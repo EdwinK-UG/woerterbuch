@@ -154,7 +154,7 @@ h1.page{font-family:Fraunces,serif;font-weight:600;font-size:1.7rem;letter-spaci
 .def small,.fdef small{font-size:.72em;letter-spacing:.05em;color:var(--mut);font-family:Inter,system-ui,sans-serif}
 .wimg{display:none}.wimg.on{display:block;float:right;width:min(42%,270px);margin:.6rem 0 .6rem 1.1rem}
 .wimg figure{margin:0}.wimg img{display:block;width:100%;height:210px;object-fit:contain;background:var(--panel);border:1px solid var(--line);border-radius:.8rem}
-.wimg figcaption{font-size:.7rem;color:var(--faint);margin-top:.3rem;text-align:right}.wimg figcaption a{color:inherit}
+.wimg figcaption{font-size:.7rem;color:var(--faint);margin-top:.35rem;display:flex;justify-content:space-between;align-items:center;gap:.5rem}.imgnext{border:1px solid var(--line);background:var(--panel);color:var(--mut);font-size:.72rem;font-weight:600;padding:.25rem .55rem;border-radius:.5rem}.imgnext:hover{color:var(--ac);border-color:var(--ac)}.wimg figcaption a{color:inherit}
 .entry .say{align-self:center;width:34px;height:34px;font-size:.95rem}.entry::after{content:"";display:block;clear:both}
 .wmap{clear:both}.wmleg{display:flex;flex-wrap:wrap;gap:.4rem 1rem;justify-content:center;font-size:.75rem;color:var(--mut);margin-top:.3rem}
 .wmleg i{display:inline-block;width:.7rem;height:.7rem;border-radius:50%;margin-right:.35rem;vertical-align:-.05em}
@@ -328,23 +328,63 @@ function say(i,btn){
   a.addEventListener('error',fall); setTimeout(()=>{if(a.readyState<2)fall()},2500);
   a.play().then(()=>{done=true;if(btn)btn.title='Aufnahme: Wikimedia Commons'}).catch(fall);
 }
-/* ---------- PICTURE: free image of the German Wikipedia article (nouns only) ---------- */
-const IMGC=new Map();
-async function loadImg(e){
-  const box=document.getElementById('wimg'); if(!box||e.ps!=='n')return;
-  const w=plainW(e.w); let d=IMGC.get(w);
-  if(d===undefined){
-    try{
-      const r=await fetch('https://de.wikipedia.org/api/rest_v1/page/summary/'+encodeURIComponent(w.replace(/ /g,'_')));
-      const j=r.ok?await r.json():null;
-      d=(j&&j.type==='standard'&&j.thumbnail)?{src:j.thumbnail.source,title:j.title,url:j.content_urls&&j.content_urls.desktop.page}:null;
-    }catch(err){d=null}
-    IMGC.set(w,d);
+/* ---------- PICTURES: Wikipedia (nouns) and Wikimedia Commons search; verbs/adjectives translated via Wiktionary ---------- */
+const IMGC=new Map(), NOIMG=new Set(['adv','prp','kon','pro','ptk','Artikel','Fragewort','Info','num','Interjektion']);
+const LSI={get(k){try{return JSON.parse(localStorage.getItem('gd_img_'+k)||'null')}catch(e){return null}},
+  set(k,v){try{localStorage.setItem('gd_img_'+k,JSON.stringify(v))}catch(e){}}};
+async function jget(url,ms=7000){
+  const c=new AbortController(); const t=setTimeout(()=>c.abort(),ms);
+  try{const r=await fetch(url,{signal:c.signal}); return r.ok?await r.json():null}catch(e){return null}finally{clearTimeout(t)}
+}
+async function enWord(w){            // first English translation from German Wiktionary
+  const j=await jget('https://de.wiktionary.org/w/api.php?action=parse&prop=wikitext&format=json&origin=*&page='+encodeURIComponent(w));
+  const t=j&&j.parse&&j.parse.wikitext&&j.parse.wikitext['*']; if(!t)return null;
+  const m=t.match(/\{\{Ü\|en\|\[?\[?([^}|\]]+)/); return m?m[1].trim():null;
+}
+function gerund(v){ v=v.replace(/^to /,''); if(/[^aeiou]e$/.test(v)&&!/ee$/.test(v))return v.slice(0,-1)+'ing';
+  if(/^[^aeiou]*[aeiou][bdgmnprt]$/.test(v))return v+v.slice(-1)+'ing'; return v+'ing'}
+function goodShape(w,h){return w>=260&&h>=180&&w/h>=.55&&w/h<=2.1}
+async function commons(q){
+  const j=await jget('https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrnamespace=6&gsrlimit=12'
+    +'&prop=imageinfo&iiprop=url|size|mime&iiurlwidth=480&gsrsearch='+encodeURIComponent(q+' filetype:bitmap'));
+  const pages=j&&j.query?Object.values(j.query.pages).sort((a,b)=>a.index-b.index):[];
+  return pages.map(p=>p.imageinfo&&p.imageinfo[0]).filter(i=>i&&/jpeg|png|webp/.test(i.mime)&&goodShape(i.width,i.height))
+    .map(i=>({src:i.thumburl||i.url,url:i.descriptionurl,cap:'Wikimedia Commons'}));
+}
+async function findImgs(e){
+  const w=plainW(e.w), out=[], seen=new Set(), add=a=>a.forEach(x=>{if(x.src&&!seen.has(x.src)){seen.add(x.src);out.push(x)}});
+  if(e.ps==='n'){
+    // best-matching German Wikipedia articles that have a picture (finds "Kulturapfel" for "Apfel")
+    const j=await jget('https://de.wikipedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrlimit=3&prop=pageimages|pageprops'
+      +'&piprop=thumbnail&pithumbsize=480&gsrsearch='+encodeURIComponent(w));
+    const ps=j&&j.query?Object.values(j.query.pages).sort((a,b)=>a.index-b.index):[];
+    add(ps.filter(p=>p.thumbnail&&!(p.pageprops&&'disambiguation' in p.pageprops)&&goodShape(p.thumbnail.width,p.thumbnail.height))
+      .slice(0,2).map(p=>({src:p.thumbnail.source,url:'https://de.wikipedia.org/wiki/'+encodeURIComponent(p.title),cap:'Wikipedia · '+p.title})));
   }
-  if(!d||!document.body.contains(box))return;
-  box.innerHTML=`<figure><img src="${d.src}" alt="${esc(w)}" loading="lazy" onerror="this.closest('.wimg').innerHTML=''">
-    <figcaption>Bild: <a href="${d.url}" target="_blank" rel="noopener">Wikipedia · ${esc(d.title)}</a></figcaption></figure>`;
+  const en=await enWord(w);
+  const qs=[]; if(en){ if(e.ps==='v')qs.push(gerund(en)); qs.push(en) } qs.push(w);
+  for(const q of qs){ add(await commons(q)); if(out.length>=6)break }
+  return out;
+}
+function showImg(e,box,list,k){
+  if(!list.length){box.classList.remove('on');box.innerHTML='';return}
+  k=((k%list.length)+list.length)%list.length; const d=list[k];
+  box.innerHTML=`<figure><img src="${d.src}" alt="${esc(plainW(e.w))}" loading="lazy" referrerpolicy="no-referrer">
+    <figcaption><button class="imgnext" title="Anderes Bild">↻ anderes Bild</button>
+    <a href="${d.url||d.src}" target="_blank" rel="noopener">${esc(d.cap)}</a></figcaption></figure>`;
   box.classList.add('on');
+  box.querySelector('img').onerror=()=>{list.splice(k,1);showImg(e,box,list,k)};
+  box.querySelector('.imgnext').onclick=()=>{const n=k+1; LSI.set(plainW(e.w),list[n%list.length]); showImg(e,box,list,n)};
+}
+async function loadImg(e){
+  const box=document.getElementById('wimg'); if(!box||NOIMG.has(e.ps)||!e.ps)return;
+  const w=plainW(e.w), saved=LSI.get(w);
+  if(saved){showImg(e,box,[saved],0)}
+  let list=IMGC.get(w);
+  if(!list){list=await findImgs(e); IMGC.set(w,list)}
+  if(!document.body.contains(box))return;
+  if(saved){const k=list.findIndex(x=>x.src===saved.src); if(k<0)list.unshift(saved); showImg(e,box,list,Math.max(0,k)); return}
+  showImg(e,box,list,0);
 }
 /* ---------- WORD MAP: synonyms, opposites, word family and words close in meaning ---------- */
 const WMG=[{k:'s',label:'Synonyme (≈)',col:'var(--das)',max:5},{k:'g',label:'Gegenteil (↔)',col:'var(--die)',max:3},
@@ -859,6 +899,53 @@ document.addEventListener('visibilitychange',async()=>{
 window.addEventListener('beforeunload',e=>{if(session&&(dirty||timer)){push();e.preventDefault();e.returnValue=''}});
 
 window.ACCT={sheet,submit,signOut};
+})();
+</script>
+<!-- ===== sign-up invitation (signed-out visitors only) ===== -->
+<style>
+.promo h3{font-size:1.35rem;margin-bottom:.4rem}
+.promo ul{list-style:none;padding:0;margin:.2rem 0 1.1rem}
+.promo li{display:flex;gap:.6rem;align-items:flex-start;padding:.35rem 0;font-size:.92rem}
+.promo li b{font-weight:700}
+.promo .ic{flex:0 0 1.9rem;height:1.9rem;border-radius:.55rem;display:grid;place-items:center;background:var(--ac-salt)}
+.promo .row .btn.primary{flex:1;justify-content:center;padding:.65rem}
+.promo .small{font-size:.78rem;color:var(--faint);text-align:center;margin:.7rem 0 0}
+</style>
+<script>
+"use strict";
+(function(){
+const KEY='gd_promo_until', signedIn=()=>{try{return !!localStorage.getItem('gd_session')}catch(e){return false}};
+const snoozed=()=>{try{return Date.now()<+(localStorage.getItem(KEY)||0)}catch(e){return false}};
+const snooze=d=>{try{localStorage.setItem(KEY,String(Date.now()+d*864e5))}catch(e){}};
+let shown=false, views=0, active=0, lastAct=Date.now();
+function show(reason){
+  if(shown||signedIn()||snoozed()||document.getElementById('modal').classList.contains('show'))return;
+  shown=true;
+  const hook=reason==='save'
+    ?'Deine erste Liste ist angelegt – sichere sie dir!'
+    :'Du bist auf Wortjagd? Dann lohnt sich ein Konto.';
+  openSheet(`<div class="promo"><h3>✨ ${hook}</h3>
+    <p>Mit einem kostenlosen Konto wird aus dem Nachschlagen echtes Lernen:</p>
+    <ul>
+      <li><span class="ic">📚</span><span><b>Eigene Wortlisten</b> – sammle jedes Wort, das du nachschlägst, mit einem Klick.</span></li>
+      <li><span class="ic">⚡</span><span><b>Karteikarten wie bei Anki</b> – das System zeigt dir jedes Wort genau dann wieder, wenn du es sonst vergessen würdest.</span></li>
+      <li><span class="ic">📱</span><span><b>Dein Fortschritt reist mit</b> – auf Handy, Tablet und Laptop, nichts geht verloren.</span></li>
+    </ul>
+    <div class="row"><button class="btn primary" onclick="ACCT.sheet('up')">Kostenlos registrieren</button>
+      <button class="btn" onclick="PROMO.later()">Später</button></div>
+    <p class="small">Dauert 20 Sekunden · nur E-Mail und Passwort · <a href="#" onclick="event.preventDefault();ACCT.sheet('in')">Ich habe schon ein Konto</a></p></div>`);
+  snooze(3);   // closing the window in any way also counts as "later"
+}
+window.PROMO={later(){snooze(3);closeSheet()},show};
+// 1) right after the first list or flashcard is saved without an account
+const sl=saveLists, sd=saveDecks;
+saveLists=function(){sl.apply(this,arguments); if(!signedIn())setTimeout(()=>show('save'),1500)};
+saveDecks=function(){sd.apply(this,arguments); if(!signedIn())setTimeout(()=>show('save'),1500)};
+// 2) clear interest: the 3rd word looked up
+window.addEventListener('hashchange',()=>{ if(location.hash.startsWith('#/w/')&&++views>=3)setTimeout(()=>show('use'),1200) });
+// 3) or one minute of active use (time while the tab is visible and the visitor does something)
+['click','keydown','scroll','touchstart'].forEach(ev=>addEventListener(ev,()=>{lastAct=Date.now()},{passive:true}));
+setInterval(()=>{ if(document.visibilityState==='visible'&&Date.now()-lastAct<20000){active+=5; if(active>=60)show('use')} },5000);
 })();
 </script>
 </body>
