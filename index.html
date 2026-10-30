@@ -266,6 +266,49 @@ nav.tabs a .lic{font-size:1rem;opacity:.85}
 .wmsay{width:32px;height:32px;border-radius:50%;border:1px solid var(--line);background:var(--panel);color:var(--ac);display:grid;place-items:center;font-size:.95rem}
 .wmgo{display:inline-flex;align-items:center;gap:.3rem;font-size:.85rem;font-weight:600;color:#fff;background:var(--ac);text-decoration:none;padding:.42rem .8rem;border-radius:.6rem}
 @media(max-width:560px){.wmhint{display:block;margin-top:.15rem}}
+
+/* entry layout */
+.def{font-size:1.06rem;line-height:1.55}
+.def i.g{color:var(--mut);font-size:.94em}
+.dgram{font-family:Inter,system-ui,sans-serif;font-size:.86rem;color:var(--mut);margin:.1rem 0 .9rem;line-height:1.5}
+.dgram b{display:none}.dgram .core{color:var(--ac);margin-right:.35rem;font-size:1rem}
+.dgram i.g{font-size:1em}
+.dl{list-style:none;margin:0;padding:0;display:grid;gap:.95rem}
+.ds{display:flex;gap:.7rem;align-items:flex-start}
+.ds>.sn{flex:0 0 auto;margin-top:.22rem!important}
+.db{min-width:0;flex:1}
+.dd b{font-weight:600}
+.dx{list-style:none;margin:.4rem 0 0;padding:0;display:grid;gap:.25rem}
+.dx li{position:relative;padding-left:1rem;font-style:italic;color:var(--fg);opacity:.92}
+.dx li::before{content:"";position:absolute;left:.15rem;top:.62em;width:.38rem;height:.38rem;border-radius:50%;background:color-mix(in srgb,var(--die) 55%,transparent)}
+.dx li i.g{color:inherit;font-size:1em}
+.dk,.dn{display:flex;gap:.5rem;align-items:baseline;margin-top:.45rem;font-family:Inter,system-ui,sans-serif;font-size:.84rem;color:var(--mut);line-height:1.5}
+.dk .kb,.dn .ib{flex:0 0 auto}
+.dsec{margin-top:1.3rem;padding-top:.9rem;border-top:1px dashed var(--line)}
+.dsec h5{margin:0 0 .5rem;font:700 .7rem/1 Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)}
+.did{list-style:none;margin:0;padding:0;display:grid;gap:.45rem}
+.did li{padding-left:.8rem;border-left:2px solid color-mix(in srgb,var(--ac) 40%,transparent)}
+.dder p{margin:0;font-size:.98rem}
+.fdef .dl{gap:.5rem;text-align:left}.fdef .dgram{display:none}
+
+.capb{display:inline-flex;gap:.35rem}
+.imgai{border:1px solid color-mix(in srgb,var(--ac) 35%,var(--line));background:var(--ac-salt);color:var(--ac);font-size:.72rem;font-weight:600;padding:.25rem .55rem;border-radius:.5rem;display:inline-flex;align-items:center;gap:.25rem}
+.wimg figcaption a{display:inline-flex;align-items:center;gap:.25rem}
+.imgnext{display:inline-flex;align-items:center;gap:.25rem}
+.aicta{height:210px;display:grid;place-items:center;border:1.5px dashed var(--line);border-radius:.8rem;background:var(--panel)}
+.aiload{height:210px;display:flex;flex-direction:column;gap:.6rem;align-items:center;justify-content:center;text-align:center;padding:1rem;font-size:.85rem;color:var(--mut);
+  border:1px solid var(--line);border-radius:.8rem;background:linear-gradient(110deg,var(--panel) 30%,color-mix(in srgb,var(--ac) 8%,var(--panel)) 50%,var(--panel) 70%);background-size:220% 100%;animation:aish 1.6s linear infinite}
+.aiload .spin{margin:0}
+.aiload.err{animation:none;background:var(--panel);color:var(--bad)}
+.aiload.err .lic{font-size:1.4rem}
+@keyframes aish{to{background-position:-120% 0}}
+.aiset h3{display:flex;align-items:center;gap:.45rem}
+.aisteps{margin:.2rem 0 .9rem;padding-left:1.2rem;font-size:.88rem;color:var(--mut);display:grid;gap:.25rem}
+.aisteps a{color:var(--ac)}
+.aiset .input{width:100%;margin-bottom:.4rem}
+.aion{display:flex;align-items:center;gap:.5rem;font-size:.88rem;margin:.6rem 0}
+.ainote{font-size:.76rem!important;color:var(--faint)!important}
+.sheet{width:min(30rem,100%)}
 @media(max-width:560px){.hw{font-size:1.7rem}.flashcard .fhw{font-size:2rem}#q{font-size:1.25rem}}
 </style>
 </head>
@@ -430,6 +473,54 @@ const ic=(n,cls='')=>`<i data-lucide="${n}" class="lic ${cls}"></i>`;
 function drawIcons(){ if(window.lucide&&lucide.createIcons)lucide.createIcons({attrs:{'stroke-width':1.8}}) }
 new MutationObserver(()=>{clearTimeout(drawIcons._t);drawIcons._t=setTimeout(drawIcons,0)}).observe(document.body,{childList:true,subtree:true});
 window.addEventListener('load',drawIcons);
+/* ---------- ENTRY LAYOUT: grammar line, numbered senses with examples, compounds, idioms, derived words ---------- */
+function fmtDef(e,compact){
+  let h=e.df, star=/^\s*<span class="core"/.test(h);
+  h=h.replace(/^\s*<span class="core"[^>]*>★<\/span>\s*/,'').replace(/^\s*<b>[^<]*<\/b>\s*/,'');
+  if(/abgeleitet von/.test(h)||e.ps==='Info')return (star?'<span class="core">★</span> ':'')+h;
+  // idioms: "■ ID ..." at the end
+  let idioms='';
+  const im=h.search(/<span class="sq"><\/span>\s*(<small>)?\s*ID\b/);
+  if(im>=0){idioms=h.slice(im).replace(/^<span class="sq"><\/span>\s*(<small>)?\s*ID\s*(<\/small>)?\s*/,''); h=h.slice(0,im)}
+  // grammar line = everything before the first sense number (or before the meaning if there are none)
+  let head='', body=h;
+  const k=h.search(/<span class="sn">\d+<\/span>/);
+  if(k>=0){head=h.slice(0,k); body=h.slice(k)}
+  else{const m=h.match(/^(\s*(\[[^\]]*\]?|[^\s<]*\]|<i class="g">[^<]*<\/i>|<small>[^<]*<\/small>|\((?:[^()]|\([^()]*\))*\)|[;,]))+/); if(m){head=m[0]; body=h.slice(m[0].length)}}
+  const senses=k>=0?body.split(/(?=<span class="sn">\d+<\/span>)/):[body];
+  const part=txt=>{          // split one sense into meaning / examples / compounds / notes / derived words
+    const o={def:'',ex:[],comp:[],note:[],der:[]}; let mode='def';
+    txt.split(/(<span class="kb">K<\/span>|<span class="ib">i<\/span>|(?:<small>)?\|(?:<\/small>)?|•\s*(?=hierzu|zu\s*[\d(]))/).forEach(t=>{
+      if(/^<span class="kb">/.test(t)){mode='comp';o.comp.push('');return}
+      if(/^<span class="ib">/.test(t)){mode='note';o.note.push('');return}
+      if(/^(<small>)?\|/.test(t)){mode='ex';o.ex.push('');return}
+      if(/^•/.test(t)){mode='der';o.der.push('');return}
+      if(mode==='def')o.def+=t; else o[mode][o[mode].length-1]+=t;
+    });
+    for(const key of ['ex','comp','note','der'])o[key]=o[key].map(x=>x.trim()).filter(x=>x.replace(/<[^>]+>/g,'').trim());
+    return o;
+  };
+  const sub=o=>`${o.ex.length?`<ul class="dx">${o.ex.map(x=>`<li>${x}</li>`).join('')}</ul>`:''}
+    ${o.comp.length?`<div class="dk"><span class="kb">K</span><span>${o.comp.join(' ')}</span></div>`:''}
+    ${o.note.length?`<div class="dn"><span class="ib">i</span><span>${o.note.join(' ')}</span></div>`:''}`;
+  let html='', allDer=[];
+  if(star||head.replace(/<[^>]+>/g,'').trim())html+=`<div class="dgram">${star?'<span class="core" title="Grundwortschatz">★</span>':''}${head}</div>`;
+  const items=senses.map(sx=>{
+    const m=sx.match(/^<span class="sn">(\d+)<\/span>/); const num=m?m[1]:'';
+    const o=part(m?sx.slice(m[0].length):sx); allDer=allDer.concat(o.der);
+    if(!o.def.replace(/<[^>]+>/g,'').trim()&&!o.ex.length&&!o.comp.length&&!o.note.length)return '';
+    return `<li class="ds">${num?`<span class="sn">${num}</span>`:''}<div class="db"><div class="dd">${o.def.trim()}</div>${compact?'':sub(o)}</div></li>`;
+  }).join('');
+  html+=`<ol class="dl${k>=0?'':' one'}">${items}</ol>`;
+  if(!compact&&idioms.replace(/<[^>]+>/g,'').trim()){
+    const ip=part(idioms);
+    const list=ip.def.split(/;\s*(?=<b>)/).map(x=>x.trim()).filter(Boolean);
+    html+=`<div class="dsec"><h5>Redewendungen</h5><ul class="did">${list.map(x=>`<li>${x}</li>`).join('')}</ul>${sub(ip)}</div>`;
+    allDer=allDer.concat(ip.der);
+  }
+  if(!compact&&allDer.length)html+=`<div class="dsec dder"><h5>Abgeleitete Wörter</h5><p>${allDer.join(' · ').replace(/^(hierzu|zu)\s*/,'')}</p></div>`;
+  return html;
+}
 /* ---------- WORD VIEW ---------- */
 function entryHTML(e){
   const art=e.ar?`<span class="art ${e.ar}">${e.ar}</span>`:'';
@@ -441,7 +532,7 @@ function entryHTML(e){
       <span class="pg">S. ${e.pg}</span>
     </div>
     <div class="wimg" id="wimg"></div>
-    <div class="def">${e.df}</div>
+    <div class="def">${fmtDef(e)}</div>
     <div class="acts">
       <button class="btn primary" onclick="quickCard(${e.i})">⚡ Als Karte lernen</button>
       <button class="btn" onclick="openAdd(${e.i})">＋ Zur Liste</button>
@@ -520,10 +611,10 @@ async function findImgs(e){
   return out;
 }
 function showImg(e,box,list,k){
-  if(!list.length){box.classList.remove('on');box.innerHTML='';return}
+  if(!list.length){box.innerHTML=`<div class="aicta"><button class="imgai" onclick="AI.open()">${ic('sparkles')} Bild mit KI erzeugen</button></div>`;box.classList.add('on');return}
   k=((k%list.length)+list.length)%list.length; const d=list[k];
   box.innerHTML=`<figure><img src="${d.src}" alt="${esc(plainW(e.w))}" loading="lazy" referrerpolicy="no-referrer">
-    <figcaption><button class="imgnext" title="Anderes Bild">↻ anderes Bild</button>
+    <figcaption><span class="capb"><button class="imgnext" title="Anderes Bild">↻ anderes Bild</button><button class="imgai" title="Bild mit Gemini erzeugen" onclick="AI.open()">${ic('sparkles')} KI</button></span>
     <a href="${d.url||d.src}" target="_blank" rel="noopener">${esc(d.cap)}</a></figcaption></figure>`;
   box.classList.add('on');
   box.querySelector('img').onerror=()=>{list.splice(k,1);showImg(e,box,list,k)};
@@ -531,6 +622,7 @@ function showImg(e,box,list,k){
 }
 async function loadImg(e){
   const box=document.getElementById('wimg'); if(!box||NOIMG.has(e.ps)||!e.ps)return;
+  if(AI.on()&&!box.dataset.photo){aiShow(e,box);return}
   const w=plainW(e.w), saved=LSI.get(w);
   if(saved){showImg(e,box,[saved],0)}
   let list=IMGC.get(w);
@@ -538,6 +630,116 @@ async function loadImg(e){
   if(!document.body.contains(box))return;
   if(saved){const k=list.findIndex(x=>x.src===saved.src); if(k<0)list.unshift(saved); showImg(e,box,list,Math.max(0,k)); return}
   showImg(e,box,list,0);
+}
+
+/* ---------- AI PICTURES with the visitor's own Gemini key (stored only in this browser) ---------- */
+const AI=(()=>{
+  const K='gd_gemini_key', M='gd_gemini_model', ON='gd_gemini_on';
+  const get=k=>{try{return localStorage.getItem(k)}catch(e){return null}}, set=(k,v)=>{try{v==null?localStorage.removeItem(k):localStorage.setItem(k,v)}catch(e){}};
+  const api='https://generativelanguage.googleapis.com/v1beta/';
+  async function models(key){
+    const r=await fetch(api+'models?pageSize=200',{headers:{'x-goog-api-key':key}}); const j=await r.json();
+    if(!r.ok)throw new Error(j.error&&j.error.message||'Schlüssel ungültig');
+    const ms=(j.models||[]).filter(m=>/image/i.test(m.name)&&/gemini/i.test(m.name)&&(m.supportedGenerationMethods||[]).includes('generateContent')).map(m=>m.name.replace('models/',''));
+    // prefer the fast "flash" image model, then any other Gemini image model
+    return ms.sort((a,b)=>(/flash/.test(b)-/flash/.test(a))||(/preview/.test(a)-/preview/.test(b)));
+  }
+  return {
+    on:()=>!!get(K)&&get(ON)!=='0', key:()=>get(K), model:()=>get(M),
+    open(){
+      const k=get(K), m=get(M);
+      openSheet(`<div class="aiset"><h3>${ic('sparkles')} KI-Bilder mit Gemini</h3>
+        <p>Statt Fotos aus dem Internet erzeugt Google Gemini für jedes Wort ein eigenes Bild, das genau diese Bedeutung zeigt. Dafür brauchst du einen eigenen, kostenlosen Gemini-Schlüssel.</p>
+        <ol class="aisteps"><li>Öffne <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio → API-Schlüssel</a> und melde dich mit deinem Google-Konto an.</li>
+          <li>Klicke auf „API-Schlüssel erstellen" und kopiere ihn.</li><li>Füge ihn hier ein.</li></ol>
+        <input class="input" id="aikey" type="password" autocomplete="off" placeholder="Gemini-API-Schlüssel (AIza…)" value="${k?'••••••••••••':''}">
+        <div class="acct-msg" id="aimsg">${k?`Verbunden${m?' · Modell: '+esc(m):''}`:''}</div>
+        <label class="aion"><input type="checkbox" id="aion" ${get(ON)!=='0'?'checked':''}> KI-Bilder statt Fotos anzeigen</label>
+        <p class="ainote">Der Schlüssel bleibt nur in diesem Browser und wird direkt an Google gesendet. Erzeugte Bilder zählen zu deinem Gemini-Kontingent; manche Bildmodelle verlangen in Google AI Studio eine aktivierte Abrechnung.</p>
+        <div class="row">${k?`<button class="btn" onclick="AI.remove()">Schlüssel entfernen</button>`:''}<span class="spacer"></span>
+          <button class="btn" onclick="closeSheet()">Abbrechen</button><button class="btn primary" id="aisave" onclick="AI.save()">Speichern</button></div></div>`);
+      const m2=document.getElementById('aimsg'); if(k&&m2)m2.classList.add('ok');
+      document.getElementById('aikey').addEventListener('focus',ev=>{if(/^•+$/.test(ev.target.value))ev.target.value=''},{once:true});
+    },
+    async save(){
+      const inp=document.getElementById('aikey'), msg=document.getElementById('aimsg'), btn=document.getElementById('aisave');
+      const onv=document.getElementById('aion').checked?'1':'0';
+      let key=inp.value.trim(); if(/^•+$/.test(key)||!key)key=get(K);
+      if(!key){msg.textContent='Bitte einen Schlüssel einfügen.';msg.classList.remove('ok');return}
+      btn.disabled=true; msg.classList.remove('ok'); msg.textContent='Schlüssel wird geprüft …';
+      try{
+        const ms=await models(key);
+        if(!ms.length)throw new Error('Mit diesem Schlüssel ist kein Gemini-Bildmodell verfügbar.');
+        set(K,key); set(M,ms[0]); set(ON,onv);
+        msg.classList.add('ok'); msg.textContent='Verbunden · Modell: '+ms[0];
+        setTimeout(()=>{closeSheet(); if(location.hash.startsWith('#/w/'))route()},700);
+      }catch(err){msg.textContent=String(err.message||err)}
+      finally{btn.disabled=false}
+    },
+    remove(){set(K,null);set(M,null);closeSheet();toast('Gemini-Schlüssel entfernt');if(location.hash.startsWith('#/w/'))route()}
+  };
+})();
+/* the prompt: meaning, example and a part-of-speech specific instruction */
+function aiPrompt(e){
+  const w=plainW(e.w), pos=POSL[e.ps]||e.ps||'', def=gloss(e), ex=examples({df:e.df.split(/<span class="sn">2<\/span>/)[0]},2), art=e.ar?e.ar+' ':'';
+  const focus={
+    v:'Show one person (or animal, if the verb is about animals) clearly in the middle of doing this action, so the activity is obvious at a glance. Choose the most typical everyday situation for it.',
+    adj:'Show a person, animal or object that unmistakably has this quality. Exaggerate the quality slightly so it reads instantly; a subtle contrast with a neutral element may help.',
+    n:'Show the thing itself as the clear main subject. If it is abstract, show one everyday human situation that makes the idea instantly understandable.',
+    Partizip:'Show a person or object in exactly the state this word describes.'
+  }[e.ps]||'Show one simple everyday situation that makes the meaning obvious.';
+  return `You illustrate a German learner's dictionary for adults. Create ONE picture that explains the German word "${art}${w}"${pos?' ('+pos+')':''}.
+Meaning from the dictionary (German): ${def||'—'}
+${ex.length?'Example sentence(s): '+ex.join(' / '):''}
+${focus}
+Requirements:
+- Depict exactly this meaning and nothing else; ignore other possible meanings of the word.
+- One clear main subject, centred, with a simple uncluttered background.
+- Warm, friendly editorial illustration style: soft natural colours, clean shapes, gentle shading, light background.
+- Absolutely no text, letters, words, numbers, captions, labels, signs or watermarks anywhere in the image.
+- Natural, inclusive people; suitable for all ages. For violence, death, illness or crime use a calm, symbolic depiction.
+- Landscape format, 4:3.`;
+}
+const idbImg=(()=>{let dbp;const open=()=>dbp||(dbp=new Promise((res,rej)=>{const r=indexedDB.open('gd-ai',1);r.onupgradeneeded=()=>r.result.createObjectStore('img');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}));
+  return {async get(k){try{const db=await open();return await new Promise(r=>{const q=db.transaction('img').objectStore('img').get(k);q.onsuccess=()=>r(q.result||null);q.onerror=()=>r(null)})}catch(e){return null}},
+          async set(k,v){try{const db=await open();db.transaction('img','readwrite').objectStore('img').put(v,k)}catch(e){}}}})();
+async function aiGenerate(e){
+  const body=(cfg)=>JSON.stringify({contents:[{parts:[{text:aiPrompt(e)}]}],generationConfig:cfg});
+  const url='https://generativelanguage.googleapis.com/v1beta/models/'+AI.model()+':generateContent';
+  const call=cfg=>fetch(url,{method:'POST',headers:{'content-type':'application/json','x-goog-api-key':AI.key()},body:body(cfg)});
+  let r=await call({responseModalities:['IMAGE','TEXT'],imageConfig:{aspectRatio:'4:3'}});
+  if(r.status===400)r=await call({responseModalities:['IMAGE','TEXT']});
+  const j=await r.json();
+  if(!r.ok){const m=j.error&&j.error.message||('Fehler '+r.status);
+    throw new Error(r.status===429?'Dein Gemini-Kontingent ist gerade aufgebraucht. Bitte später erneut versuchen.':r.status===403||/API key/i.test(m)?'Der Gemini-Schlüssel wurde abgelehnt.':m)}
+  const part=(j.candidates||[]).flatMap(c=>c.content&&c.content.parts||[]).find(p=>p.inlineData||p.inline_data);
+  if(!part)throw new Error('Gemini hat kein Bild geliefert (eventuell vom Sicherheitsfilter blockiert).');
+  const d=part.inlineData||part.inline_data, bin=atob(d.data), u=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
+  return new Blob([u],{type:d.mimeType||d.mime_type||'image/png'});
+}
+const aiBusy=new Map();
+async function aiShow(e,box,fresh){
+  const w=plainW(e.w), id=e.w;
+  const cap=`<figcaption><span class="capb"><button class="imgnext" onclick="aiShow(E[${e.i}],document.getElementById('wimg'),true)">${ic('refresh-cw')} neu erzeugen</button>
+    <button class="imgai" onclick="(b=>{b.dataset.photo='1';loadImg(E[${e.i}])})(document.getElementById('wimg'))">Foto</button></span>
+    <a href="#" onclick="event.preventDefault();AI.open()">${ic('sparkles')} KI-Bild · Gemini</a></figcaption>`;
+  box.classList.add('on');
+  let blob=fresh?null:await idbImg.get(id);
+  if(!blob){
+    box.innerHTML=`<figure><div class="aiload"><span class="spin"></span><span>Bild wird mit Gemini erzeugt …</span></div>${cap}</figure>`;
+    try{
+      let p=aiBusy.get(id); if(!p||fresh){p=aiGenerate(e);aiBusy.set(id,p)}
+      blob=await p; aiBusy.delete(id); await idbImg.set(id,blob);
+    }catch(err){
+      aiBusy.delete(id);
+      if(!document.body.contains(box))return;
+      box.innerHTML=`<figure><div class="aiload err">${ic('triangle-alert')}<span>${esc(String(err.message||err))}</span></div>${cap}</figure>`;
+      return;
+    }
+  }
+  if(!document.body.contains(box))return;
+  box.innerHTML=`<figure><img src="${URL.createObjectURL(blob)}" alt="KI-Bild: ${esc(w)}">${cap}</figure>`;
 }
 /* ---------- WORD MAP: synonyms, opposites, word family and words close in meaning ---------- */
 const WMG=[{k:'s',label:'Synonyme (≈)',col:'var(--das)',max:5},{k:'g',label:'Gegenteil (↔)',col:'var(--die)',max:3},
@@ -616,7 +818,10 @@ function wmCard(node){
 }
 function wmHideNow(){document.querySelectorAll('.wmpop.on').forEach(p=>p.classList.remove('on'));document.querySelectorAll('g.node.act').forEach(n=>n.classList.remove('act'));wmCur=null}
 function wmHideSoon(){clearTimeout(wmHide);wmHide=setTimeout(wmHideNow,220)}
-const canHover=()=>matchMedia('(hover: hover) and (pointer: fine)').matches;
+let lastPtr='mouse';   // what the visitor actually used for the last tap/click
+document.addEventListener('pointerdown',ev=>{lastPtr=ev.pointerType||'mouse'},true);
+document.addEventListener('touchstart',()=>{lastPtr='touch'},{capture:true,passive:true});
+const canHover=()=>lastPtr==='mouse'&&matchMedia('(hover: hover)').matches;
 document.addEventListener('pointerover',ev=>{const n=ev.target.closest&&ev.target.closest('.wmap g.node'); if(n&&canHover()&&ev.pointerType==='mouse'){clearTimeout(wmHide); if(wmCur!==n)wmCard(n)}});
 document.addEventListener('pointerout',ev=>{const n=ev.target.closest&&ev.target.closest('.wmap g.node'); if(n&&ev.pointerType==='mouse'&&!(ev.relatedTarget&&n.contains(ev.relatedTarget)))wmHideSoon()});
 document.addEventListener('click',ev=>{
@@ -833,7 +1038,7 @@ function renderCard(){
     V().innerHTML=`<div class="study"><div class="row" style="margin-bottom:.3rem">
       <a class="btn sm" href="#/decks">← ${esc(d.name)}</a></div>${counts}
       <div class="stwrap"><div class="flashcard">
-        ${art}<div class="fhw">${esc(e.w)}</div><hr><div class="fdef">${e.df}</div>
+        ${art}<div class="fhw">${esc(e.w)}</div><hr><div class="fdef">${fmtDef(e,true)}</div>
       </div>
       <div class="grades">
         <button class="grade g-again" onclick="ans(0)">Nochmal<small>${nextIvLabel(c,0)}</small></button>
