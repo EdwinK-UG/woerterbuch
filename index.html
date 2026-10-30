@@ -555,6 +555,240 @@ document.getElementById('theme').onclick=()=>{
 Object.assign(window,{go,openAdd,addTo,addNew,quickCard,makeCards,newList,createList,renameList,delList,rmFromList,pickAll,listFromWords,closeSheet,reveal,ans,delDeck});
 load().catch(err=>{V().innerHTML='<div class="empty"><span class="em">⚠️</span>Laden fehlgeschlagen: '+esc(String(err))+'</div>'});
 </script>
+<!-- ===== Konten (Supabase) – add-on, changes no existing feature ===== -->
+<style>
+#acct.in{background:var(--ac);color:#fff;border-color:var(--ac);font-weight:700;font-size:.95rem}
+.acct-f{display:flex;flex-direction:column;gap:.55rem;margin:.4rem 0 0}
+.acct-f .input{width:100%}
+.acct-tabs{display:flex;gap:.3rem;margin:0 0 .8rem}
+.acct-tabs button{flex:1;border:1px solid var(--line);background:var(--panel);color:var(--mut);font-weight:600;font-size:.85rem;padding:.45rem;border-radius:.55rem}
+.acct-tabs button.on{background:var(--ac-salt);color:var(--ac);border-color:var(--ac)}
+.acct-msg{font-size:.84rem;color:var(--bad)}
+.acct-msg:empty{display:none}
+.acct-msg.ok{color:var(--ok)}
+.acct-link{background:none;border:none;color:var(--ac);font-size:.82rem;font-weight:600;padding:0}
+.acct-who{display:flex;align-items:center;gap:.7rem;margin:.2rem 0 1rem}
+.acct-who .av{width:44px;height:44px;border-radius:50%;background:var(--ac);color:#fff;display:grid;place-items:center;font-weight:700;font-size:1.2rem;flex:0 0 auto}
+.acct-who .em{font-weight:700;word-break:break-all}
+</style>
+<script>
+"use strict";
+(function(){
+const SB_URL='https://vnnhyhicppkexdibuqyu.supabase.co';
+const SB_KEY='sb_publishable_sNNNyEu6D9_Sjy0O0MaS5Q_VyReD7Tj'; // publishable key: safe to be public, data is protected by row level security
+const SITE=location.origin+location.pathname;
+const SKEY='gd_session';
+let session=LS.get(SKEY,null);
+let timer=null, pushing=false, dirty=false, failed=false;
+const cacheKey=()=>'gd_cache_'+session.user.id;
+const $=id=>document.getElementById(id);
+const isEmpty=o=>!o||!Object.keys(o).length;
+
+/* ---------- Supabase REST ---------- */
+async function api(path,{method='GET',body,token,headers={}}={}){
+  const h=Object.assign({apikey:SB_KEY,'Content-Type':'application/json'},headers);
+  if(token)h.Authorization='Bearer '+token;
+  const r=await fetch(SB_URL+path,{method,headers:h,body:body===undefined?undefined:JSON.stringify(body)});
+  const t=await r.text(); let j=null; try{j=t?JSON.parse(t):null}catch(e){}
+  if(!r.ok){const e=new Error((j&&(j.msg||j.message||j.error_description||j.error))||('HTTP '+r.status));e.status=r.status;e.code=j&&(j.error_code||j.code);throw e}
+  return j;
+}
+function keep(s,user){
+  const u=user||s.user;
+  session={access_token:s.access_token,refresh_token:s.refresh_token,
+    expires_at:+s.expires_at||Math.floor(Date.now()/1000)+(+s.expires_in||3600),
+    user:{id:u.id,email:u.email}};
+  LS.set(SKEY,session);
+}
+async function token(){
+  if(!session)throw new Error('Nicht angemeldet');
+  if(session.expires_at-60>Date.now()/1000)return session.access_token;
+  try{const s=await api('/auth/v1/token?grant_type=refresh_token',{method:'POST',body:{refresh_token:session.refresh_token}});keep(s);return session.access_token}
+  catch(e){if(e.status>=400&&e.status<500)endSession('Sitzung abgelaufen – bitte neu anmelden');throw e}
+}
+function de(e){
+  const m=String(e&&e.message||e), c=String(e&&e.code||''), s=m+' '+c;
+  if(/invalid login|invalid_credentials/i.test(s))return 'E-Mail oder Passwort ist falsch.';
+  if(/not confirmed|email_not_confirmed/i.test(s))return 'Bitte bestätige zuerst deine E-Mail-Adresse (Link im Postfach).';
+  if(/already registered|user_already_exists/i.test(s))return 'Für diese E-Mail gibt es schon ein Konto. Bitte melde dich an.';
+  if(/password should|weak_password/i.test(s))return 'Das Passwort muss mindestens 6 Zeichen haben.';
+  if(/same_password|should be different/i.test(s))return 'Das neue Passwort muss sich vom alten unterscheiden.';
+  if(/rate limit|over_.*rate_limit/i.test(s)||e.status===429)return 'Zu viele Versuche. Bitte warte etwas und versuche es dann erneut.';
+  if(/invalid.*email|email_address_invalid/i.test(s))return 'Diese E-Mail-Adresse ist ungültig.';
+  if(/PGRST205|PGRST202|42P01/.test(c))return 'Die Datenbank ist noch nicht eingerichtet.';
+  if(/failed to fetch|networkerror|load failed/i.test(m))return 'Keine Verbindung zum Server.';
+  return m;
+}
+
+/* ---------- account data ---------- */
+function writeCache(){if(session)LS.set(cacheKey(),{lists,decks,dirty})}
+function rerender(){if(E.length&&!location.hash.startsWith('#/study'))route()}
+async function pull(){
+  const rows=await api('/rest/v1/user_data?select=lists,decks&user_id=eq.'+session.user.id,{token:await token()});
+  return rows&&rows[0]||null;
+}
+async function push(){
+  if(!session)return;
+  if(pushing){dirty=true;return}
+  clearTimeout(timer);timer=null;
+  pushing=true;dirty=false;
+  const who=session.user.id;
+  try{
+    await api('/rest/v1/user_data?on_conflict=user_id',{method:'POST',token:await token(),
+      headers:{Prefer:'resolution=merge-duplicates,return=minimal'},
+      body:{user_id:who,lists,decks,updated_at:new Date().toISOString()}});
+    failed=false;
+  }catch(e){
+    dirty=true;
+    if(!failed)toast('Nicht gespeichert: '+de(e));
+    failed=true;
+  }finally{
+    pushing=false;
+    if(session&&session.user.id===who){
+      writeCache();
+      if(dirty&&!timer)timer=setTimeout(push,failed?15000:300);
+    }
+  }
+}
+function schedule(){dirty=true;writeCache();clearTimeout(timer);timer=setTimeout(push,600)}
+
+/* keep the original guest behaviour, save to the account when signed in */
+const guestLists=saveLists, guestDecks=saveDecks;
+saveLists=function(){session?schedule():guestLists()};
+saveDecks=function(){session?schedule():guestDecks()};
+
+async function afterLogin(fresh){
+  setBtn();
+  const c=LS.get(cacheKey(),null);
+  if(c){lists=c.lists||{};decks=c.decks||{};dirty=!!c.dirty}else{lists={};decks={};dirty=false}
+  rerender();
+  let row;
+  try{
+    if(dirty&&c){await push();return}
+    row=await pull();
+  }catch(e){toast(de(e));return}
+  let L=row?row.lists||{}:{}, D=row?row.decks||{}:{}, save=!row;
+  const gl=LS.get('gd_lists',{}), gd=LS.get('gd_decks',{});
+  if(fresh&&(!isEmpty(gl)||!isEmpty(gd))&&confirm('Auf diesem Gerät gibt es Listen oder Karten ohne Konto. Sollen sie in dein Konto übernommen werden?')){
+    L=Object.assign({},L,gl);D=Object.assign({},D,gd);
+    LS.set('gd_lists',{});LS.set('gd_decks',{});save=true;
+  }
+  lists=L;decks=D;dirty=false;writeCache();rerender();
+  if(save)await push();
+}
+function endSession(msg){
+  if(session)try{localStorage.removeItem(cacheKey())}catch(e){}
+  session=null;clearTimeout(timer);timer=null;dirty=false;failed=false;
+  try{localStorage.removeItem(SKEY)}catch(e){}
+  lists=LS.get('gd_lists',{});decks=LS.get('gd_decks',{});
+  setBtn();closeSheet();rerender();
+  if(msg)toast(msg);
+}
+async function signOut(){
+  if(dirty||timer){await push();if(dirty&&!confirm('Einige Änderungen konnten noch nicht gespeichert werden. Trotzdem abmelden?'))return}
+  const t=session.access_token;
+  api('/auth/v1/logout',{method:'POST',token:t}).catch(()=>{});
+  endSession('Abgemeldet');
+}
+
+/* ---------- UI ---------- */
+function setBtn(){
+  const b=$('acct');if(!b)return;
+  if(session){b.textContent=(session.user.email||'?')[0].toUpperCase();b.classList.add('in');b.title='Konto: '+session.user.email}
+  else{b.textContent='👤';b.classList.remove('in');b.title='Anmelden'}
+}
+let lastEmail='';
+function msg(t,ok){const m=$('ac_msg');if(m){m.textContent=t||'';m.classList.toggle('ok',!!ok)}}
+function sheet(mode){
+  const em=$('ac_em');if(em&&em.value)lastEmail=em.value;
+  if(mode==='me'){
+    const n=Object.keys(lists).length, k=Object.keys(decks).length;
+    openSheet(`<h3>Dein Konto</h3>
+      <div class="acct-who"><div class="av">${esc((session.user.email||'?')[0].toUpperCase())}</div>
+      <div><div class="em">${esc(session.user.email||'')}</div><div class="muted" style="font-size:.82rem">${n} ${n===1?'Liste':'Listen'} · ${k} ${k===1?'Stapel':'Stapel'} · ${dirty?'wird gespeichert …':'gespeichert ✓'}</div></div></div>
+      <p>Deine Listen und Karten gehören nur zu diesem Konto und werden auf jedem Gerät geladen, auf dem du dich anmeldest.</p>
+      <div class="row"><button class="acct-link" onclick="ACCT.sheet('newpw')">Passwort ändern</button><span class="spacer"></span>
+      <button class="btn" onclick="closeSheet()">Schließen</button><button class="btn primary" onclick="ACCT.signOut()">Abmelden</button></div>`);
+    return;
+  }
+  const T={in:['Anmelden','Anmelden'],up:['Konto erstellen','Registrieren'],reset:['Passwort vergessen','Link senden'],newpw:['Neues Passwort','Speichern']}[mode];
+  const tabs=(mode==='in'||mode==='up')?`<div class="acct-tabs"><button type="button" class="${mode==='in'?'on':''}" onclick="ACCT.sheet('in')">Anmelden</button><button type="button" class="${mode==='up'?'on':''}" onclick="ACCT.sheet('up')">Registrieren</button></div>`:'';
+  const intro={in:'Melde dich an, um deine Listen und Karten auf jedem Gerät zu haben.',
+    up:'Mit einem Konto werden deine Listen und Karten gespeichert. Niemand sonst kann sie sehen.',
+    reset:'Gib deine E-Mail-Adresse ein. Wir schicken dir einen Link, mit dem du ein neues Passwort festlegst.',
+    newpw:'Lege ein neues Passwort für dein Konto fest.'}[mode];
+  const emailIn=mode==='newpw'?'':`<input class="input" id="ac_em" type="email" autocomplete="email" placeholder="E-Mail" required value="${esc(lastEmail).replace(/"/g,'&quot;')}">`;
+  const pwIn=mode==='reset'?'':`<input class="input" id="ac_pw" type="password" minlength="6" required autocomplete="${mode==='in'?'current-password':'new-password'}" placeholder="${mode==='in'?'Passwort':'Passwort (mind. 6 Zeichen)'}">`;
+  openSheet(`<h3>${T[0]}</h3><p>${intro}</p>${tabs}
+    <form class="acct-f" onsubmit="event.preventDefault();ACCT.submit('${mode}')">${emailIn}${pwIn}
+    <div class="acct-msg" id="ac_msg"></div>
+    <div class="row">${mode==='in'?`<button type="button" class="acct-link" onclick="ACCT.sheet('reset')">Passwort vergessen?</button>`:''}${mode==='reset'?`<button type="button" class="acct-link" onclick="ACCT.sheet('in')">Zurück zur Anmeldung</button>`:''}
+    <span class="spacer"></span><button type="button" class="btn" onclick="closeSheet()">Abbrechen</button><button class="btn primary" id="ac_go" type="submit">${T[1]}</button></div></form>`);
+  setTimeout(()=>{const f=$(mode==='newpw'||lastEmail?'ac_pw':'ac_em')||$('ac_em');if(f)f.focus()},60);
+}
+async function submit(mode){
+  const em=($('ac_em')||{}).value, pw=($('ac_pw')||{}).value, go=$('ac_go');
+  if(em)lastEmail=em.trim();
+  if(go)go.disabled=true; msg('');
+  try{
+    if(mode==='in'){
+      const s=await api('/auth/v1/token?grant_type=password',{method:'POST',body:{email:em.trim(),password:pw}});
+      keep(s);closeSheet();toast('Angemeldet als '+s.user.email);await afterLogin(true);
+    }else if(mode==='up'){
+      const r=await api('/auth/v1/signup?redirect_to='+encodeURIComponent(SITE),{method:'POST',body:{email:em.trim(),password:pw}});
+      if(r&&r.access_token){keep(r);closeSheet();toast('Konto erstellt');await afterLogin(true)}
+      else if(r&&Array.isArray(r.identities)&&r.identities.length===0)msg('Für diese E-Mail gibt es schon ein Konto. Bitte melde dich an.');
+      else msg('Fast geschafft! Wir haben eine E-Mail an '+em.trim()+' geschickt. Klicke auf den Link darin, um dein Konto zu bestätigen.',true);
+    }else if(mode==='reset'){
+      await api('/auth/v1/recover?redirect_to='+encodeURIComponent(SITE),{method:'POST',body:{email:em.trim()}});
+      msg('Falls es ein Konto mit dieser Adresse gibt, ist ein Link unterwegs. Schau in dein Postfach.',true);
+    }else if(mode==='newpw'){
+      await api('/auth/v1/user',{method:'PUT',token:await token(),body:{password:pw}});
+      closeSheet();toast('Passwort geändert');
+    }
+  }catch(e){msg(de(e))}
+  finally{if(go)go.disabled=false}
+}
+
+/* header button (placed next to the day/night toggle) */
+const th=$('theme');
+if(th&&!$('acct')){const b=document.createElement('button');b.className='iconbtn';b.id='acct';th.after(b)}
+$('acct').onclick=()=>session?sheet('me'):sheet('in');
+setBtn();
+
+/* links from confirmation / password-reset e-mails arrive as #access_token=… */
+const hp=new URLSearchParams(location.hash.replace(/^#\/?/,''));
+if(hp.get('access_token')||hp.get('error')||hp.get('error_code')){
+  history.replaceState(null,'',location.pathname+location.search+'#/');
+  if(hp.get('access_token')){
+    const type=hp.get('type');
+    api('/auth/v1/user',{token:hp.get('access_token')}).then(u=>{
+      keep({access_token:hp.get('access_token'),refresh_token:hp.get('refresh_token'),expires_at:hp.get('expires_at'),expires_in:hp.get('expires_in')},u);
+      toast(type==='recovery'?'Bitte neues Passwort festlegen':'E-Mail bestätigt – du bist angemeldet');
+      return afterLogin(true).then(()=>{if(type==='recovery')sheet('newpw')});
+    }).catch(e=>toast(de(e)));
+  }else{
+    const d=hp.get('error_code')==='otp_expired'?'Der Link ist abgelaufen oder wurde schon benutzt. Bitte fordere einen neuen an.':(hp.get('error_description')||'Anmeldung fehlgeschlagen').replace(/\+/g,' ');
+    setTimeout(()=>{sheet('in');msg(d)},300);
+  }
+}else if(session){
+  afterLogin(false);
+}
+
+/* save before leaving, refresh when coming back (other device may have changed things) */
+document.addEventListener('visibilitychange',async()=>{
+  if(!session)return;
+  if(document.visibilityState==='hidden'){if(dirty||timer)push();return}
+  if(dirty||pushing||timer)return;
+  try{const row=await pull();if(!row||!session||dirty||timer)return;
+    if(JSON.stringify([row.lists,row.decks])!==JSON.stringify([lists,decks])){lists=row.lists||{};decks=row.decks||{};writeCache();rerender()}
+  }catch(e){}
+});
+window.addEventListener('beforeunload',e=>{if(session&&(dirty||timer)){push();e.preventDefault();e.returnValue=''}});
+
+window.ACCT={sheet,submit,signOut};
+})();
+</script>
 </body>
 </html>
 
