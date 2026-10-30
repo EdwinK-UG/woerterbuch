@@ -8,6 +8,7 @@
 <meta name="description" content="German learner dictionary with categories, revision lists, word maps and Anki-style flashcards.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<script src="https://unpkg.com/lucide@0.454.0/dist/umd/lucide.min.js" defer></script>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=Newsreader:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -160,17 +161,96 @@ h1.page{font-family:Fraunces,serif;font-weight:600;font-size:1.7rem;letter-spaci
 .wmleg i{display:inline-block;width:.7rem;height:.7rem;border-radius:50%;margin-right:.35rem;vertical-align:-.05em}
 .wmnote{font-size:.7rem;color:var(--faint);text-align:center;margin:.35rem 0 0}
 @media(max-width:560px){.wimg.on{float:none;width:100%;margin:.7rem 0}.wimg img{height:190px}}
+
+/* ===== redesign ===== */
+html{background:var(--bg)}body{min-height:100vh;background:radial-gradient(1200px 500px at 50% -120px,color-mix(in srgb,var(--ac) 7%,transparent),transparent 70%) no-repeat,var(--bg)}
+.lic{width:1em;height:1em;display:inline-block;vertical-align:-.14em}
+svg.lic{stroke-width:1.8}
+header .brand{display:flex;align-items:center;gap:.5rem}
+header .logo{width:30px;height:30px;border-radius:50%;object-fit:cover;box-shadow:0 0 0 2px var(--card),0 0 0 3px var(--line)}
+nav.tabs a{border-radius:999px;padding:.42rem .85rem}
+.hero{padding:1.6rem 0 .3rem}
+.hero h1{font-family:Fraunces,serif;font-weight:600;font-size:clamp(1.9rem,4.6vw,2.9rem);line-height:1.06;letter-spacing:-.03em;margin:0}
+.hero h1 em{font-style:italic;color:var(--ac);font-weight:500}
+.hero p{color:var(--mut);margin:.7rem 0 0;font-size:1rem;max-width:34rem}
+.searchbox{margin:1.4rem 0 1rem}
+#q{border:1px solid var(--line);border-radius:1.1rem;padding:1.05rem 1.2rem 1.05rem 3.1rem;box-shadow:0 1px 2px rgba(20,24,32,.04),0 12px 32px -8px rgba(20,24,32,.12)}
+.searchbox .mag{left:1.15rem;right:auto;color:var(--mut);font-size:1.25rem;display:flex}
+#sug{border-radius:1rem}
+.chips{display:flex;flex-wrap:wrap;gap:.45rem;align-items:center;margin:0 0 1.3rem}
+.chipl{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);margin-right:.2rem}
+.chip{font-family:Newsreader,serif;font-size:1rem;text-decoration:none;color:var(--fg);background:var(--card);border:1px solid var(--line);padding:.28rem .8rem;border-radius:999px}
+.chip:hover{border-color:var(--ac);color:var(--ac)}
+.wotd{display:flex;gap:1rem;align-items:flex-start;text-decoration:none;color:inherit;border-radius:1.4rem;padding:1.4rem 1.5rem;margin:.4rem 0 .4rem;
+  background:linear-gradient(135deg,color-mix(in srgb,var(--ac) 13%,var(--card)) 0%,var(--card) 62%);border:1px solid color-mix(in srgb,var(--ac) 22%,var(--line));box-shadow:var(--shadow);transition:transform .15s,box-shadow .15s}
+.wotd:hover{transform:translateY(-2px);box-shadow:0 2px 4px rgba(20,24,32,.05),0 18px 40px -12px rgba(20,24,32,.2)}
+.wotd-l{flex:1;min-width:0}
+.eyebrow{display:inline-flex;align-items:center;gap:.35rem;font-size:.72rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--ac)}
+.wotd-w{display:flex;align-items:center;gap:.6rem;margin:.45rem 0 .2rem;flex-wrap:wrap}
+.wotd-hw{font-family:Fraunces,serif;font-weight:600;font-size:clamp(2rem,5vw,2.6rem);letter-spacing:-.025em;line-height:1.1}
+.wotd-hw .syl{color:var(--faint);font-weight:400}
+.wotd-d{font-family:Newsreader,serif;font-size:1.12rem;line-height:1.5;margin:.3rem 0 .8rem;color:var(--fg);max-width:40rem}
+.wotd-go{display:inline-flex;align-items:center;gap:.35rem;font-size:.85rem;font-weight:600;color:var(--ac)}
+.wotd-say{flex:0 0 auto;width:46px;height:46px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--ac);font-size:1.2rem;display:grid;place-items:center}
+.wotd-say:hover{border-color:var(--ac)}
+.sec{display:flex;align-items:baseline;justify-content:space-between;gap:1rem;margin:2.1rem 0 .9rem}
+.sec h2{font-family:Fraunces,serif;font-weight:600;font-size:1.4rem;letter-spacing:-.02em;margin:0}
+.sec a{display:inline-flex;align-items:center;gap:.3rem;font-size:.86rem;font-weight:600;color:var(--ac);text-decoration:none;white-space:nowrap}
+.cgrid{grid-template-columns:repeat(auto-fill,minmax(15.5rem,1fr));gap:.7rem}
+.ccard{flex-direction:row;align-items:center;gap:.85rem;padding:.85rem .9rem .85rem .85rem;border-radius:1rem;box-shadow:0 1px 2px rgba(20,24,32,.04);transition:transform .15s,border-color .15s,box-shadow .15s}
+.ccard .stripe,.ccard .emo{display:none}
+.ccard:hover{transform:translateY(-2px);border-color:hsl(var(--h) 55% 70%);box-shadow:0 10px 26px -12px hsl(var(--h) 50% 40% / .35)}
+.badge{flex:0 0 auto;width:2.6rem;height:2.6rem;border-radius:.8rem;display:grid;place-items:center;font-size:1.25rem;
+  background:color-mix(in srgb,hsl(var(--h) 75% 55%) 15%,var(--card));color:hsl(var(--h) 60% 38%)}
+.badge.big{width:3.1rem;height:3.1rem;font-size:1.5rem;border-radius:.95rem}
+.ctx{display:flex;flex-direction:column;min-width:0;flex:1}
+.ccard .cl{font-size:.95rem;font-weight:600;line-height:1.25}
+.ccard .cc{font-size:.76rem;font-weight:500;color:var(--faint)}
+.chev{color:var(--faint);font-size:1rem;display:flex;transition:transform .15s}
+.ccard:hover .chev{transform:translateX(2px);color:hsl(var(--h) 55% 45%)}
+.cathead{display:flex;align-items:center;gap:.75rem}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(9rem,1fr));gap:.6rem;margin:2.2rem 0 .4rem;padding:1.1rem 0 0;border-top:1px solid var(--line)}
+.stats div{display:flex;flex-direction:column}
+.stats b{font-family:Fraunces,serif;font-weight:600;font-size:1.55rem;letter-spacing:-.02em}
+.stats span{font-size:.78rem;color:var(--mut)}
+.src{font-size:.75rem;color:var(--faint);margin:.9rem 0 0}
+.panelcard{border-radius:1.1rem;transition:transform .15s,border-color .15s}
+.panelcard:hover{transform:translateY(-1px)}
+.panelcard .ic{color:var(--ac);font-size:1.25rem}
+.empty .em{font-size:2rem;color:var(--faint)}
+.entry{border-radius:1.4rem;padding:1.5rem 1.6rem}
+.wrow{border-radius:.8rem}
+.btn{border-radius:.7rem}
+.btn.primary{box-shadow:0 6px 16px -8px color-mix(in srgb,var(--ac) 80%,transparent)}
+h1.page{font-size:2rem}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .badge{color:hsl(var(--h) 75% 72%);background:color-mix(in srgb,hsl(var(--h) 70% 50%) 20%,var(--card))}}
+:root[data-theme="dark"] .badge{color:hsl(var(--h) 75% 72%);background:color-mix(in srgb,hsl(var(--h) 70% 50%) 20%,var(--card))}
+@media(max-width:560px){.hero{padding-top:.8rem}.wotd{padding:1.15rem}.cgrid{grid-template-columns:1fr 1fr}.ccard{flex-direction:column;align-items:flex-start;gap:.55rem}.chev{display:none}.entry{padding:1.15rem}}
+
+nav.tabs a{display:inline-flex;align-items:center;gap:.4rem}
+nav.tabs a .lic{font-size:1rem;opacity:.85}
+@media(max-width:640px){
+  header .brand{margin-right:auto}
+  header{backdrop-filter:none;-webkit-backdrop-filter:none;background:var(--bg)}
+  nav.tabs{position:fixed;left:0;right:0;bottom:0;margin:0;z-index:60;display:grid;grid-template-columns:repeat(4,1fr);gap:.2rem;overflow:visible;
+    background:color-mix(in srgb,var(--card) 90%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    border-top:1px solid var(--line);padding:.35rem .6rem calc(.35rem + env(safe-area-inset-bottom))}
+  nav.tabs a{flex-direction:column;gap:.18rem;font-size:.68rem;padding:.4rem 0;border-radius:.8rem}
+  nav.tabs a .lic{font-size:1.25rem;opacity:1}
+  main{padding-bottom:6.5rem}
+  #toast{bottom:5.2rem}
+}
 @media(max-width:560px){.hw{font-size:1.7rem}.flashcard .fhw{font-size:2rem}#q{font-size:1.25rem}}
 </style>
 </head>
 <body>
 <header><div class="wrap bar">
-  <a class="brand" href="#/">Wörter<b>buch</b></a>
+  <a class="brand" href="#/"><img src="icon-32.png" alt="" class="logo"><span>Wörter<b>buch</b></span></a>
   <nav class="tabs" id="tabs">
-    <a href="#/" data-t="home">Suche</a>
-    <a href="#/cats" data-t="cats">Kategorien</a>
-    <a href="#/lists" data-t="lists">Listen</a>
-    <a href="#/decks" data-t="decks">Karten</a>
+    <a href="#/" data-t="home"><i data-lucide="search" class="lic"></i><span>Suche</span></a>
+    <a href="#/cats" data-t="cats"><i data-lucide="layout-grid" class="lic"></i><span>Themen</span></a>
+    <a href="#/lists" data-t="lists"><i data-lucide="list" class="lic"></i><span>Listen</span></a>
+    <a href="#/decks" data-t="decks"><i data-lucide="layers" class="lic"></i><span>Karten</span></a>
   </nav>
   <button class="iconbtn" id="theme" title="Tag / Nacht">◐</button>
 </div></header>
@@ -248,9 +328,11 @@ const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 /* ---------- HOME / SEARCH ---------- */
 function viewHome(){
   V().innerHTML=`
+   <div class="hero"><h1>Was möchtest du<br><em>heute</em> nachschlagen?</h1>
+     <p>Bedeutungen, Beispiele, Aussprache und Wortkarten – für über 32.000 deutsche Wörter.</p></div>
    <div class="searchbox">
      <input id="q" placeholder="Wort suchen …" autocomplete="off" spellcheck="false">
-     <span class="mag">⌕</span>
+     <span class="mag">${ic('search')}</span>
      <ul id="sug" style="display:none"></ul>
    </div>
    <div id="hres"></div>`;
@@ -272,12 +354,53 @@ function viewHome(){
   });
   sug.addEventListener('click',ev=>{const li=ev.target.closest('li');if(li)go('w/'+cur[+li.dataset.k].w)});
   q.focus();
-  // intro showing categories quick access
+  // home: recent words, word of the day, topics
+  const recent=(LS.get('gd_recent',[])||[]).filter(w=>WIDX.has(w)).slice(0,8);
+  const wd=wordOfDay();
+  const nMain=E.filter(e=>e.ps!=='Info'&&!/abgeleitet von/.test(e.df)).length;
   document.getElementById('hres').innerHTML=`
-    <p class="sub">Langenscheidt Großwörterbuch · ${E.length.toLocaleString('de')} Stichwörter. Tippe oben, um ein Wort zu finden.</p>
-    <div class="cgrid">${CATS.slice(0,8).map(cardCat).join('')}</div>
-    <div class="row" style="margin-top:.8rem"><a class="btn" href="#/cats">Alle 50 Kategorien →</a></div>`;
+    ${recent.length?`<div class="chips"><span class="chipl">Zuletzt</span>${recent.map(w=>`<a class="chip" href="#/w/${encodeURIComponent(w)}">${esc(w)}</a>`).join('')}</div>`:''}
+    ${wd?`<a class="wotd" href="#/w/${encodeURIComponent(wd.w)}">
+      <div class="wotd-l"><span class="eyebrow">${ic('sparkles')} Wort des Tages</span>
+        <div class="wotd-w">${wd.ar?`<span class="art ${wd.ar}">${wd.ar}</span>`:''}<span class="wotd-hw">${sylHTML(wd.sy)}</span></div>
+        <p class="wotd-d">${esc(gloss(wd))}</p>
+        <span class="wotd-go">Eintrag öffnen ${ic('arrow-right')}</span></div>
+      <button class="wotd-say" title="Aussprache anhören" onclick="event.preventDefault();event.stopPropagation();say(${wd.i},this)">${ic('volume-2')}</button></a>`:''}
+    <div class="sec"><h2>Themen entdecken</h2><a href="#/cats">Alle ${CATS.length} Themen ${ic('arrow-right')}</a></div>
+    <div class="cgrid">${CATS.slice(0,12).map(cardCat).join('')}</div>
+    <div class="stats">
+      <div><b>${nMain.toLocaleString('de')}</b><span>Stichwörter</span></div>
+      <div><b>${(E.length-nMain-E.filter(e=>e.ps==='Info').length).toLocaleString('de')}</b><span>abgeleitete Wörter</span></div>
+      <div><b>${E.filter(e=>e.ps==='Info').length}</b><span>Infokästen</span></div>
+      <div><b>${CATS.length}</b><span>Themen</span></div></div>
+    <p class="src">Grundlage: Langenscheidt Großwörterbuch Deutsch als Fremdsprache</p>`;
 }
+/* word of the day: a core-vocabulary word, the same for everyone on a given day */
+function wordOfDay(){
+  const pool=E.filter(e=>/class="core"/.test(e.df)&&/^(n|v|adj)$/.test(e.ps)&&!/[¹²³]/.test(e.w));
+  if(!pool.length)return null;
+  const d=new Date(), k=d.getFullYear()*372+d.getMonth()*31+d.getDate();
+  let h=k; h=(h^61)^(h>>>16); h=(h+(h<<3))>>>0; h^=h>>>4; h=Math.imul(h,0x27d4eb2d)>>>0; h^=h>>>15;
+  return pool[(h>>>0)%pool.length];
+}
+function gloss(e){   // first meaning, without headword and grammar
+  let t=e.df.replace(/<span class="sn">1<\/span>/,'§').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
+  const i=t.indexOf('§'); t=i>=0?t.slice(i+1):t.replace(/^★?\s*\S+\s*/,'');
+  t=t.split(/ \| | K | \d /)[0].replace(/^[^a-zA-ZäöüÄÖÜ(]*/,'').trim();
+  return t.length>140?t.slice(0,138).replace(/\s\S*$/,'')+' …':t;
+}
+/* line icons (Lucide); falls back to nothing if the library cannot load */
+const CICON={essen:'utensils',familie:'users',koerper:'person-standing',gesundheit:'stethoscope',gefuehle:'heart',charakter:'drama',
+  denken:'brain',sprache:'message-circle',bildung:'graduation-cap',arbeit:'briefcase',geld:'euro',wirtschaft:'trending-up',recht:'scale',
+  politik:'landmark',militaer:'shield',religion:'church',kunst:'palette',musik:'music',sport:'trophy',freizeit:'dice-5',reisen:'luggage',
+  verkehr:'car',stadt:'building-2',wohnen:'house',kleidung:'shirt',natur:'mountain',tiere:'paw-print',pflanzen:'leaf',wetter:'cloud-sun',
+  zeit:'clock',zahlen:'hash',farben:'shapes',technik:'cog',computer:'laptop',wissenschaft:'microscope',landwirt:'tractor',werkzeug:'wrench',
+  haushalt:'cooking-pot',beziehung:'heart-handshake',gesellschaft:'users-round',gefahr:'triangle-alert',bewegung:'compass',geografie:'globe',
+  geschichte:'scroll',material:'layers',mengen:'package',abstrakt:'sparkles',verwaltung:'folder-open',alltag:'list-checks',kommunikation:'phone'};
+const ic=(n,cls='')=>`<i data-lucide="${n}" class="lic ${cls}"></i>`;
+function drawIcons(){ if(window.lucide&&lucide.createIcons)lucide.createIcons({attrs:{'stroke-width':1.8}}) }
+new MutationObserver(()=>{clearTimeout(drawIcons._t);drawIcons._t=setTimeout(drawIcons,0)}).observe(document.body,{childList:true,subtree:true});
+window.addEventListener('load',drawIcons);
 /* ---------- WORD VIEW ---------- */
 function entryHTML(e){
   const art=e.ar?`<span class="art ${e.ar}">${e.ar}</span>`:'';
@@ -307,6 +430,7 @@ function viewWord(w){
   const e=E[i];
   V().innerHTML=`<div class="row" style="margin-bottom:.8rem"><a class="btn sm" href="#/">← Suche</a></div>`+entryHTML(e);
   loadImg(e);
+  try{const r=(LS.get('gd_recent',[])||[]).filter(x=>x!==e.w);r.unshift(e.w);LS.set('gd_recent',r.slice(0,12))}catch(err){}
 }
 /* ---------- PRONUNCIATION: recording from Wikimedia Commons, else the browser's German voice ---------- */
 const plainW=w=>w.replace(/[¹²³⁴⁵⁶⁷⁸⁹]/g,'').replace(/^-|-$/g,'').trim();
@@ -431,20 +555,21 @@ function catHue(id){let h=0;for(const c of id)h=(h*31+c.charCodeAt(0))%360;retur
 function cardCat(c){
   const n=catCounts()[c.id]||0, hue=catHue(c.id);
   return `<a class="ccard" href="#/cat/${c.id}" style="--h:${hue}">
-    <span class="stripe" style="background:hsl(${hue} 70% 55%)"></span>
-    <span class="emo">${c.emoji}</span>
-    <span class="cl">${c.label}</span><span class="cc">${n} Wörter</span></a>`;
+    <span class="badge">${ic(CICON[c.id]||'tag')}</span>
+    <span class="ctx"><span class="cl">${c.label}</span><span class="cc">${n.toLocaleString('de')} Wörter</span></span>
+    <span class="chev">${ic('chevron-right')}</span></a>`;
 }
 function viewCats(){
-  V().innerHTML=`<h1 class="page">Kategorien</h1>
-   <p class="sub">50 thematische Felder. ${Object.values(catCounts()).reduce((a,b)=>a+b,0).toLocaleString('de')} Wörter sind eingeordnet.</p>
+  V().innerHTML=`<h1 class="page">Themen</h1>
+   <p class="sub">${CATS.length} thematische Felder. ${Object.values(catCounts()).reduce((a,b)=>a+b,0).toLocaleString('de')} Wörter sind eingeordnet.</p>
    <div class="cgrid">${CATS.map(cardCat).join('')}</div>`;
 }
 function viewCat(id){
   const c=CATMAP.get(id); if(!c){go('cats');return}
-  const words=E.filter(e=>e.cat===id).sort((a,b)=>a.w.localeCompare(b.w,'de'));
-  V().innerHTML=`<div class="row" style="margin-bottom:.4rem"><a class="btn sm" href="#/cats">← Kategorien</a></div>
-    <h1 class="page">${c.emoji} ${c.label}</h1>
+  const affix=w=>/^-|-$/.test(w)?1:0;
+  const words=E.filter(e=>e.cat===id).sort((a,b)=>affix(a.w)-affix(b.w)||a.w.localeCompare(b.w,'de'));
+  V().innerHTML=`<div class="row" style="margin-bottom:.4rem"><a class="btn sm" href="#/cats">← Themen</a></div>
+    <h1 class="page cathead" style="--h:${catHue(c.id)}"><span class="badge big">${ic(CICON[c.id]||'tag')}</span>${c.label}</h1>
     <div class="row" style="margin-bottom:.9rem">
       <span class="muted">${words.length} Wörter</span><span class="spacer"></span>
       <button class="btn" onclick="listFromWords([${words.map(e=>e.i).join(',')}],'${c.label}')">＋ Als Revisionsliste speichern</button>
@@ -463,9 +588,9 @@ function viewLists(){
     <p class="sub">Sammle Wörter und verwandle sie in Karteikarten.</p>
     <div class="row" style="margin-bottom:1rem"><button class="btn primary" onclick="newList()">＋ Neue Liste</button></div>
     ${ids.length?ids.map(id=>{const l=lists[id];return `<a class="panelcard" href="#/list/${id}">
-       <span class="ic">📑</span><div><div class="big">${esc(l.name)}</div>
+       <span class="ic">${ic('list')}</span><div><div class="big">${esc(l.name)}</div>
        <div class="meta">${l.words.length} Wörter</div></div></a>`}).join(''):
-      `<div class="empty"><span class="em">📑</span>Noch keine Listen. Lege eine an oder füge Wörter über ein Stichwort hinzu.</div>`}`;
+      `<div class="empty"><span class="em">${ic('list-plus')}</span>Noch keine Listen. Lege eine an oder füge Wörter über ein Stichwort hinzu.</div>`}`;
 }
 function viewList(id){
   const l=lists[id]; if(!l){go('lists');return}
@@ -587,14 +712,14 @@ function viewDecks(){
   V().innerHTML=`<h1 class="page">Karteikarten</h1>
     <p class="sub">Anki-ähnliche Stapel mit SM-2 Wiederholung. Vorderseite: Wort ohne Artikel. Rückseite: Artikel + Bedeutung.</p>
     ${ids.length?ids.map(id=>{const d=decks[id];const q=dueQueue(d);
-      return `<a class="panelcard" href="#/study/${id}"><span class="ic">🗂️</span>
+      return `<a class="panelcard" href="#/study/${id}"><span class="ic">${ic('layers')}</span>
         <div><div class="big">${esc(d.name)}</div>
         <div class="meta">${Object.keys(d.cards).length} Karten ·
           <span style="color:var(--neu)">${q.nw.length} neu</span> ·
           <span style="color:var(--die)">${q.lr.length} lernen</span> ·
           <span style="color:var(--das)">${q.rv.length} fällig</span></div></div>
         <span class="spacer"></span><span class="btn sm" onclick="event.preventDefault();event.stopPropagation();delDeck('${id}')">✕</span></a>`}).join(''):
-      `<div class="empty"><span class="em">🗂️</span>Noch keine Stapel. Erstelle Karten aus einer Liste oder über „Als Karte lernen" bei einem Wort.</div>`}`;
+      `<div class="empty"><span class="em">${ic('layers')}</span>Noch keine Stapel. Erstelle Karten aus einer Liste oder über „Als Karte lernen" bei einem Wort.</div>`}`;
 }
 function delDeck(id){if(confirm('Stapel löschen?')){delete decks[id];saveDecks();route()}}
 /* ---------- STUDY ---------- */
