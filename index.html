@@ -624,16 +624,69 @@ function speak(w){
   const v=speechSynthesis.getVoices().find(v=>/^de(-|_|$)/i.test(v.lang)); if(v)u.voice=v;
   speechSynthesis.speak(u);
 }
-function say(i,btn){
-  const w=plainW(E[i].w); if(curAudio){curAudio.pause();curAudio=null}
-  const canOgg=!!document.createElement('audio').canPlayType('audio/ogg; codecs="vorbis"');
-  if(!canOgg||/\s/.test(w)){speak(w);return}
-  const a=new Audio('https://commons.wikimedia.org/wiki/Special:FilePath/De-'+encodeURIComponent(w)+'.ogg');
-  curAudio=a; let done=false;
-  const fall=()=>{if(done)return;done=true;speak(w)};
-  a.addEventListener('error',fall); setTimeout(()=>{if(a.readyState<2)fall()},2500);
-  a.play().then(()=>{done=true;if(btn)btn.title='Aufnahme: Wikimedia Commons'}).catch(fall);
+/* Commons recordings: link straight to upload.wikimedia.org (md5 path) instead of Special:FilePath,
+   which costs two redirects. Safari has no Ogg, so it gets Commons' MP3 copy. Preloaded when an entry opens. */
+function md5(str){
+  const b=new TextEncoder().encode(str),n=((b.length+8>>6)+1)*16,x=new Array(n).fill(0);
+  for(let i=0;i<b.length;i++)x[i>>2]|=b[i]<<(i%4*8);
+  x[b.length>>2]|=0x80<<(b.length%4*8); x[n-2]=b.length*8;
+  const K=[],S=[7,12,17,22,5,9,14,20,4,11,16,23,6,10,15,21];
+  for(let i=0;i<64;i++)K[i]=Math.floor(Math.abs(Math.sin(i+1))*2**32)|0;
+  let h0=0x67452301,h1=0xefcdab89|0,h2=0x98badcfe|0,h3=0x10325476;
+  for(let o=0;o<n;o+=16){
+    let A=h0,B=h1,C=h2,D=h3;
+    for(let i=0;i<64;i++){
+      let f,g,r=i>>4;
+      if(r===0){f=(B&C)|(~B&D);g=i}else if(r===1){f=(D&B)|(~D&C);g=(5*i+1)%16}
+      else if(r===2){f=B^C^D;g=(3*i+5)%16}else{f=C^(B|~D);g=7*i%16}
+      const t=D;D=C;C=B;const sum=(A+f+K[i]+x[o+g])|0,sh=S[r*4+i%4];
+      B=(B+((sum<<sh)|(sum>>>(32-sh))))|0;A=t;
+    }
+    h0=(h0+A)|0;h1=(h1+B)|0;h2=(h2+C)|0;h3=(h3+D)|0;
+  }
+  return [h0,h1,h2,h3].map(v=>[0,8,16,24].map(s=>((v>>>s)&255).toString(16).padStart(2,'0')).join('')).join('');
 }
+const CAN_OGG=!!document.createElement('audio').canPlayType('audio/ogg; codecs="vorbis"');
+const SNDC=new Map();   // word -> {a:Audio, ok:true|false|null}
+function sndURL(w){
+  const f=('De-'+w+'.ogg').replace(/ /g,'_'),h=md5(f),p=h[0]+'/'+h.slice(0,2)+'/',e=encodeURIComponent(f);
+  return 'https://upload.wikimedia.org/wikipedia/commons/'+(CAN_OGG?p+e:'transcoded/'+p+e+'/'+e+'.mp3');
+}
+function sndGet(w){
+  let c=SNDC.get(w); if(c)return c;
+  const a=new Audio(); c={a,ok:null}; a.preload='auto';
+  a.addEventListener('canplaythrough',()=>{c.ok=true},{once:true});
+  a.addEventListener('error',()=>{c.ok=false});
+  a.src=sndURL(w); SNDC.set(w,c);
+  if(SNDC.size>60)SNDC.delete(SNDC.keys().next().value);
+  return c;
+}
+function preSay(i){const w=E[i]&&plainW(E[i].w); if(w&&!/\s/.test(w))sndGet(w)}
+let sayTok=0;
+function say(i,btn){
+  const w=plainW(E[i].w); sayTok++;
+  if(curAudio){curAudio.pause();curAudio=null}
+  if('speechSynthesis' in window)speechSynthesis.cancel();
+  if(/\s/.test(w)){speak(w);return}
+  const c=sndGet(w); if(c.ok===false){speak(w);return}
+  const a=c.a, my=++sayTok; curAudio=a; let done=false;
+  const fall=err=>{if(done)return;done=true;if(err===true)c.ok=false;if(my!==sayTok)return;a.pause();curAudio=null;speak(w)};
+  a.addEventListener('error',()=>fall(true),{once:true});
+  const t=setTimeout(()=>{if(!done&&a.readyState<3)fall()},2500);
+  try{a.currentTime=0}catch(_){}
+  a.play().then(()=>{if(done||my!==sayTok){if(my!==sayTok||done)a.pause();return}done=true;clearTimeout(t);if(btn)btn.title='Aufnahme: Wikimedia Commons'}).catch(()=>fall());
+}
+// start loading a recording as soon as a speaker button appears or the pointer nears one
+(function(){
+  const idx=b=>{const m=/say\((\d+)/.exec(b.getAttribute('onclick')||'');return m?+m[1]:-1};
+  const warm=ev=>{const b=ev.target.closest&&ev.target.closest('button[onclick*="say("]');if(b){const i=idx(b);if(i>=0)preSay(i)}};
+  document.addEventListener('pointerover',warm,{passive:true});
+  document.addEventListener('touchstart',warm,{passive:true});
+  document.addEventListener('focusin',warm);
+  let q=0; new MutationObserver(()=>{if(q)return;q=requestAnimationFrame(()=>{q=0;
+    const b=document.querySelector('.iconbtn.say[onclick*="say("]'); if(b){const i=idx(b);if(i>=0)preSay(i)}})})
+    .observe(document.body,{childList:true,subtree:true});
+})();
 /* ---------- PICTURES: Wikipedia (nouns) and Wikimedia Commons search; verbs/adjectives translated via Wiktionary ---------- */
 const IMGC=new Map(), NOIMG=new Set(['adv','prp','kon','pro','ptk','Artikel','Fragewort','Info','num','Interjektion']);
 const LSI={get(k){try{return JSON.parse(localStorage.getItem('gd_img_'+k)||'null')}catch(e){return null}},
