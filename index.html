@@ -466,13 +466,12 @@ function route(){
 window.addEventListener('hashchange',route);
 /* grammar: its code and chapters load only when the tab is opened, so the dictionary is not slowed down */
 let gramP=null;
+function loadGram(){ if(window.GRAM)return Promise.resolve(); if(!gramP){gramP=new Promise((res,rej)=>{const s=document.createElement('script');s.src='grammatik/grammatik.js?v=5';s.onload=res;s.onerror=()=>{gramP=null;rej()};document.head.appendChild(s)})} return gramP }
 function openGram(arg){
   if(window.GRAM){GRAM.view(arg);return}
   V().innerHTML='<div class="loading" data-g="1"><div class="spin"></div>Grammatik wird geladen …</div>';
-  if(gramP)return;
-  gramP=new Promise((res,rej)=>{const s=document.createElement('script');s.src='grammatik/grammatik.js?v=4';s.onload=res;s.onerror=rej;document.head.appendChild(s)});
-  gramP.then(()=>{const h=location.hash.slice(2);if(h.split('/')[0]==='g')GRAM.view(decodeURIComponent(h.split('/').slice(1).join('/')||''))})
-    .catch(()=>{gramP=null;if(location.hash.startsWith('#/g'))V().innerHTML='<div class="empty"><span class="em">⚠️</span>Die Grammatik konnte nicht geladen werden. Bitte prüfe die Internetverbindung.</div>'});
+  loadGram().then(()=>{const h=location.hash.slice(2);if(h.split('/')[0]==='g')GRAM.view(decodeURIComponent(h.split('/').slice(1).join('/')||''))})
+    .catch(()=>{if(location.hash.startsWith('#/g'))V().innerHTML='<div class="empty"><span class="em">⚠️</span>Die Grammatik konnte nicht geladen werden. Bitte prüfe die Internetverbindung.</div>'});
 }
 const isGram=()=>/^#\/g(\/|$)/.test(location.hash);
 const V=()=>document.getElementById('view');
@@ -1643,7 +1642,7 @@ setInterval(()=>{ if(document.visibilityState==='visible'&&Date.now()-lastAct<20
 .gcard .gtag{position:absolute;right:.8rem;top:.8rem;font-size:.68rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;background:rgba(255,255,255,.22);padding:.18rem .5rem;border-radius:99px}
 .gc1{background:linear-gradient(135deg,#6a55ff,#3f2fb8)} .gc2{background:linear-gradient(135deg,#ff7a5c,#e0446a)}
 .gc3{background:linear-gradient(135deg,#17bfa9,#0d7f8f)} .gc4{background:linear-gradient(135deg,#f7b733,#ef7f1a)}
-.gc5{background:linear-gradient(135deg,#3aa0ff,#2a5bd7)} .gc6{background:linear-gradient(135deg,#9b5cff,#d1468f)}
+.gc5{background:linear-gradient(135deg,#3aa0ff,#2a5bd7)} .gc6{background:linear-gradient(135deg,#9b5cff,#d1468f)} .gc7{background:linear-gradient(135deg,#0f9d6b,#1f6feb)}
 .gsec{margin:1.4rem 0 .6rem;font-size:1.05rem}
 /* setup form */
 .gset{background:var(--card);border:1px solid var(--line);border-radius:1.2rem;padding:1.1rem 1.15rem;box-shadow:var(--shadow);max-width:720px}
@@ -1963,6 +1962,8 @@ async function wikiExact(w){
 }
 const withTimeout=(p,ms,d)=>Promise.race([p.catch(()=>d),new Promise(r=>setTimeout(()=>r(d),ms))]);
 async function buildQs(s){
+  if(s.src==='gram'){ await loadGram(); const qs=await GRAM.quiz(+s.id,s.n||10), f=s.speed||1;
+    qs.forEach(q=>{q.dur=Math.round((DUR[q.t]||20)*f)}); if(s.dbl&&qs.length)qs[qs.length-1].dbl=1; return qs }
   if(s.src==='quiz'){ const qz=(prefs.quizzes||{})[s.id]; if(!qz)return []; const f=s.speed||1;
     return qz.qs.map(q=>{const x=JSON.parse(JSON.stringify(q)); if(x.t==='order'){x.sol=x.items.slice();x.o=shuffle(x.items);delete x.items}
       x.dur=Math.round((x.dur||DUR[x.t]||20)*f); return x}).filter(q=>q.p) }
@@ -2665,6 +2666,7 @@ function viewHub(){
       ${card('gc4','#/play/memory','🃏','Memory','Finde die Paare aus Wort und Bedeutung.','Solo')}
       ${card('gc5','#/play/blitz','⚡','Artikel-Blitz','der, die oder das? So viele wie möglich in 60 Sekunden.','Solo')}
       ${card('gc6','#/play/quizzes','✏️','Eigene Quizze','Schreibe eigene Fragen und spiele sie allein oder live.','Editor')}
+      ${card('gc7','#/play/gram','📘','Grammatik-Quiz','Wähle ein Grammatik-Kapitel oder eine Verbliste und übe sie im Quiz – allein oder live mit der Gruppe.','Grammatik')}
     </div>
     <h3 class="gsec">Fragetypen</h3>
     <div class="gchk" style="pointer-events:none">${Object.values(TYPES).map(([l,i])=>`<label>${ic(i)} ${l}</label>`).join('')}</div></div>`;
@@ -2683,6 +2685,7 @@ function srcOptions(cur,kind){
 function viewSetup(kind){   // kind: solo | host | memory | blitz
   document.body.classList.remove('ingame');
   const s=Object.assign({},SDEF,LS.get('gd_gset_'+kind,{}));
+  if(s.src==='gram'&&!(kind==='solo'||kind==='host')){s.src='all';s.lvl=1}
   const cur=s.src==='all'?'all:'+s.lvl:s.src+':'+s.id;
   const T={solo:['Allein spielen','Beantworte die Fragen so schnell du kannst. Richtig und schnell gibt die meisten Punkte, Serien bringen Bonus.'],
     host:['Live-Quiz mit Gruppe','Zeige diese Seite auf einem großen Bildschirm. Die anderen spielen auf ihrem Handy mit der Spiel-PIN mit.'],
@@ -2693,10 +2696,10 @@ function viewSetup(kind){   // kind: solo | host | memory | blitz
   V().innerHTML=`<div class="row" style="margin-bottom:.4rem"><a class="btn sm" href="#/play">${ic('arrow-left')} Spiele</a></div>
     <h1 class="page">${T[0]}</h1><p class="sub">${T[1]}</p>
     <form class="gset" id="gsetf">
-      <label class="f">Wörter</label><select id="gsrc">${srcOptions(cur,quizzy?'quiz':'')}</select>
+      <label class="f">Wörter oder Grammatik</label><select id="gsrc">${srcOptions(cur,quizzy?'quiz':'')}</select>
       <div id="gqopts">${quizzy?`
       <label class="f">Anzahl Fragen</label>${seg('n',[[5,'5'],[10,'10'],[15,'15'],[20,'20']])}
-      <label class="f">Fragetypen</label><div class="gchk">${AUTO.map(t=>`<label><input type="checkbox" value="${t}" ${s.types.includes(t)?'checked':''}> ${ic(TYPES[t][1])} ${TYPES[t][0]}</label>`).join('')}</div>`:''}</div>
+      <div id="gtypesw"><label class="f">Fragetypen</label><div class="gchk">${AUTO.map(t=>`<label><input type="checkbox" value="${t}" ${s.types.includes(t)?'checked':''}> ${ic(TYPES[t][1])} ${TYPES[t][0]}</label>`).join('')}</div></div>`:''}</div>
       ${quizzy?`<label class="f">Tempo</label>${seg('speed',[[1.5,'Entspannt'],[1,'Normal'],[0.7,'Schnell']])}
       <label class="gchk" style="margin-top:.8rem;display:flex"><label><input type="checkbox" id="gdbl" ${s.dbl?'checked':''}> Letzte Frage zählt doppelt</label></label>`:''}
       ${kind==='host'?`<label class="f">Spielart</label>${seg('teams',[[0,'Jeder für sich'],[2,'2 Teams'],[3,'3 Teams'],[4,'4 Teams']])}`:''}
@@ -2706,11 +2709,15 @@ function viewSetup(kind){   // kind: solo | host | memory | blitz
   drawIcons();
   const f=$('gsetf');
   f.querySelectorAll('.gseg').forEach(g=>g.querySelectorAll('button').forEach(b=>b.onclick=()=>{g.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));s[g.dataset.f]=+b.dataset.v}));
-  const srcSel=$('gsrc'), qo=$('gqopts'); const syncQ=()=>{if(qo)qo.style.display=srcSel.value.startsWith('quiz:')?'none':''}; srcSel.onchange=syncQ; syncQ();
+  const srcSel=$('gsrc'), qo=$('gqopts'); const syncQ=()=>{if(qo)qo.style.display=srcSel.value.startsWith('quiz:')?'none':''; const tw=$('gtypesw'); if(tw)tw.style.display=srcSel.value.startsWith('gram:')?'none':''}; srcSel.onchange=syncQ; syncQ();
+  if(quizzy)loadGram().then(()=>{ if(!$('gsrc'))return; const by={}; GRAM.list().forEach(c=>(by[c.group]=by[c.group]||[]).push(c));
+    srcSel.insertAdjacentHTML('beforeend',Object.keys(by).map(g=>`<optgroup label="Grammatik · ${H(g)}">${by[g].map(c=>`<option value="gram:${c.n}">${c.n>100?'':c.n+'. '}${H(c.title)}</option>`).join('')}</optgroup>`).join(''));
+    if(cur.startsWith('gram:'))srcSel.value=cur; syncQ() }).catch(()=>{});
   f.onsubmit=ev=>{ev.preventDefault(); AU.wake();
     const [src,id]=srcSel.value.split(':'); s.src=src; if(src==='all'){s.lvl=+id;delete s.id}else s.id=id;
-    if(quizzy){s.types=[...f.querySelectorAll('.gchk input[type=checkbox][value]:checked')].map(x=>x.value); if(!s.types.length&&src!=='quiz'){toast('Wähle mindestens einen Fragetyp');return} s.dbl=$('gdbl').checked?1:0}
+    if(quizzy){s.types=[...f.querySelectorAll('.gchk input[type=checkbox][value]:checked')].map(x=>x.value); if(!s.types.length&&src!=='quiz'&&src!=='gram'){toast('Wähle mindestens einen Fragetyp');return} s.dbl=$('gdbl').checked?1:0}
     if(src==='quiz')s.title=(QZ()[id]||{}).title;
+    if(src==='gram')s.title='Grammatik: '+((window.GRAM&&GRAM.list().find(c=>String(c.n)===id))||{}).title;
     LS.set('gd_gset_'+kind,s); start(kind,s)};
 }
 function start(kind,s){
@@ -2737,7 +2744,8 @@ function view(arg){
   if(!E.length){V().innerHTML='<div class="loading"><div class="spin"></div>Wörterbuch wird geladen …</div>';return}
   const [a,b]=(arg||'').split('/');
   if(G&&!(a==='join'&&G.mode==='player'))leave();
-  if(a==='solo'||a==='host'||a==='memory'||a==='blitz')viewSetup(a);
+  if(a==='gram'){const st=LS.get('gd_gset_solo',{}); if(st.src!=='gram'){st.src='gram';st.id='1'} LS.set('gd_gset_solo',st); viewSetup('solo')}
+  else if(a==='solo'||a==='host'||a==='memory'||a==='blitz')viewSetup(a);
   else if(a==='join')joinForm((b||'').replace(/\D/g,'').slice(0,6));
   else if(a==='quizzes')viewQuizzes();
   else if(a==='edit')viewEdit(b);
