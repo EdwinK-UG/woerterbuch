@@ -470,7 +470,7 @@ function openGram(arg){
   if(window.GRAM){GRAM.view(arg);return}
   V().innerHTML='<div class="loading" data-g="1"><div class="spin"></div>Grammatik wird geladen …</div>';
   if(gramP)return;
-  gramP=new Promise((res,rej)=>{const s=document.createElement('script');s.src='grammatik/grammatik.js?v=3';s.onload=res;s.onerror=rej;document.head.appendChild(s)});
+  gramP=new Promise((res,rej)=>{const s=document.createElement('script');s.src='grammatik/grammatik.js?v=4';s.onload=res;s.onerror=rej;document.head.appendChild(s)});
   gramP.then(()=>{const h=location.hash.slice(2);if(h.split('/')[0]==='g')GRAM.view(decodeURIComponent(h.split('/').slice(1).join('/')||''))})
     .catch(()=>{gramP=null;if(location.hash.startsWith('#/g'))V().innerHTML='<div class="empty"><span class="em">⚠️</span>Die Grammatik konnte nicht geladen werden. Bitte prüfe die Internetverbindung.</div>'});
 }

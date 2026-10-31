@@ -5,7 +5,7 @@
    Attempts are kept in this browser and, for signed-in users, saved to Supabase (table grammar_results). */
 (function () {
 'use strict';
-const VER = '3';
+const VER = '4';
 const PASS = 0.7;                       // share of correct answers needed to pass an exercise
 const $ = id => document.getElementById(id);
 const H = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -76,7 +76,7 @@ const GROUPS = [
   { t: 'Adjektive 2', ic: 'sparkles', h: 350, ch: [
     [84, 'Adjektive ohne Artikel', 'frisches Brot, kaltes Wasser', 'B1'], [85, 'Partizip I als Adjektiv', 'ein lachendes Kind', 'B1'] ] }
 ];
-const READY = { 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1, 9: 1, 10: 1, 11: 1, 12: 1, 13: 1, 22: 1 };   // chapters that exist so far
+const READY = Object.fromEntries([...Array.from({ length: 24 }, (_, i) => i + 1)].map(n => [n, 1]));   // chapters that exist so far   // chapters that exist so far
 const TOTAL = GROUPS.reduce((s, g) => s + g.ch.length, 0);
 const chInfo = n => { for (const g of GROUPS) for (const c of g.ch) if (c[0] === n) return { g, c }; return null; };
 
@@ -188,6 +188,8 @@ const CSS = `
 .gr-tbl tr.n th{color:var(--nom)}.gr-tbl tr.a th{color:var(--akk)}.gr-tbl tr.d th{color:var(--dat)}
 .gr-tbl td{font-family:Newsreader,serif;font-size:1.08rem}
 .gr-tbl td .art{font-weight:600}
+.gr-tbl .ls{display:none}
+@media(max-width:560px){.gr-tbl .lf{display:none}.gr-tbl .ls{display:inline}.gr-tbl:not(.gr-grid) td{font-size:.9rem;padding:.4rem .2rem;line-height:1.25}.gr-tbl:not(.gr-grid) th{padding:.4rem .3rem}.gr-tbl:not(.gr-grid) thead th{font-size:.6rem;letter-spacing:.02em}}
 .gr-tbl tr.a td .art.chg{color:var(--akk);background:var(--akk-s);border-radius:.3em;padding:0 .2em}
 .gr-tbl tr.d td .art.chg{color:var(--dat);background:var(--dat-s);border-radius:.3em;padding:0 .2em}
 .plusn{color:var(--dat);text-decoration:underline;text-underline-offset:3px}
@@ -497,7 +499,27 @@ ${o.beard ? `<path d="M-19 -158Q-20 -132 0 -130Q20 -132 19 -158Q14 -146 0 -144Q-
   sign: (x, y, kind = 'P') => `<g><rect x="${x - 3}" y="${y - 150}" width="6" height="150" fill="var(--metal)"/><circle cx="${x}" cy="${y - 168}" r="30" fill="var(--der)" stroke="var(--bad)" stroke-width="8"/><path d="M${x - 20} ${y - 188}l40 40${kind === 'X' ? `M${x + 20} ${y - 188}l-40 40` : ''}" stroke="var(--bad)" stroke-width="8"/></g>`,
   stop: (x, y) => `<g><rect x="${x - 3}" y="${y - 130}" width="6" height="130" fill="var(--metal)"/><circle cx="${x}" cy="${y - 140}" r="20" fill="var(--sun)" stroke="var(--das)" stroke-width="4"/><text x="${x}" y="${y - 134}" text-anchor="middle" font-family="Inter,sans-serif" font-size="17" font-weight="800" fill="var(--das)">H</text></g>`,
   icon: (x, y, t, c) => `<g transform="translate(${x} ${y})"><circle r="26" fill="var(--${c}-s)" stroke="var(--${c})" stroke-width="2"/><text y="6" text-anchor="middle" font-family="Fraunces,serif" font-weight="700" font-size="17" fill="var(--${c})">${H(t)}</text></g>`,
-  arrow: (d, c = 'var(--ac)') => `<path d="${d}" fill="none" stroke="${c}" stroke-width="2.4" stroke-dasharray="5 6" stroke-linecap="round"/>`
+  arrow: (d, c = 'var(--ac)') => `<path d="${d}" fill="none" stroke="${c}" stroke-width="2.4" stroke-dasharray="5 6" stroke-linecap="round"/>`,
+  dog: (x, y, o = {}) => { const c = o.c || 'var(--wood)', s = o.s || 1;
+    return `<g transform="translate(${x} ${y}) scale(${o.flip ? -s : s} ${s})"><path d="M-32 -42q-16 -14 -10 -32" stroke="${c}" stroke-width="7" fill="none" stroke-linecap="round"/>
+<rect x="-27" y="-30" width="10" height="30" rx="5" fill="${c}"/><rect x="-12" y="-30" width="10" height="30" rx="5" fill="${c}"/><rect x="12" y="-30" width="10" height="30" rx="5" fill="${c}"/><rect x="25" y="-30" width="10" height="30" rx="5" fill="${c}"/>
+<ellipse cx="0" cy="-37" rx="37" ry="18" fill="${c}"/><circle cx="34" cy="-60" r="18" fill="${c}"/><ellipse cx="48" cy="-53" rx="12" ry="8.5" fill="var(--floor)"/><circle cx="58" cy="-56" r="4" fill="var(--ink)"/>
+<path d="M23 -74q-12 4 -7 26q9 -6 11 -21z" fill="var(--hair2)"/><circle cx="39" cy="-64" r="2.6" fill="var(--ink)"/><path d="M22 -46q11 9 24 2" stroke="var(--die)" stroke-width="4.5" fill="none"/></g>`; },
+  cat: (x, y, o = {}) => { const c = o.c || 'var(--pants)', s = o.s || 1;
+    return `<g transform="translate(${x} ${y}) scale(${o.flip ? -s : s} ${s})"><path d="M18 -6q36 -2 26 -36" stroke="${c}" stroke-width="7" fill="none" stroke-linecap="round"/><ellipse cx="0" cy="-27" rx="23" ry="28" fill="${c}"/>
+<circle cx="0" cy="-64" r="18" fill="${c}"/><path d="M-16 -72l2 -19l13 11zM16 -72l-2 -19l-13 11z" fill="${c}"/><ellipse cx="-6" cy="-66" rx="3" ry="4" fill="var(--sun)"/><ellipse cx="6" cy="-66" rx="3" ry="4" fill="var(--sun)"/>
+<path d="M-3 -57l3 3l3 -3" stroke="var(--die)" stroke-width="2" fill="none"/><path d="M-10 -58h-13M-10 -55l-12 4M10 -58h13M10 -55l12 4" stroke="var(--card)" stroke-width="1.2" opacity=".6"/></g>`; },
+  bird: (x, y, c = 'var(--akk)') => `<g transform="translate(${x} ${y})"><path d="M-14 2l-14 5l5 -10z" fill="${c}"/><ellipse rx="17" ry="12" fill="${c}"/><circle cx="12" cy="-9" r="9" fill="${c}"/>
+<path d="M20 -10l10 3l-10 4z" fill="var(--sun)"/><circle cx="15" cy="-11" r="2" fill="var(--ink)"/><path d="M-4 -3q-9 -15 -22 -8q9 2 11 11z" fill="var(--card)" opacity=".45"/><path d="M-2 11v7M4 11v7" stroke="var(--sun)" stroke-width="2"/></g>`,
+  tree: (x, y, s = 1) => `<g transform="translate(${x} ${y}) scale(${s})"><rect x="-9" y="-110" width="18" height="110" rx="6" fill="var(--wood)"/><g fill="var(--hill1)"><circle cx="-34" cy="-122" r="34"/><circle cx="30" cy="-128" r="38"/><circle cx="-2" cy="-166" r="40"/></g><g fill="var(--hill2)" opacity=".7"><circle cx="-14" cy="-176" r="16"/><circle cx="34" cy="-140" r="14"/></g></g>`,
+  gift: (x, y, c = 'var(--die)', w = 46) => `<g><rect x="${x - w / 2}" y="${y - w * .8}" width="${w}" height="${w * .8}" rx="4" fill="${c}"/><rect x="${x - w / 2 - 3}" y="${y - w * .8 - 8}" width="${w + 6}" height="11" rx="3" fill="${c}"/>
+<rect x="${x - 4}" y="${y - w * .8 - 8}" width="8" height="${w * .8 + 8}" fill="var(--sun)"/><path d="M${x} ${y - w * .8 - 8}q-16 -16 -18 -2q4 6 18 2q16 4 18 -2q-2 -14 -18 2z" fill="var(--sun)"/></g>`,
+  jacket: (x, y, c) => `<g><path d="M${x} ${y}v-8q0-6 6-6" stroke="var(--metal)" stroke-width="3" fill="none"/><path d="M${x - 26} ${y + 14}L${x} ${y}L${x + 26} ${y + 14}" stroke="var(--metal)" stroke-width="3" fill="none"/>
+<path d="M${x - 24} ${y + 12}L${x - 36} ${y + 66}H${x - 24}L${x - 20} ${y + 40}V${y + 92}H${x + 20}V${y + 40}L${x + 24} ${y + 66}H${x + 36}L${x + 24} ${y + 12}L${x + 8} ${y + 6}L${x} ${y + 24}L${x - 8} ${y + 6}Z" fill="${c}"/><path d="M${x} ${y + 24}V${y + 92}" stroke="var(--card)" stroke-width="1.5" opacity=".6"/></g>`,
+  apples: (x, y, n = 5) => Array.from({ length: n }, (_, i) => { const cx = x + (i % 3) * 18 - 18 + (i >= 3 ? 9 : 0), cy = y - 9 - (i >= 3 ? 15 : 0);
+    return `<circle cx="${cx}" cy="${cy}" r="10" fill="var(--die)"/><path d="M${cx} ${cy - 10}v-5" stroke="var(--wood)" stroke-width="2"/><ellipse cx="${cx + 4}" cy="${cy - 13}" rx="4" ry="2" fill="var(--das)"/>`; }).join(''),
+  bananas: (x, y) => [0, 1, 2].map(i => `<path d="M${x - 24 + i * 6} ${y - 6 - i * 7}q24 14 46 -10q-20 8 -46 4z" fill="var(--sun)" stroke="var(--nom)" stroke-width="1.5"/>`).join(''),
+  oranges: (x, y) => [[-14, -9], [6, -9], [26, -9], [-4, -26], [16, -26]].map(([dx, dy]) => `<circle cx="${x + dx}" cy="${y + dy}" r="10" fill="var(--nom)"/>`).join('')
 };
 
 /* ---------- text helpers ---------- */
@@ -766,7 +788,7 @@ function tableHTML(b, k) {
     return `<td><span class="art${chg ? ' chg' : ''}">${H(art)}</span> ${noun}</td>`;
   };
   return `<table class="gr-tbl"><thead><tr><th></th>${b.head.map(h => `<th>${H(h)}</th>`).join('')}</tr></thead><tbody>${rows.map((r, i) =>
-    `<tr class="${cls[i]}"><th>${lab[i]}</th>${r.map((t, j) => cell(t, i, j)).join('')}</tr>`).join('')}</tbody></table>`;
+    `<tr class="${cls[i]}"><th><span class="lf">${lab[i]}</span><span class="ls">${lab[i].slice(0, 3)}.</span></th>${r.map((t, j) => cell(t, i, j)).join('')}</tr>`).join('')}</tbody></table>`;
 }
 const PERS = ['ich', 'du', 'er/sie/es', 'wir', 'ihr', 'sie/Sie'];
 function conjForm(inf, f) {
