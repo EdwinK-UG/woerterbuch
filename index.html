@@ -344,6 +344,17 @@ kbd{font:600 .66rem Inter,system-ui,sans-serif;padding:.1rem .35rem;border-radiu
 .grade kbd{margin-top:.2rem;background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.3);color:#fff}
 @media(max-width:640px){.grades{bottom:calc(4.6rem + env(safe-area-inset-bottom))}.grade kbd,.flashcard .tap kbd{display:none}
   .bbody .wimg.on{float:none;width:100%;margin:0 0 .8rem}.bbody .wimg img,.bbody .aiload{height:170px}}
+
+.sugai{align-items:center!important;gap:.7rem!important;color:var(--fg)}
+.sugai .lic{color:var(--ac);font-size:1.2rem;flex:0 0 auto}
+.sugai span{font-size:.9rem;line-height:1.4}.sugai em{color:var(--ac);font-style:normal;font-weight:600}
+.aibadge{margin-left:auto;align-self:center;display:inline-flex;align-items:center;gap:.3rem;font:700 .7rem Inter,system-ui,sans-serif;letter-spacing:.04em;color:var(--ac);background:var(--ac-salt);padding:.25rem .55rem;border-radius:999px}
+.ainotice{display:flex;gap:.45rem;align-items:flex-start;font-size:.78rem;color:var(--mut);margin:1rem 0 0;padding:.6rem .75rem;border-radius:.7rem;background:var(--panel);border:1px solid var(--line2)}
+.ainotice .lic{flex:0 0 auto;margin-top:.15rem}
+.exsrc{font-style:normal;font-family:Inter,system-ui,sans-serif;font-size:.72rem;color:var(--faint);text-decoration:none;white-space:nowrap}
+.exsrc:hover{color:var(--ac)}
+.aimiss,.aimake{text-align:center;padding:3rem 1rem}.aimiss .em{font-size:2.2rem;color:var(--faint)}
+.aimiss .row{justify-content:center}.aimake .spin{margin:0 auto 1rem}
 @media(max-width:560px){.hw{font-size:1.7rem}.flashcard .fhw{font-size:2rem}#q{font-size:1.25rem}}
 </style>
 </head>
@@ -382,6 +393,7 @@ let FOLD=[];
 /* ---------- load packed data ---------- */
 async function load(){
   const b64=document.getElementById('data').textContent.trim();
+  const aip=fetchAIEntries();          // AI entries load in parallel with the dictionary
   const bin=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));
   const ds=new DecompressionStream('gzip');
   const txt=await new Response(new Blob([bin]).stream().pipeThrough(ds)).text();
@@ -393,6 +405,8 @@ async function load(){
   for(const [o,n] of Object.entries(j.a||{})){if(!WIDX.has(o)&&WIDX.has(n))WIDX.set(o,WIDX.get(n))}
   E.forEach(e=>{const p=e.w.replace(/[¹²³⁴⁵⁶⁷⁸⁹]/g,'');if(!WIDX.has(p))WIDX.set(p,e.i)});
   FOLD=E.map(e=>fold(e.w));
+  const first=await Promise.race([aip,new Promise(r=>setTimeout(()=>r(null),1500))]);
+  if(first)addAIEntries(first); else aip.then(list=>{addAIEntries(list); if(/^#\/(w|study|list)\//.test(location.hash))route()});
   route();
 }
 /* ---------- search ---------- */
@@ -444,7 +458,11 @@ function viewHome(){
   let sel=-1,cur=[];
   const render=()=>{
     cur=search(q.value,40);
-    if(!q.value.trim()||!cur.length){sug.style.display='none';return}
+    const qv=q.value.trim();
+    if(qv.length>=3&&!cur.length&&/^[A-Za-zÄÖÜäöüß][A-Za-zÄÖÜäöüß -]+$/.test(qv)){
+      sug.innerHTML=`<li class="sugai" data-create="1">${ic('sparkles')}<span><b>„${esc(qv)}“</b> ist nicht im Wörterbuch.<br><em>Eintrag mit KI erstellen</em> – mit echten Beispielsätzen</span></li>`;
+      sug.style.display='block'; return }
+    if(!qv||!cur.length){sug.style.display='none';return}
     sug.innerHTML=cur.map((e,k)=>`<li data-k="${k}" class="${k===sel?'on':''}">
       <span class="gdot" style="background:${gcol(e.ar)}"></span>
       <span class="hw">${esc(e.w)}</span><small>${e.ar?e.ar+' · ':''}${POSL[e.ps]||''}</small></li>`).join('');
@@ -454,9 +472,9 @@ function viewHome(){
   q.addEventListener('keydown',ev=>{
     if(ev.key==='ArrowDown'){sel=Math.min(sel+1,cur.length-1);render();ev.preventDefault()}
     else if(ev.key==='ArrowUp'){sel=Math.max(sel-1,0);render();ev.preventDefault()}
-    else if(ev.key==='Enter'){const e=cur[sel<0?0:sel];if(e)go('w/'+e.w)}
+    else if(ev.key==='Enter'){const e=cur[sel<0?0:sel];if(e)go('w/'+e.w); else if(q.value.trim().length>=3)createAI(q.value.trim())}
   });
-  sug.addEventListener('click',ev=>{const li=ev.target.closest('li');if(li)go('w/'+cur[+li.dataset.k].w)});
+  sug.addEventListener('click',ev=>{const li=ev.target.closest('li');if(!li)return; if(li.dataset.create)createAI(q.value.trim()); else go('w/'+cur[+li.dataset.k].w)});
   q.focus();
   // home: recent words, word of the day, topics
   const recent=(LS.get('gd_recent',[])||[]).filter(w=>WIDX.has(w)).slice(0,8);
@@ -568,10 +586,11 @@ function entryHTML(e){
     <div class="top">
       <div class="hw">${sylHTML(e.sy)}</div>${art}${pos}
       <button class="iconbtn say" title="Aussprache anhören" aria-label="Aussprache anhören" onclick="say(${e.i},this)">🔊</button>
-      <span class="pg">S. ${e.pg}</span>
+      ${e.ai?`<span class="aibadge" title="Mit KI erstellt – nicht aus dem Langenscheidt">${ic('sparkles')} KI-Eintrag</span>`:`<span class="pg">S. ${e.pg}</span>`}
     </div>
     <div class="wimg" id="wimg"></div>
     <div class="def">${fmtDef(e)}</div>
+    ${e.ai?`<p class="ainotice">${ic('info')} Dieser Eintrag wurde mit KI erstellt, weil das Wort im Langenscheidt fehlt. Die Beispielsätze sind echte Sätze aus Zeitungen und Wikipedia (Leipzig Corpora Collection).</p>`:''}
     <div class="acts">
       <button class="btn primary" onclick="quickCard(${e.i})">⚡ Als Karte lernen</button>
       <button class="btn" onclick="openAdd(${e.i})">＋ Zur Liste</button>
@@ -585,7 +604,9 @@ function sylHTML(sy){ // middot syllable marks muted
 }
 function viewWord(w){
   const i=WIDX.get(w);
-  if(i==null){V().innerHTML=`<p class="sub">„${esc(w)}" nicht gefunden.</p><a class="btn" href="#/">← Suche</a>`;return}
+  if(i==null){V().innerHTML=`<div class="aimiss"><span class="em">${ic('search-x')}</span><h1 class="page">„${esc(w)}“ ist nicht im Wörterbuch</h1>
+    <p class="sub">Die KI kann einen Eintrag mit einfacher Erklärung und echten Beispielsätzen aus Zeitungen und Wikipedia erstellen. Danach finden ihn alle.</p>
+    <div class="row"><button class="btn primary" onclick="createAI(${JSON.stringify(w).replace(/"/g,'&quot;')})">${ic('sparkles')} Eintrag mit KI erstellen</button><a class="btn" href="#/">← Suche</a></div></div>`;return}
   const e=E[i];
   V().innerHTML=`<div class="row" style="margin-bottom:.8rem"><a class="btn sm" href="#/">← Suche</a></div>`+entryHTML(e);
   loadImg(e);
@@ -744,6 +765,43 @@ async function freeShow(e,box,fresh){
 const AIURL_BASE='https://woerterbuch-bilder.edwin1kitaka.workers.dev', AIBLOB=new Map(), AIWAIT={until:0};
 function aiBack(i){ const box=document.getElementById('wimg'); if(!box)return;
   if(AI.free()){delete box.dataset.photo; loadImg(E[i])} else AI.open() }
+
+/* ---------- AI ENTRIES for words the book does not have (shared by everyone) ---------- */
+const AIPOS={Substantiv:'n',Verb:'v',Adjektiv:'adj',Adverb:'adv','Präposition':'prp',Konjunktion:'kon',Pronomen:'pro',Partikel:'ptk'};
+async function fetchAIEntries(){
+  try{const c=new AbortController(); setTimeout(()=>c.abort(),8000);
+    const r=await fetch(AIURL_BASE+'/entries',{signal:c.signal}); return r.ok?await r.json():[]}catch(e){return []}
+}
+function aiToDf(x){
+  const head=`<b>${esc(x.w)}</b> ${x.ar?`<i class="g">${esc(x.ar)};</i> `:''}${x.forms?esc(x.forms)+' ':''}${x.en?`<i class="g">engl. ${esc(x.en)}</i>`:''}`;
+  return head+' '+x.senses.map((sn,k)=>`<span class="sn">${k+1}</span> ${esc(sn.d)} `+sn.ex.map(ex=>`<small>|</small> <i class="g">${esc(ex.t)}</i> <a class="exsrc" href="${esc(ex.url||'#')}" target="_blank" rel="noopener">— ${esc(ex.src)}${ex.y?', '+esc(ex.y):''}</a> `).join('')).join(' ');
+}
+function addAIEntries(list){
+  let added=0;
+  for(const x of list||[]){
+    if(!x||!x.w||!Array.isArray(x.senses)||WIDX.has(x.w))continue;   // the book's own entry always wins
+    const e={i:E.length,w:x.w,sy:x.w,ar:x.ar||'',ps:AIPOS[x.ps]||x.ps||'',df:aiToDf(x),rel:[],cat:'',pg:'KI',wm:null,ai:true};
+    E.push(e); WIDX.set(e.w,e.i); FOLD.push(fold(e.w)); (x.q||[]).forEach(q=>{if(!WIDX.has(q))WIDX.set(q,e.i)}); added++;
+  }
+  return added;
+}
+async function createAI(w){
+  w=w.trim(); if(!w)return;
+  const steps=['Echte Beispielsätze werden in Zeitungen und Wikipedia gesucht …','Die Bedeutung wird einfach erklärt …','Der Eintrag wird gespeichert …'];
+  V().innerHTML=`<div class="aimake"><span class="spin"></span><h1 class="page">„${esc(w)}“</h1><p class="sub" id="aistep">${steps[0]}</p>
+    <p class="muted" style="font-size:.85rem">Das dauert meist 10–30 Sekunden.</p></div>`;
+  let k=0; const tick=setInterval(()=>{k=Math.min(k+1,steps.length-1); const el=document.getElementById('aistep'); if(el)el.textContent=steps[k]},6000);
+  try{
+    const r=await fetch(AIURL_BASE+'/entry?w='+encodeURIComponent(w),{method:'POST'}); const d=await r.json(); clearInterval(tick);
+    if(!r.ok||!d.entry){
+      V().innerHTML=`<div class="aimiss"><span class="em">${ic('circle-help')}</span><h1 class="page">Kein Eintrag erstellt</h1>
+        <p class="sub">${esc(d.error||'Bitte später noch einmal versuchen.')}</p><a class="btn" href="#/">← Suche</a></div>`; return }
+    const x=d.entry;
+    if(WIDX.has(x.w)&&!E[WIDX.get(x.w)].ai){toast('Gefunden als „'+x.w+'“'); go('w/'+encodeURIComponent(x.w)); return}
+    addAIEntries([x]); if(!WIDX.has(w))WIDX.set(w,WIDX.get(x.w));
+    go('w/'+encodeURIComponent(x.w));
+  }catch(err){ clearInterval(tick); V().innerHTML=`<div class="aimiss"><h1 class="page">Keine Verbindung</h1><p class="sub">Der Eintrag konnte gerade nicht erstellt werden.</p><a class="btn" href="#/">← Suche</a></div>` }
+}
 /* ---------- WORD MAP: synonyms, opposites, word family and words close in meaning ---------- */
 const WMG=[{k:'s',label:'Synonyme (≈)',col:'var(--das)',max:5},{k:'g',label:'Gegenteil (↔)',col:'var(--die)',max:3},
   {k:'f',label:'Wortfamilie',col:'var(--der)',max:5},{k:'n',label:'Ähnliche Bedeutung',col:'var(--neu)',max:7}];
