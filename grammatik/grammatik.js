@@ -5,7 +5,7 @@
    Attempts are kept in this browser and, for signed-in users, saved to Supabase (table grammar_results). */
 (function () {
 'use strict';
-const VER = '2';
+const VER = '3';
 const PASS = 0.7;                       // share of correct answers needed to pass an exercise
 const $ = id => document.getElementById(id);
 const H = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -76,7 +76,7 @@ const GROUPS = [
   { t: 'Adjektive 2', ic: 'sparkles', h: 350, ch: [
     [84, 'Adjektive ohne Artikel', 'frisches Brot, kaltes Wasser', 'B1'], [85, 'Partizip I als Adjektiv', 'ein lachendes Kind', 'B1'] ] }
 ];
-const READY = { 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1, 9: 1, 22: 1 };   // chapters that exist so far
+const READY = { 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1, 9: 1, 10: 1, 11: 1, 12: 1, 13: 1, 22: 1 };   // chapters that exist so far
 const TOTAL = GROUPS.reduce((s, g) => s + g.ch.length, 0);
 const chInfo = n => { for (const g of GROUPS) for (const c of g.ch) if (c[0] === n) return { g, c }; return null; };
 
