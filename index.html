@@ -643,31 +643,90 @@ async function jget(url,ms=7000){
 async function enWord(w){            // first English translation from German Wiktionary
   const j=await jget('https://de.wiktionary.org/w/api.php?action=parse&prop=wikitext&format=json&origin=*&page='+encodeURIComponent(w));
   const t=j&&j.parse&&j.parse.wikitext&&j.parse.wikitext['*']; if(!t)return null;
-  const m=t.match(/\{\{Ü\|en\|\[?\[?([^}|\]]+)/); return m?m[1].trim():null;
+  // the translation listed most often (müde: sleepy, tired, tired -> tired); on a tie the first one
+  const all=[...t.matchAll(/\{\{Ü\|en\|\[?\[?([^}|\]]+)/g)].map(m=>m[1].trim()); if(!all.length)return null;
+  const n={}; all.forEach(x=>n[x]=(n[x]||0)+1); return all.reduce((a,b)=>n[b]>n[a]?b:a);
 }
-function gerund(v){ v=v.replace(/^to /,''); if(/[^aeiou]e$/.test(v)&&!/ee$/.test(v))return v.slice(0,-1)+'ing';
-  if(/^[^aeiou]*[aeiou][bdgmnprt]$/.test(v))return v+v.slice(-1)+'ing'; return v+'ing'}
+function gerund(v){ v=v.replace(/^to /,'').trim(); const [h,...rest]=v.split(' '); let g;   // "peel off" -> "peeling off"
+  if(/[^aeiou]e$/.test(h)&&!/ee$/.test(h))g=h.slice(0,-1)+'ing';
+  else if(/^[^aeiou]*[aeiou][bdgmnprt]$/.test(h))g=h+h.slice(-1)+'ing'; else g=h+'ing';
+  return [g,...rest].join(' ')}
+const cap1=s=>s?s[0].toUpperCase()+s.slice(1):s;
 function goodShape(w,h){return w>=260&&h>=180&&w/h>=.55&&w/h<=2.1}
-async function commons(q){
-  const j=await jget('https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrnamespace=6&gsrlimit=12'
+
+/* picture sources */
+const PEOPLE='(?:person|people|man|men|woman|women|girl|boy|child|children|kid|face|portrait)';
+// Wikimedia Commons; keeps only files whose name mentions the search words
+// (strict: every word must appear, "person" also matches man/woman/child/face …)
+async function commons(q,strict){
+  const j=await jget('https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrnamespace=6&gsrlimit=20'
     +'&prop=imageinfo&iiprop=url|size|mime&iiurlwidth=480&gsrsearch='+encodeURIComponent(q+' filetype:bitmap'));
   const pages=j&&j.query?Object.values(j.query.pages).sort((a,b)=>a.index-b.index):[];
-  return pages.map(p=>p.imageinfo&&p.imageinfo[0]).filter(i=>i&&/jpeg|png|webp/.test(i.mime)&&goodShape(i.width,i.height))
+  const keys=q.toLowerCase().split(/\s+/).filter(k=>k.length>=3&&!['the','and'].includes(k))
+    .map(k=>new RegExp('(?:^|[^a-z])'+(k==='person'||k==='face'?PEOPLE:k.slice(0,5).replace(/[^a-z]/g,'')),'i'));
+  return pages.filter(p=>{const t=p.title.replace(/^File:/,'').replace(/_/g,' ');
+      return !keys.length||(strict?keys.every(k=>k.test(t)):keys.some(k=>k.test(t)))})
+    .map(p=>p.imageinfo&&p.imageinfo[0]).filter(i=>i&&/jpeg|png|webp/.test(i.mime)&&goodShape(i.width,i.height))
     .map(i=>({src:i.thumburl||i.url,url:i.descriptionurl,cap:'Wikimedia Commons'}));
+}
+async function wikiDe(q){             // best-matching German Wikipedia articles with a picture (finds "Kulturapfel" for "Apfel")
+  const j=await jget('https://de.wikipedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrlimit=3&prop=pageimages|pageprops'
+    +'&piprop=thumbnail&pithumbsize=480&gsrsearch='+encodeURIComponent(q));
+  const ps=j&&j.query?Object.values(j.query.pages).sort((a,b)=>a.index-b.index):[];
+  return ps.filter(p=>p.thumbnail&&!(p.pageprops&&'disambiguation' in p.pageprops)&&goodShape(p.thumbnail.width,p.thumbnail.height))
+    .slice(0,2).map(p=>({src:p.thumbnail.source,url:'https://de.wikipedia.org/wiki/'+encodeURIComponent(p.title),cap:'Wikipedia · '+p.title}));
+}
+async function wikiEn(t){             // lead picture of the English article with exactly this title ("Justice" -> Lady Justice)
+  if(!t)return [];
+  const j=await jget('https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&redirects=1&prop=pageimages|pageprops'
+    +'&piprop=thumbnail&pithumbsize=480&titles='+encodeURIComponent(cap1(t)));
+  const p=j&&j.query&&Object.values(j.query.pages)[0];
+  return p&&p.thumbnail&&!(p.pageprops&&'disambiguation' in p.pageprops)&&goodShape(p.thumbnail.width,p.thumbnail.height)
+    ?[{src:p.thumbnail.source,url:'https://en.wikipedia.org/wiki/'+encodeURIComponent(p.title),cap:'Wikipedia · '+p.title}]:[];
+}
+async function stock(q){              // stock photos through our worker (Pexels, when a key is set up there)
+  const j=await jget(AIURL_BASE+'/photos?v=2&q='+encodeURIComponent(q),8000); return Array.isArray(j)?j:[];
+}
+
+/* what kind of word is it? decides which source is tried first */
+const ABSCAT=new Set(['abstrakt','gefuehle','denken','charakter','beziehung']), PERSONCAT=new Set(['gefuehle','charakter','koerper','gesundheit','beziehung']);
+const THINGCAT=new Set(['essen','tiere','pflanzen','wohnen','haushalt','kleidung','werkzeug','verkehr','material','technik','computer','kommunikation','natur','sport','musik','landwirt']);
+const COLOURS=/^(red|blue|green|yellow|black|white|brown|orange|purple|violet|pink|grey|gray|golden|silver|turquoise|beige)$/;
+function imgKind(e){
+  const w=plainW(e.w);
+  if(e.ps==='v')return 'verb';
+  if(e.ps==='adj'||e.ps==='Partizip')return e.cat==='farben'||COLOURS.test(ENC.get(w)&&ENC.get(w).v||'')?'colour':'adj';
+  if(e.ps==='n'&&(ABSCAT.has(e.cat)||/(heit|keit|ismus|schaft|tum|nis|tät|anz|enz)$/.test(w)))return 'abstract';
+  return 'thing';
+}
+// the thing a verb or adjective is used with, from the dictionary's examples ("einen Apfel schälen" -> Apfel)
+function exampleNoun(e){
+  const self=plainW(e.w).toLowerCase();
+  for(const ex of examples(e,2)){
+    for(const t of ex.match(/[A-ZÄÖÜ][a-zäöüß]{3,}/g)||[]){
+      for(const c of [t,t.replace(/(en|n|e|s)$/,''),t.replace(/e?n$/,'')]){
+        const i=WIDX.get(c); if(i!=null&&E[i].ps==='n'&&plainW(E[i].w).toLowerCase()!==self&&THINGCAT.has(E[i].cat))return plainW(E[i].w);
+      }
+    }
+  }
+  return null;
 }
 async function findImgs(e){
   const w=plainW(e.w), out=[], seen=new Set(), add=a=>a.forEach(x=>{if(x.src&&!seen.has(x.src)){seen.add(x.src);out.push(x)}});
-  if(e.ps==='n'){
-    // best-matching German Wikipedia articles that have a picture (finds "Kulturapfel" for "Apfel")
-    const j=await jget('https://de.wikipedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrlimit=3&prop=pageimages|pageprops'
-      +'&piprop=thumbnail&pithumbsize=480&gsrsearch='+encodeURIComponent(w));
-    const ps=j&&j.query?Object.values(j.query.pages).sort((a,b)=>a.index-b.index):[];
-    add(ps.filter(p=>p.thumbnail&&!(p.pageprops&&'disambiguation' in p.pageprops)&&goodShape(p.thumbnail.width,p.thumbnail.height))
-      .slice(0,2).map(p=>({src:p.thumbnail.source,url:'https://de.wikipedia.org/wiki/'+encodeURIComponent(p.title),cap:'Wikipedia · '+p.title})));
+  const en=await enCached(w), kind=imgKind(e);
+  const noun=(kind==='verb'||kind==='adj')?exampleNoun(e):null, obj=noun?await enCached(noun):null;
+  let plan;                           // [source, query] in order of how good that source usually is for this kind of word
+  if(kind==='thing')         plan=[[wikiDe,w],[wikiEn,en],[commons,en],[commons,w],[stock,en]];
+  else if(kind==='abstract') plan=[[wikiEn,en],[stock,en],[wikiDe,w],[commons,en]];
+  else if(kind==='colour')   plan=[[wikiEn,en&&en+' (color)'],[wikiEn,en],[commons,en&&en+' colour']];
+  else if(kind==='verb'){ const g=en&&gerund(en);
+    plan=[[stock,g&&(obj?g+' '+obj:'person '+g)],[commons,g&&obj&&g+' '+obj,1],[wikiEn,g],[commons,g&&'person '+g,1],[commons,g&&obj&&g+' '+obj],[commons,g]];
+  } else {                            // adjectives: the quality on a typical person or thing
+    const who=PERSONCAT.has(e.cat)||!obj?'person':obj;
+    plan=[[stock,en&&en+' '+who],[commons,en&&en+' '+who,1],[commons,en&&obj&&en+' '+obj,1],[commons,en&&en+' face',1],[wikiEn,en]];
   }
-  const en=await enWord(w);
-  const qs=[]; if(en){ if(e.ps==='v')qs.push(gerund(en)); qs.push(en) } qs.push(w);
-  for(const q of qs){ add(await commons(q)); if(out.length>=6)break }
+  for(const [src,q,strict] of plan){ if(!q)continue; add(await src(q,strict)); if(out.length>=6)break }
+  if(!out.length)add(await commons(w));  // last resort: the German word itself
   return out;
 }
 function showImg(e,box,list,k){
@@ -727,7 +786,7 @@ Requirements:
 }
 /* AI pictures for everyone from our own Cloudflare service; the seed keeps a word's picture until "neu erzeugen" */
 const ENC=new Map();
-async function enCached(w){ if(!ENC.has(w))ENC.set(w,enWord(w).catch(()=>null)); return ENC.get(w) }
+async function enCached(w){ if(!ENC.has(w)){const p=enWord(w).catch(()=>null); p.then(v=>p.v=v); ENC.set(w,p)} return ENC.get(w) }
 // which picture to show: your own last generated one, otherwise the latest one anyone generated
 function ownSeed(w){ return prefs&&prefs.img&&prefs.img[w]||null }
 function setOwnSeed(w,seed){ prefs=prefs||{}; prefs.img=Object.assign({},prefs.img,{[w]:seed}); savePrefs() }
