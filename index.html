@@ -310,6 +310,40 @@ nav.tabs a .lic{font-size:1rem;opacity:.85}
 .ainote{font-size:.76rem!important;color:var(--faint)!important}
 .sheet{width:min(30rem,100%)}
 .aih{margin:1rem 0 .2rem;font:700 .9rem Inter,system-ui,sans-serif}.aion .muted{font-size:.8rem}
+
+/* flashcard study */
+.study{max-width:38rem}
+.sthead{display:flex;align-items:center;justify-content:space-between;gap:.6rem;margin-bottom:.6rem}
+.sthead .btn{display:inline-flex;align-items:center;gap:.35rem;max-width:60%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.stcount{display:flex;gap:.35rem;font:700 .8rem Inter,system-ui,sans-serif}
+.stcount span{min-width:2rem;text-align:center;padding:.2rem .5rem;border-radius:999px;background:var(--card);border:1px solid var(--line)}
+.stcount .n{color:var(--neu)}.stcount .l{color:var(--die)}.stcount .r{color:var(--das)}
+.stbar{height:4px;border-radius:4px;background:var(--line2);overflow:hidden;margin-bottom:1rem}
+.stbar i{display:block;height:100%;background:var(--ac);border-radius:4px;transition:width .3s}
+.flashcard{width:100%;font:inherit;color:inherit;text-align:center;border-radius:1.4rem;min-height:0;padding:1.4rem}
+.flashcard.front{min-height:52vh;cursor:pointer;gap:.6rem;justify-content:center;transition:transform .15s,box-shadow .15s}
+.flashcard.front:hover{transform:translateY(-2px)}
+.fside{font:700 .68rem Inter,system-ui,sans-serif;letter-spacing:.09em;text-transform:uppercase;color:var(--faint)}
+.flashcard .fhw{font-size:clamp(2.2rem,8vw,3rem)}
+.flashcard .tap{display:inline-flex;align-items:center;gap:.4rem;margin-top:1.4rem;font-size:.82rem}
+kbd{font:600 .66rem Inter,system-ui,sans-serif;padding:.1rem .35rem;border-radius:.3rem;border:1px solid var(--line);background:var(--panel);color:var(--mut)}
+.flashcard.back{display:block;text-align:left;padding:1.2rem 1.3rem 1.3rem}
+.bhead{display:flex;align-items:center;justify-content:space-between;gap:.6rem;padding-bottom:.8rem;margin-bottom:.9rem;border-bottom:1px solid var(--line2)}
+.bword{display:flex;align-items:center;gap:.55rem;flex-wrap:wrap}
+.bword .fhw{font-size:clamp(1.7rem,6vw,2.2rem)}
+.bword .fhw .syl{color:var(--faint);font-weight:400}
+.bbody .wimg.on{width:min(40%,220px);margin:.1rem 0 .5rem 1rem}
+.bbody .wimg img,.bbody .aiload{height:150px}
+.bbody .wimg figcaption{display:none}
+.flashcard .fdef{font-size:1.02rem;margin:0;max-width:none}
+.flashcard .dl{gap:.75rem}
+.fmore{display:inline-block;margin-top:.8rem;font:600 .82rem Inter,system-ui,sans-serif;color:var(--ac);text-decoration:none}
+.grades{position:sticky;bottom:.6rem;gap:.45rem;margin-top:.9rem;padding:.45rem;border-radius:1.15rem;background:color-mix(in srgb,var(--bg) 82%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--line2)}
+.grade{border-radius:.9rem;padding:.65rem .3rem;align-items:center;box-shadow:0 8px 18px -10px rgba(0,0,0,.45)}
+.grade span{font-size:.92rem}
+.grade kbd{margin-top:.2rem;background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.3);color:#fff}
+@media(max-width:640px){.grades{bottom:calc(4.6rem + env(safe-area-inset-bottom))}.grade kbd,.flashcard .tap kbd{display:none}
+  .bbody .wimg.on{float:none;width:100%;margin:0 0 .8rem}.bbody .wimg img,.bbody .aiload{height:170px}}
 @media(max-width:560px){.hw{font-size:1.7rem}.flashcard .fhw{font-size:2rem}#q{font-size:1.25rem}}
 </style>
 </head>
@@ -340,8 +374,8 @@ const uid=()=>Math.random().toString(36).slice(2,9);
 const DAY=864e5, now=()=>Date.now();
 /* ---------- state ---------- */
 let E=[], CATS=[], WIDX=new Map(), CATMAP=new Map();
-let lists=LS.get('gd_lists',{}), decks=LS.get('gd_decks',{});
-function saveLists(){LS.set('gd_lists',lists)} function saveDecks(){LS.set('gd_decks',decks)}
+let lists=LS.get('gd_lists',{}), decks=LS.get('gd_decks',{}), prefs=LS.get('gd_prefs',{});
+function saveLists(){LS.set('gd_lists',lists)} function saveDecks(){LS.set('gd_decks',decks)} function savePrefs(){LS.set('gd_prefs',prefs)}
 /* fold diacritics for search */
 const fold=s=>s.toLowerCase().replace(/ä/g,'a').replace(/ö/g,'o').replace(/ü/g,'u').replace(/ß/g,'ss').replace(/[^a-z0-9]/g,'');
 let FOLD=[];
@@ -476,6 +510,7 @@ new MutationObserver(()=>{clearTimeout(drawIcons._t);drawIcons._t=setTimeout(dra
 window.addEventListener('load',drawIcons);
 /* ---------- ENTRY LAYOUT: grammar line, numbered senses with examples, compounds, idioms, derived words ---------- */
 function fmtDef(e,compact){
+  const card=compact==='card';
   let h=e.df, star=/^\s*<span class="core"/.test(h);
   h=h.replace(/^\s*<span class="core"[^>]*>★<\/span>\s*/,'').replace(/^\s*<b>[^<]*<\/b>\s*/,'');
   if(/abgeleitet von/.test(h)||e.ps==='Info')return (star?'<span class="core">★</span> ':'')+h;
@@ -506,13 +541,16 @@ function fmtDef(e,compact){
     ${o.note.length?`<div class="dn"><span class="ib">i</span><span>${o.note.join(' ')}</span></div>`:''}`;
   let html='', allDer=[];
   if(star||head.replace(/<[^>]+>/g,'').trim())html+=`<div class="dgram">${star?'<span class="core" title="Grundwortschatz">★</span>':''}${head}</div>`;
-  const items=senses.map(sx=>{
+  const total=senses.filter(x=>/^<span class="sn">/.test(x)).length;
+  const items=(card?senses.slice(0,3):senses).map(sx=>{
     const m=sx.match(/^<span class="sn">(\d+)<\/span>/); const num=m?m[1]:'';
     const o=part(m?sx.slice(m[0].length):sx); allDer=allDer.concat(o.der);
     if(!o.def.replace(/<[^>]+>/g,'').trim()&&!o.ex.length&&!o.comp.length&&!o.note.length)return '';
-    return `<li class="ds">${num?`<span class="sn">${num}</span>`:''}<div class="db"><div class="dd">${o.def.trim()}</div>${compact?'':sub(o)}</div></li>`;
+    const exs=card&&o.ex.length?`<ul class="dx"><li>${o.ex[0]}</li></ul>`:'';
+    return `<li class="ds">${num?`<span class="sn">${num}</span>`:''}<div class="db"><div class="dd">${o.def.trim()}</div>${card?exs:compact?'':sub(o)}</div></li>`;
   }).join('');
   html+=`<ol class="dl${k>=0?'':' one'}">${items}</ol>`;
+  if(card)return html+(total>3?`<a class="fmore" href="#/w/${encodeURIComponent(e.w)}">+ ${total-3} weitere Bedeutungen im Eintrag</a>`:'');
   if(!compact&&idioms.replace(/<[^>]+>/g,'').trim()){
     const ip=part(idioms);
     const list=ip.def.split(/;\s*(?=<b>)/).map(x=>x.trim()).filter(Boolean);
@@ -669,13 +707,14 @@ Requirements:
 /* AI pictures for everyone from our own Cloudflare service; the seed keeps a word's picture until "neu erzeugen" */
 const ENC=new Map();
 async function enCached(w){ if(!ENC.has(w))ENC.set(w,enWord(w).catch(()=>null)); return ENC.get(w) }
-function seedFor(w){ try{const v=localStorage.getItem('gd_aiseed_'+w); if(v)return +v}catch(e){}
-  let h=7; for(const c of w)h=(h*31+c.charCodeAt(0))>>>0; return h%1000000 }
+// which picture to show: your own last generated one, otherwise the latest one anyone generated
+function ownSeed(w){ return prefs&&prefs.img&&prefs.img[w]||null }
+function setOwnSeed(w,seed){ prefs=prefs||{}; prefs.img=Object.assign({},prefs.img,{[w]:seed}); savePrefs() }
 async function freeShow(e,box,fresh){
   const w=plainW(e.w);
-  let seed=seedFor(w);
-  if(fresh){seed=Math.floor(Math.random()*1e6); try{localStorage.setItem('gd_aiseed_'+w,seed)}catch(err){}}
-  const cap=`<figcaption><span class="capb"><button class="imgnext" onclick="freeShow(E[${e.i}],document.getElementById('wimg'),true)">${ic('refresh-cw')} neu erzeugen</button>
+  // new pictures are only made on "neu erzeugen" (or once, if a word has never had one)
+  const seed=fresh?String(1+Math.floor(Math.random()*999998)):(ownSeed(w)?String(ownSeed(w)):'latest');
+  const cap=`<figcaption><span class="capb"><button class="imgnext" onclick="this.disabled=true;freeShow(E[${e.i}],document.getElementById('wimg'),true)">${ic('refresh-cw')} neu erzeugen</button>
     <button class="imgai" onclick="(b=>{b.dataset.photo='1';loadImg(E[${e.i}])})(document.getElementById('wimg'))">Foto</button></span>
     <a href="#" onclick="event.preventDefault();AI.open()">${ic('sparkles')} KI-Bild</a></figcaption>`;
   box.classList.add('on');
@@ -683,7 +722,7 @@ async function freeShow(e,box,fresh){
   const en=e.ps==='n'&&!fresh?await Promise.race([enCached(w),new Promise(r=>setTimeout(()=>r(null),2500))]):await Promise.race([enCached(w),new Promise(r=>setTimeout(()=>r(null),2500))]);
   // our own Cloudflare picture service: a text model turns the meaning into a scene, FLUX draws it, stored per word
   const def=gloss(e).replace(/[⟨⟩]/g,'').slice(0,300), ex=(examples({df:e.df.split(/<span class="sn">2<\/span>/)[0]},1)[0]||'').slice(0,180);
-  const qs=new URLSearchParams({w, pos:POSL[e.ps]||e.ps||'', en:en||'', def, ex, seed:String(seed)});
+  const qs=new URLSearchParams({w, pos:POSL[e.ps]||e.ps||'', en:en||'', def, ex, seed}); if(fresh)qs.set('set','1');
   const url=AIURL_BASE+'/img?'+qs.toString();
   const fallback=()=>{ if(!document.body.contains(box))return; box.dataset.photo='1'; loadImg(e) };
   if(Date.now()<AIWAIT.until){fallback();return}           // daily allowance used up: photos until it resets
@@ -693,7 +732,8 @@ async function freeShow(e,box,fresh){
     try{
       const r=await fetch(url,{signal:c.signal});
       if(!r.ok||!/^image\//.test(r.headers.get('content-type')||'')){ if(r.status===429)AIWAIT.until=Date.now()+30*60e3; throw new Error('ai '+r.status) }
-      src=URL.createObjectURL(await r.blob()); AIBLOB.set(url,src);
+      src=URL.createObjectURL(await r.blob()); if(seed!=='latest')AIBLOB.set(url,src);
+      if(fresh)setOwnSeed(w,+seed);
     }catch(err){ clearTimeout(t); fallback(); return }
     clearTimeout(t);
   }
@@ -988,27 +1028,34 @@ function renderCard(){
   SESS.queue=q.all;
   if(!SESS.queue.length){viewStudy(SESS.id);return}
   const w=SESS.queue[0]; const e=E[WIDX.get(w)]; const c=d.cards[w];
-  const counts=`<div class="counts"><span class="n">${q.nw.length} neu</span>
-    <span class="l">${q.lr.length} lernen</span><span class="r">${q.rv.length} fällig</span></div>`;
+  const total=Object.keys(d.cards).length, left=q.nw.length+q.lr.length+q.rv.length;
+  SESS.start=SESS.start||left; const pct=Math.round(100*Math.max(0,SESS.start-left)/Math.max(1,SESS.start));
+  const pos=e.ps&&POSL[e.ps]?`<span class="pos">${POSL[e.ps]}</span>`:'';
+  const top=`<div class="sthead"><a class="btn sm" href="#/decks">${ic('arrow-left')} ${esc(d.name)}</a>
+      <div class="stcount"><span class="n" title="neu">${q.nw.length}</span><span class="l" title="lernen">${q.lr.length}</span><span class="r" title="fällig">${q.rv.length}</span></div></div>
+    <div class="stbar"><i style="width:${pct}%"></i></div>`;
   if(!SESS.revealed){
-    V().innerHTML=`<div class="study"><div class="row" style="margin-bottom:.3rem">
-      <a class="btn sm" href="#/decks">← ${esc(d.name)}</a></div>${counts}
-      <div class="stwrap"><div class="flashcard" onclick="reveal()">
-        <div class="fhw">${esc(e.w)}</div><div class="tap">Tippen zum Umdrehen (Leertaste)</div>
-      </div></div></div>`;
+    V().innerHTML=`<div class="study">${top}
+      <button class="flashcard front" onclick="reveal()">
+        <span class="fside">Vorderseite</span>
+        <span class="fhw">${esc(e.w)}</span>${pos}
+        <span class="tap">${ic('rotate-ccw')} Antwort zeigen <kbd>Leertaste</kbd></span>
+      </button></div>`;
   } else {
-    const art=e.ar?`<div class="fart" style="color:${gcol(e.ar)}">${e.ar}</div>`:'';
-    V().innerHTML=`<div class="study"><div class="row" style="margin-bottom:.3rem">
-      <a class="btn sm" href="#/decks">← ${esc(d.name)}</a></div>${counts}
-      <div class="stwrap"><div class="flashcard">
-        ${art}<div class="fhw">${esc(e.w)}</div><hr><div class="fdef">${fmtDef(e,true)}</div>
+    const art=e.ar?`<span class="art ${e.ar}">${e.ar}</span>`:'';
+    V().innerHTML=`<div class="study">${top}
+      <div class="flashcard back">
+        <div class="bhead"><div class="bword">${art}<span class="fhw">${sylHTML(e.sy)}</span>${pos}</div>
+          <button class="iconbtn say" title="Aussprache" onclick="say(${e.i},this)">${ic('volume-2')}</button></div>
+        <div class="bbody"><div class="wimg" id="wimg"></div><div class="fdef def">${fmtDef(e,'card')}</div></div>
       </div>
       <div class="grades">
-        <button class="grade g-again" onclick="ans(0)">Nochmal<small>${nextIvLabel(c,0)}</small></button>
-        <button class="grade g-hard" onclick="ans(1)">Schwer<small>${nextIvLabel(c,1)}</small></button>
-        <button class="grade g-good" onclick="ans(2)">Gut<small>${nextIvLabel(c,2)}</small></button>
-        <button class="grade g-easy" onclick="ans(3)">Einfach<small>${nextIvLabel(c,3)}</small></button>
-      </div></div></div>`;
+        <button class="grade g-again" onclick="ans(0)"><span>Nochmal</span><small>${nextIvLabel(c,0)}</small><kbd>1</kbd></button>
+        <button class="grade g-hard" onclick="ans(1)"><span>Schwer</span><small>${nextIvLabel(c,1)}</small><kbd>2</kbd></button>
+        <button class="grade g-good" onclick="ans(2)"><span>Gut</span><small>${nextIvLabel(c,2)}</small><kbd>3</kbd></button>
+        <button class="grade g-easy" onclick="ans(3)"><span>Einfach</span><small>${nextIvLabel(c,3)}</small><kbd>4</kbd></button>
+      </div></div>`;
+    loadImg(e);
   }
 }
 function reveal(){SESS.revealed=true;renderCard()}
@@ -1107,10 +1154,13 @@ function de(e){
 }
 
 /* ---------- account data ---------- */
-function writeCache(){if(session)LS.set(cacheKey(),{lists,decks,dirty})}
+let NOPREFS=false;
+function writeCache(){if(session)LS.set(cacheKey(),{lists,decks,prefs,dirty})}
 function rerender(){if(E.length&&!location.hash.startsWith('#/study'))route()}
 async function pull(){
-  const rows=await api('/rest/v1/user_data?select=lists,decks&user_id=eq.'+session.user.id,{token:await token()});
+  let rows;
+  try{ if(NOPREFS)throw 0; rows=await api('/rest/v1/user_data?select=lists,decks,prefs&user_id=eq.'+session.user.id,{token:await token()}) }
+  catch(err){ if(err&&err.status!==400&&err!==0)throw err; NOPREFS=true; rows=await api('/rest/v1/user_data?select=lists,decks&user_id=eq.'+session.user.id,{token:await token()}) }
   return rows&&rows[0]||null;
 }
 async function push(){
@@ -1122,7 +1172,7 @@ async function push(){
   try{
     await api('/rest/v1/user_data?on_conflict=user_id',{method:'POST',token:await token(),
       headers:{Prefer:'resolution=merge-duplicates,return=minimal'},
-      body:{user_id:who,lists,decks,updated_at:new Date().toISOString()}});
+      body:Object.assign({user_id:who,lists,decks,updated_at:new Date().toISOString()},NOPREFS?{}:{prefs})}).catch(async err=>{ if(err&&err.status===400&&!NOPREFS){NOPREFS=true; return api('/rest/v1/user_data?on_conflict=user_id',{method:'POST',token:await token(),headers:{Prefer:'resolution=merge-duplicates,return=minimal'},body:{user_id:who,lists,decks,updated_at:new Date().toISOString()}})} throw err });
     failed=false;
   }catch(e){
     dirty=true;
@@ -1139,14 +1189,15 @@ async function push(){
 function schedule(){dirty=true;writeCache();clearTimeout(timer);timer=setTimeout(push,600)}
 
 /* keep the original guest behaviour, save to the account when signed in */
-const guestLists=saveLists, guestDecks=saveDecks;
+const guestLists=saveLists, guestDecks=saveDecks, guestPrefs=savePrefs;
+savePrefs=function(){session?schedule():guestPrefs()};
 saveLists=function(){session?schedule():guestLists()};
 saveDecks=function(){session?schedule():guestDecks()};
 
 async function afterLogin(fresh){
   setBtn();
   const c=LS.get(cacheKey(),null);
-  if(c){lists=c.lists||{};decks=c.decks||{};dirty=!!c.dirty}else{lists={};decks={};dirty=false}
+  if(c){lists=c.lists||{};decks=c.decks||{};prefs=c.prefs||{};dirty=!!c.dirty}else{lists={};decks={};prefs={};dirty=false}
   rerender();
   let row;
   try{
@@ -1154,19 +1205,21 @@ async function afterLogin(fresh){
     row=await pull();
   }catch(e){toast(de(e));return}
   let L=row?row.lists||{}:{}, D=row?row.decks||{}:{}, save=!row;
+  const gp=LS.get('gd_prefs',{});
+  let P=Object.assign({},row&&row.prefs||{}); P.img=Object.assign({},gp.img||{},P.img||{}); if(!row||!row.prefs&&gp.img)save=true;
   const gl=LS.get('gd_lists',{}), gd=LS.get('gd_decks',{});
   if(fresh&&(!isEmpty(gl)||!isEmpty(gd))&&confirm('Auf diesem Gerät gibt es Listen oder Karten ohne Konto. Sollen sie in dein Konto übernommen werden?')){
     L=Object.assign({},L,gl);D=Object.assign({},D,gd);
     LS.set('gd_lists',{});LS.set('gd_decks',{});save=true;
   }
-  lists=L;decks=D;dirty=false;writeCache();rerender();
+  lists=L;decks=D;prefs=P;dirty=false;writeCache();rerender();
   if(save)await push();
 }
 function endSession(msg){
   if(session)try{localStorage.removeItem(cacheKey())}catch(e){}
   session=null;clearTimeout(timer);timer=null;dirty=false;failed=false;
   try{localStorage.removeItem(SKEY)}catch(e){}
-  lists=LS.get('gd_lists',{});decks=LS.get('gd_decks',{});
+  lists=LS.get('gd_lists',{});decks=LS.get('gd_decks',{});prefs=LS.get('gd_prefs',{});
   setBtn();closeSheet();rerender();
   if(msg)toast(msg);
 }
@@ -1267,7 +1320,7 @@ document.addEventListener('visibilitychange',async()=>{
   if(document.visibilityState==='hidden'){if(dirty||timer)push();return}
   if(dirty||pushing||timer)return;
   try{const row=await pull();if(!row||!session||dirty||timer)return;
-    if(JSON.stringify([row.lists,row.decks])!==JSON.stringify([lists,decks])){lists=row.lists||{};decks=row.decks||{};writeCache();rerender()}
+    if(JSON.stringify([row.lists,row.decks,row.prefs||prefs])!==JSON.stringify([lists,decks,prefs])){lists=row.lists||{};decks=row.decks||{};if(row.prefs)prefs=row.prefs;writeCache();rerender()}
   }catch(e){}
 });
 window.addEventListener('beforeunload',e=>{if(session&&(dirty||timer)){push();e.preventDefault();e.returnValue=''}});
