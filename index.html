@@ -309,6 +309,7 @@ nav.tabs a .lic{font-size:1rem;opacity:.85}
 .aion{display:flex;align-items:center;gap:.5rem;font-size:.88rem;margin:.6rem 0}
 .ainote{font-size:.76rem!important;color:var(--faint)!important}
 .sheet{width:min(30rem,100%)}
+.aih{margin:1rem 0 .2rem;font:700 .9rem Inter,system-ui,sans-serif}.aion .muted{font-size:.8rem}
 @media(max-width:560px){.hw{font-size:1.7rem}.flashcard .fhw{font-size:2rem}#q{font-size:1.25rem}}
 </style>
 </head>
@@ -611,10 +612,10 @@ async function findImgs(e){
   return out;
 }
 function showImg(e,box,list,k){
-  if(!list.length){box.innerHTML=`<div class="aicta"><button class="imgai" onclick="AI.open()">${ic('sparkles')} Bild mit KI erzeugen</button></div>`;box.classList.add('on');return}
+  if(!list.length){box.innerHTML=`<div class="aicta"><button class="imgai" onclick="aiBack(${e.i})">${ic('sparkles')} Bild mit KI erzeugen</button></div>`;box.classList.add('on');return}
   k=((k%list.length)+list.length)%list.length; const d=list[k];
   box.innerHTML=`<figure><img src="${d.src}" alt="${esc(plainW(e.w))}" loading="lazy" referrerpolicy="no-referrer">
-    <figcaption><span class="capb"><button class="imgnext" title="Anderes Bild">↻ anderes Bild</button><button class="imgai" title="Bild mit Gemini erzeugen" onclick="AI.open()">${ic('sparkles')} KI</button></span>
+    <figcaption><span class="capb"><button class="imgnext" title="Anderes Bild">↻ anderes Bild</button><button class="imgai" title="KI-Bild zeigen" onclick="aiBack(${e.i})">${ic('sparkles')} KI</button></span>
     <a href="${d.url||d.src}" target="_blank" rel="noopener">${esc(d.cap)}</a></figcaption></figure>`;
   box.classList.add('on');
   box.querySelector('img').onerror=()=>{list.splice(k,1);showImg(e,box,list,k)};
@@ -622,7 +623,7 @@ function showImg(e,box,list,k){
 }
 async function loadImg(e){
   const box=document.getElementById('wimg'); if(!box||NOIMG.has(e.ps)||!e.ps)return;
-  if(AI.on()&&!box.dataset.photo){aiShow(e,box);return}
+  if(!box.dataset.photo&&AI.free()){freeShow(e,box);return}
   const w=plainW(e.w), saved=LSI.get(w);
   if(saved){showImg(e,box,[saved],0)}
   let list=IMGC.get(w);
@@ -632,55 +633,20 @@ async function loadImg(e){
   showImg(e,box,list,0);
 }
 
-/* ---------- AI PICTURES with the visitor's own Gemini key (stored only in this browser) ---------- */
-const AI=(()=>{
-  const K='gd_gemini_key', M='gd_gemini_model', ON='gd_gemini_on';
-  const get=k=>{try{return localStorage.getItem(k)}catch(e){return null}}, set=(k,v)=>{try{v==null?localStorage.removeItem(k):localStorage.setItem(k,v)}catch(e){}};
-  const api='https://generativelanguage.googleapis.com/v1beta/';
-  async function models(key){
-    const r=await fetch(api+'models?pageSize=200',{headers:{'x-goog-api-key':key}}); const j=await r.json();
-    if(!r.ok)throw new Error(j.error&&j.error.message||'Schlüssel ungültig');
-    const ms=(j.models||[]).filter(m=>/image/i.test(m.name)&&/gemini/i.test(m.name)&&(m.supportedGenerationMethods||[]).includes('generateContent')).map(m=>m.name.replace('models/',''));
-    // prefer the fast "flash" image model, then any other Gemini image model
-    return ms.sort((a,b)=>(/flash/.test(b)-/flash/.test(a))||(/preview/.test(a)-/preview/.test(b)));
+/* ---------- AI PICTURES: settings ---------- */
+const AI={
+  free:()=>{try{return localStorage.getItem('gd_ai_free')!=='0'}catch(e){return true}},
+  setFree:v=>{try{localStorage.setItem('gd_ai_free',v?'1':'0')}catch(e){}},
+  open(){
+    openSheet(`<div class="aiset"><h3>${ic('sparkles')} KI-Bilder</h3>
+      <p>Zu jedem Wort wird automatisch ein eigenes Bild erzeugt, das genau diese Bedeutung zeigt. Kostenlos und ohne Anmeldung.</p>
+      <label class="aion"><input type="checkbox" id="aifree" ${AI.free()?'checked':''} onchange="AI.setFree(this.checked)"> KI-Bilder statt Fotos anzeigen</label>
+      <p class="ainote">Die Bilder werden von einem KI-Bildmodell (FLUX) erzeugt und für jedes Wort gespeichert. Mit „Foto" unter einem Bild siehst du stattdessen ein Foto aus Wikipedia/Wikimedia.</p>
+      <div class="row"><span class="spacer"></span><button class="btn primary" onclick="closeSheet();if(location.hash.startsWith('#/w/'))route()">Fertig</button></div></div>`);
   }
-  return {
-    on:()=>!!get(K)&&get(ON)!=='0', key:()=>get(K), model:()=>get(M),
-    open(){
-      const k=get(K), m=get(M);
-      openSheet(`<div class="aiset"><h3>${ic('sparkles')} KI-Bilder mit Gemini</h3>
-        <p>Statt Fotos aus dem Internet erzeugt Google Gemini für jedes Wort ein eigenes Bild, das genau diese Bedeutung zeigt. Dafür brauchst du einen eigenen, kostenlosen Gemini-Schlüssel.</p>
-        <ol class="aisteps"><li>Öffne <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio → API-Schlüssel</a> und melde dich mit deinem Google-Konto an.</li>
-          <li>Klicke auf „API-Schlüssel erstellen" und kopiere ihn.</li><li>Füge ihn hier ein.</li></ol>
-        <input class="input" id="aikey" type="password" autocomplete="off" placeholder="Gemini-API-Schlüssel (AIza…)" value="${k?'••••••••••••':''}">
-        <div class="acct-msg" id="aimsg">${k?`Verbunden${m?' · Modell: '+esc(m):''}`:''}</div>
-        <label class="aion"><input type="checkbox" id="aion" ${get(ON)!=='0'?'checked':''}> KI-Bilder statt Fotos anzeigen</label>
-        <p class="ainote">Der Schlüssel bleibt nur in diesem Browser und wird direkt an Google gesendet. Erzeugte Bilder zählen zu deinem Gemini-Kontingent; manche Bildmodelle verlangen in Google AI Studio eine aktivierte Abrechnung.</p>
-        <div class="row">${k?`<button class="btn" onclick="AI.remove()">Schlüssel entfernen</button>`:''}<span class="spacer"></span>
-          <button class="btn" onclick="closeSheet()">Abbrechen</button><button class="btn primary" id="aisave" onclick="AI.save()">Speichern</button></div></div>`);
-      const m2=document.getElementById('aimsg'); if(k&&m2)m2.classList.add('ok');
-      document.getElementById('aikey').addEventListener('focus',ev=>{if(/^•+$/.test(ev.target.value))ev.target.value=''},{once:true});
-    },
-    async save(){
-      const inp=document.getElementById('aikey'), msg=document.getElementById('aimsg'), btn=document.getElementById('aisave');
-      const onv=document.getElementById('aion').checked?'1':'0';
-      let key=inp.value.trim(); if(/^•+$/.test(key)||!key)key=get(K);
-      if(!key){msg.textContent='Bitte einen Schlüssel einfügen.';msg.classList.remove('ok');return}
-      btn.disabled=true; msg.classList.remove('ok'); msg.textContent='Schlüssel wird geprüft …';
-      try{
-        const ms=await models(key);
-        if(!ms.length)throw new Error('Mit diesem Schlüssel ist kein Gemini-Bildmodell verfügbar.');
-        set(K,key); set(M,ms[0]); set(ON,onv);
-        msg.classList.add('ok'); msg.textContent='Verbunden · Modell: '+ms[0];
-        setTimeout(()=>{closeSheet(); if(location.hash.startsWith('#/w/'))route()},700);
-      }catch(err){msg.textContent=String(err.message||err)}
-      finally{btn.disabled=false}
-    },
-    remove(){set(K,null);set(M,null);closeSheet();toast('Gemini-Schlüssel entfernt');if(location.hash.startsWith('#/w/'))route()}
-  };
-})();
+};
 /* the prompt: meaning, example and a part-of-speech specific instruction */
-function aiPrompt(e){
+function aiPrompt(e,en){
   const w=plainW(e.w), pos=POSL[e.ps]||e.ps||'', def=gloss(e), ex=examples({df:e.df.split(/<span class="sn">2<\/span>/)[0]},2), art=e.ar?e.ar+' ':'';
   const focus={
     v:'Show one person (or animal, if the verb is about animals) clearly in the middle of doing this action, so the activity is obvious at a glance. Choose the most typical everyday situation for it.',
@@ -688,7 +654,7 @@ function aiPrompt(e){
     n:'Show the thing itself as the clear main subject. If it is abstract, show one everyday human situation that makes the idea instantly understandable.',
     Partizip:'Show a person or object in exactly the state this word describes.'
   }[e.ps]||'Show one simple everyday situation that makes the meaning obvious.';
-  return `You illustrate a German learner's dictionary for adults. Create ONE picture that explains the German word "${art}${w}"${pos?' ('+pos+')':''}.
+  return `You illustrate a German learner's dictionary for adults. Create ONE picture that explains the German word "${art}${w}"${pos?' ('+pos+')':''}${en?' – in English: "'+en+'"':''}.
 Meaning from the dictionary (German): ${def||'—'}
 ${ex.length?'Example sentence(s): '+ex.join(' / '):''}
 ${focus}
@@ -700,47 +666,44 @@ Requirements:
 - Natural, inclusive people; suitable for all ages. For violence, death, illness or crime use a calm, symbolic depiction.
 - Landscape format, 4:3.`;
 }
-const idbImg=(()=>{let dbp;const open=()=>dbp||(dbp=new Promise((res,rej)=>{const r=indexedDB.open('gd-ai',1);r.onupgradeneeded=()=>r.result.createObjectStore('img');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}));
-  return {async get(k){try{const db=await open();return await new Promise(r=>{const q=db.transaction('img').objectStore('img').get(k);q.onsuccess=()=>r(q.result||null);q.onerror=()=>r(null)})}catch(e){return null}},
-          async set(k,v){try{const db=await open();db.transaction('img','readwrite').objectStore('img').put(v,k)}catch(e){}}}})();
-async function aiGenerate(e){
-  const body=(cfg)=>JSON.stringify({contents:[{parts:[{text:aiPrompt(e)}]}],generationConfig:cfg});
-  const url='https://generativelanguage.googleapis.com/v1beta/models/'+AI.model()+':generateContent';
-  const call=cfg=>fetch(url,{method:'POST',headers:{'content-type':'application/json','x-goog-api-key':AI.key()},body:body(cfg)});
-  let r=await call({responseModalities:['IMAGE','TEXT'],imageConfig:{aspectRatio:'4:3'}});
-  if(r.status===400)r=await call({responseModalities:['IMAGE','TEXT']});
-  const j=await r.json();
-  if(!r.ok){const m=j.error&&j.error.message||('Fehler '+r.status);
-    throw new Error(r.status===429?'Dein Gemini-Kontingent ist gerade aufgebraucht. Bitte später erneut versuchen.':r.status===403||/API key/i.test(m)?'Der Gemini-Schlüssel wurde abgelehnt.':m)}
-  const part=(j.candidates||[]).flatMap(c=>c.content&&c.content.parts||[]).find(p=>p.inlineData||p.inline_data);
-  if(!part)throw new Error('Gemini hat kein Bild geliefert (eventuell vom Sicherheitsfilter blockiert).');
-  const d=part.inlineData||part.inline_data, bin=atob(d.data), u=new Uint8Array(bin.length);
-  for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
-  return new Blob([u],{type:d.mimeType||d.mime_type||'image/png'});
-}
-const aiBusy=new Map();
-async function aiShow(e,box,fresh){
-  const w=plainW(e.w), id=e.w;
-  const cap=`<figcaption><span class="capb"><button class="imgnext" onclick="aiShow(E[${e.i}],document.getElementById('wimg'),true)">${ic('refresh-cw')} neu erzeugen</button>
+/* AI pictures for everyone from our own Cloudflare service; the seed keeps a word's picture until "neu erzeugen" */
+const ENC=new Map();
+async function enCached(w){ if(!ENC.has(w))ENC.set(w,enWord(w).catch(()=>null)); return ENC.get(w) }
+function seedFor(w){ try{const v=localStorage.getItem('gd_aiseed_'+w); if(v)return +v}catch(e){}
+  let h=7; for(const c of w)h=(h*31+c.charCodeAt(0))>>>0; return h%1000000 }
+async function freeShow(e,box,fresh){
+  const w=plainW(e.w);
+  let seed=seedFor(w);
+  if(fresh){seed=Math.floor(Math.random()*1e6); try{localStorage.setItem('gd_aiseed_'+w,seed)}catch(err){}}
+  const cap=`<figcaption><span class="capb"><button class="imgnext" onclick="freeShow(E[${e.i}],document.getElementById('wimg'),true)">${ic('refresh-cw')} neu erzeugen</button>
     <button class="imgai" onclick="(b=>{b.dataset.photo='1';loadImg(E[${e.i}])})(document.getElementById('wimg'))">Foto</button></span>
-    <a href="#" onclick="event.preventDefault();AI.open()">${ic('sparkles')} KI-Bild · Gemini</a></figcaption>`;
+    <a href="#" onclick="event.preventDefault();AI.open()">${ic('sparkles')} KI-Bild</a></figcaption>`;
   box.classList.add('on');
-  let blob=fresh?null:await idbImg.get(id);
-  if(!blob){
-    box.innerHTML=`<figure><div class="aiload"><span class="spin"></span><span>Bild wird mit Gemini erzeugt …</span></div>${cap}</figure>`;
+  box.innerHTML=`<figure><div class="aiload"><span class="spin"></span><span>Bild wird erzeugt …</span></div>${cap}</figure>`;
+  const en=e.ps==='n'&&!fresh?await Promise.race([enCached(w),new Promise(r=>setTimeout(()=>r(null),2500))]):await Promise.race([enCached(w),new Promise(r=>setTimeout(()=>r(null),2500))]);
+  // our own Cloudflare picture service: a text model turns the meaning into a scene, FLUX draws it, stored per word
+  const def=gloss(e).replace(/[⟨⟩]/g,'').slice(0,300), ex=(examples({df:e.df.split(/<span class="sn">2<\/span>/)[0]},1)[0]||'').slice(0,180);
+  const qs=new URLSearchParams({w, pos:POSL[e.ps]||e.ps||'', en:en||'', def, ex, seed:String(seed)});
+  const url=AIURL_BASE+'/img?'+qs.toString();
+  const fallback=()=>{ if(!document.body.contains(box))return; box.dataset.photo='1'; loadImg(e) };
+  if(Date.now()<AIWAIT.until){fallback();return}           // daily allowance used up: photos until it resets
+  let src=AIBLOB.get(url);
+  if(!src){
+    const c=new AbortController(), t=setTimeout(()=>c.abort(),45000);
     try{
-      let p=aiBusy.get(id); if(!p||fresh){p=aiGenerate(e);aiBusy.set(id,p)}
-      blob=await p; aiBusy.delete(id); await idbImg.set(id,blob);
-    }catch(err){
-      aiBusy.delete(id);
-      if(!document.body.contains(box))return;
-      box.innerHTML=`<figure><div class="aiload err">${ic('triangle-alert')}<span>${esc(String(err.message||err))}</span></div>${cap}</figure>`;
-      return;
-    }
+      const r=await fetch(url,{signal:c.signal});
+      if(!r.ok||!/^image\//.test(r.headers.get('content-type')||'')){ if(r.status===429)AIWAIT.until=Date.now()+30*60e3; throw new Error('ai '+r.status) }
+      src=URL.createObjectURL(await r.blob()); AIBLOB.set(url,src);
+    }catch(err){ clearTimeout(t); fallback(); return }
+    clearTimeout(t);
   }
   if(!document.body.contains(box))return;
-  box.innerHTML=`<figure><img src="${URL.createObjectURL(blob)}" alt="KI-Bild: ${esc(w)}">${cap}</figure>`;
+  const img=new Image(); img.alt='KI-Bild: '+w; img.src=src;
+  const l=box.querySelector('.aiload'); if(l)l.replaceWith(img);
 }
+const AIURL_BASE='https://woerterbuch-bilder.edwin1kitaka.workers.dev', AIBLOB=new Map(), AIWAIT={until:0};
+function aiBack(i){ const box=document.getElementById('wimg'); if(!box)return;
+  if(AI.free()){delete box.dataset.photo; loadImg(E[i])} else AI.open() }
 /* ---------- WORD MAP: synonyms, opposites, word family and words close in meaning ---------- */
 const WMG=[{k:'s',label:'Synonyme (≈)',col:'var(--das)',max:5},{k:'g',label:'Gegenteil (↔)',col:'var(--die)',max:3},
   {k:'f',label:'Wortfamilie',col:'var(--der)',max:5},{k:'n',label:'Ähnliche Bedeutung',col:'var(--neu)',max:7}];
