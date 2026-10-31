@@ -5,7 +5,7 @@
    Attempts are kept in this browser and, for signed-in users, saved to Supabase (table grammar_results). */
 (function () {
 'use strict';
-const VER = '5';
+const VER = '6';
 const PASS = 0.7;                       // share of correct answers needed to pass an exercise
 const $ = id => document.getElementById(id);
 const H = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -17,6 +17,15 @@ let cur = null;                         // chapter on screen
 
 /* ---------- chapter list (topics A1–B1, in learning order) ---------- */
 const GROUPS = [
+  { t: 'Wortschatz A1', ic: 'book-a', h: 20, vocab: true, ch: [
+    [201, 'Person', 'Name, Herkunft, Alter', 'A1'], [202, 'Familie und Freunde', 'Eltern, Geschwister, Freunde', 'A1'],
+    [203, 'Körper und Gesundheit', 'Kopf, Hand, krank sein', 'A1'], [204, 'Post, Bank und Ämter', 'Brief, Konto, Formular', 'A1'],
+    [205, 'Verkehr', 'Bus, Bahn, Fahrrad', 'A1'], [206, 'Reisen', 'Hotel, Koffer, Fahrkarte', 'A1'],
+    [207, 'Einkaufen: Lebensmittel', 'Brot, Obst, Supermarkt', 'A1'], [208, 'Restaurant, Imbiss, Einladung', 'bestellen, bezahlen', 'A1'],
+    [209, 'Kommunikation und Freizeit', 'Handy, Hobby, Sport', 'A1'], [210, 'Lernen', 'Kurs, Heft, üben', 'A1'],
+    [211, 'Arbeit und Beruf', 'Büro, Kollege, arbeiten', 'A1'], [212, 'Wohnen', 'Zimmer, Küche, Miete', 'A1'],
+    [213, 'Uhrzeit, Tag und Woche', 'Montag, morgens, um acht', 'A1'], [214, 'Datum, Jahreszeiten, Wetter', 'Mai, Sommer, Regen', 'A1'],
+    [215, 'Kleine Wörter', 'hier, dort, mit, ohne', 'A1'], [216, 'Zahlen, Maße, Gewichte', 'eins, Kilo, Meter', 'A1'] ] },
   { t: 'Verben 1', ic: 'zap', h: 216, ch: [
     [1, 'Personalpronomen', 'ich, du, er, sie, es …', 'A1'], [2, 'Präsens: regelmäßige Verben', 'ich wohne, du wohnst', 'A1'],
     [3, 'sein, haben und möchten', 'ich bin, ich habe', 'A1'], [4, 'Verben mit Vokalwechsel', 'essen → isst, fahren → fährt', 'A1'],
@@ -79,8 +88,9 @@ const GROUPS = [
     [101, 'Unregelmäßige Verben', 'Präteritum, Partizip, haben oder sein – mit Trainer', 'Liste'], [102, 'Verben mit Dativ', 'helfen, danken, gefallen … – mit Trainer', 'Liste'],
     [103, 'Verben mit Dativ und Akkusativ', 'jemandem etwas geben … – mit Trainer', 'Liste'], [104, 'Verben mit Präpositionen', 'warten auf, denken an … – mit Trainer', 'Liste'] ] }
 ];
-const READY = Object.fromEntries([...Array.from({ length: 85 }, (_, i) => i + 1), 101, 102, 103, 104].map(n => [n, 1]));   // chapters that exist so far   // chapters that exist so far
-const TOTAL = GROUPS.reduce((s, g) => s + (g.ref ? 0 : g.ch.length), 0);
+const READY = Object.fromEntries([...Array.from({ length: 85 }, (_, i) => i + 1), 101, 102, 103, 104, 202].map(n => [n, 1]));   // chapters that exist so far   // chapters that exist so far
+const TOTAL = GROUPS.reduce((s, g) => s + (g.ref || g.vocab ? 0 : g.ch.length), 0);
+const numLabel = n => n > 200 ? String(n - 200) : n > 100 ? icn('book-marked') : String(n);
 const chInfo = n => { for (const g of GROUPS) for (const c of g.ch) if (c[0] === n) return { g, c }; return null; };
 
 /* ---------- styles ---------- */
@@ -351,6 +361,64 @@ const CSS = `
 .gr-play{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;background:var(--ac-salt);border-radius:1rem;padding:.7rem .9rem;margin:0 0 1rem;font-size:.9rem;font-weight:600}
 .gr-play>span{display:inline-flex;gap:.4rem;align-items:center;margin-right:auto}
 .gr-scs .alt{display:block;font-size:1rem;color:var(--mut);margin-top:.2rem}
+
+/* Wortschatz */
+.vk-feat .th{background:var(--cream)}
+.vk-n{font-family:Inter,sans-serif;font-size:.8rem;color:var(--mut);font-weight:600;margin-left:.3rem}
+.vk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(9.6rem,1fr));gap:.7rem}
+.vk-card{display:flex;flex-direction:column;align-items:stretch;text-align:left;gap:.12rem;padding:.55rem .6rem .65rem;border:1px solid var(--line);border-radius:1rem;background:var(--card);color:var(--fg);cursor:pointer;font:inherit;position:relative;transition:transform .15s,box-shadow .15s}
+.vk-card:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+.vk-card::before{content:"";position:absolute;left:.6rem;right:.6rem;top:0;height:3px;border-radius:0 0 3px 3px;background:var(--faint)}
+.vk-card.der::before{background:var(--der)}.vk-card.die::before{background:var(--die)}.vk-card.das::before{background:var(--das)}
+.vk-pic{display:block;aspect-ratio:4/3;border-radius:.7rem;background:var(--cream);overflow:hidden;margin-bottom:.35rem}
+.vk-pic svg,.vk-shp svg,.vk-qpic svg{display:block;width:100%;height:100%}
+.vk-w{font-family:Fraunces,serif;font-weight:600;font-size:1.08rem;line-height:1.2}
+.vk-ar{font-family:Inter,sans-serif;font-size:.82rem;font-weight:700}
+.der .vk-ar{color:var(--der)}.die .vk-ar{color:var(--die)}.das .vk-ar{color:var(--das)}
+.vk-pl{font-size:.76rem;color:var(--mut)}.vk-en{font-size:.82rem;color:var(--fg);opacity:.8;font-style:italic}
+.vk-legend{display:flex;gap:.9rem;flex-wrap:wrap;margin:.8rem 0 0;font-size:.78rem;color:var(--mut)}
+.vk-legend span::before{content:"";display:inline-block;width:.9rem;height:3px;border-radius:2px;margin-right:.3rem;vertical-align:middle;background:var(--faint)}
+.vk-legend .der::before{background:var(--der)}.vk-legend .die::before{background:var(--die)}.vk-legend .das::before{background:var(--das)}
+.vk-fil{margin:0 0 .8rem}
+.vk-src{font-size:.75rem;color:var(--mut);margin:1.6rem 0 0;line-height:1.5}.vk-src a{color:inherit}
+.vk-qpic{display:inline-block;width:5.4rem;height:4rem;border-radius:.6rem;background:var(--cream);overflow:hidden;vertical-align:middle;margin:0 .6rem .3rem 0}
+.vk-dlg{display:flex;flex-direction:column;gap:.5rem}
+.vk-ln{display:flex;align-items:center;gap:.5rem}.vk-ln.r{flex-direction:row-reverse}
+.vk-who{flex:0 0 auto;width:2.1rem;height:2.1rem;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:.8rem;background:var(--akk-s);color:var(--akk)}
+.vk-ln.r .vk-who{background:var(--dat-s);color:var(--dat)}
+.vk-bub{background:var(--card);border:1px solid var(--line);border-radius:1rem;padding:.45rem .75rem;font-size:.98rem;max-width:75%}
+.vk-tree{display:block;width:100%;max-width:560px;margin:0 auto}
+.vk-cap{min-height:1.6em;margin:.4rem 0 0;font-family:Newsreader,serif;font-size:1.12rem;color:var(--cream-ink);text-align:center}
+.vk-tree [data-cap]{cursor:pointer}.vk-tree [data-cap] .ring{opacity:0;transition:opacity .2s}.vk-tree [data-cap].on .ring,.vk-tree [data-cap]:hover .ring{opacity:1}
+.vk-sh{max-height:min(84vh,46rem);overflow:auto;margin:-.2rem -.5rem -.2rem -.2rem;padding:.2rem .5rem .2rem .2rem}
+.vk-shh{display:flex;gap:.9rem;align-items:center}
+.vk-shp{flex:0 0 6.6rem;height:5rem;border-radius:.8rem;background:var(--cream);overflow:hidden}
+.vk-sht{min-width:0}
+.vk-shw{display:flex;align-items:center;gap:.45rem;flex-wrap:wrap;font-family:Fraunces,serif;font-size:1.65rem;line-height:1.15}
+.vk-shw .vk-ar{font-size:1rem}.vk-shw .gr-say{width:32px;height:32px}
+.vk-shw.der b{color:var(--der)}.vk-shw.die b{color:var(--die)}.vk-shw.das b{color:var(--das)}
+.gr-say.on{color:var(--ac);border-color:var(--ac);box-shadow:0 0 0 3px var(--ac-salt)}
+.vk-meta{font-size:.8rem;color:var(--mut);margin-top:.15rem}.vk-meta .ipa{font-family:ui-monospace,Menlo,monospace}
+.vk-fm{font-size:.88rem;margin-top:.25rem}.vk-fm small{color:var(--mut)}
+.vk-tr{display:flex;gap:.6rem;align-items:baseline;background:var(--ac-salt);border-radius:.8rem;padding:.6rem .8rem;margin:.9rem 0 .7rem;font-size:1.02rem}
+.vk-tr .lab{font-size:.68rem;font-weight:800;letter-spacing:.06em;color:var(--ac)}.vk-tr i{color:var(--faint);font-style:normal;margin:0 .4rem}
+.vk-conj{display:flex;gap:1rem;flex-wrap:wrap;margin:0 0 .7rem;font-size:.9rem}
+.vk-conj table{border-collapse:collapse}.vk-conj td{padding:.12rem .7rem .12rem 0}.vk-conj td:first-child{color:var(--mut)}
+.vk-tense p{margin:0 0 .45rem}.vk-tense small{display:block;font-size:.7rem;color:var(--mut);text-transform:uppercase;letter-spacing:.05em}
+.vk-note{display:flex;gap:.5rem;align-items:flex-start;background:var(--cream);border:1px solid var(--cream-b);border-radius:.8rem;padding:.55rem .75rem;font-size:.9rem;margin:0 0 .6rem;color:var(--cream-ink)}
+.vk-note svg{flex:0 0 auto;margin-top:.15rem;color:var(--nom)}
+.vk-h4{font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--mut);margin:.8rem 0 .4rem}
+.vk-exs{border:1px solid var(--line);border-radius:.8rem;overflow:hidden}
+.vk-exr{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--line)}.vk-exr:first-child{border-top:0}
+.vk-exr>div{padding:.5rem .7rem;font-size:.93rem;line-height:1.4}
+.vk-exr .de{display:flex;gap:.4rem;align-items:flex-start;justify-content:space-between;font-family:Newsreader,serif;font-size:1.04rem}
+.vk-exr .en{background:var(--line2);color:var(--fg)}
+.vk-exr mark{background:none;color:var(--ac);font-weight:700}
+.vk-exr .gr-say.sm{width:26px;height:26px}
+.vk-tl{font-size:.68rem;color:var(--faint);text-decoration:none;margin-left:.2rem}.vk-tl:hover{color:var(--ac)}
+.vk-shf{display:flex;gap:.4rem;flex-wrap:wrap;align-items:center;margin:.9rem 0 .3rem}.vk-shf .spacer{flex:1}
+.vk-cred{font-size:.7rem;color:var(--faint);margin:.3rem 0 0}.vk-cred a{color:inherit}
+@media(max-width:520px){.vk-exr{grid-template-columns:1fr}.vk-exr .en{padding-top:.25rem}.vk-grid{grid-template-columns:repeat(2,1fr);gap:.5rem}.vk-w{font-size:.98rem}}
 `;
 function css() { if (!$('grcss')) { const s = document.createElement('style'); s.id = 'grcss'; s.textContent = CSS; document.head.appendChild(s); } }
 
@@ -534,7 +602,7 @@ ${o.beard ? `<path d="M-19 -158Q-20 -132 0 -130Q20 -132 19 -158Q14 -146 0 -144Q-
 
 /* ---------- text helpers ---------- */
 // {n:…} Nominativ, {d:…} Dativ, {a:…} Akkusativ, {e:…} Endung/wichtiger Teil, {v:…} Verb (Position 2), {t:…} Verbteil am Ende
-const plain = s => s.replace(/\{[ndaevt]:([^}]*)\}/g, '$1').replace(/\(\(([^|)]*)[^)]*\)\)/g, '$1').replace(/\[\[([^\]|]*)[^\]]*\]\]/g, '$1').replace(/\[|\]/g, '');
+const plain = s => s.replace(/\{p:[^}]*\}\s*/g, '').replace(/\{[ndaevt]:([^}]*)\}/g, '$1').replace(/\(\(([^|)]*)[^)]*\)\)/g, '$1').replace(/\[\[([^\]|]*)[^\]]*\]\]/g, '$1').replace(/\[|\]/g, '');
 const wrapWords = t => H(t).replace(/[A-Za-zÄÖÜäöüß]+/g, w => `<span class="gw">${w}</span>`);
 function fmt(s) {
   let out = '', last = 0, m; const re = /\{([ndaevt]):([^}]*)\}/g;
@@ -659,6 +727,7 @@ function overview() {
     <div class="gr-stats"><span class="gr-stat"><b>${TOTAL}</b>Kapitel</span><span class="gr-stat"><b>${done}</b>schon fertig</span><a class="gr-stat" href="#/g/fortschritt" style="text-decoration:none"><b>${passedEx}</b>Übungen bestanden →</a></div></div>
     <div class="gr-topart">${ART.cover()}</div></section>
   <a class="gr-feat" href="#/g/1"><span class="th" id="grfeat"></span><span><span class="gr-lv A1">A1</span> <span class="gr-eyebrow" style="display:inline">Hier anfangen</span><b>Kapitel 1: Personalpronomen</b><p>Alle 85 Kapitel von A1 bis B1 – mit Erklärungen, Beispielen, Übungen, Sprechtraining und Spiel. Dazu Verblisten mit Trainer.</p></span></a>
+  <a class="gr-feat vk-feat" href="#/g/202"><span class="th" id="vkfeat"></span><span><span class="gr-lv A1">A1</span> <span class="gr-eyebrow" style="display:inline">Neu: Wortschatz</span><b>Familie und Freunde</b><p>44 Wörter mit Bildern, Aussprache, Übersetzungen und echten Beispielsätzen auf Deutsch und Englisch – dazu Übungen und Spiel.</p></span></a>
   <div class="gr-filter">${['', 'A1', 'A2', 'B1'].map(l => `<button class="gr-chip${filt.lv === l ? ' on' : ''}" data-lv="${l}">${l || 'Alle'}</button>`).join('')}
     <input id="grq" placeholder="Thema suchen, z. B. Perfekt" value="${H(filt.q)}" autocomplete="off"></div>
   <div id="grlist"></div>`;
@@ -673,9 +742,9 @@ function list() {
   for (const g of GROUPS) {
     const cs = g.ch.filter(c => (!filt.lv || c[3] === filt.lv) && (!q || f(c[1] + ' ' + c[2] + ' ' + g.t).includes(q)));
     if (!cs.length) continue;
-    html += `<section class="gr-grp" style="--h:${g.h}"><h2><span class="badge">${icn(g.ic)}</span>${H(g.t)}<small>${g.ch.length} Kapitel</small></h2><div class="gr-cards">` +
+    html += `<section class="gr-grp" style="--h:${g.h}"><h2><span class="badge">${icn(g.ic)}</span>${H(g.t)}<small>${g.ch.length} ${g.vocab ? 'Themen' : 'Kapitel'}</small></h2><div class="gr-cards">` +
       cs.map(c => {
-        const ok = READY[c[0]], body = `<span class="gr-num">${c[0] > 100 ? icn('book-marked') : c[0]}</span><span class="gr-ct"><b>${H(c[1])}</b><small>${H(c[2])}</small></span><span class="gr-lv ${c[3]}">${c[3]}</span>`;
+        const ok = READY[c[0]], body = `<span class="gr-num">${numLabel(c[0])}</span><span class="gr-ct"><b>${H(c[1])}</b><small>${H(c[2])}</small></span><span class="gr-lv ${c[3]}">${c[3]}</span>`;
         if (!ok) return `<div class="gr-card soon" title="Kommt bald">${body}</div>`;
         const pr = CH[c[0]] ? chapterProgress(CH[c[0]]) : null, all = pr && pr.passed === pr.total;
         return `<a class="gr-card ready" href="#/g/${c[0]}">${body}${all ? `<span class="gr-done" title="Alle Übungen bestanden">${icn('circle-check')}</span>` : ''}</a>`;
@@ -696,7 +765,7 @@ async function progressView() {
   let rows = '';
   for (const n of Object.keys(READY).map(Number)) {
     const c = CH[n]; if (!c) continue;
-    rows += `<tr class="gr-ph"><td colspan="5"><a href="#/g/${n}"><b>${n > 100 ? 'Nachschlagen' : 'Kapitel ' + n}</b> · ${H(c.title)}</a> <span class="gr-lv ${c.level}">${c.level}</span></td></tr>`;
+    rows += `<tr class="gr-ph"><td colspan="5"><a href="#/g/${n}"><b>${n > 200 ? 'Wortschatz ' + (n - 200) : n > 100 ? 'Nachschlagen' : 'Kapitel ' + n}</b> · ${H(c.title)}</a> <span class="gr-lv ${c.level}">${c.level}</span></td></tr>`;
     for (const x of c.exercises.filter(x => x.graded !== false)) {
       const mine = at.filter(a => a.ch === n && a.ex === x.id), b = best(n, x.id), last = mine[mine.length - 1];
       const p = b ? pct(b.score, b.total) : 0, ok = b && b.score / b.total >= PASS;
@@ -734,6 +803,7 @@ async function chapter(n) {
 }
 function render(c) {
   cur = c;
+  if (c.vocab) { renderVocab(c); return; }
   for (const x of c.exercises) if (x.gen) x.items = x.gen();
   if (c.speak && c.speak.gen) c.speak.items = c.speak.gen(); const info = chInfo(c.n), pr = chapterProgress(c);
   const blocks = c.understand.map(block).join('');
@@ -763,6 +833,109 @@ function render(c) {
 function progHTML(pr) {
   const p = pct(pr.passed, pr.total);
   return `${ring(p)}<span><b>${pr.passed} von ${pr.total}</b> Übungen bestanden<br>${pr.passed === pr.total ? 'Kapitel geschafft! 🎉' : (acct() ? 'Ergebnisse werden in deinem Konto gespeichert.' : '<a href="#/g/fortschritt">Wo werden meine Ergebnisse gespeichert?</a>')}</span>`;
+}
+
+/* ---------- Wortschatz topics: word cards, dictionary sheet (DE/EN), forms, examples ---------- */
+const VPOS = { n: 'Nomen', v: 'Verb', adj: 'Adjektiv', adv: 'Adverb' };
+const vlabel = x => (x.ar ? x.ar + ' ' : '') + x.w;
+function vsub(x) {
+  if (x.ps === 'n') return x.pf ? 'nur Plural' : x.pl ? (x.pl === x.w ? 'die ' + x.pl + ' (gleich)' : 'die ' + x.pl) : '';
+  if (x.ps === 'v') return 'er/sie ' + x.pres[2];
+  if (x.ps === 'adj' && x.comp) return x.comp + ' · ' + x.sup;
+  return VPOS[x.ps] || '';
+}
+function vforms(x) {     // every form of the word, to mark it in the example sentences
+  const f = new Set([x.w, x.pl, x.prt, x.pp, x.comp, x.sup && x.sup.replace(/^am /, '')].filter(Boolean));
+  (x.pres || []).forEach(p => f.add(p.split(' ')[0]));
+  if (x.prt) f.add(x.prt.split(' ')[0]);
+  if (x.ps === 'n') { f.add(x.w + 'n'); f.add(x.w + 's'); if (x.pl) f.add(x.pl + 'n'); }
+  if (x.ps === 'adj') [...f].forEach(b => ['e', 'en', 'er', 'es', 'em'].forEach(e => f.add(b + e)));
+  if (x.ps === 'v') { const st = x.w.replace(/n$/, ''); ['e', 'st', 't', 'en', 'te', 'test', 'ten', 'tet'].forEach(e => f.add(st.replace(/e$/, '') + e)); }
+  return new Set([...f].map(w => w.toLowerCase()));
+}
+function vmark(x, sent) {
+  const f = vforms(x), sep = x.pres && / /.test(x.pres[2]) ? x.pres[2].split(' ')[1] : '';
+  const toks = sent.split(/([A-Za-zÄÖÜäöüß]+)/);
+  const hasVerb = toks.some(t => f.has(t.toLowerCase()));
+  let lastWord = -1; toks.forEach((t, k) => { if (/^[A-Za-zÄÖÜäöüß]+$/.test(t)) lastWord = k; });
+  return toks.map((t, k) => !/^[A-Za-zÄÖÜäöüß]+$/.test(t) ? H(t) : (f.has(t.toLowerCase()) || (sep && hasVerb && k === lastWord && t === sep)) ? `<mark>${H(t)}</mark>` : H(t)).join('');
+}
+function vcard(c, x) {
+  return `<button class="vk-card ${x.ar && !x.pf ? x.ar : x.pf ? 'die' : 'x'}" data-vw="${H(x.w)}" data-g="${H(x.g)}">
+    <span class="vk-pic">${c.pic ? c.pic(x.w) : ''}</span>
+    <span class="vk-w">${x.ar ? `<span class="vk-ar">${H(x.ar)}</span> ` : ''}${H(x.w)}</span>
+    <span class="vk-pl">${H(vsub(x))}</span><span class="vk-en">${H(x.en.slice(0, 2).join(', '))}</span></button>`;
+}
+let vgroup = '';
+function vfilter(g) {
+  vgroup = g;
+  document.querySelectorAll('[data-vg]').forEach(b => b.classList.toggle('on', b.dataset.vg === g));
+  document.querySelectorAll('#vkgrid .vk-card').forEach(b => { b.hidden = !!g && b.dataset.g !== g; });
+}
+function renderVocab(c) {
+  for (const x of c.exercises) if (x.gen) x.items = x.gen();
+  if (c.speak && c.speak.gen) c.speak.items = c.speak.gen();
+  const pr = chapterProgress(c), groups = [...new Set(c.words.map(x => x.g))];
+  vgroup = '';
+  V().innerHTML = `<div class="row" style="margin-bottom:.6rem"><a class="btn sm" href="#/g">${icn('arrow-left')} Grammatik und Wortschatz</a></div>
+  <article class="gr-ch vk">
+   <div class="gr-hero"><div>
+     <p class="gr-eyebrow">Wortschatz ${H(c.level)} · Thema ${c.n - 200} · <span class="gr-lv ${c.level}">${c.level}</span></p>
+     <h1>${H(c.title)}</h1><p class="gr-kick">${H(c.kicker)}</p><p class="gr-intro">${rich(c.intro)}</p>
+     <div class="gr-prog" id="grprog">${progHTML(pr)}</div>
+     <div class="row" style="margin-top:.8rem"><button class="btn sm" onclick="GRAM.practice('solo')">${icn('gamepad-2')} Im Spiel üben</button></div></div>
+     <figure class="gr-art">${typeof c.art === 'function' ? c.art(K) : ''}<figcaption><span>${fmt(c.hero)}</span>${sayBtn(c.hero)}</figcaption></figure>
+   </div>
+   <nav class="gr-toc"><a href="#grs-w" data-jump>${icn('book-a')} Wörter</a><a href="#grs-v" data-jump>${icn('lightbulb')} Verstehen</a><a href="#grs-u" data-jump>${icn('pencil')} Üben</a><a href="#grs-s" data-jump>${icn('mic')} Sprechen</a></nav>
+   <section class="gr-sec" id="grs-w"><h2><span class="gr-sn">1</span>Wörter <small class="vk-n">${c.words.length}</small></h2>
+     <p class="sub" style="margin:-.3rem 0 .8rem">Tippe auf ein Wort: Übersetzungen, Formen, Aussprache und echte Beispielsätze auf Deutsch und Englisch.</p>
+     <div class="gr-filter vk-fil"><button class="gr-chip on" data-vg="">Alle</button>${groups.map(g => `<button class="gr-chip" data-vg="${H(g)}">${H(g)}</button>`).join('')}</div>
+     <div class="vk-grid" id="vkgrid">${c.words.map(x => vcard(c, x)).join('')}</div>
+     <div class="vk-legend"><span class="der">der</span><span class="die">die</span><span class="das">das</span><span class="x">ohne Artikel</span></div></section>
+   <section class="gr-sec" id="grs-v"><h2><span class="gr-sn">2</span>Verstehen</h2>${c.understand.map(block).join('')}</section>
+   <section class="gr-sec" id="grs-u"><h2><span class="gr-sn">3</span>Üben</h2>
+     <p class="sub" style="margin:-.3rem 0 1rem">Bestanden ab ${Math.round(PASS * 100)} % richtigen Antworten. Die Lösung kannst du nach dem ersten Prüfen ansehen. „Neu“ bringt andere Wörter.</p>
+     <div class="gr-play"><span>${icn('gamepad-2')} Übe die Wörter auch im Spiel:</span><button class="btn sm primary" onclick="GRAM.practice('solo')">${icn('user-round')} Allein spielen</button><button class="btn sm" onclick="GRAM.practice('host')">${icn('users')} Live mit Gruppe</button></div>
+     ${c.exercises.map((x, i) => exHTML(x, i + 1)).join('')}</section>
+   <section class="gr-sec" id="grs-s"><h2><span class="gr-sn">4</span>Sprechen</h2>${speakHTML(c.speak)}</section>
+   <p class="vk-src">Übersetzungen und Formen nach <a href="https://de.wiktionary.org" target="_blank" rel="noopener">Wiktionary</a> (CC BY-SA), Beispielsätze von <a href="https://tatoeba.org" target="_blank" rel="noopener">Tatoeba</a> (CC BY 2.0 FR), Aussprache von <a href="https://commons.wikimedia.org" target="_blank" rel="noopener">Wikimedia Commons</a>. Bilder, Erklärungen und Übungen: Wörterbuch.</p>
+  </article>`;
+  wire(c); icons();
+}
+function vplay(x, btn) {
+  const fallback = () => talk(vlabel(x));
+  if (!x.au) { fallback(); return; }
+  try { const a = new Audio(x.au); if (btn) { btn.classList.add('on'); a.onended = a.onerror = () => btn.classList.remove('on'); } a.play().catch(() => { if (btn) btn.classList.remove('on'); fallback(); }); } catch (e) { fallback(); }
+}
+function vocabSheet(c, w) {
+  if (typeof openSheet !== 'function') return;
+  const list = c.words.filter(x => !vgroup || x.g === vgroup), k = Math.max(0, list.findIndex(x => x.w === w)), x = list[k] || c.words[0];
+  const prev = list[(k - 1 + list.length) % list.length], next = list[(k + 1) % list.length];
+  let forms = '';
+  if (x.ps === 'n') forms = x.pf ? `<span>${H(vlabel(x))}</span> <small>nur Plural</small>` : `<span>${H(vlabel(x))}</span>${x.pl ? ` · <span>die ${H(x.pl)}</span> <small>Plural</small>` : ''}`;
+  if (x.ps === 'adj' && x.comp) forms = `${H(x.w)} · ${H(x.comp)} · ${H(x.sup)}`;
+  const verb = x.ps === 'v' ? `<div class="vk-conj"><table>${PERS.map((p, i) => `<tr><td>${p}</td><td><b>${H(x.pres[i])}</b></td></tr>`).join('')}</table>
+    <div class="vk-tense"><p><small>Präteritum</small>er/sie ${H(x.prt)}</p><p><small>Perfekt</small>er/sie ${x.aux === 'sein' ? 'ist' : 'hat'} ${H(x.pp)}</p></div></div>` : '';
+  const big = typeof WIDX !== 'undefined' && (WIDX.has(x.w) ? x.w : WIDX.has(x.w + '¹') ? x.w + '¹' : null);
+  openSheet(`<div class="vk-sh">
+    <div class="vk-shh"><span class="vk-shp">${c.pic ? c.pic(x.w) : ''}</span><div class="vk-sht">
+      <div class="vk-shw ${x.ar && !x.pf ? x.ar : x.pf ? 'die' : 'x'}">${x.ar ? `<span class="vk-ar">${H(x.ar)}</span> ` : ''}<b>${H(x.w)}</b>
+        <button class="gr-say" title="Aussprache anhören" onclick="GRAM.voc.play(${c.n},'${H(x.w)}',this)">${icn('volume-2')}</button></div>
+      <div class="vk-meta">${H(VPOS[x.ps] || '')}${x.ipa ? ` · <span class="ipa">${H(x.ipa)}</span>` : ''}</div>
+      ${forms ? `<div class="vk-fm">${forms}</div>` : ''}</div></div>
+    <div class="vk-tr"><span class="lab">EN</span><span>${x.en.map((e, i) => i === 0 ? `<b>${H(e)}</b>` : H(e)).join('<i>·</i>')}</span></div>
+    ${verb}
+    ${x.note ? `<p class="vk-note">${icn('lightbulb')}<span>${H(x.note)}</span></p>` : ''}
+    <h4 class="vk-h4">Beispiele</h4>
+    <div class="vk-exs">${x.ex.map(e => `<div class="vk-exr"><div class="de"><span>${vmark(x, e[0])}</span><button class="gr-say sm" title="Anhören" onclick="GRAM.voc.say(this.dataset.t)" data-t="${H(e[0])}">${icn('volume-2')}</button></div>
+      <div class="en">${H(e[1])} <a class="vk-tl" href="https://tatoeba.org/de/sentences/show/${e[2]}" target="_blank" rel="noopener" title="Satz bei Tatoeba">Tatoeba</a></div></div>`).join('')}</div>
+    <div class="vk-shf"><button class="btn sm" onclick="GRAM.voc.open(${c.n},'${H(prev.w)}')">${icn('arrow-left')} ${H(prev.w)}</button>
+      <button class="btn sm" onclick="GRAM.voc.open(${c.n},'${H(next.w)}')">${H(next.w)} ${icn('arrow-right')}</button><span class="spacer"></span>
+      ${big ? `<a class="btn sm" href="#/w/${encodeURIComponent(big)}" onclick="closeSheet()">${icn('book-open')} Großes Wörterbuch</a>` : ''}
+      <button class="btn sm primary" onclick="closeSheet()">Fertig</button></div>
+    ${x.af ? `<p class="vk-cred">Aussprache: <a href="https://commons.wikimedia.org/wiki/File:${encodeURIComponent(x.af)}" target="_blank" rel="noopener">${H(x.af)}</a> (Wikimedia Commons) · Formen: <a href="https://de.wiktionary.org/wiki/${encodeURIComponent(x.w)}" target="_blank" rel="noopener">Wiktionary</a></p>` : ''}
+  </div>`);
+  icons();
 }
 
 /* explanation blocks */
@@ -797,6 +970,8 @@ function block(b) {
     return `<div class="gr-cream gr-ref"><h3>${H(b.title)}</h3>${b.intro ? `<p class="gr-foot" style="margin:-.3rem 0 .7rem">${rich(b.intro)}</p>` : ''}<input class="gr-refq" data-list="${id}" placeholder="Suchen …" autocomplete="off">
       <div class="gr-tblw gr-refw"><table class="gr-tbl gr-grid" id="${id}"><thead><tr>${b.head.map(h => `<th>${H(h)}</th>`).join('')}</tr></thead><tbody>${b.rows.map(r =>
       `<tr data-s="${H(r.map(plain).join(' ').toLowerCase())}">${r.map((c, i) => `<td${i === 0 ? ' class="gr-ref0"' : ''}>${i === 0 ? `<span class="gw">${H(plain(c))}</span>` : fmt(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div><p class="gr-foot gr-refn" style="margin-top:.5rem">${b.rows.length} Einträge</p></div>`; }
+  if (b.type === 'html') return `<div class="gr-cream">${b.title ? `<h3>${H(b.title)}</h3>` : ''}${typeof b.html === 'function' ? b.html(K) : b.html}${b.foot ? `<p class="gr-foot">${rich(b.foot)}</p>` : ''}</div>`;
+  if (b.type === 'dialog') return `<div class="gr-cream"><h3>${H(b.title)}</h3><div class="vk-dlg">${b.lines.map((l, k) => `<div class="vk-ln ${k % 2 ? 'r' : ''}"><span class="vk-who">${H(l[0])}</span><span class="vk-bub">${fmt(l[1])}</span>${sayBtn(l[1])}</div>`).join('')}</div>${b.foot ? `<p class="gr-foot">${rich(b.foot)}</p>` : ''}</div>`;
   if (b.type === 'note') return `<div class="gr-note">${icn('triangle-alert')}<p><b class="t">${H(b.title)}</b>${fmt(b.text)}</p></div>`;
   return '';
 }
@@ -861,6 +1036,8 @@ function badgeHTML(x) {
 }
 function itemHTML(x, it, i) {
   if (x.type === 'cases') return it.replace(/\{([nda]):([^}]*)\}|([^{]+)/g, (m, k, t, p) => p != null ? H(p) : `<button class="gr-tag" data-k="${k}" data-st="" data-lb="">${H(t)}</button>`);
+  if (x.type === 'choice' && /^\{p:/.test(it)) { const m = /^\{p:([^|}]+)[^}]*\}\s*/.exec(it);
+    return `<span class="vk-qpic">${cur && cur.pic ? cur.pic(m[1]) : ''}</span>` + itemHTML(x, it.slice(m[0].length), i); }
   if (x.type === 'choice') return it.replace(/\(\(([^)]*)\)\)|([^(]+|\()/g, (m, opts, p) => {
     if (p != null) return H(p); const o = opts.split('|');
     return `<span class="gr-gap" data-ok="${H(o[0])}">${shuffle(o).map(v => `<button>${H(v)}</button>`).join('')}</span>`; });
@@ -891,7 +1068,9 @@ function onClick(ev) {
   if (!t.closest) return;
   if (!t.closest('#grpop') && !t.closest('.gw')) closePop();
   const ch = t.closest('.gr-ch'); if (!ch || !cur) return;
-  const sb = t.closest('[data-say]'); if (sb) { talk(sb.dataset.say); return; }
+  const sb = t.closest('[data-say]'); if (sb) { talk(sb.dataset.say); if (sb.dataset.cap != null) { const box = sb.closest('.gr-cream'), cp = box && box.querySelector('.vk-cap'); if (cp) cp.innerHTML = fmt(sb.dataset.cap); box.querySelectorAll('[data-cap]').forEach(g => g.classList.toggle('on', g === sb)); } return; }
+  const vc = t.closest('[data-vw]'); if (vc && cur && cur.vocab) { vocabSheet(cur, vc.dataset.vw); return; }
+  const vf = t.closest('[data-vg]'); if (vf && cur && cur.vocab) { vfilter(vf.dataset.vg); return; }
   const j = t.closest('[data-jump]'); if (j) { ev.preventDefault(); const el = document.querySelector(j.getAttribute('href')); if (el) el.scrollIntoView({ behavior: 'smooth' }); return; }
   const gw = t.closest('.gw'); if (gw && !t.closest('button')) { pop(gw); return; }
   const ue = t.closest('.gr-ue'); if (!ue) { spk(t); return; }
@@ -1028,7 +1207,7 @@ function speakHTML(s) {
 /* ---------- entry point ---------- */
 function view(arg) {
   css(); closePop();
-  if (!arg) { cur = null; overview(); loadChapter(1).then(c => { const t = $('grfeat'); if (t && typeof c.art === 'function') t.innerHTML = c.art(K); }).catch(() => {}); Promise.all(Object.keys(READY).map(n => loadChapter(+n).catch(() => {}))).then(() => pull()).then(() => { if (location.hash === '#/g' || location.hash === '#/g/') list(); }); return; }
+  if (!arg) { cur = null; overview(); loadChapter(1).then(c => { const t = $('grfeat'); if (t && typeof c.art === 'function') t.innerHTML = c.art(K); }).catch(() => {}); loadChapter(202).then(c => { const t = $('vkfeat'); if (t && typeof c.art === 'function') t.innerHTML = c.art(K); }).catch(() => {}); Promise.all(Object.keys(READY).map(n => loadChapter(+n).catch(() => {}))).then(() => pull()).then(() => { if (location.hash === '#/g' || location.hash === '#/g/') list(); }); return; }
   if (arg === 'fortschritt') { cur = null; progressView(); return; }
   chapter(parseInt(arg, 10));
 }
@@ -1044,6 +1223,7 @@ function toQuestions(x, it) {
   const sub = x.title;
   if (x.type === 'choice') {
     let k = 0, right = null, opts = null;
+    it = it.replace(/^\{p:[^|}]*\|([^}]*)\}\s*/, '»$1« = ');
     const p = it.replace(/\(\(([^)]*)\)\)/g, (m, o) => { const os = o.split('|'); if (k++ === 0) { right = os[0]; opts = os; return '_____'; } return os[0]; });
     const o = shuffle(opts); return { t: 'mc', p: plain(p), o, c: o.indexOf(right), sub };
   }
@@ -1053,7 +1233,7 @@ function toQuestions(x, it) {
     if (!ans || !ans.length) return null;
     return { t: 'type', p: plain(p), ans, sub: (hint ? hint + ' · ' : '') + sub };
   }
-  if (x.type === 'type') return { t: 'type', p: it.q.replace(/\[([^\]]*)\]/g, '»$1«'), ans: it.ok, sub: `${x.instr} – Schreib nur den Rest: „${it.pre ? it.pre + ' ' : ''}…${it.end}“` };
+  if (x.type === 'type') return { t: 'type', p: it.q.replace(/\[([^\]]*)\]/g, '»$1«'), ans: it.ok, sub: it.pre || it.end ? `${x.instr} – Schreib nur den Rest: „${it.pre ? it.pre + ' ' : ''}…${it.end}“` : x.instr };
   if (x.type === 'order') {
     if (it.ok.length > 1) return null;
     let rest = it.ok[0]; const sol = [];
@@ -1070,7 +1250,7 @@ function toQuestions(x, it) {
 }
 async function quiz(n, count) {
   const c = await loadChapter(n), pool = [];
-  for (const x of c.exercises) { if (x.type === 'free') continue; for (const it of (x.gen ? x.gen() : x.items)) { const q = toQuestions(x, it); if (q && q.o !== undefined ? q.c >= 0 || q.t === 'order' : q) pool.push(q); } }
+  for (const x of c.exercises) { if (x.type === 'free' || x.quiz === false) continue; for (const it of (x.gen ? x.gen() : x.items)) { const q = toQuestions(x, it); if (q && q.o !== undefined ? q.c >= 0 || q.t === 'order' : q) pool.push(q); } }
   // a fair mix: shuffle, but spread the exercise types
   return shuffle(pool).slice(0, count || 10);
 }
@@ -1083,7 +1263,8 @@ function practice(kind) {
   location.hash = '#/play/' + kind;
 }
 
-window.GRAM = { view, leave, base, quiz, list: chapterList, practice, add(c) { CH[c.n] = c; }, _test: { findWord, norm, attempts, best, store, PASS, CH,
+window.GRAM = { view, leave, base, quiz, list: chapterList, practice, add(c) { CH[c.n] = c; },
+  voc: { open: (n, w) => CH[n] && vocabSheet(CH[n], w), play: (n, w, b) => { const x = CH[n] && CH[n].words.find(v => v.w === w); if (x) vplay(x, b); }, say: t => talk(t) }, _test: { findWord, norm, attempts, best, store, PASS, CH,
   // answers every exercise with its own key; used to check new chapters ("ok" = all 100 %)
   async check(list) {
     const sl = ms => new Promise(r => setTimeout(r, ms)), report = {};
