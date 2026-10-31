@@ -369,6 +369,7 @@ kbd{font:600 .66rem Inter,system-ui,sans-serif;padding:.1rem .35rem;border-radiu
     <a href="#/cats" data-t="cats" title="Themen"><i data-lucide="layout-grid" class="lic"></i><span>Themen</span></a>
     <a href="#/lists" data-t="lists" title="Listen"><i data-lucide="list" class="lic"></i><span>Listen</span></a>
     <a href="#/decks" data-t="decks" title="Karten"><i data-lucide="layers" class="lic"></i><span>Karten</span></a>
+    <a href="#/v" data-t="wort" title="Wortschatz"><i data-lucide="book-a" class="lic"></i><span>Wortschatz</span></a>
     <a href="#/g" data-t="gram" title="Grammatik"><i data-lucide="book-open-text" class="lic"></i><span>Grammatik</span></a>
   </nav>
   <button class="iconbtn" id="theme" title="Tag / Nacht">◐</button>
@@ -467,7 +468,7 @@ const gcol=a=>a==='der'?'var(--der)':a==='die'?'var(--die)':a==='das'?'var(--das
 function route(){
   const h=location.hash.slice(2)||'';
   const [p,arg]=[h.split('/')[0],decodeURIComponent(h.split('/').slice(1).join('/')||'')];
-  if(!FULL&&!['','cats','g','lists','decks'].includes(p)){        // definitions are still arriving
+  if(!FULL&&!['','cats','g','v','lists','decks'].includes(p)){        // definitions are still arriving
     if(!V().querySelector('.loading[data-full]'))V().innerHTML='<div class="loading" data-full="1"><div class="spin"></div>Einträge werden geladen …</div>';
     FULLP.then(()=>{ if(location.hash.slice(2)===h)route() }); return }
   document.querySelectorAll('#tabs a').forEach(a=>a.classList.remove('on'));
@@ -481,23 +482,25 @@ function route(){
   else if(p==='decks'){setOn('decks');viewDecks()}
   else if(p==='study'){setOn('decks');viewStudy(arg)}
   else if(p==='play'&&window.PLAY){setOn('play');PLAY.view(arg)}
-  else if(p==='g'){setOn('gram');openGram(arg)}
+  else if(p==='g'){setOn('gram');openGram(arg,'g')}
+  else if(p==='v'){setOn('wort');openGram(arg,'v')}
   else viewHome();
   if(p!=='play'&&window.PLAY)PLAY.leave();
-  if(p!=='g'&&window.GRAM)GRAM.leave();
+  if(p!=='g'&&p!=='v'&&window.GRAM)GRAM.leave();
   if(p!=='study')window.scrollTo(0,0);
 }
 window.addEventListener('hashchange',route);
 /* grammar: its code and chapters load only when the tab is opened, so the dictionary is not slowed down */
 let gramP=null;
-function loadGram(){ if(window.GRAM)return Promise.resolve(); if(!gramP){gramP=new Promise((res,rej)=>{const s=document.createElement('script');s.src='grammatik/grammatik.js?v=6';s.onload=res;s.onerror=()=>{gramP=null;rej()};document.head.appendChild(s)})} return gramP }
-function openGram(arg){
-  if(window.GRAM){GRAM.view(arg);return}
-  V().innerHTML='<div class="loading" data-g="1"><div class="spin"></div>Grammatik wird geladen …</div>';
-  loadGram().then(()=>{const h=location.hash.slice(2);if(h.split('/')[0]==='g')GRAM.view(decodeURIComponent(h.split('/').slice(1).join('/')||''))})
-    .catch(()=>{if(location.hash.startsWith('#/g'))V().innerHTML='<div class="empty"><span class="em">⚠️</span>Die Grammatik konnte nicht geladen werden. Bitte prüfe die Internetverbindung.</div>'});
+function loadGram(){ if(window.GRAM)return Promise.resolve(); if(!gramP){gramP=new Promise((res,rej)=>{const s=document.createElement('script');s.src='grammatik/grammatik.js?v=7';s.onload=res;s.onerror=()=>{gramP=null;rej()};document.head.appendChild(s)})} return gramP }
+function openGram(arg,m){
+  m=m||'g'; const name=m==='v'?'Der Wortschatz':'Die Grammatik';
+  if(window.GRAM){GRAM.view(arg,m);return}
+  V().innerHTML=`<div class="loading" data-g="1"><div class="spin"></div>${m==='v'?'Wortschatz':'Grammatik'} wird geladen …</div>`;
+  loadGram().then(()=>{const h=location.hash.slice(2);if(h.split('/')[0]===m)GRAM.view(decodeURIComponent(h.split('/').slice(1).join('/')||''),m)})
+    .catch(()=>{if(location.hash.startsWith('#/'+m))V().innerHTML=`<div class="empty"><span class="em">⚠️</span>${name} konnte nicht geladen werden. Bitte prüfe die Internetverbindung.</div>`});
 }
-const isGram=()=>/^#\/g(\/|$)/.test(location.hash);
+const isGram=()=>/^#\/[gv](\/|$)/.test(location.hash);
 const V=()=>document.getElementById('view');
 const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 /* ---------- HOME / SEARCH ---------- */
@@ -1650,7 +1653,7 @@ setInterval(()=>{ if(document.visibilityState==='visible'&&Date.now()-lastAct<20
 @media(min-width:1181px){nav.tabs a{padding:.45rem .5rem;gap:.3rem}}
 @media(min-width:641px) and (max-width:1180px){nav.tabs a .lic{display:none} nav.tabs a{padding:.45rem .55rem}}
 @media(min-width:641px) and (max-width:880px){nav.tabs a .lic{display:inline-flex} nav.tabs a span{display:none} nav.tabs a{padding:.5rem .6rem}}
-@media(max-width:640px){nav.tabs{grid-template-columns:repeat(6,1fr);padding-left:.3rem;padding-right:.3rem} nav.tabs a{font-size:.62rem;letter-spacing:-.01em} body.ingame nav.tabs{display:none} body.ingame main{padding-bottom:1rem}}
+@media(max-width:640px){nav.tabs{grid-template-columns:repeat(7,1fr);padding-left:.3rem;padding-right:.3rem} nav.tabs a{font-size:.62rem;letter-spacing:-.01em} body.ingame nav.tabs{display:none} body.ingame main{padding-bottom:1rem}}
 .ghub h1{margin-bottom:.2rem}
 .ghero{border-radius:1.4rem;padding:1.4rem 1.4rem 1.2rem;margin:.4rem 0 1.1rem;color:#fff;position:relative;overflow:hidden;
   background:radial-gradient(120% 140% at 0% 0%,#5b4bdb 0%,#3a2f9e 40%,#1d6f8a 100%)}
@@ -2736,7 +2739,7 @@ function viewSetup(kind){   // kind: solo | host | memory | blitz
   f.querySelectorAll('.gseg').forEach(g=>g.querySelectorAll('button').forEach(b=>b.onclick=()=>{g.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));s[g.dataset.f]=+b.dataset.v}));
   const srcSel=$('gsrc'), qo=$('gqopts'); const syncQ=()=>{if(qo)qo.style.display=srcSel.value.startsWith('quiz:')?'none':''; const tw=$('gtypesw'); if(tw)tw.style.display=srcSel.value.startsWith('gram:')?'none':''}; srcSel.onchange=syncQ; syncQ();
   if(quizzy)loadGram().then(()=>{ if(!$('gsrc'))return; const by={}; GRAM.list().forEach(c=>(by[c.group]=by[c.group]||[]).push(c));
-    srcSel.insertAdjacentHTML('beforeend',Object.keys(by).map(g=>`<optgroup label="Grammatik · ${H(g)}">${by[g].map(c=>`<option value="gram:${c.n}">${c.n>100?'':c.n+'. '}${H(c.title)}</option>`).join('')}</optgroup>`).join(''));
+    srcSel.insertAdjacentHTML('beforeend',Object.keys(by).map(g=>`<optgroup label="${/^Wortschatz/.test(g)?'':'Grammatik · '}${H(g)}">${by[g].map(c=>`<option value="gram:${c.n}">${c.n>200?(c.n-200)+'. ':c.n>100?'':c.n+'. '}${H(c.title)}</option>`).join('')}</optgroup>`).join(''));
     if(cur.startsWith('gram:'))srcSel.value=cur; syncQ() }).catch(()=>{});
   f.onsubmit=ev=>{ev.preventDefault(); AU.wake();
     const [src,id]=srcSel.value.split(':'); s.src=src; if(src==='all'){s.lvl=+id;delete s.id}else s.id=id;
