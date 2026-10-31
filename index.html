@@ -606,7 +606,7 @@ function viewWord(w){
   const i=WIDX.get(w);
   if(i==null){V().innerHTML=`<div class="aimiss"><span class="em">${ic('search-x')}</span><h1 class="page">„${esc(w)}“ ist nicht im Wörterbuch</h1>
     <p class="sub">Die KI kann einen Eintrag mit einfacher Erklärung und echten Beispielsätzen aus Zeitungen und Wikipedia erstellen. Danach finden ihn alle.</p>
-    <div class="row"><button class="btn primary" onclick="createAI(${JSON.stringify(w).replace(/"/g,'&quot;')})">${ic('sparkles')} Eintrag mit KI erstellen</button><a class="btn" href="#/">← Suche</a></div></div>`;return}
+    <div class="row"><button class="btn primary" onclick="createAI(${JSON.stringify(w).replace(/"/g,'&quot;')})">${ic('sparkles')} Eintrag mit KI erstellen</button><a class="btn" href="#/" onclick="home(event)">← Suche</a></div></div>`;return}
   const e=E[i];
   V().innerHTML=`<div class="row" style="margin-bottom:.8rem"><a class="btn sm" href="#/">← Suche</a></div>`+entryHTML(e);
   loadImg(e);
@@ -785,6 +785,7 @@ function addAIEntries(list){
   }
   return added;
 }
+function home(ev){ if(ev)ev.preventDefault(); if(location.hash==='#/'||location.hash==='')route(); else go('') }
 async function createAI(w){
   w=w.trim(); if(!w)return;
   const steps=['Echte Beispielsätze werden in Zeitungen und Wikipedia gesucht …','Die Bedeutung wird einfach erklärt …','Der Eintrag wird gespeichert …'];
@@ -795,12 +796,12 @@ async function createAI(w){
     const r=await fetch(AIURL_BASE+'/entry?w='+encodeURIComponent(w),{method:'POST'}); const d=await r.json(); clearInterval(tick);
     if(!r.ok||!d.entry){
       V().innerHTML=`<div class="aimiss"><span class="em">${ic('circle-help')}</span><h1 class="page">Kein Eintrag erstellt</h1>
-        <p class="sub">${esc(d.error||'Bitte später noch einmal versuchen.')}</p><a class="btn" href="#/">← Suche</a></div>`; return }
+        <p class="sub">${esc(d.error||'Bitte später noch einmal versuchen.')}</p><a class="btn" href="#/" onclick="home(event)">← Suche</a></div>`; return }
     const x=d.entry;
     if(WIDX.has(x.w)&&!E[WIDX.get(x.w)].ai){toast('Gefunden als „'+x.w+'“'); go('w/'+encodeURIComponent(x.w)); return}
     addAIEntries([x]); if(!WIDX.has(w))WIDX.set(w,WIDX.get(x.w));
     go('w/'+encodeURIComponent(x.w));
-  }catch(err){ clearInterval(tick); V().innerHTML=`<div class="aimiss"><h1 class="page">Keine Verbindung</h1><p class="sub">Der Eintrag konnte gerade nicht erstellt werden.</p><a class="btn" href="#/">← Suche</a></div>` }
+  }catch(err){ clearInterval(tick); V().innerHTML=`<div class="aimiss"><h1 class="page">Keine Verbindung</h1><p class="sub">Der Eintrag konnte gerade nicht erstellt werden.</p><a class="btn" href="#/" onclick="home(event)">← Suche</a></div>` }
 }
 /* ---------- WORD MAP: synonyms, opposites, word family and words close in meaning ---------- */
 const WMG=[{k:'s',label:'Synonyme (≈)',col:'var(--das)',max:5},{k:'g',label:'Gegenteil (↔)',col:'var(--die)',max:3},
