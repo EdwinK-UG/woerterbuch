@@ -365,10 +365,11 @@ kbd{font:600 .66rem Inter,system-ui,sans-serif;padding:.1rem .35rem;border-radiu
 <header><div class="wrap bar">
   <a class="brand" href="#/"><img src="icon-64.png?v=2" width="30" height="30" alt="" class="logo"><span>Wörter<b>buch</b></span></a>
   <nav class="tabs" id="tabs">
-    <a href="#/" data-t="home"><i data-lucide="search" class="lic"></i><span>Suche</span></a>
-    <a href="#/cats" data-t="cats"><i data-lucide="layout-grid" class="lic"></i><span>Themen</span></a>
-    <a href="#/lists" data-t="lists"><i data-lucide="list" class="lic"></i><span>Listen</span></a>
-    <a href="#/decks" data-t="decks"><i data-lucide="layers" class="lic"></i><span>Karten</span></a>
+    <a href="#/" data-t="home" title="Suche"><i data-lucide="search" class="lic"></i><span>Suche</span></a>
+    <a href="#/cats" data-t="cats" title="Themen"><i data-lucide="layout-grid" class="lic"></i><span>Themen</span></a>
+    <a href="#/lists" data-t="lists" title="Listen"><i data-lucide="list" class="lic"></i><span>Listen</span></a>
+    <a href="#/decks" data-t="decks" title="Karten"><i data-lucide="layers" class="lic"></i><span>Karten</span></a>
+    <a href="#/g" data-t="gram" title="Grammatik"><i data-lucide="book-open-text" class="lic"></i><span>Grammatik</span></a>
   </nav>
   <button class="iconbtn" id="theme" title="Tag / Nacht">◐</button>
 </div></header>
@@ -401,7 +402,7 @@ async function load(){
   if(b64)bin=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));   // single-file copy: data inside the page
   else{                                 // website: data.bin, preloaded in <head>, cached offline by sw.js
     const r=await fetch(el.dataset.src); if(!r.ok)throw new Error('Wörterbuch-Daten: '+r.status);
-    const total=+r.headers.get('content-length')||0, lo=document.querySelector('#view .loading');
+    const total=+r.headers.get('content-length')||0, lo=document.querySelector('#view .loading:not([data-g])');
     if(r.body&&total&&lo){            // show how far the first download is (later visits come from the offline copy)
       const rd=r.body.getReader(), parts=[]; let got=0, last=-1;
       for(;;){const {done,value}=await rd.read(); if(done)break; parts.push(value); got+=value.length;
@@ -424,7 +425,7 @@ async function load(){
   aip.then(list=>{ if(!list)return; addAIEntries(list);
     const h=location.hash, w=h.startsWith('#/w/')?decodeURIComponent(h.slice(4)):null;
     if((w&&WIDX.get(w)!=null&&E[WIDX.get(w)].ai)||/^#\/(study|list)\//.test(h))route() });
-  route();
+  if(!isGram())route();
   if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
 }
 /* ---------- search ---------- */
@@ -456,11 +457,24 @@ function route(){
   else if(p==='decks'){setOn('decks');viewDecks()}
   else if(p==='study'){setOn('decks');viewStudy(arg)}
   else if(p==='play'&&window.PLAY){setOn('play');PLAY.view(arg)}
+  else if(p==='g'){setOn('gram');openGram(arg)}
   else viewHome();
   if(p!=='play'&&window.PLAY)PLAY.leave();
+  if(p!=='g'&&window.GRAM)GRAM.leave();
   if(p!=='study')window.scrollTo(0,0);
 }
 window.addEventListener('hashchange',route);
+/* grammar: its code and chapters load only when the tab is opened, so the dictionary is not slowed down */
+let gramP=null;
+function openGram(arg){
+  if(window.GRAM){GRAM.view(arg);return}
+  V().innerHTML='<div class="loading" data-g="1"><div class="spin"></div>Grammatik wird geladen …</div>';
+  if(gramP)return;
+  gramP=new Promise((res,rej)=>{const s=document.createElement('script');s.src='grammatik/grammatik.js?v=1';s.onload=res;s.onerror=rej;document.head.appendChild(s)});
+  gramP.then(()=>{const h=location.hash.slice(2);if(h.split('/')[0]==='g')GRAM.view(decodeURIComponent(h.split('/').slice(1).join('/')||''))})
+    .catch(()=>{gramP=null;if(location.hash.startsWith('#/g'))V().innerHTML='<div class="empty"><span class="em">⚠️</span>Die Grammatik konnte nicht geladen werden. Bitte prüfe die Internetverbindung.</div>'});
+}
+const isGram=()=>/^#\/g(\/|$)/.test(location.hash);
 const V=()=>document.getElementById('view');
 const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 /* ---------- HOME / SEARCH ---------- */
@@ -1305,7 +1319,8 @@ document.getElementById('theme').onclick=()=>{
 };
 /* expose for inline handlers */
 Object.assign(window,{go,openAdd,addTo,addNew,quickCard,makeCards,newList,createList,renameList,delList,rmFromList,pickAll,listFromWords,closeSheet,reveal,ans,delDeck});
-load().catch(err=>{V().innerHTML='<div class="empty"><span class="em">⚠️</span>Laden fehlgeschlagen: '+esc(String(err))+'</div>'});
+if(isGram())route();   // grammar does not need the dictionary download to start
+load().catch(err=>{if(!isGram())V().innerHTML='<div class="empty"><span class="em">⚠️</span>Laden fehlgeschlagen: '+esc(String(err))+'</div>'});
 </script>
 <!-- ===== Konten (Supabase) – add-on, changes no existing feature ===== -->
 <style>
@@ -1519,6 +1534,7 @@ async function submit(mode){
 const th=$('theme');
 if(th&&!$('acct')){const b=document.createElement('button');b.className='iconbtn';b.id='acct';th.after(b)}
 $('acct').onclick=()=>session?sheet('me'):sheet('in');
+window.ACCT={user:()=>session&&session.user,token,api,open:()=>sheet('in')};   // used by the grammar section to save results
 setBtn();
 
 /* links from confirmation / password-reset e-mails arrive as #access_token=… */
@@ -1607,7 +1623,10 @@ setInterval(()=>{ if(document.visibilityState==='visible'&&Date.now()-lastAct<20
 <!-- ===== Spiele ===== -->
 <style>
 /* ===== Spiele ===== */
-@media(max-width:640px){nav.tabs{grid-template-columns:repeat(5,1fr)} body.ingame nav.tabs{display:none} body.ingame main{padding-bottom:1rem}}
+@media(min-width:1181px){nav.tabs a{padding:.45rem .5rem;gap:.3rem}}
+@media(min-width:641px) and (max-width:1180px){nav.tabs a .lic{display:none} nav.tabs a{padding:.45rem .55rem}}
+@media(min-width:641px) and (max-width:880px){nav.tabs a .lic{display:inline-flex} nav.tabs a span{display:none} nav.tabs a{padding:.5rem .6rem}}
+@media(max-width:640px){nav.tabs{grid-template-columns:repeat(6,1fr);padding-left:.3rem;padding-right:.3rem} nav.tabs a{font-size:.62rem;letter-spacing:-.01em} body.ingame nav.tabs{display:none} body.ingame main{padding-bottom:1rem}}
 .ghub h1{margin-bottom:.2rem}
 .ghero{border-radius:1.4rem;padding:1.4rem 1.4rem 1.2rem;margin:.4rem 0 1.1rem;color:#fff;position:relative;overflow:hidden;
   background:radial-gradient(120% 140% at 0% 0%,#5b4bdb 0%,#3a2f9e 40%,#1d6f8a 100%)}
@@ -2738,7 +2757,7 @@ window.PLAY={view,leave,quit,again,saveMiss,kick,hostGo,hostNext,hostEnd,hostSco
 
 /* nav tab */
 const tabs=document.getElementById('tabs');
-if(tabs&&!tabs.querySelector('[data-t="play"]')){const a=document.createElement('a');a.href='#/play';a.dataset.t='play';a.innerHTML='<i data-lucide="gamepad-2" class="lic"></i><span>Spiele</span>';tabs.appendChild(a);drawIcons()}
+if(tabs&&!tabs.querySelector('[data-t="play"]')){const a=document.createElement('a');a.href='#/play';a.dataset.t='play';a.title='Spiele';a.innerHTML='<i data-lucide="gamepad-2" class="lic"></i><span>Spiele</span>';tabs.appendChild(a);drawIcons()}
 })();
 </script>
 <!-- ===== /Spiele ===== -->
