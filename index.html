@@ -401,7 +401,13 @@ async function load(){
   if(b64)bin=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));   // single-file copy: data inside the page
   else{                                 // website: data.bin, preloaded in <head>, cached offline by sw.js
     const r=await fetch(el.dataset.src); if(!r.ok)throw new Error('Wörterbuch-Daten: '+r.status);
-    bin=new Uint8Array(await r.arrayBuffer());
+    const total=+r.headers.get('content-length')||0, lo=document.querySelector('#view .loading');
+    if(r.body&&total&&lo){            // show how far the first download is (later visits come from the offline copy)
+      const rd=r.body.getReader(), parts=[]; let got=0, last=-1;
+      for(;;){const {done,value}=await rd.read(); if(done)break; parts.push(value); got+=value.length;
+        const pc=Math.min(99,Math.floor(got/total*100)); if(pc!==last&&pc>0){last=pc; lo.lastChild.textContent='Wörterbuch wird geladen … '+pc+' %'}}
+      bin=new Uint8Array(got); let o=0; for(const x of parts){bin.set(x,o); o+=x.length}
+    } else bin=new Uint8Array(await r.arrayBuffer());
   }
   const txt=bin[0]===0x1f&&bin[1]===0x8b
     ?await new Response(new Blob([bin]).stream().pipeThrough(new DecompressionStream('gzip'))).text()
