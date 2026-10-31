@@ -5,7 +5,7 @@
    Attempts are kept in this browser and, for signed-in users, saved to Supabase (table grammar_results). */
 (function () {
 'use strict';
-const VER = '1';
+const VER = '2';
 const PASS = 0.7;                       // share of correct answers needed to pass an exercise
 const $ = id => document.getElementById(id);
 const H = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -76,7 +76,7 @@ const GROUPS = [
   { t: 'Adjektive 2', ic: 'sparkles', h: 350, ch: [
     [84, 'Adjektive ohne Artikel', 'frisches Brot, kaltes Wasser', 'B1'], [85, 'Partizip I als Adjektiv', 'ein lachendes Kind', 'B1'] ] }
 ];
-const READY = { 22: 1 };                 // chapters that exist so far
+const READY = { 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1, 9: 1, 22: 1 };   // chapters that exist so far
 const TOTAL = GROUPS.reduce((s, g) => s + g.ch.length, 0);
 const chInfo = n => { for (const g of GROUPS) for (const c of g.ch) if (c[0] === n) return { g, c }; return null; };
 
@@ -84,13 +84,14 @@ const chInfo = n => { for (const g of GROUPS) for (const c of g.ch) if (c[0] ===
 const CSS = `
 :root{--nom:#b8730a;--nom-s:#fcf0d9;--dat:#7c3aed;--dat-s:#f1eafe;--akk:#0b8579;--akk-s:#dcf3ef;
   --cream:#fbf4e3;--cream-b:#ecdcb8;--cream-ink:#5a4626;--sky1:#fdf1d6;--sky2:#f9e2bd;--sun:#f6b94a;--cloud:#fffaf0;
-  --hill1:#a9cf8f;--hill2:#cde3a8;--skin1:#8a5a3c;--skin2:#a86f48;--hair1:#f2efe9;--hair2:#2b1d16;--pants:#3d4656;--ink:#2a2f38}
+  --hill1:#a9cf8f;--hill2:#cde3a8;--skin1:#8a5a3c;--skin2:#a86f48;--hair1:#f2efe9;--hair2:#2b1d16;--pants:#3d4656;--ink:#2a2f38;
+  --skin3:#c48a5a;--skin3b:#d9a274;--skin4:#f1cfae;--skin4b:#f6dcc2;--hair3:#8a5a2b;--hair4:#e3b04b;--wall:#fbefd8;--floor:#e7c99a;--wood:#b07a46;--metal:#9aa6b4}
 @media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--nom:#f2b450;--nom-s:#382a12;--dat:#b79bff;--dat-s:#2a1f47;--akk:#4fd1c0;--akk-s:#11332f;
   --cream:#1e1b15;--cream-b:#3a3223;--cream-ink:#e3d3b2;--sky1:#1e2638;--sky2:#2d2f45;--sun:#e8c46a;--cloud:#3a4258;
-  --hill1:#2f4a35;--hill2:#3a5a3f;--skin1:#7a4e33;--skin2:#93603f;--hair1:#e7e3db;--hair2:#140d09;--pants:#1c222d;--ink:#e8ecf2}}
+  --hill1:#2f4a35;--hill2:#3a5a3f;--skin1:#7a4e33;--skin2:#93603f;--hair1:#e7e3db;--hair2:#140d09;--pants:#1c222d;--ink:#e8ecf2;--skin3:#a8754b;--skin3b:#bb8758;--skin4:#d9b391;--skin4b:#e3c3a5;--hair3:#6e4520;--hair4:#c9973a;--wall:#232634;--floor:#3a3127;--wood:#7d5631;--metal:#5d6876}}
 :root[data-theme="dark"]{--nom:#f2b450;--nom-s:#382a12;--dat:#b79bff;--dat-s:#2a1f47;--akk:#4fd1c0;--akk-s:#11332f;
   --cream:#1e1b15;--cream-b:#3a3223;--cream-ink:#e3d3b2;--sky1:#1e2638;--sky2:#2d2f45;--sun:#e8c46a;--cloud:#3a4258;
-  --hill1:#2f4a35;--hill2:#3a5a3f;--skin1:#7a4e33;--skin2:#93603f;--hair1:#e7e3db;--hair2:#140d09;--pants:#1c222d;--ink:#e8ecf2}
+  --hill1:#2f4a35;--hill2:#3a5a3f;--skin1:#7a4e33;--skin2:#93603f;--hair1:#e7e3db;--hair2:#140d09;--pants:#1c222d;--ink:#e8ecf2;--skin3:#a8754b;--skin3b:#bb8758;--skin4:#d9b391;--skin4b:#e3c3a5;--hair3:#6e4520;--hair4:#c9973a;--wall:#232634;--floor:#3a3127;--wood:#7d5631;--metal:#5d6876}
 .cs{border-radius:.35em;padding:0 .22em;box-decoration-break:clone;-webkit-box-decoration-break:clone;font-weight:600}
 .cs.n{background:var(--nom-s);color:var(--nom);box-shadow:inset 0 -2px 0 var(--nom)}
 .cs.d{background:var(--dat-s);color:var(--dat);box-shadow:inset 0 -2px 0 var(--dat)}
@@ -301,6 +302,43 @@ const CSS = `
   .gr-hero h1{font-size:1.8rem}.gr-top h1{font-size:2rem}.gr-feat .th{flex-basis:6.5rem}.gr-toc{top:58px}
   .gr-slot>span{font-size:1.05rem;padding:.3rem .55rem}.gr-msent{font-size:1.25rem}.gr-ib{font-size:1.1rem}.gr-tbl{font-size:.85rem}.gr-tbl td{font-size:.98rem;padding:.45rem .4rem}
   .gr-ptab .hide-s{display:none}}
+/* verbs, endings, bracket */
+.cs.e{color:var(--ac);background:var(--ac-salt);box-shadow:inset 0 -2px 0 var(--ac);padding:0 .08em;border-radius:.25em}
+.cs.v{background:var(--fg);color:var(--bg);box-shadow:none;padding:0 .3em}
+.cs.t{background:transparent;color:var(--fg);box-shadow:none;outline:1.5px dashed var(--fg);outline-offset:-1px;padding:0 .3em}
+.gr-merk .cs.v{background:var(--bg);color:var(--fg)}.gr-merk .cs.t{color:var(--bg);outline-color:var(--bg)}
+.gr-slot.vt>span{background:transparent;border:2px dashed var(--fg);font-weight:600}
+.gr-slot.q>span{border-color:var(--ac);background:var(--ac-salt);color:var(--ac)}.gr-slot.q small{color:var(--ac)}
+.gr-slot small:empty::before{content:'\\00a0'}
+.gr-cards2{display:grid;grid-template-columns:repeat(auto-fill,minmax(var(--min,13rem),1fr));gap:.6rem}
+.gr-c2{background:var(--card);border-radius:1rem;padding:.8rem .9rem;border:1px solid var(--cream-b);border-top:4px solid var(--c,var(--ac))}
+.gr-c2 .tt{font-family:Fraunces,serif;font-weight:700;font-size:1.35rem;color:var(--c,var(--fg));line-height:1.15;display:flex;gap:.45rem;align-items:center}
+.gr-c2 .tt .lic{font-size:1.05rem}
+.gr-c2 .s{font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);display:block;margin:.1rem 0 .35rem}
+.gr-c2 p{margin:.3rem 0 0;font-size:.92rem}.gr-c2 .ex{font-family:Newsreader,serif;font-size:1.05rem;color:var(--mut)}
+.gr-c2 .ws{display:flex;flex-wrap:wrap;gap:.25rem .35rem;margin-top:.35rem;font-family:Newsreader,serif;font-size:1.05rem}
+.gr-c2 .ws span.gw{background:var(--panel);border:1px solid var(--line);border-radius:.4rem;padding:0 .35rem}
+.k-n{--c:var(--nom)}.k-d{--c:var(--dat)}.k-a{--c:var(--akk)}.k-ac{--c:var(--ac)}.k-ok{--c:var(--ok)}.k-w{--c:var(--warn)}.k-b{--c:var(--bad)}.k-f{--c:var(--fg)}
+.gr-grid td{font-family:Newsreader,serif;font-size:1.06rem}.gr-grid td.l,.gr-grid th.l{font-family:Inter,sans-serif;font-size:.86rem;font-weight:600;color:var(--mut)}
+.gr-grid td.l{white-space:nowrap}
+.gr-grid tr.hl td{background:color-mix(in srgb,var(--ac) 7%,var(--card))}
+.gr-conj .gr-cv{display:flex;flex-wrap:wrap;gap:.3rem;margin:0 0 .75rem}
+.gr-conj .gr-cv .gr-chip{font-family:Newsreader,serif;font-size:1rem;padding:.25rem .75rem}
+.gr-conjt{display:grid;grid-template-columns:repeat(2,1fr);grid-template-rows:repeat(3,auto);grid-auto-flow:column;gap:.4rem}
+@media(max-width:560px){.gr-conjt{grid-template-columns:1fr;grid-template-rows:none;grid-auto-flow:row}.gr-conjt b{width:4.6rem}}
+.gr-conjt div{background:var(--card);border-radius:.75rem;padding:.5rem .75rem;display:flex;align-items:baseline;gap:.6rem;border:1px solid var(--cream-b);animation:grin .35s both}
+.gr-conjt b{font-family:Inter,sans-serif;font-size:.8rem;color:var(--mut);width:5.2rem;flex:0 0 auto;font-weight:600}
+.gr-conjt span{font-family:Newsreader,serif;font-size:1.3rem}
+.gr-conjt .end{color:var(--ac);font-weight:600;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px}
+@keyframes grin{from{opacity:0;transform:translateY(4px)}}
+.gr-cnote{font-size:.88rem;color:var(--cream-ink);margin:.6rem 0 0;min-height:1.3em}
+.gr-fill{font:inherit;font-size:1.05rem;width:calc(var(--n,4)*.68em + 1.4em);min-width:3.2em;max-width:100%;border:none;border-bottom:2px solid var(--ac);background:var(--ac-salt);color:var(--fg);border-radius:.35rem .35rem 0 0;padding:0 .3em;text-align:center}
+.gr-fill:focus{outline:none;background:color-mix(in srgb,var(--ac) 22%,var(--card))}
+.gr-fill.right{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 14%,var(--card));color:var(--ok);font-weight:600}
+.gr-fill.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 12%,var(--card));color:var(--bad)}
+.gr-hint{font-family:Inter,sans-serif;font-size:.78rem;font-weight:600;color:var(--mut);background:var(--line2);border-radius:.35rem;padding:.05rem .4rem;margin-right:.25rem;vertical-align:.15em}
+.gr-scp .x{background:var(--line2);color:var(--fg)}.gr-scp .b{background:color-mix(in srgb,var(--bad) 13%,var(--card));color:var(--bad)}.gr-scp .ok{background:color-mix(in srgb,var(--ok) 13%,var(--card));color:var(--ok)}.gr-scp .v{background:var(--fg);color:var(--bg)}.gr-scp .e{background:var(--ac-salt);color:var(--ac)}
+.gr-scs .alt{display:block;font-size:1rem;color:var(--mut);margin-top:.2rem}
 `;
 function css() { if (!$('grcss')) { const s = document.createElement('style'); s.id = 'grcss'; s.textContent = CSS; document.head.appendChild(s); } }
 
@@ -381,12 +419,100 @@ ${tile(88, 34, -10, 'der', 'nom', 'nom-s')}${tile(236, 30, 9, 'dem', 'dat', 'dat
   }
 };
 
+/* ---------- drawing kit: chapters compose their pictures from these pieces ---------- */
+const K = {
+  svg: (inner, label) => `<svg viewBox="0 0 520 360" role="img" aria-label="${H(label)}">${inner}</svg>`,
+  grad: () => `<defs><linearGradient id="grsky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--sky1)"/><stop offset="1" stop-color="var(--sky2)"/></linearGradient></defs><rect width="520" height="360" fill="url(#grsky)"/>`,
+  clouds: () => `<g fill="var(--cloud)"><ellipse cx="90" cy="62" rx="38" ry="12"/><ellipse cx="110" cy="53" rx="22" ry="14"/><ellipse cx="318" cy="38" rx="28" ry="9"/><ellipse cx="334" cy="31" rx="15" ry="9"/></g>`,
+  sun: (x = 446, y = 66) => `<circle cx="${x}" cy="${y}" r="38" fill="var(--sun)" opacity=".25"/><circle cx="${x}" cy="${y}" r="25" fill="var(--sun)"/>`,
+  sky: (sun = true) => K.grad() + (sun ? K.sun() : '') + K.clouds() + `<path d="M0 262Q120 214 250 250T520 238V360H0Z" fill="var(--hill2)"/><path d="M0 300Q170 264 310 292T520 284V360H0Z" fill="var(--hill1)"/>`,
+  room: (win = true) => `<rect width="520" height="360" fill="var(--wall)"/><rect y="296" width="520" height="64" fill="var(--floor)"/><rect y="292" width="520" height="6" fill="var(--wood)" opacity=".55"/>` +
+    (win ? `<rect x="380" y="52" width="104" height="116" rx="8" fill="var(--sky1)" stroke="var(--wood)" stroke-width="6"/><circle cx="458" cy="84" r="11" fill="var(--sun)"/><path d="M432 52V168M380 110H484" stroke="var(--wood)" stroke-width="4"/>` : ''),
+  street: () => K.grad() + K.clouds() + `<g opacity=".55"><rect x="20" y="150" width="70" height="140" fill="var(--hill2)"/><rect x="96" y="120" width="56" height="170" fill="var(--hill1)"/><rect x="380" y="136" width="62" height="154" fill="var(--hill1)"/><rect x="446" y="168" width="60" height="122" fill="var(--hill2)"/>
+<g fill="var(--sky1)"><rect x="34" y="168" width="14" height="14"/><rect x="60" y="168" width="14" height="14"/><rect x="34" y="198" width="14" height="14"/><rect x="60" y="198" width="14" height="14"/><rect x="108" y="140" width="12" height="12"/><rect x="128" y="140" width="12" height="12"/><rect x="108" y="168" width="12" height="12"/><rect x="128" y="168" width="12" height="12"/><rect x="394" y="156" width="12" height="12"/><rect x="416" y="156" width="12" height="12"/><rect x="394" y="184" width="12" height="12"/><rect x="416" y="184" width="12" height="12"/></g></g>
+<rect y="288" width="520" height="72" fill="var(--metal)" opacity=".5"/><rect y="284" width="520" height="8" fill="var(--card)" opacity=".7"/><path d="M0 334H520" stroke="var(--card)" stroke-width="4" stroke-dasharray="26 22" opacity=".7"/>`,
+  shadow: (x, w = 44, y = 328) => `<ellipse cx="${x}" cy="${y}" rx="${w}" ry="7" fill="var(--ink)" opacity=".14"/>`,
+  /* a person standing with feet at (x,y). o: s scale, shirt, skin 1–4, hair short|curly|long|bun|white|bald, hc, pants, dress, apron,
+     armL/armR down|up|wave|out|hold|hip|chest|front, face smile|open|o|sleep|flat, glasses, beard, flip, extra (drawn in the figure's frame) */
+  person(o) {
+    const s = o.s || 1, sh = o.shirt || 'var(--nom)', sk = 'var(--skin' + (o.skin || 1) + ')', sk2 = 'var(--skin' + ({ 1: 2, 2: 2, 3: '3b', 4: '4b' }[o.skin || 1]) + ')';
+    const hc = o.hc || 'var(--hair2)', pants = o.pants || 'var(--pants)', hair = o.hair || 'short';
+    const P = { down: [6, 54], up: [12, -54], wave: [34, -50], out: [48, 18], hold: [-12, 30], hip: [18, 38], chest: [-20, 4], front: [30, 26] };
+    const arm = (side, pose) => {
+      const sx = side * 21, sy = -122, d = P[pose] || P.down, hx = sx + side * d[0], hy = sy + d[1];
+      const cx = sx + side * (pose === 'down' ? 6 : pose === 'chest' || pose === 'hold' ? 8 : 20), cy = (sy + hy) / 2 + (pose === 'up' || pose === 'wave' ? 14 : 8);
+      return `<path d="M${sx} ${sy}Q${cx} ${cy} ${hx} ${hy}" stroke="${sh}" stroke-width="13" stroke-linecap="round" fill="none"/><circle cx="${hx}" cy="${hy}" r="6.5" fill="${sk}"/>`;
+    };
+    const hairBack = hair === 'long' ? `<path d="M-25 -158Q-28 -192 0 -188Q28 -192 25 -158V-116Q17 -108 12 -118V-146Q0 -164-12 -146V-118Q-17 -108-25 -116Z" fill="${hc}"/>` : '';
+    const cap = `<path d="M-23 -162Q-24 -188 0 -188Q24 -188 23 -162Q15 -178 0 -175Q-15 -178-23 -162Z" fill="${hc}"/>`;
+    const hairFront = {
+      short: cap, bun: `<circle cx="0" cy="-192" r="10" fill="${hc}"/>` + cap,
+      long: `<path d="M-23 -160Q-24 -188 0 -188Q24 -188 23 -160Q12 -180-2 -172Q-14 -180-23 -160Z" fill="${hc}"/>`,
+      curly: `<g fill="${hc}"><circle cx="-16" cy="-174" r="9"/><circle cx="-6" cy="-182" r="10"/><circle cx="7" cy="-182" r="10"/><circle cx="17" cy="-174" r="9"/><circle cx="21" cy="-163" r="6"/><circle cx="-21" cy="-163" r="6"/></g>`,
+      white: `<path d="M-24 -156Q-27 -180-12 -186Q-22 -172-18 -154zM24 -156Q27 -180 12 -186Q22 -172 18 -154z" fill="var(--hair1)"/>`, bald: ''
+    }[hair] || '';
+    const mouth = { smile: '<path d="M-7 -150Q0 -144 7 -150" stroke="var(--ink)" stroke-width="2.2" stroke-linecap="round" fill="none"/>', open: '<path d="M-7 -151Q0 -139 7 -151Z" fill="var(--ink)"/>',
+      o: '<ellipse cx="0" cy="-148" rx="3.2" ry="4" fill="var(--ink)"/>', flat: '<path d="M-6 -149H6" stroke="var(--ink)" stroke-width="2.2" stroke-linecap="round"/>' }[o.face || 'smile'] || '';
+    const eyes = o.face === 'sleep' ? '<path d="M-11 -160q3 3 6 0M5 -160q3 3 6 0" stroke="var(--ink)" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M-5 -149H5" stroke="var(--ink)" stroke-width="2" stroke-linecap="round"/>'
+      : '<circle cx="-8" cy="-160" r="2.5" fill="var(--ink)"/><circle cx="8" cy="-160" r="2.5" fill="var(--ink)"/>' + mouth;
+    const legs = o.dress ? `<rect x="-16" y="-58" width="10" height="58" rx="5" fill="${sk}"/><rect x="6" y="-58" width="10" height="58" rx="5" fill="${sk}"/>`
+      : `<rect x="-19" y="-62" width="15" height="62" rx="7" fill="${pants}"/><rect x="4" y="-62" width="15" height="62" rx="7" fill="${pants}"/>`;
+    return `<g transform="translate(${o.x} ${o.y || 326}) scale(${o.flip ? -s : s} ${s})">${legs}<ellipse cx="-12" cy="0" rx="12" ry="5" fill="var(--ink)"/><ellipse cx="12" cy="0" rx="12" ry="5" fill="var(--ink)"/>
+<path d="M-27 -72Q-27 -134 0 -134Q27 -134 27 -72V-60Q27 -54 21 -54H-21Q-27 -54-27 -60Z" fill="${sh}"/>${o.dress ? `<path d="M-25 -80L-36 -42Q0 -34 36 -42L25 -80Z" fill="${o.dress}"/>` : ''}
+${o.apron ? `<path d="M-15 -114H15V-50H-15Z" fill="${o.apron}"/>` : ''}${o.under || ''}${arm(-1, o.armL || 'down')}${arm(1, o.armR || 'down')}
+${hairBack}<rect x="-6" y="-146" width="12" height="16" rx="5" fill="${sk}"/><circle cx="0" cy="-160" r="23" fill="${sk}"/>
+<circle cx="-23" cy="-158" r="4.5" fill="${sk2}"/><circle cx="23" cy="-158" r="4.5" fill="${sk2}"/>${hairFront}${eyes}<g fill="var(--die)" opacity=".28"><circle cx="-13" cy="-151" r="3.5"/><circle cx="13" cy="-151" r="3.5"/></g>
+${o.glasses ? '<g fill="none" stroke="var(--ink)" stroke-width="1.8"><circle cx="-8" cy="-160" r="6.5"/><circle cx="8" cy="-160" r="6.5"/><path d="M-1.5 -160h3"/></g>' : ''}
+${o.beard ? `<path d="M-19 -158Q-20 -132 0 -130Q20 -132 19 -158Q14 -146 0 -144Q-14 -146-19 -158Z" fill="${o.beard}"/><path d="M-6 -149Q0 -146 6 -149" stroke="var(--ink)" stroke-width="2" fill="none"/>` : ''}${o.extra || ''}</g>`;
+  },
+  /* speech bubble; *word* is highlighted. tail l|r|c */
+  bubble(x, y, t, o = {}) {
+    const w = o.w || Math.round(t.replace(/\*/g, '').length * 7.5 + 30), h = 34, c = o.c ? `var(--${o.c})` : 'var(--card)', tc = o.c ? 'var(--card)' : 'var(--ink)';
+    const tx = x + (o.tail === 'r' ? w / 4 : o.tail === 'c' ? 0 : -w / 4), dir = o.tail === 'r' ? 1 : o.tail === 'c' ? 0 : -1, st = o.c ? '' : 'stroke="var(--line)" stroke-width="1.5"';
+    const txt = H(t).replace(/\*([^*]+)\*/g, `<tspan fill="${o.c ? 'var(--card)' : 'var(--ac)'}" font-weight="800">$1</tspan>`);
+    return `<g><path d="M${tx - 7} ${y + h / 2 - 2}L${tx + 7} ${y + h / 2 - 2}L${tx + dir * 10} ${y + h / 2 + 11}Z" fill="${c}" ${st}/><rect x="${x - w / 2}" y="${y - h / 2}" width="${w}" height="${h}" rx="17" fill="${c}" ${st}/>
+<path d="M${tx - 6} ${y + h / 2 - 1}H${tx + 6}" stroke="${c}" stroke-width="3"/><text x="${x}" y="${y + 5}" text-anchor="middle" font-family="Inter,sans-serif" font-weight="600" font-size="14.5" fill="${tc}">${txt}</text></g>`;
+  },
+  tag: (x, y, t, c) => `<g transform="translate(${x} ${y})"><rect x="${-(t.length * 4.7 + 14)}" y="-14" width="${t.length * 9.4 + 28}" height="27" rx="13.5" fill="var(--${c})"/><text y="4.5" text-anchor="middle" font-family="Inter,sans-serif" font-weight="700" font-size="14" fill="var(--card)">${H(t)}</text></g>`,
+  notes: (x, y) => `<g opacity=".9"><path d="M${x} ${y}v-26l14-4v24" stroke="var(--dat)" stroke-width="2.4" fill="none"/><ellipse cx="${x - 4}" cy="${y}" rx="5" ry="4" fill="var(--dat)"/><ellipse cx="${x + 10}" cy="${y - 4}" rx="5" ry="4" fill="var(--dat)"/>
+<path d="M${x + 34} ${y - 30}v-20" stroke="var(--akk)" stroke-width="2.4"/><ellipse cx="${x + 30}" cy="${y - 30}" rx="5" ry="4" fill="var(--akk)"/></g>`,
+  table: (x, y, w) => `<g><rect x="${x - w / 2}" y="${y}" width="${w}" height="10" rx="4" fill="var(--wood)"/><rect x="${x - w / 2 + 12}" y="${y + 10}" width="8" height="${326 - y - 10}" fill="var(--wood)" opacity=".85"/><rect x="${x + w / 2 - 20}" y="${y + 10}" width="8" height="${326 - y - 10}" fill="var(--wood)" opacity=".85"/></g>`,
+  cup: (x, y) => `<g><path d="M${x - 11} ${y - 22}h22l-3 22h-16z" fill="var(--card)" stroke="var(--ink)" stroke-width="1.5"/><path d="M${x + 11} ${y - 17}q9 0 7 8q-2 6-9 5" fill="none" stroke="var(--ink)" stroke-width="1.5"/><path d="M${x - 4} ${y - 28}q4-6 0-12M${x + 4} ${y - 28}q4-6 0-12" stroke="var(--mut)" stroke-width="1.6" fill="none" opacity=".7"/></g>`,
+  plate: (x, y) => `<g><path d="M${x - 18} ${y - 5}q18-24 36 0z" fill="var(--nom)"/><circle cx="${x - 6}" cy="${y - 13}" r="3" fill="var(--die)"/><circle cx="${x + 6}" cy="${y - 11}" r="3" fill="var(--das)"/><ellipse cx="${x}" cy="${y - 3}" rx="26" ry="5" fill="var(--card)" stroke="var(--line)" stroke-width="1.5"/></g>`,
+  boxes: (x, y) => `<g stroke="var(--ink)" stroke-opacity=".3" stroke-width="1.5"><rect x="${x - 34}" y="${y - 36}" width="68" height="36" rx="3" fill="var(--wood)"/><rect x="${x - 28}" y="${y - 70}" width="56" height="34" rx="3" fill="var(--floor)"/><rect x="${x - 22}" y="${y - 100}" width="44" height="30" rx="3" fill="var(--wood)"/>
+<path d="M${x - 34} ${y - 18}h68M${x - 28} ${y - 53}h56M${x - 22} ${y - 85}h44" stroke="var(--card)" stroke-opacity=".6" stroke-width="3"/></g>`,
+  cart: (x, y) => `<g><rect x="${x - 40}" y="${y - 104}" width="14" height="34" rx="3" fill="var(--card)" stroke="var(--ac)" stroke-width="2"/><circle cx="${x - 12}" cy="${y - 82}" r="12" fill="var(--die)"/><path d="M${x - 12} ${y - 94}q3-6 8-6" stroke="var(--das)" stroke-width="3" fill="none"/>
+<path d="M${x + 2} ${y - 76}l30-34" stroke="var(--nom)" stroke-width="9" stroke-linecap="round"/><circle cx="${x + 26}" cy="${y - 84}" r="9" fill="var(--das)"/>
+<path d="M${x - 50} ${y - 76}h84l-9 36h-67z" fill="var(--metal)" opacity=".35"/><path d="M${x - 76} ${y - 92}h16l10 62h70l12-46h-86" fill="none" stroke="var(--metal)" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="${x - 36}" cy="${y - 10}" r="9" fill="var(--ink)"/><circle cx="${x + 18}" cy="${y - 10}" r="9" fill="var(--ink)"/></g>`,
+  guitar: (x, y, r = -35) => `<g transform="translate(${x} ${y}) rotate(${r})"><rect x="-4" y="-92" width="8" height="66" rx="2" fill="var(--wood)"/><rect x="-7" y="-104" width="14" height="16" rx="3" fill="var(--ink)"/>
+<circle cx="0" cy="-14" r="17" fill="var(--nom)"/><circle cx="0" cy="12" r="22" fill="var(--nom)"/><circle cx="0" cy="-4" r="6" fill="var(--ink)"/><path d="M-2 -92V24M2 -92V24" stroke="var(--card)" stroke-width=".8" opacity=".8"/></g>`,
+  car: (x, y, c = 'var(--die)') => `<g><path d="M${x - 78} ${y - 14}v-26q0-10 10-12l26-4l20-24q6-6 16-6h40q10 0 16 8l18 22q24 2 26 14v28z" fill="${c}"/>
+<path d="M${x - 34} ${y - 58}l16-20h30v20zM${x + 18} ${y - 58}v-20h22l14 20z" fill="var(--sky1)" opacity=".9"/><circle cx="${x - 44}" cy="${y - 12}" r="15" fill="var(--ink)"/><circle cx="${x - 44}" cy="${y - 12}" r="6" fill="var(--metal)"/><circle cx="${x + 50}" cy="${y - 12}" r="15" fill="var(--ink)"/><circle cx="${x + 50}" cy="${y - 12}" r="6" fill="var(--metal)"/></g>`,
+  bus: (x, y) => `<g><rect x="${x - 96}" y="${y - 108}" width="192" height="92" rx="14" fill="var(--nom)"/><rect x="${x - 96}" y="${y - 40}" width="192" height="8" fill="var(--ink)" opacity=".18"/>
+<g fill="var(--sky1)"><rect x="${x - 84}" y="${y - 96}" width="36" height="34" rx="5"/><rect x="${x - 42}" y="${y - 96}" width="36" height="34" rx="5"/><rect x="${x}" y="${y - 96}" width="36" height="34" rx="5"/><rect x="${x + 44}" y="${y - 96}" width="40" height="52" rx="5"/></g>
+<circle cx="${x - 56}" cy="${y - 14}" r="14" fill="var(--ink)"/><circle cx="${x + 54}" cy="${y - 14}" r="14" fill="var(--ink)"/><rect x="${x - 70}" y="${y - 124}" width="58" height="16" rx="4" fill="var(--ink)" opacity=".85"/><text x="${x - 41}" y="${y - 112}" text-anchor="middle" font-family="Inter,sans-serif" font-size="10" font-weight="700" fill="var(--sun)">Linie 7</text></g>`,
+  bike: (x, y) => `<g fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="${x - 40}" cy="${y - 26}" r="24" stroke="var(--ink)" stroke-width="4"/><circle cx="${x + 40}" cy="${y - 26}" r="24" stroke="var(--ink)" stroke-width="4"/>
+<path d="M${x - 40} ${y - 26}l26-36h40l14 36M${x - 14} ${y - 62}l18 36l36 0M${x + 26} ${y - 62}l-4-14h12M${x - 20} ${y - 70}h14" stroke="var(--akk)" stroke-width="5"/></g>`,
+  sign: (x, y, kind = 'P') => `<g><rect x="${x - 3}" y="${y - 150}" width="6" height="150" fill="var(--metal)"/><circle cx="${x}" cy="${y - 168}" r="30" fill="var(--der)" stroke="var(--bad)" stroke-width="8"/><path d="M${x - 20} ${y - 188}l40 40${kind === 'X' ? `M${x + 20} ${y - 188}l-40 40` : ''}" stroke="var(--bad)" stroke-width="8"/></g>`,
+  stop: (x, y) => `<g><rect x="${x - 3}" y="${y - 130}" width="6" height="130" fill="var(--metal)"/><circle cx="${x}" cy="${y - 140}" r="20" fill="var(--sun)" stroke="var(--das)" stroke-width="4"/><text x="${x}" y="${y - 134}" text-anchor="middle" font-family="Inter,sans-serif" font-size="17" font-weight="800" fill="var(--das)">H</text></g>`,
+  icon: (x, y, t, c) => `<g transform="translate(${x} ${y})"><circle r="26" fill="var(--${c}-s)" stroke="var(--${c})" stroke-width="2"/><text y="6" text-anchor="middle" font-family="Fraunces,serif" font-weight="700" font-size="17" fill="var(--${c})">${H(t)}</text></g>`,
+  arrow: (d, c = 'var(--ac)') => `<path d="${d}" fill="none" stroke="${c}" stroke-width="2.4" stroke-dasharray="5 6" stroke-linecap="round"/>`
+};
+
 /* ---------- text helpers ---------- */
-const plain = s => s.replace(/\{[nda]:([^}]*)\}/g, '$1').replace(/\(\(([^|)]*)[^)]*\)\)/g, '$1').replace(/\[|\]/g, '');
+// {n:…} Nominativ, {d:…} Dativ, {a:…} Akkusativ, {e:…} Endung/wichtiger Teil, {v:…} Verb (Position 2), {t:…} Verbteil am Ende
+const plain = s => s.replace(/\{[ndaevt]:([^}]*)\}/g, '$1').replace(/\(\(([^|)]*)[^)]*\)\)/g, '$1').replace(/\[\[([^\]|]*)[^\]]*\]\]/g, '$1').replace(/\[|\]/g, '');
 const wrapWords = t => H(t).replace(/[A-Za-zÄÖÜäöüß]+/g, w => `<span class="gw">${w}</span>`);
 function fmt(s) {
-  let out = '', last = 0, m; const re = /\{([nda]):([^}]*)\}/g;
-  while ((m = re.exec(s))) { out += wrapWords(s.slice(last, m.index)) + `<span class="cs ${m[1]}">${wrapWords(m[2])}</span>`; last = re.lastIndex; }
+  let out = '', last = 0, m; const re = /\{([ndaevt]):([^}]*)\}/g;
+  while ((m = re.exec(s))) {
+    const before = s.slice(last, m.index), glued = m[1] === 'e' && /[A-Za-zÄÖÜäöüß]$/.test(before);
+    // an ending glued to its stem: keep the whole word tappable as one
+    if (glued) { const wm = /[A-Za-zÄÖÜäöüß]+$/.exec(before); out += wrapWords(before.slice(0, wm.index)) + `<span class="gw">${H(wm[0])}<span class="cs e">${H(m[2])}</span></span>`; }
+    else out += wrapWords(before) + `<span class="cs ${m[1]}">${m[1] === 'e' ? H(m[2]) : wrapWords(m[2])}</span>`;
+    last = re.lastIndex;
+  }
   return out + wrapWords(s.slice(last));
 }
 const sayBtn = s => `<button class="gr-say" data-say="${H(plain(s))}" title="Anhören" aria-label="Anhören">${icn('volume-2')}</button>`;
@@ -397,12 +523,17 @@ const norm = s => s.replace(/[.,!?;:„“"'»«]/g, ' ').replace(/\s+/g, ' ').t
 /* ---------- dictionary look-up for tapped words ---------- */
 const BASEL = { dem: 'der', den: 'der', des: 'der', die: 'der', das: 'der', einem: 'ein', einen: 'ein', einer: 'ein', eine: 'ein', eines: 'ein',
   mir: 'ich', mich: 'ich', dir: 'du', dich: 'du', ihm: 'er', ihn: 'er', ihnen: 'sie', Ihnen: 'Sie', uns: 'wir', euch: 'ihr', es: 'es',
-  bin: 'sein', bist: 'sein', ist: 'sein', sind: 'sein', seid: 'sein', war: 'sein', hast: 'haben', hat: 'haben', habt: 'haben' };
+  bin: 'sein', bist: 'sein', ist: 'sein', sind: 'sein', seid: 'sein', war: 'sein', hast: 'haben', hat: 'haben', habt: 'haben',
+  kann: 'können', kannst: 'können', könnt: 'können', muss: 'müssen', musst: 'müssen', müsst: 'müssen', darf: 'dürfen', darfst: 'dürfen', dürft: 'dürfen',
+  will: 'wollen', willst: 'wollen', wollt: 'wollen', soll: 'sollen', sollst: 'sollen', sollt: 'sollen', möchte: ['möchten', 'mögen'], möchtest: ['möchten', 'mögen'], möchtet: ['möchten', 'mögen'],
+  isst: 'essen', iss: 'essen', gibst: 'geben', gibt: 'geben', gib: 'geben', nimmst: 'nehmen', nimmt: 'nehmen', nimm: 'nehmen', liest: 'lesen', lies: 'lesen', siehst: 'sehen', sieht: 'sehen',
+  sprichst: 'sprechen', spricht: 'sprechen', hilfst: 'helfen', hilft: 'helfen', hilf: 'helfen', triffst: 'treffen', trifft: 'treffen', vergisst: 'vergessen', fährst: 'fahren', fährt: 'fahren',
+  schläfst: 'schlafen', schläft: 'schlafen', läufst: 'laufen', läuft: 'laufen', trägst: 'tragen', trägt: 'tragen', wäscht: 'waschen', hält: 'halten', sei: 'sein', seien: 'sein', weißt: 'wissen', weiß: 'wissen' };
 function findWord(w) {
   if (typeof WIDX === 'undefined' || !WIDX.size) return null;
   const L = Object.assign({}, BASEL, (cur && cur.lemmas) || {});
   const lw = w.toLowerCase(), cap = s => s.charAt(0).toUpperCase() + s.slice(1);
-  const c = [L[w], w, L[lw], lw, cap(lw)];
+  const c = [].concat(L[w] || [], w, L[lw] || [], lw, cap(lw), lw + 'en', lw + 'n');
   for (const suf of ['st', 'est', 't', 'et', 'e', 'en', 'n', 'em', 'er', 'es', 's']) if (lw.endsWith(suf) && lw.length - suf.length >= 3) {
     const st = lw.slice(0, -suf.length); c.push(st + 'en', st + 'n', st, cap(st), cap(st) + 'e');
   }
@@ -493,7 +624,7 @@ function overview() {
     <p>Alle Themen bis B1 – mit Bildern, Beispielen zum Anhören und Übungen, die sofort sagen, was richtig ist.</p>
     <div class="gr-stats"><span class="gr-stat"><b>${TOTAL}</b>Kapitel</span><span class="gr-stat"><b>${done}</b>schon fertig</span><a class="gr-stat" href="#/g/fortschritt" style="text-decoration:none"><b>${passedEx}</b>Übungen bestanden →</a></div></div>
     <div class="gr-topart">${ART.cover()}</div></section>
-  <a class="gr-feat" href="#/g/22"><span class="th">${ART.kite(true)}</span><span><span class="gr-lv A2">A2</span> <span class="gr-eyebrow" style="display:inline">Probekapitel</span><b>Verben mit Dativ und Akkusativ</b><p>Wem gibst du was? Erklärung, Beispiele, 5 Übungen und Sprechtraining.</p></span></a>
+  <a class="gr-feat" href="#/g/1"><span class="th" id="grfeat"></span><span><span class="gr-lv A1">A1</span> <span class="gr-eyebrow" style="display:inline">Hier anfangen</span><b>Verben 1: Kapitel 1–9</b><p>Pronomen, Präsens, sein und haben, Modalverben, trennbare Verben und Imperativ – mit Übungen und Sprechtraining.</p></span></a>
   <div class="gr-filter">${['', 'A1', 'A2', 'B1'].map(l => `<button class="gr-chip${filt.lv === l ? ' on' : ''}" data-lv="${l}">${l || 'Alle'}</button>`).join('')}
     <input id="grq" placeholder="Thema suchen, z. B. Perfekt" value="${H(filt.q)}" autocomplete="off"></div>
   <div id="grlist"></div>`;
@@ -576,7 +707,7 @@ function render(c) {
      <p class="gr-eyebrow">Kapitel ${c.n} · ${H(c.group)} · <span class="gr-lv ${c.level}">${c.level}</span></p>
      <h1>${H(c.title)}</h1><p class="gr-kick">${H(c.kicker)}</p><p class="gr-intro">${c.intro}</p>
      <div class="gr-prog" id="grprog">${progHTML(pr)}</div></div>
-     <figure class="gr-art">${ART[c.art] ? ART[c.art]() : ''}<figcaption><span>${fmt(c.hero)}</span>${sayBtn(c.hero)}</figcaption></figure>
+     <figure class="gr-art">${typeof c.art === 'function' ? c.art(K) : ART[c.art] ? ART[c.art]() : ''}<figcaption><span>${fmt(c.hero)}</span>${sayBtn(c.hero)}</figcaption></figure>
    </div>
    <nav class="gr-toc"><a href="#grs-v" data-jump>${icn('lightbulb')} Verstehen</a><a href="#grs-b" data-jump>${icn('quote')} Beispiele</a><a href="#grs-u" data-jump>${icn('pencil')} Üben</a><a href="#grs-s" data-jump>${icn('mic')} Sprechen</a></nav>
    <section class="gr-sec" id="grs-v"><h2><span class="gr-sn">1</span>Verstehen</h2>${blocks}</section>
@@ -618,6 +749,12 @@ function block(b) {
       <div class="gr-msent"></div><div class="gr-mrule">${icn('info')}<span></span></div></div>`;
   if (b.type === 'verbs') return `<div class="gr-cream"><h3>${H(b.title)}</h3><p class="gr-pat">${H(b.pattern)}</p><div class="gr-verbs">${b.items.map(v =>
       `<div class="gr-verb"><b><span class="gw">${H(v[0])}</span></b><span class="ex">${fmt(v[1])}</span></div>`).join('')}</div></div>`;
+  if (b.type === 'cards') return `<div class="gr-cream"${b.min ? ` style="--min:${b.min}"` : ''}>${b.title ? `<h3>${H(b.title)}</h3>` : ''}<div class="gr-cards2">${b.items.map(i =>
+    `<div class="gr-c2 k-${i.k || 'ac'}"><span class="tt">${i.icon ? icn(i.icon) : ''}${H(i.t)}</span>${i.s ? `<span class="s">${H(i.s)}</span>` : ''}${i.p ? `<p>${i.p}</p>` : ''}${i.ex ? `<p class="ex">${fmt(i.ex)}</p>` : ''}${i.ws ? `<div class="ws">${i.ws.map(w => `<span class="gw">${H(w)}</span>`).join('')}</div>` : ''}</div>`).join('')}</div>${b.foot ? `<p class="gr-foot" style="margin-top:.7rem">${b.foot}</p>` : ''}</div>`;
+  if (b.type === 'grid') return `<div class="gr-cream"><h3>${H(b.title)}</h3><div class="gr-tblw"><table class="gr-tbl gr-grid">${b.head ? `<thead><tr>${b.head.map((h, i) => `<th${i === 0 && b.label !== false ? ' class="l"' : ''}>${H(h)}</th>`).join('')}</tr></thead>` : ''}<tbody>${b.rows.map((r, ri) =>
+    `<tr${(b.hl || []).includes(ri) ? ' class="hl"' : ''}>${r.map((c, i) => i === 0 && b.label !== false ? `<td class="l">${H(c)}</td>` : `<td>${/<\w/.test(c) ? c : fmt(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>${b.foot ? `<p class="gr-foot" style="margin-top:.7rem">${b.foot}</p>` : ''}</div>`;
+  if (b.type === 'conj') { const ks = Object.keys(b.verbs);
+    return `<div class="gr-cream gr-conj" data-conj="${H(JSON.stringify(b))}"><h3>${H(b.title)}</h3>${b.intro ? `<p class="gr-foot" style="margin:-.3rem 0 .7rem">${b.intro}</p>` : ''}<div class="gr-cv">${ks.map((k, i) => `<button class="gr-chip${i ? '' : ' on'}" data-verb="${H(k)}">${H(k)}</button>`).join('')}</div><div class="gr-conjt"></div><p class="gr-cnote"></p></div>`; }
   if (b.type === 'note') return `<div class="gr-note">${icn('triangle-alert')}<p><b class="t">${H(b.title)}</b>${fmt(b.text)}</p></div>`;
   return '';
 }
@@ -630,6 +767,21 @@ function tableHTML(b, k) {
   };
   return `<table class="gr-tbl"><thead><tr><th></th>${b.head.map(h => `<th>${H(h)}</th>`).join('')}</tr></thead><tbody>${rows.map((r, i) =>
     `<tr class="${cls[i]}"><th>${lab[i]}</th>${r.map((t, j) => cell(t, i, j)).join('')}</tr>`).join('')}</tbody></table>`;
+}
+const PERS = ['ich', 'du', 'er/sie/es', 'wir', 'ihr', 'sie/Sie'];
+function conjForm(inf, f) {
+  if (/\{e:/.test(f)) return f.replace(/\{e:([^}]*)\}/g, (m, x) => `<span class="end">${H(x)}</span>`).replace(/^([^<]*)/, m => H(m));
+  const stem = inf.replace(/(e?n)$/, ''); let i = 0; while (i < f.length && i < stem.length && f[i] === stem[i]) i++;
+  if (i === 0) return `<span class="end">${H(f)}</span>`;
+  return H(f.slice(0, i)) + (i < f.length ? `<span class="end">${H(f.slice(i))}</span>` : '');
+}
+function conj(el) {
+  const b = JSON.parse(el.dataset.conj), out = el.querySelector('.gr-conjt'), note = el.querySelector('.gr-cnote');
+  const draw = k => { const v = b.verbs[k], forms = Array.isArray(v) ? v : v.f;
+    out.innerHTML = forms.map((f, i) => `<div style="animation-delay:${i * 35}ms"><b>${PERS[i]}</b><span>${conjForm(k, f)}</span><button class="gr-say" data-say="${H(PERS[i].split('/')[0] + ' ' + f.replace(/\{e:([^}]*)\}/g, '$1'))}" style="margin-left:auto;width:28px;height:28px">${icn('volume-2')}</button></div>`).join('');
+    note.innerHTML = Array.isArray(v) ? '' : (v.n || ''); icons(); };
+  el.querySelectorAll('[data-verb]').forEach(c => c.onclick = () => { el.querySelectorAll('[data-verb]').forEach(x => x.classList.toggle('on', x === c)); draw(c.dataset.verb); });
+  draw(Object.keys(b.verbs)[0]);
 }
 function machine(el) {
   const b = JSON.parse(el.dataset.mach), st = { d: false, a: false }, sent = el.querySelector('.gr-msent'), rule = el.querySelector('.gr-mrule span');
@@ -674,6 +826,9 @@ function itemHTML(x, it, i) {
     return `<div class="gr-line"></div><div class="gr-pool">${t.map(v => `<button class="gr-tile">${H(v)}</button>`).join('')}</div><span class="gr-end" hidden>${H(it.end)}</span>`; }
   if (x.type === 'type') return `<div class="gr-q">${H(it.q).replace(/\[([^\]]*)\]/g, '<mark>$1</mark>')}</div>
     <div class="gr-tl"><span>${H(it.pre)}</span><input autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Antwort ${i + 1}"><span>${H(it.end)}</span></div>`;
+  if (x.type === 'fill') return it.replace(/^\(([^)]*)\)\s*/, (m, h) => `<span class="gr-hint">${H(h)}</span>`).replace(/\[\[([^\]]*)\]\]|([^[]+|\[)/g, (m, a, p) => {
+    if (p != null) return p.startsWith('<span class="gr-hint">') ? p : H(p); const ok = a.split('|');
+    return `<input class="gr-fill" data-ok="${H(JSON.stringify(ok))}" style="--n:${Math.max(...ok.map(o => o.length))}" autocomplete="off" autocapitalize="off" spellcheck="false">`; });
   if (x.type === 'free') return `<div class="gr-q">${H(it.q)}</div><div class="gr-free"><textarea rows="2" placeholder="${H(it.ph)}" spellcheck="false"></textarea></div><div class="gr-fb"></div>`;
   return '';
 }
@@ -681,6 +836,7 @@ const exState = {};       // exercise id -> {shown:bool}
 function wire(c) {
   const root = V().querySelector('.gr-ch');
   root.querySelectorAll('.gr-mach').forEach(machine);
+  root.querySelectorAll('.gr-conj').forEach(conj);
   root.querySelectorAll('.gr-tsw').forEach(sw => sw.querySelectorAll('[data-set]').forEach(b => b.onclick = () => {
     sw.querySelectorAll('[data-set]').forEach(x => x.classList.toggle('on', x === b));
     const blk = c.understand.find(x => x.type === 'table'); $(sw.dataset.tbl).innerHTML = tableHTML(blk, b.dataset.set); }));
@@ -711,7 +867,7 @@ function clearMark(el) { const it = el.closest('.gr-it'); it.classList.remove('o
 function spk(t) {
   const b = t.closest('[data-spk]'); if (!b) return;
   const card = b.closest('.gr-sc'), out = card.querySelector('.gr-scs'), i = +card.dataset.i, it = cur.speak.items[i];
-  const s = b.dataset.spk === 'pron' ? it.pron : it.say;
+  const s = b.dataset.spk === 'pron' ? (it.pron || it.alt) : it.say;
   out.classList.remove('hid'); out.innerHTML = fmt(s); talk(plain(s));
 }
 function answers(x, ue) {
@@ -722,6 +878,10 @@ function answers(x, ue) {
       return { ok: gaps.every((g, k) => val[k] === g.dataset.ok), given: val.join('|'), empty: val.every(v => !v) }; }
     if (x.type === 'order') { const v = [...el.querySelectorAll('.gr-line .gr-tile')].map(b => b.textContent).join(' ');
       return { ok: it.ok.includes(v) && !el.querySelector('.gr-pool').children.length, given: v, empty: !v }; }
+    if (x.type === 'fill') { const ins = [...el.querySelectorAll('.gr-fill')], res = ins.map(i => { const ok = JSON.parse(i.dataset.ok), v = i.value.trim();
+        return { v, ok: ok.includes(v), ci: !ok.includes(v) && ok.some(o => o.toLowerCase() === v.toLowerCase()) }; });
+      ins.forEach((inp, k) => { inp.classList.remove('right', 'wrong'); inp.classList.add(res[k].ok || res[k].ci ? 'right' : 'wrong'); });
+      return { ok: res.every(r => r.ok || r.ci), ci: res.some(r => r.ci), given: res.map(r => r.v).join('|'), empty: res.every(r => !r.v) }; }
     if (x.type === 'type') { const raw = el.querySelector('input').value, v = norm(raw), ok = it.ok.some(a => norm(a) === v), ci = !ok && it.ok.some(a => norm(a).toLowerCase() === v.toLowerCase());
       return { ok: ok || ci, ci, given: raw.trim(), empty: !v }; }
     return { ok: false, given: '', empty: true };
@@ -731,6 +891,7 @@ function solText(x, it) {
   if (x.type === 'cases') return 'Richtig: ' + [...it.matchAll(/\{([nda]):([^}]*)\}/g)].map(m => `${m[2]} = ${CASE[m[1]]}`).join(' · ');
   if (x.type === 'choice') return 'Richtig: ' + plain(it);
   if (x.type === 'order') return 'Richtig: ' + it.ok[0] + it.end;
+  if (x.type === 'fill') return 'Richtig: ' + plain(it.replace(/^\([^)]*\)\s*/, ''));
   if (x.type === 'type') return 'Richtig: ' + it.pre + ' ' + it.ok[0] + it.end;
   return '';
 }
@@ -740,7 +901,7 @@ function check(x, ue) {
   if (res.every(r => r.empty)) { if (typeof toast === 'function') toast('Bearbeite zuerst die Aufgaben.'); return; }
   const score = res.filter(r => r.ok).length, total = res.length, passed = score / total >= PASS;
   ue.querySelectorAll('.gr-it').forEach((el, i) => { const r = res[i]; el.classList.remove('ok', 'no'); void el.offsetWidth; el.classList.add(r.ok ? 'ok' : 'no');
-    const s = el.querySelector('.gr-sol'); s.hidden = !(r.ok && r.ci); if (r.ok && r.ci) { s.className = 'gr-sol'; s.textContent = 'Richtig – aber achte auf Groß- und Kleinschreibung: ' + x.items[i].pre + ' ' + x.items[i].ok[0] + x.items[i].end; } });
+    const s = el.querySelector('.gr-sol'); s.hidden = !(r.ok && r.ci); if (r.ok && r.ci) { s.className = 'gr-sol'; s.textContent = 'Richtig – aber achte auf Groß- und Kleinschreibung: ' + solText(x, x.items[i]).replace(/^Richtig: /, ''); } });
   const out = ue.querySelector('.gr-res');
   if (S.shown) { out.className = 'gr-res'; out.textContent = `${score} von ${total} richtig – zählt nicht, weil die Lösung angezeigt wurde.`; return; }
   record({ ch: cur.n, ex: x.id, score, total, passed, at: Date.now(), ans: res.map(r => r.given) });
@@ -757,6 +918,7 @@ function show(x, ue) {
     if (x.type === 'cases') el.querySelectorAll('.gr-tag').forEach(g => { g.dataset.st = g.dataset.k; g.dataset.lb = CASE[g.dataset.k]; });
     if (x.type === 'choice') el.querySelectorAll('.gr-gap').forEach(g => g.querySelectorAll('button').forEach(b => {
       const right = b.textContent === g.dataset.ok; b.classList.toggle('right', right); b.classList.toggle('wrong', b.classList.contains('sel') && !right); b.classList.remove('sel'); }));
+    if (x.type === 'fill') el.querySelectorAll('.gr-fill').forEach(i => { const ok = JSON.parse(i.dataset.ok); if (!ok.some(o => o.toLowerCase() === i.value.trim().toLowerCase())) { i.value = ok[0]; i.classList.remove('wrong'); i.classList.add('right'); } i.readOnly = true; });
     if (!wasOk) { s.hidden = false; s.className = 'gr-sol'; s.textContent = solText(x, it); }
   });
   const out = ue.querySelector('.gr-res'); out.className = 'gr-res'; out.textContent = 'Lösung angezeigt. Mit „Neu“ kannst du es noch einmal versuchen.';
@@ -795,12 +957,8 @@ async function freeCheck(x, ue) {
     done++;
     const notes = [], low = t.toLowerCase();
     if (!/[.!?]$/.test(t)) notes.push(['h', 'Am Satzende fehlt ein Punkt.']);
-    if (!x.verbs.some(v => new RegExp('\\b(?:\\w+)?' + v, 'i').test(low))) notes.push(['h', 'Benutze ein Verb mit Dativ und Akkusativ, z. B. schenken, geben oder zeigen.']);
-    if (/\b(mir|dir|ihm|uns|euch|ihnen)\s+(es|ihn)\b/i.test(t)) notes.push(['e', 'Zwei Pronomen: erst Akkusativ, dann Dativ – also z. B. „es mir“, nicht „mir es“.']);
-    const m1 = /\b(den|einen|meinen|deinen|seinen|ihren|unseren|euren|keinen)\s+([A-ZÄÖÜ][a-zäöüß]+)\s+(der|die|das|den|ein|eine|einen|mein\w*|dein\w*|sein\w*|ihr\w*|unser\w*|kein\w*|[A-ZÄÖÜ][a-zäöüß]+)\b/.exec(t);
-    if (m1 && !/n$/.test(m1[2])) notes.push(['e', `„${m1[1]} ${m1[2]}“ ist Akkusativ. Wenn das die Person ist, die etwas bekommt, brauchst du den Dativ: „${m1[1].replace(/en$/, 'em')} ${m1[2]}“.`]);
-    const m2 = /\b(die|eine|meine|deine|seine|ihre|unsere|keine)\s+([A-ZÄÖÜ][a-zäöüß]+)\s+(der|die|das|den|ein|eine|einen|mein\w*|dein\w*|sein\w*|ihr\w*|unser\w*|kein\w*)\b/.exec(t);
-    if (m2) notes.push(['h', `Ist „${m2[1]} ${m2[2]}“ die Person, die etwas bekommt? Dann Dativ: feminin „${m2[1] === 'die' ? 'der' : m2[1].replace(/e$/, 'er')} ${m2[2]}“, Plural „den …n“.`]);
+    if (x.verbs && !x.verbs.some(v => new RegExp('\\b(?:\\w+)?' + v, 'i').test(low))) notes.push(['h', x.needMsg || 'Benutze ein passendes Verb aus diesem Kapitel.']);
+    for (const fn of x.checks || []) { const r = fn(t); if (r) notes.push(r); }
     try {
       const r = await fetch('https://api.languagetool.org/v2/check', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams({ text: t, language: 'de-DE' }) });
@@ -817,23 +975,24 @@ async function freeCheck(x, ue) {
 
 function speakHTML(s) {
   return `<p class="sub" style="margin:-.3rem 0 1rem">${H(s.intro)}</p><div class="gr-spk">${s.items.map((it, i) => `<div class="gr-sc" data-i="${i}">
-    <div class="gr-scp"><span class="n">${icn('user-round')}${H(it.who)}</span><span class="arr">${icn('arrow-right')}</span><span class="d">${icn('hand-heart')}${H(it.whom)}</span><span class="a">${icn(it.icon)}${H(it.what)}</span></div>
+    <div class="gr-scp">${(it.cue || [['n', 'user-round', it.who], ['arr'], ['d', 'hand-heart', it.whom], ['a', it.icon, it.what]]).map(c => c[0] === 'arr' ? `<span class="arr">${icn('arrow-right')}</span>` : `<span class="${c[0]}">${c[1] ? icn(c[1]) : ''}${H(c[2])}</span>`).join('')}</div>
     <div class="gr-scs hid">Erst laut sagen – dann aufdecken.</div>
-    <div class="row"><button class="btn sm" data-spk="say">${icn('eye')} Lösung</button><button class="btn sm" data-spk="pron">${icn('replace')} Mit Pronomen</button></div></div>`).join('')}</div>`;
+    <div class="row"><button class="btn sm" data-spk="say">${icn('eye')} Lösung</button>${it.pron || it.alt ? `<button class="btn sm" data-spk="pron">${icn(it.altIcon || 'replace')} ${H(it.altLabel || s.altLabel || 'Mit Pronomen')}</button>` : ''}</div></div>`).join('')}</div>`;
 }
 
 /* ---------- entry point ---------- */
 function view(arg) {
   css(); closePop();
-  if (!arg) { cur = null; overview(); Promise.all(Object.keys(READY).map(n => loadChapter(+n).catch(() => {}))).then(() => pull()).then(() => { if (location.hash === '#/g' || location.hash === '#/g/') list(); }); return; }
+  if (!arg) { cur = null; overview(); loadChapter(1).then(c => { const t = $('grfeat'); if (t && typeof c.art === 'function') t.innerHTML = c.art(K); }).catch(() => {}); Promise.all(Object.keys(READY).map(n => loadChapter(+n).catch(() => {}))).then(() => pull()).then(() => { if (location.hash === '#/g' || location.hash === '#/g/') list(); }); return; }
   if (arg === 'fortschritt') { cur = null; progressView(); return; }
   chapter(parseInt(arg, 10));
 }
 function leave() { closePop(); cur = null; }
 document.addEventListener('click', onClick);
+document.addEventListener('input', e => { const t = e.target; if (!t.closest || !t.closest('.gr-ue')) return; const S = cur && exState[t.closest('.gr-ue').dataset.ex]; if (S && S.shown) return; if (t.classList.contains('gr-fill')) t.classList.remove('right', 'wrong'); const it = t.closest('.gr-it'); if (it) clearMark(t); });
 window.addEventListener('scroll', () => { if ($('grpop')) closePop(); }, { passive: true });
 window.addEventListener('resize', closePop);
 
 const base = (document.currentScript && document.currentScript.src.replace(/[^/]*$/, '')) || 'grammatik/';
-window.GRAM = { view, leave, base, add(c) { CH[c.n] = c; }, _test: { findWord, norm, attempts, best, store, PASS } };
+window.GRAM = { view, leave, base, add(c) { CH[c.n] = c; }, _test: { findWord, norm, attempts, best, store, PASS, CH } };
 })();

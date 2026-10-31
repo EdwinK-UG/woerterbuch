@@ -107,6 +107,14 @@ GRAM.add({
     { id: 'u5', type: 'free', title: 'Dein eigener Satz', graded: false,
       instr: 'Schreib eigene Sätze. Die automatische Prüfung findet viele Fehler, aber nicht alle – diese Übung zählt deshalb nicht für die Note.',
       verbs: ['geb', 'gib', 'gab', 'schenk', 'kauf', 'bring', 'brach', 'zeig', 'schick', 'schreib', 'schrieb', 'erklär', 'erzähl', 'empf', 'leih', 'lieh', 'sag', 'wünsch', 'biet', 'bot'],
+      needMsg: 'Benutze ein Verb mit Dativ und Akkusativ, z. B. schenken, geben oder zeigen.',
+      checks: [
+        t => /\b(mir|dir|ihm|uns|euch|ihnen)\s+(es|ihn)\b/i.test(t) && ['e', 'Zwei Pronomen: erst Akkusativ, dann Dativ – also z. B. „es mir“, nicht „mir es“.'],
+        t => { const m = /\b(den|einen|meinen|deinen|seinen|ihren|unseren|euren|keinen)\s+([A-ZÄÖÜ][a-zäöüß]+)\s+(der|die|das|den|ein|eine|einen|mein\w*|dein\w*|sein\w*|ihr\w*|unser\w*|kein\w*|[A-ZÄÖÜ][a-zäöüß]+)\b/.exec(t);
+          return m && !/n$/.test(m[2]) && ['e', `„${m[1]} ${m[2]}“ ist Akkusativ. Wenn das die Person ist, die etwas bekommt, brauchst du den Dativ: „${m[1].replace(/en$/, 'em')} ${m[2]}“.`]; },
+        t => { const m = /\b(die|eine|meine|deine|seine|ihre|unsere|keine)\s+([A-ZÄÖÜ][a-zäöüß]+)\s+(der|die|das|den|ein|eine|einen|mein\w*|dein\w*|sein\w*|ihr\w*|unser\w*|kein\w*)\b/.exec(t);
+          return m && ['h', `Ist „${m[1]} ${m[2]}“ die Person, die etwas bekommt? Dann Dativ: feminin „${m[1] === 'die' ? 'der' : m[1].replace(/e$/, 'er')} ${m[2]}“, Plural „den …n“.`]; }
+      ],
       items: [
         { q: 'Was schenkst du deiner Mutter oder deinem Vater zum Geburtstag?', ph: 'Ich schenke …' },
         { q: 'Was leihst du einem Freund oder einer Freundin gern?', ph: 'Ich leihe …' },
