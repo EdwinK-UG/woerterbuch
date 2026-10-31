@@ -1,25 +1,56 @@
 // Offline cache for the Wörterbuch.
-// - data.bin?v=… (the dictionary, ~6 MB): kept after the first visit, so later visits do not download it again.
-//   A new version has a new ?v=, so updates arrive automatically and the old copy is removed.
+// - core.bin / defs.bin ?v=… (the dictionary): kept after the first visit, so later visits do not download it
+//   again. A new version has a new ?v=, so updates arrive automatically and the old copy is removed.
+// - pictures from the picture service: kept on the device, so a picture seen once opens at once next time.
+//   "latest" pictures are refreshed in the background at most once a day; numbered ones never change.
 // - the page itself: always asked from the network first (so changes show at once), the saved copy is used
 //   only when the network is slow (over 4 s) or offline.
-const DATA = 'wb-data', PAGE = 'wb-page';
+const DATA = 'wb-data', PAGE = 'wb-page', PICS = 'wb-pics-1', PIC_HOST = 'woerterbuch-bilder.edwin1kitaka.workers.dev', MAXPICS = 1500;
 
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
 
+const fileOf = url => new URL(url).pathname.split('/').pop();
+
+async function trimPics(c) {
+  const keys = await c.keys();
+  for (let i = 0; i < keys.length - MAXPICS; i++) await c.delete(keys[i]);   // oldest first
+}
+
+async function picture(e, u) {
+  const c = await caches.open(PICS), key = u.href;
+  const hit = await c.match(key);
+  const refresh = () => fetch(key, { mode: 'cors', credentials: 'omit' }).then(async r => {
+    if (r.ok && /^image\//.test(r.headers.get('content-type') || '')) {
+      const copy = new Response(await r.clone().blob(), { headers: { 'Content-Type': r.headers.get('content-type'), 'X-Saved': String(Date.now()) } });
+      await c.put(key, copy); trimPics(c);
+    }
+    return r;
+  });
+  if (hit) {
+    const age = Date.now() - (+hit.headers.get('X-Saved') || 0);
+    if (u.searchParams.get('seed') === 'latest' && age > 864e5) e.waitUntil(refresh().catch(() => {}));
+    return hit;
+  }
+  try { return await refresh(); } catch (err) { return fetch(e.request); }
+}
+
 self.addEventListener('fetch', e => {
   const req = e.request, u = new URL(req.url);
-  if (req.method !== 'GET' || u.origin !== self.location.origin) return;
+  if (req.method !== 'GET') return;
 
-  if (u.pathname.endsWith('/data.bin')) {
+  if (u.host === PIC_HOST && u.pathname === '/pic') { e.respondWith(picture(e, u)); return; }
+  if (u.origin !== self.location.origin) return;
+
+  if (/\/(core|defs|data)\.bin$/.test(u.pathname)) {
     e.respondWith(caches.open(DATA).then(async c => {
       const hit = await c.match(req);
       if (hit) return hit;
       const r = await fetch(req);
       if (r.ok) {
         await c.put(req, r.clone());
-        (await c.keys()).forEach(k => { if (k.url !== req.url) c.delete(k); });
+        const name = fileOf(req.url);       // remove older versions of this file and the old single data.bin
+        (await c.keys()).forEach(k => { const f = fileOf(k.url); if ((f === name || f === 'data.bin') && k.url !== req.url) c.delete(k); });
       }
       return r;
     }).catch(() => fetch(req)));

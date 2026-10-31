@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Wörterbuch</title>
 <meta name="description" content="German learner dictionary with categories, revision lists, word maps and Anki-style flashcards.">
-<link rel="preload" href="data.bin?v=628ccf7d68" as="fetch" crossorigin="anonymous">
+<link rel="preload" href="core.bin?v=3846fea8f4" as="fetch" crossorigin="anonymous">
 <link rel="preconnect" href="https://woerterbuch-bilder.edwin1kitaka.workers.dev">
 <link rel="preconnect" href="https://upload.wikimedia.org">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -379,7 +379,7 @@ kbd{font:600 .66rem Inter,system-ui,sans-serif;padding:.1rem .35rem;border-radiu
 <div id="toast"></div>
 <div class="modal" id="modal"><div class="sheet" id="sheet"></div></div>
 
-<script id="data" type="application/octet-stream" data-src="data.bin?v=628ccf7d68"></script>
+<script id="data" type="application/octet-stream" data-src="core.bin?v=3846fea8f4" data-defs="defs.bin?v=db398139f0"></script>
 <script>
 "use strict";
 /* ---------- storage helpers (safe) ---------- */
@@ -395,36 +395,57 @@ function saveLists(){LS.set('gd_lists',lists)} function saveDecks(){LS.set('gd_d
 const fold=s=>s.toLowerCase().replace(/ä/g,'a').replace(/ö/g,'o').replace(/ü/g,'u').replace(/ß/g,'ss').replace(/[^a-z0-9]/g,'');
 let FOLD=[];
 /* ---------- load packed data ---------- */
-async function load(){
-  const el=document.getElementById('data'), b64=el.textContent.trim();
-  const aip=fetchAIEntries();          // AI entries load in parallel with the dictionary
+/* The website loads the dictionary in two parts: core.bin (~0.5 MB: headwords for search, topics, home page)
+   first, then defs.bin (definitions, word families, word maps) in the background. Pages that show definitions
+   wait for the second part (FULLP). The single-file copy has everything inside the page. */
+let FULL=false, NMAIN=0, fullRes; const FULLP=new Promise(r=>fullRes=r);
+async function fetchBin(url,progress){
+  const r=await fetch(url); if(!r.ok)throw new Error('Wörterbuch-Daten: '+r.status);
+  const total=+r.headers.get('content-length')||0, lo=progress&&document.querySelector('#view .loading:not([data-g])');
   let bin;
-  if(b64)bin=Uint8Array.from(atob(b64),c=>c.charCodeAt(0));   // single-file copy: data inside the page
-  else{                                 // website: data.bin, preloaded in <head>, cached offline by sw.js
-    const r=await fetch(el.dataset.src); if(!r.ok)throw new Error('Wörterbuch-Daten: '+r.status);
-    const total=+r.headers.get('content-length')||0, lo=document.querySelector('#view .loading:not([data-g])');
-    if(r.body&&total&&lo){            // show how far the first download is (later visits come from the offline copy)
-      const rd=r.body.getReader(), parts=[]; let got=0, last=-1;
-      for(;;){const {done,value}=await rd.read(); if(done)break; parts.push(value); got+=value.length;
-        const pc=Math.min(99,Math.floor(got/total*100)); if(pc!==last&&pc>0){last=pc; lo.lastChild.textContent='Wörterbuch wird geladen … '+pc+' %'}}
-      bin=new Uint8Array(got); let o=0; for(const x of parts){bin.set(x,o); o+=x.length}
-    } else bin=new Uint8Array(await r.arrayBuffer());
-  }
+  if(r.body&&total&&lo){            // show how far the first download is (later visits come from the offline copy)
+    const rd=r.body.getReader(), parts=[]; let got=0, last=-1;
+    for(;;){const {done,value}=await rd.read(); if(done)break; parts.push(value); got+=value.length;
+      const pc=Math.min(99,Math.floor(got/total*100)); if(pc!==last&&pc>0){last=pc; lo.lastChild.textContent='Wörterbuch wird geladen … '+pc+' %'}}
+    bin=new Uint8Array(got); let o=0; for(const x of parts){bin.set(x,o); o+=x.length}
+  } else bin=new Uint8Array(await r.arrayBuffer());
+  return unpack(bin);
+}
+async function unpack(bin){
   const txt=bin[0]===0x1f&&bin[1]===0x8b
     ?await new Response(new Blob([bin]).stream().pipeThrough(new DecompressionStream('gzip'))).text()
     :new TextDecoder().decode(bin);    // in case a server already unpacked it
-  const j=JSON.parse(txt);
+  return JSON.parse(txt);
+}
+function setFull(){ FULL=true; fullRes() }
+async function load(){
+  const el=document.getElementById('data'), b64=el.textContent.trim();
+  const aip=fetchAIEntries();          // AI entries load in parallel with the dictionary
+  let j, defsP=null;
+  if(b64){ j=await unpack(Uint8Array.from(atob(b64),c=>c.charCodeAt(0))) }   // single-file copy: data inside the page
+  else{ j=await fetchBin(el.dataset.src,true); defsP=fetchBin(el.dataset.defs) }   // one after the other: on a slow line the small file is not slowed down
   CATS=j.c; CATS.forEach(c=>CATMAP.set(c.id,c));
-  E=j.e.map((a,i)=>({i,w:a[0],sy:a[1],ar:a[2],ps:a[3],df:a[4],rel:a[5],cat:a[6],pg:a[7],wm:a[8]||null}));
+  if(defsP){
+    NMAIN=j.n;
+    E=j.e.map((a,i)=>({i,w:a[0],sy:a[1],ar:a[2],ps:a[3],df:'',rel:[],cat:a[4],pg:a[5],wm:null,st:a[6]&1,dl:a[7]}));
+  } else {
+    E=j.e.map((a,i)=>({i,w:a[0],sy:a[1],ar:a[2],ps:a[3],df:a[4],rel:a[5],cat:a[6],pg:a[7],wm:a[8]||null,st:/^\s*<span class="core"/.test(a[4])?1:0,dl:a[4].length}));
+    NMAIN=E.filter(e=>e.ps!=='Info'&&!/abgeleitet von/.test(e.df)).length;
+  }
+  const NB=E.length;                   // AI entries are added after these and bring their own definitions
   E.forEach(e=>{if(!WIDX.has(e.w))WIDX.set(e.w,e.i)});
   // older spellings and words without homograph number still open the right entry (saved lists, flashcards)
   for(const [o,n] of Object.entries(j.a||{})){if(!WIDX.has(o)&&WIDX.has(n))WIDX.set(o,WIDX.get(n))}
   E.forEach(e=>{const p=e.w.replace(/[¹²³⁴⁵⁶⁷⁸⁹]/g,'');if(!WIDX.has(p))WIDX.set(p,e.i)});
   FOLD=E.map(e=>fold(e.w));
+  if(defsP){
+    defsP.then(d=>{ for(let i=0;i<NB&&i<d.length;i++){const x=d[i],e=E[i]; e.df=x[0]; e.rel=x[1]||[]; e.wm=x[2]||null} setFull() })
+      .catch(()=>{ const v=V(); if(v&&v.querySelector('.loading[data-full]'))v.innerHTML='<div class="empty"><span class="em">⚠️</span>Die Wörterbuch-Daten konnten nicht geladen werden. Bitte prüfe die Internetverbindung und lade die Seite neu.</div>' });
+  } else setFull();
   // AI entries arrive on their own; only pages that may need one are drawn again
   aip.then(list=>{ if(!list)return; addAIEntries(list);
     const h=location.hash, w=h.startsWith('#/w/')?decodeURIComponent(h.slice(4)):null;
-    if((w&&WIDX.get(w)!=null&&E[WIDX.get(w)].ai)||/^#\/(study|list)\//.test(h))route() });
+    if(FULL&&((w&&WIDX.get(w)!=null&&E[WIDX.get(w)].ai)||/^#\/(study|list)\//.test(h)))route() });
   if(!isGram())route();
   if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
 }
@@ -446,6 +467,9 @@ const gcol=a=>a==='der'?'var(--der)':a==='die'?'var(--die)':a==='das'?'var(--das
 function route(){
   const h=location.hash.slice(2)||'';
   const [p,arg]=[h.split('/')[0],decodeURIComponent(h.split('/').slice(1).join('/')||'')];
+  if(!FULL&&!['','cats','g','lists','decks'].includes(p)){        // definitions are still arriving
+    if(!V().querySelector('.loading[data-full]'))V().innerHTML='<div class="loading" data-full="1"><div class="spin"></div>Einträge werden geladen …</div>';
+    FULLP.then(()=>{ if(location.hash.slice(2)===h)route() }); return }
   document.querySelectorAll('#tabs a').forEach(a=>a.classList.remove('on'));
   const setOn=t=>{const el=document.querySelector(`#tabs a[data-t="${t}"]`);if(el)el.classList.add('on')};
   if(p===''){setOn('home');viewHome()}
@@ -512,13 +536,13 @@ function viewHome(){
   // home: recent words, word of the day, topics
   const recent=(LS.get('gd_recent',[])||[]).filter(w=>WIDX.has(w)).slice(0,8);
   const wd=wordOfDay();
-  const nMain=E.filter(e=>e.ps!=='Info'&&!/abgeleitet von/.test(e.df)).length;
+  const nMain=NMAIN;
   document.getElementById('hres').innerHTML=`
     ${recent.length?`<div class="chips"><span class="chipl">Zuletzt</span>${recent.map(w=>`<a class="chip" href="#/w/${encodeURIComponent(w)}">${esc(w)}</a>`).join('')}</div>`:''}
     ${wd?`<a class="wotd" href="#/w/${encodeURIComponent(wd.w)}">
       <div class="wotd-l"><span class="eyebrow">${ic('sparkles')} Wort des Tages</span>
         <div class="wotd-w">${wd.ar?`<span class="art ${wd.ar}">${wd.ar}</span>`:''}<span class="wotd-hw">${sylHTML(wd.sy)}</span></div>
-        <p class="wotd-d">${esc(gloss(wd))}</p>
+        <p class="wotd-d" id="wotdd">${FULL?esc(gloss(wd)):'…'}</p>
         <span class="wotd-go">Eintrag öffnen ${ic('arrow-right')}</span></div>
       <button class="wotd-say" title="Aussprache anhören" onclick="event.preventDefault();event.stopPropagation();say(${wd.i},this)">${ic('volume-2')}</button></a>`:''}
     <div class="sec"><h2>Themen entdecken</h2><a href="#/cats">Alle ${CATS.length} Themen ${ic('arrow-right')}</a></div>
@@ -529,10 +553,11 @@ function viewHome(){
       <div><b>${E.filter(e=>e.ps==='Info').length}</b><span>Infokästen</span></div>
       <div><b>${CATS.length}</b><span>Themen</span></div></div>
     <p class="src">Grundlage: Langenscheidt Großwörterbuch Deutsch als Fremdsprache</p>`;
+  if(!FULL&&wd)FULLP.then(()=>{const d=document.getElementById('wotdd'); if(d)d.textContent=gloss(wd)});
 }
 /* word of the day: a core-vocabulary word, the same for everyone on a given day */
 function wordOfDay(){
-  const pool=E.filter(e=>/class="core"/.test(e.df)&&/^(n|v|adj)$/.test(e.ps)&&!/[¹²³]/.test(e.w));
+  const pool=E.filter(e=>e.st&&/^(n|v|adj)$/.test(e.ps)&&!/[¹²³]/.test(e.w));
   if(!pool.length)return null;
   const d=new Date(), k=d.getFullYear()*372+d.getMonth()*31+d.getDate();
   let h=k; h=(h^61)^(h>>>16); h=(h+(h<<3))>>>0; h^=h>>>4; h=Math.imul(h,0x27d4eb2d)>>>0; h^=h>>>15;
@@ -1901,7 +1926,7 @@ const okWord=e=>e&&/^[A-Za-zÄÖÜäöüß]{2,18}$/.test(plainW(e.w))&&(e.ps!=='
 const short=(g,n=95)=>g&&g.length>n?g.slice(0,n-2).replace(/\s\S*$/,'')+' …':g;
 let RANK=null;   // nouns, verbs, adjectives; the longest entries first (a good sign the word is common)
 function ranked(){ if(RANK)return RANK;
-  RANK=E.filter(e=>(e.ps==='n'||e.ps==='v'||e.ps==='adj')&&/^[A-Za-zÄÖÜäöüß]{3,16}$/.test(plainW(e.w))).sort((a,b)=>b.df.length-a.df.length).map(e=>e.i);
+  RANK=E.filter(e=>(e.ps==='n'||e.ps==='v'||e.ps==='adj')&&/^[A-Za-zÄÖÜäöüß]{3,16}$/.test(plainW(e.w))).sort((a,b)=>(b.dl||b.df.length)-(a.dl||a.df.length)).map(e=>e.i);
   return RANK }
 const LVL={1:1500,2:5000,3:16000};
 function poolFor(s){

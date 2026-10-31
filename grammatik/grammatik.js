@@ -585,7 +585,7 @@ function pop(el) {
     const e = E[i], g = typeof gloss === 'function' ? gloss(e) : '';
     const ar = e.ar ? `<span style="color:${typeof gcol === 'function' ? gcol(e.ar) : 'inherit'}">${H(e.ar)}</span> ` : '';
     d.innerHTML = `<div class="hw">${ar}${H(plainW ? plainW(e.w) : e.w)}<button class="gr-say" onclick="say(${i},this)" title="Anhören">${icn('volume-2')}</button></div>
-      <div class="ps">${H((typeof POSL !== 'undefined' && POSL[e.ps]) || e.ps || '')}</div><p>${H(g || '')}</p>
+      <div class="ps">${H((typeof POSL !== 'undefined' && POSL[e.ps]) || e.ps || '')}</div><p>${H(g || (typeof FULL !== 'undefined' && !FULL ? 'Bedeutung wird geladen …' : ''))}</p>
       <a class="btn sm primary" href="#/w/${encodeURIComponent(e.w)}">${icn('book-open')} Im Wörterbuch öffnen</a>`;
   }
   document.body.appendChild(d);
