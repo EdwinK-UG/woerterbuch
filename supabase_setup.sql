@@ -28,3 +28,29 @@ create policy "own row: delete" on public.user_data
 -- Signed-out visitors get no access at all.
 revoke all on public.user_data from anon;
 grant select, insert, update, delete on public.user_data to authenticated;
+
+-- ===== Grammatik: one row per attempt ("Prüfen") at a grammar exercise =====
+-- Run this part once as well (Supabase → SQL Editor → New query → paste → Run).
+create table if not exists public.grammar_results (
+  id         bigint generated always as identity primary key,
+  user_id    uuid not null default auth.uid() references auth.users (id) on delete cascade,
+  chapter    int  not null,
+  exercise   text not null,
+  score      int  not null check (score >= 0),
+  total      int  not null check (total > 0 and score <= total),
+  passed     boolean not null,
+  answers    jsonb,
+  created_at timestamptz not null default now()
+);
+create index if not exists grammar_results_user on public.grammar_results (user_id, chapter, exercise);
+
+alter table public.grammar_results enable row level security;
+drop policy if exists "own results: select" on public.grammar_results;
+drop policy if exists "own results: insert" on public.grammar_results;
+create policy "own results: select" on public.grammar_results
+  for select to authenticated using ((select auth.uid()) = user_id);
+create policy "own results: insert" on public.grammar_results
+  for insert to authenticated with check ((select auth.uid()) = user_id);
+-- No update or delete: the history of attempts stays as it was.
+revoke all on public.grammar_results from anon;
+grant select, insert on public.grammar_results to authenticated;
