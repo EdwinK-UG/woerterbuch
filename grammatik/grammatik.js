@@ -5,7 +5,7 @@
    Attempts are kept in this browser and, for signed-in users, saved to Supabase (table grammar_results). */
 (function () {
 'use strict';
-const VER = '4';
+const VER = '5';
 const PASS = 0.7;                       // share of correct answers needed to pass an exercise
 const $ = id => document.getElementById(id);
 const H = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -74,10 +74,13 @@ const GROUPS = [
   { t: 'Präpositionen 2', ic: 'navigation', h: 140, ch: [
     [82, 'Präpositionen mit Genitiv', 'wegen, trotz, während', 'B1'], [83, 'Zeitliche Präpositionen', 'innerhalb, vor, seit …', 'B1'] ] },
   { t: 'Adjektive 2', ic: 'sparkles', h: 350, ch: [
-    [84, 'Adjektive ohne Artikel', 'frisches Brot, kaltes Wasser', 'B1'], [85, 'Partizip I als Adjektiv', 'ein lachendes Kind', 'B1'] ] }
+    [84, 'Adjektive ohne Artikel', 'frisches Brot, kaltes Wasser', 'B1'], [85, 'Partizip I als Adjektiv', 'ein lachendes Kind', 'B1'] ] },
+  { t: 'Nachschlagen und trainieren', ic: 'library', h: 40, ref: true, ch: [
+    [101, 'Unregelmäßige Verben', 'Präteritum, Partizip, haben oder sein – mit Trainer', 'Liste'], [102, 'Verben mit Dativ', 'helfen, danken, gefallen … – mit Trainer', 'Liste'],
+    [103, 'Verben mit Dativ und Akkusativ', 'jemandem etwas geben … – mit Trainer', 'Liste'], [104, 'Verben mit Präpositionen', 'warten auf, denken an … – mit Trainer', 'Liste'] ] }
 ];
-const READY = Object.fromEntries([...Array.from({ length: 24 }, (_, i) => i + 1)].map(n => [n, 1]));   // chapters that exist so far   // chapters that exist so far
-const TOTAL = GROUPS.reduce((s, g) => s + g.ch.length, 0);
+const READY = Object.fromEntries([...Array.from({ length: 85 }, (_, i) => i + 1), 101, 102, 103, 104].map(n => [n, 1]));   // chapters that exist so far   // chapters that exist so far
+const TOTAL = GROUPS.reduce((s, g) => s + (g.ref ? 0 : g.ch.length), 0);
 const chInfo = n => { for (const g of GROUPS) for (const c of g.ch) if (c[0] === n) return { g, c }; return null; };
 
 /* ---------- styles ---------- */
@@ -103,6 +106,7 @@ const CSS = `
 .gw:hover{background:color-mix(in srgb,var(--ac) 14%,transparent)}
 .gr-eyebrow{font-size:.74rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--mut);margin:0 0 .35rem}
 .gr-lv{display:inline-block;font-size:.7rem;font-weight:700;padding:.12rem .45rem;border-radius:999px;letter-spacing:.03em}
+.gr-lv.Liste{background:var(--line2);color:var(--mut)}
 .gr-lv.A1{background:#e3f4ea;color:#0f7a4f}.gr-lv.A2{background:#e6eefe;color:#1d5bd6}.gr-lv.B1{background:#f6e8fd;color:#8b2fc9}
 @media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .gr-lv.A1{background:#12301f;color:#5fd69b}:root:not([data-theme="light"]) .gr-lv.A2{background:#16233a;color:#7fb0ff}:root:not([data-theme="light"]) .gr-lv.B1{background:#2a1838;color:#d29bf5}}
 :root[data-theme="dark"] .gr-lv.A1{background:#12301f;color:#5fd69b}:root[data-theme="dark"] .gr-lv.A2{background:#16233a;color:#7fb0ff}:root[data-theme="dark"] .gr-lv.B1{background:#2a1838;color:#d29bf5}
@@ -340,6 +344,12 @@ const CSS = `
 .gr-fill.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 12%,var(--card));color:var(--bad)}
 .gr-hint{font-family:Inter,sans-serif;font-size:.78rem;font-weight:600;color:var(--mut);background:var(--line2);border-radius:.35rem;padding:.05rem .4rem;margin-right:.25rem;vertical-align:.15em}
 .gr-scp .x{background:var(--line2);color:var(--fg)}.gr-scp .b{background:color-mix(in srgb,var(--bad) 13%,var(--card));color:var(--bad)}.gr-scp .ok{background:color-mix(in srgb,var(--ok) 13%,var(--card));color:var(--ok)}.gr-scp .v{background:var(--fg);color:var(--bg)}.gr-scp .e{background:var(--ac-salt);color:var(--ac)}
+.gr-refq{width:100%;border:1.5px solid var(--cream-b);background:var(--card);color:var(--fg);border-radius:999px;padding:.5rem 1rem;font:inherit;margin:0 0 .6rem}
+.gr-refw{max-height:28rem;overflow:auto;border-radius:.9rem}
+.gr-ref thead th{position:sticky;top:0;z-index:1}
+.gr-ref0{font-weight:600}
+.gr-play{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;background:var(--ac-salt);border-radius:1rem;padding:.7rem .9rem;margin:0 0 1rem;font-size:.9rem;font-weight:600}
+.gr-play>span{display:inline-flex;gap:.4rem;align-items:center;margin-right:auto}
 .gr-scs .alt{display:block;font-size:1rem;color:var(--mut);margin-top:.2rem}
 `;
 function css() { if (!$('grcss')) { const s = document.createElement('style'); s.id = 'grcss'; s.textContent = CSS; document.head.appendChild(s); } }
@@ -537,6 +547,8 @@ function fmt(s) {
   }
   return out + wrapWords(s.slice(last));
 }
+// highlight markup inside text that may already contain HTML (notes under tables, card texts)
+const rich = s => String(s == null ? '' : s).replace(/\{([ndaevt]):([^}]*)\}/g, (m, k, t) => `<span class="cs ${k}">${t}</span>`);
 const sayBtn = s => `<button class="gr-say" data-say="${H(plain(s))}" title="Anhören" aria-label="Anhören">${icn('volume-2')}</button>`;
 function talk(t) { if (typeof speak === 'function') speak(t); }
 const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
@@ -639,14 +651,14 @@ function ring(p, size = 46) {
 /* ---------- overview ---------- */
 let filt = { lv: '', q: '' };
 function overview() {
-  const done = Object.keys(READY).length;
+  const done = Object.keys(READY).filter(n => +n <= 100).length;
   const passedEx = new Set(attempts().filter(a => a.score / a.total >= PASS).map(a => a.ch + '/' + a.ex)).size;
   V().innerHTML = `
   <section class="gr-top"><div><p class="gr-eyebrow">A1 · A2 · B1</p><h1>Grammatik</h1>
     <p>Alle Themen bis B1 – mit Bildern, Beispielen zum Anhören und Übungen, die sofort sagen, was richtig ist.</p>
     <div class="gr-stats"><span class="gr-stat"><b>${TOTAL}</b>Kapitel</span><span class="gr-stat"><b>${done}</b>schon fertig</span><a class="gr-stat" href="#/g/fortschritt" style="text-decoration:none"><b>${passedEx}</b>Übungen bestanden →</a></div></div>
     <div class="gr-topart">${ART.cover()}</div></section>
-  <a class="gr-feat" href="#/g/1"><span class="th" id="grfeat"></span><span><span class="gr-lv A1">A1</span> <span class="gr-eyebrow" style="display:inline">Hier anfangen</span><b>Verben 1: Kapitel 1–9</b><p>Pronomen, Präsens, sein und haben, Modalverben, trennbare Verben und Imperativ – mit Übungen und Sprechtraining.</p></span></a>
+  <a class="gr-feat" href="#/g/1"><span class="th" id="grfeat"></span><span><span class="gr-lv A1">A1</span> <span class="gr-eyebrow" style="display:inline">Hier anfangen</span><b>Kapitel 1: Personalpronomen</b><p>Alle 85 Kapitel von A1 bis B1 – mit Erklärungen, Beispielen, Übungen, Sprechtraining und Spiel. Dazu Verblisten mit Trainer.</p></span></a>
   <div class="gr-filter">${['', 'A1', 'A2', 'B1'].map(l => `<button class="gr-chip${filt.lv === l ? ' on' : ''}" data-lv="${l}">${l || 'Alle'}</button>`).join('')}
     <input id="grq" placeholder="Thema suchen, z. B. Perfekt" value="${H(filt.q)}" autocomplete="off"></div>
   <div id="grlist"></div>`;
@@ -663,10 +675,10 @@ function list() {
     if (!cs.length) continue;
     html += `<section class="gr-grp" style="--h:${g.h}"><h2><span class="badge">${icn(g.ic)}</span>${H(g.t)}<small>${g.ch.length} Kapitel</small></h2><div class="gr-cards">` +
       cs.map(c => {
-        const ok = READY[c[0]], body = `<span class="gr-num">${c[0]}</span><span class="gr-ct"><b>${H(c[1])}</b><small>${H(c[2])}</small></span><span class="gr-lv ${c[3]}">${c[3]}</span>`;
+        const ok = READY[c[0]], body = `<span class="gr-num">${c[0] > 100 ? icn('book-marked') : c[0]}</span><span class="gr-ct"><b>${H(c[1])}</b><small>${H(c[2])}</small></span><span class="gr-lv ${c[3]}">${c[3]}</span>`;
         if (!ok) return `<div class="gr-card soon" title="Kommt bald">${body}</div>`;
         const pr = CH[c[0]] ? chapterProgress(CH[c[0]]) : null, all = pr && pr.passed === pr.total;
-        return `<a class="gr-card ready" href="#/g/${c[0]}">${body}${all ? `<span class="gr-done" title="Alle Übungen bestanden">${icn('circle-check')}</span>` : ''}<span class="gr-tagr">Neu</span></a>`;
+        return `<a class="gr-card ready" href="#/g/${c[0]}">${body}${all ? `<span class="gr-done" title="Alle Übungen bestanden">${icn('circle-check')}</span>` : ''}</a>`;
       }).join('') + `</div></section>`;
   }
   $('grlist').innerHTML = html || `<p class="sub" style="margin:1rem 0">Kein Thema gefunden.</p>`;
@@ -684,7 +696,7 @@ async function progressView() {
   let rows = '';
   for (const n of Object.keys(READY).map(Number)) {
     const c = CH[n]; if (!c) continue;
-    rows += `<tr class="gr-ph"><td colspan="5"><a href="#/g/${n}"><b>Kapitel ${n}</b> · ${H(c.title)}</a> <span class="gr-lv ${c.level}">${c.level}</span></td></tr>`;
+    rows += `<tr class="gr-ph"><td colspan="5"><a href="#/g/${n}"><b>${n > 100 ? 'Nachschlagen' : 'Kapitel ' + n}</b> · ${H(c.title)}</a> <span class="gr-lv ${c.level}">${c.level}</span></td></tr>`;
     for (const x of c.exercises.filter(x => x.graded !== false)) {
       const mine = at.filter(a => a.ch === n && a.ex === x.id), b = best(n, x.id), last = mine[mine.length - 1];
       const p = b ? pct(b.score, b.total) : 0, ok = b && b.score / b.total >= PASS;
@@ -721,14 +733,17 @@ async function chapter(n) {
   pull().then(() => { if (cur === CH[n] && location.hash === '#/g/' + n) { refreshBadges(); sync(); } });
 }
 function render(c) {
-  cur = c; const info = chInfo(c.n), pr = chapterProgress(c);
+  cur = c;
+  for (const x of c.exercises) if (x.gen) x.items = x.gen();
+  if (c.speak && c.speak.gen) c.speak.items = c.speak.gen(); const info = chInfo(c.n), pr = chapterProgress(c);
   const blocks = c.understand.map(block).join('');
   V().innerHTML = `<div class="row" style="margin-bottom:.6rem"><a class="btn sm" href="#/g">${icn('arrow-left')} Grammatik</a></div>
   <article class="gr-ch">
    <div class="gr-hero"><div>
-     <p class="gr-eyebrow">Kapitel ${c.n} · ${H(c.group)} · <span class="gr-lv ${c.level}">${c.level}</span></p>
-     <h1>${H(c.title)}</h1><p class="gr-kick">${H(c.kicker)}</p><p class="gr-intro">${c.intro}</p>
-     <div class="gr-prog" id="grprog">${progHTML(pr)}</div></div>
+     <p class="gr-eyebrow">${c.n > 100 ? 'Nachschlagen und trainieren' : `Kapitel ${c.n} · ${H(c.group)}`} · <span class="gr-lv ${c.level}">${c.level}</span></p>
+     <h1>${H(c.title)}</h1><p class="gr-kick">${H(c.kicker)}</p><p class="gr-intro">${rich(c.intro)}</p>
+     <div class="gr-prog" id="grprog">${progHTML(pr)}</div>
+     <div class="row" style="margin-top:.8rem"><button class="btn sm" onclick="GRAM.practice('solo')">${icn('gamepad-2')} Im Spiel üben</button></div></div>
      <figure class="gr-art">${typeof c.art === 'function' ? c.art(K) : ART[c.art] ? ART[c.art]() : ''}<figcaption><span>${fmt(c.hero)}</span>${sayBtn(c.hero)}</figcaption></figure>
    </div>
    <nav class="gr-toc"><a href="#grs-v" data-jump>${icn('lightbulb')} Verstehen</a><a href="#grs-b" data-jump>${icn('quote')} Beispiele</a><a href="#grs-u" data-jump>${icn('pencil')} Üben</a><a href="#grs-s" data-jump>${icn('mic')} Sprechen</a></nav>
@@ -739,6 +754,7 @@ function render(c) {
      <p class="gr-tip">${icn('mouse-pointer-click')} Tippe auf ein Wort, um es im Wörterbuch nachzuschlagen.</p></section>
    <section class="gr-sec" id="grs-u"><h2><span class="gr-sn">3</span>Üben</h2>
      <p class="sub" style="margin:-.3rem 0 1rem">Bestanden ab ${Math.round(PASS * 100)} % richtigen Antworten. Die Lösung kannst du nach dem ersten Prüfen ansehen.</p>
+     <div class="gr-play"><span>${icn('gamepad-2')} Übe dieses Kapitel auch im Spiel:</span><button class="btn sm primary" onclick="GRAM.practice('solo')">${icn('user-round')} Allein spielen</button><button class="btn sm" onclick="GRAM.practice('host')">${icn('users')} Live mit Gruppe</button></div>
      ${c.exercises.map((x, i) => exHTML(x, i + 1)).join('')}</section>
    <section class="gr-sec" id="grs-s"><h2><span class="gr-sn">4</span>Sprechen</h2>${speakHTML(c.speak)}</section>
   </article>`;
@@ -758,12 +774,12 @@ function block(b) {
     const arrow = `<svg viewBox="0 0 120 22"><path d="M110 4Q60 26 10 6" fill="none" stroke="var(--dat)" stroke-width="2" stroke-dasharray="4 4" marker-end="url(#grarr2)"/><defs><marker id="grarr2" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--dat)"/></marker></defs></svg>`;
     const row = r => { const i = r.findIndex(s => s[1] === 'd'); if (i < 0 || r[i + 1]?.[1] !== 'a') return `<div class="gr-slots">${r.map(slot).join('')}</div>`;
       return `<div class="gr-slots">${r.slice(0, i).map(slot).join('')}<div class="gr-pair"><div class="gr-pairin">${slot(r[i])}${slot(r[i + 1])}</div><div class="gr-give">${arrow}<span>die Person bekommt die Sache</span></div></div>${r.slice(i + 2).map(slot).join('')}</div>`; };
-    return `<div class="gr-cream"><h3>${H(b.title)}</h3>${b.rows.map(row).join('')}<p class="gr-foot">${b.note}</p></div>`;
+    return `<div class="gr-cream"><h3>${H(b.title)}</h3>${b.rows.map(row).join('')}<p class="gr-foot">${rich(b.note)}</p></div>`;
   }
   if (b.type === 'table') {
     const keys = Object.keys(b.sets), id = 'grt' + Math.random().toString(36).slice(2, 7);
     return `<div class="gr-cream"><h3>${H(b.title)}</h3><div class="gr-tsw" data-tbl="${id}">${keys.map((k, i) => `<button class="gr-chip${i ? '' : ' on'}" data-set="${k}">${k}</button>`).join('')}</div>
-      <div class="gr-tblw" id="${id}">${tableHTML(b, keys[0])}</div><p class="gr-foot" style="margin-top:.7rem">${b.foot}</p></div>`;
+      <div class="gr-tblw" id="${id}">${tableHTML(b, keys[0])}</div><p class="gr-foot" style="margin-top:.7rem">${rich(b.foot)}</p></div>`;
   }
   if (b.type === 'merk') return `<div class="gr-merk"><span class="ico">${icn('lightbulb')}</span><p><small>Merksatz</small>${fmt(b.text)}</p></div>`;
   if (b.type === 'machine') return `<div class="gr-cream gr-mach" data-mach='${H(JSON.stringify(b))}'><h3>${H(b.title)}</h3><p class="gr-foot" style="margin:-.3rem 0 .8rem">${H(b.intro)}</p>
@@ -772,11 +788,15 @@ function block(b) {
   if (b.type === 'verbs') return `<div class="gr-cream"><h3>${H(b.title)}</h3><p class="gr-pat">${H(b.pattern)}</p><div class="gr-verbs">${b.items.map(v =>
       `<div class="gr-verb"><b><span class="gw">${H(v[0])}</span></b><span class="ex">${fmt(v[1])}</span></div>`).join('')}</div></div>`;
   if (b.type === 'cards') return `<div class="gr-cream"${b.min ? ` style="--min:${b.min}"` : ''}>${b.title ? `<h3>${H(b.title)}</h3>` : ''}<div class="gr-cards2">${b.items.map(i =>
-    `<div class="gr-c2 k-${i.k || 'ac'}"><span class="tt">${i.icon ? icn(i.icon) : ''}${H(i.t)}</span>${i.s ? `<span class="s">${H(i.s)}</span>` : ''}${i.p ? `<p>${i.p}</p>` : ''}${i.ex ? `<p class="ex">${fmt(i.ex)}</p>` : ''}${i.ws ? `<div class="ws">${i.ws.map(w => `<span class="gw">${H(w)}</span>`).join('')}</div>` : ''}</div>`).join('')}</div>${b.foot ? `<p class="gr-foot" style="margin-top:.7rem">${b.foot}</p>` : ''}</div>`;
+    `<div class="gr-c2 k-${i.k || 'ac'}"><span class="tt">${i.icon ? icn(i.icon) : ''}${H(i.t)}</span>${i.s ? `<span class="s">${H(i.s)}</span>` : ''}${i.p ? `<p>${rich(i.p)}</p>` : ''}${i.ex ? `<p class="ex">${fmt(i.ex)}</p>` : ''}${i.ws ? `<div class="ws">${i.ws.map(w => `<span class="gw">${H(w)}</span>`).join('')}</div>` : ''}</div>`).join('')}</div>${b.foot ? `<p class="gr-foot" style="margin-top:.7rem">${rich(b.foot)}</p>` : ''}</div>`;
   if (b.type === 'grid') return `<div class="gr-cream"><h3>${H(b.title)}</h3><div class="gr-tblw"><table class="gr-tbl gr-grid">${b.head ? `<thead><tr>${b.head.map((h, i) => `<th${i === 0 && b.label !== false ? ' class="l"' : ''}>${H(h)}</th>`).join('')}</tr></thead>` : ''}<tbody>${b.rows.map((r, ri) =>
-    `<tr${(b.hl || []).includes(ri) ? ' class="hl"' : ''}>${r.map((c, i) => i === 0 && b.label !== false ? `<td class="l">${H(c)}</td>` : `<td>${/<\w/.test(c) ? c : fmt(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>${b.foot ? `<p class="gr-foot" style="margin-top:.7rem">${b.foot}</p>` : ''}</div>`;
+    `<tr${(b.hl || []).includes(ri) ? ' class="hl"' : ''}>${r.map((c, i) => i === 0 && b.label !== false ? `<td class="l">${H(c)}</td>` : `<td>${/<\w/.test(c) ? c : fmt(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>${b.foot ? `<p class="gr-foot" style="margin-top:.7rem">${rich(b.foot)}</p>` : ''}</div>`;
   if (b.type === 'conj') { const ks = Object.keys(b.verbs);
-    return `<div class="gr-cream gr-conj" data-conj="${H(JSON.stringify(b))}"><h3>${H(b.title)}</h3>${b.intro ? `<p class="gr-foot" style="margin:-.3rem 0 .7rem">${b.intro}</p>` : ''}<div class="gr-cv">${ks.map((k, i) => `<button class="gr-chip${i ? '' : ' on'}" data-verb="${H(k)}">${H(k)}</button>`).join('')}</div><div class="gr-conjt"></div><p class="gr-cnote"></p></div>`; }
+    return `<div class="gr-cream gr-conj" data-conj="${H(JSON.stringify(b))}"><h3>${H(b.title)}</h3>${b.intro ? `<p class="gr-foot" style="margin:-.3rem 0 .7rem">${rich(b.intro)}</p>` : ''}<div class="gr-cv">${ks.map((k, i) => `<button class="gr-chip${i ? '' : ' on'}" data-verb="${H(k)}">${H(k)}</button>`).join('')}</div><div class="gr-conjt"></div><p class="gr-cnote"></p></div>`; }
+  if (b.type === 'reflist') { const id = 'grl' + Math.random().toString(36).slice(2, 7);
+    return `<div class="gr-cream gr-ref"><h3>${H(b.title)}</h3>${b.intro ? `<p class="gr-foot" style="margin:-.3rem 0 .7rem">${rich(b.intro)}</p>` : ''}<input class="gr-refq" data-list="${id}" placeholder="Suchen …" autocomplete="off">
+      <div class="gr-tblw gr-refw"><table class="gr-tbl gr-grid" id="${id}"><thead><tr>${b.head.map(h => `<th>${H(h)}</th>`).join('')}</tr></thead><tbody>${b.rows.map(r =>
+      `<tr data-s="${H(r.map(plain).join(' ').toLowerCase())}">${r.map((c, i) => `<td${i === 0 ? ' class="gr-ref0"' : ''}>${i === 0 ? `<span class="gw">${H(plain(c))}</span>` : fmt(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div><p class="gr-foot gr-refn" style="margin-top:.5rem">${b.rows.length} Einträge</p></div>`; }
   if (b.type === 'note') return `<div class="gr-note">${icn('triangle-alert')}<p><b class="t">${H(b.title)}</b>${fmt(b.text)}</p></div>`;
   return '';
 }
@@ -801,7 +821,7 @@ function conj(el) {
   const b = JSON.parse(el.dataset.conj), out = el.querySelector('.gr-conjt'), note = el.querySelector('.gr-cnote');
   const draw = k => { const v = b.verbs[k], forms = Array.isArray(v) ? v : v.f;
     out.innerHTML = forms.map((f, i) => `<div style="animation-delay:${i * 35}ms"><b>${PERS[i]}</b><span>${conjForm(k, f)}</span><button class="gr-say" data-say="${H(PERS[i].split('/')[0] + ' ' + f.replace(/\{e:([^}]*)\}/g, '$1'))}" style="margin-left:auto;width:28px;height:28px">${icn('volume-2')}</button></div>`).join('');
-    note.innerHTML = Array.isArray(v) ? '' : (v.n || ''); icons(); };
+    note.innerHTML = Array.isArray(v) ? '' : rich(v.n || ''); icons(); };
   el.querySelectorAll('[data-verb]').forEach(c => c.onclick = () => { el.querySelectorAll('[data-verb]').forEach(x => x.classList.toggle('on', x === c)); draw(c.dataset.verb); });
   draw(Object.keys(b.verbs)[0]);
 }
@@ -859,6 +879,8 @@ function wire(c) {
   const root = V().querySelector('.gr-ch');
   root.querySelectorAll('.gr-mach').forEach(machine);
   root.querySelectorAll('.gr-conj').forEach(conj);
+  root.querySelectorAll('.gr-refq').forEach(q => q.oninput = () => { const t = q.value.trim().toLowerCase(), tb = $(q.dataset.list); let n = 0;
+    tb.querySelectorAll('tbody tr').forEach(tr => { const show = !t || tr.dataset.s.includes(t); tr.hidden = !show; if (show) n++; }); q.closest('.gr-ref').querySelector('.gr-refn').textContent = n + ' Einträge'; });
   root.querySelectorAll('.gr-tsw').forEach(sw => sw.querySelectorAll('[data-set]').forEach(b => b.onclick = () => {
     sw.querySelectorAll('[data-set]').forEach(x => x.classList.toggle('on', x === b));
     const blk = c.understand.find(x => x.type === 'table'); $(sw.dataset.tbl).innerHTML = tableHTML(blk, b.dataset.set); }));
@@ -947,6 +969,7 @@ function show(x, ue) {
 }
 function reset(x, ue) {
   exState[x.id] = { shown: false, checked: false };
+  if (x.gen) { x.items = x.gen(); const box = ue.querySelector('.gr-items'); box.innerHTML = x.items.map((it, i) => `<div class="gr-it" data-i="${i}"><span class="gr-in">${i + 1}</span><div class="gr-ib">${itemHTML(x, it, i)}<div class="gr-sol" hidden></div></div></div>`).join(''); }
   ue.querySelectorAll('.gr-it').forEach((el, i) => { el.classList.remove('ok', 'no'); el.querySelector('.gr-ib').innerHTML = itemHTML(x, x.items[i], i) + '<div class="gr-sol" hidden></div>'; });
   const sh = ue.querySelector('[data-act="show"]'); if (sh) sh.disabled = true;
   ue.querySelector('.gr-res').textContent = '';
@@ -1016,5 +1039,73 @@ window.addEventListener('scroll', () => { if ($('grpop')) closePop(); }, { passi
 window.addEventListener('resize', closePop);
 
 const base = (document.currentScript && document.currentScript.src.replace(/[^/]*$/, '')) || 'grammatik/';
-window.GRAM = { view, leave, base, add(c) { CH[c.n] = c; }, _test: { findWord, norm, attempts, best, store, PASS, CH } };
+/* ---------- questions for the Spiele (solo and live quiz) ---------- */
+function toQuestions(x, it) {
+  const sub = x.title;
+  if (x.type === 'choice') {
+    let k = 0, right = null, opts = null;
+    const p = it.replace(/\(\(([^)]*)\)\)/g, (m, o) => { const os = o.split('|'); if (k++ === 0) { right = os[0]; opts = os; return '_____'; } return os[0]; });
+    const o = shuffle(opts); return { t: 'mc', p: plain(p), o, c: o.indexOf(right), sub };
+  }
+  if (x.type === 'fill') {
+    const hint = (/^\(([^)]*)\)/.exec(it) || [])[1]; let k = 0, ans = null;
+    const p = it.replace(/^\([^)]*\)\s*/, '').replace(/\[\[([^\]]*)\]\]/g, (m, a) => { const ok = a.split('|'); if (k++ === 0) { ans = ok.filter(Boolean); return '_____'; } return ok[0]; });
+    if (!ans || !ans.length) return null;
+    return { t: 'type', p: plain(p), ans, sub: (hint ? hint + ' · ' : '') + sub };
+  }
+  if (x.type === 'type') return { t: 'type', p: it.q.replace(/\[([^\]]*)\]/g, '»$1«'), ans: it.ok, sub: `${x.instr} – Schreib nur den Rest: „${it.pre ? it.pre + ' ' : ''}…${it.end}“` };
+  if (x.type === 'order') {
+    if (it.ok.length > 1) return null;
+    let rest = it.ok[0]; const sol = [];
+    for (let g = 0; rest && g < 20; g++) { const t = it.tiles.filter(t => !sol.includes(t) && (rest === t || rest.startsWith(t + ' '))).sort((a, b) => b.length - a.length)[0]; if (!t) return null; sol.push(t); rest = rest.slice(t.length).trim(); }
+    let o = shuffle(sol); for (let g = 0; g < 6 && o.join(' ') === sol.join(' '); g++) o = shuffle(sol);
+    return { t: 'order', p: 'Bring die Teile in die richtige Reihenfolge.', sub: `${sub} · Satzende: „${it.end}“`, o, sol };
+  }
+  if (x.type === 'cases') {
+    const tags = [...it.matchAll(/\{([nda]):([^}]*)\}/g)]; if (!tags.length) return null;
+    const m = tags[Math.floor(Math.random() * tags.length)], o = ['Nominativ', 'Akkusativ', 'Dativ'];
+    return { t: 'mc', p: `Welcher Fall ist „${m[2]}“?`, o, c: o.indexOf(CASE[m[1]]), sub: plain(it) };
+  }
+  return null;
+}
+async function quiz(n, count) {
+  const c = await loadChapter(n), pool = [];
+  for (const x of c.exercises) { if (x.type === 'free') continue; for (const it of (x.gen ? x.gen() : x.items)) { const q = toQuestions(x, it); if (q && q.o !== undefined ? q.c >= 0 || q.t === 'order' : q) pool.push(q); } }
+  // a fair mix: shuffle, but spread the exercise types
+  return shuffle(pool).slice(0, count || 10);
+}
+const chapterList = () => GROUPS.flatMap(g => g.ch.filter(c => READY[c[0]]).map(c => ({ n: c[0], title: c[1], group: g.t, level: c[3] })));
+// open the Spiele setup with this chapter already chosen as the question source
+function practice(kind) {
+  if (!cur) return; const k = 'gd_gset_' + kind;
+  let st = {}; try { st = JSON.parse(localStorage.getItem(k) || '{}') || {}; } catch (e) {}
+  Object.assign(st, { src: 'gram', id: String(cur.n), title: cur.title }); try { localStorage.setItem(k, JSON.stringify(st)); } catch (e) {}
+  location.hash = '#/play/' + kind;
+}
+
+window.GRAM = { view, leave, base, quiz, list: chapterList, practice, add(c) { CH[c.n] = c; }, _test: { findWord, norm, attempts, best, store, PASS, CH,
+  // answers every exercise with its own key; used to check new chapters ("ok" = all 100 %)
+  async check(list) {
+    const sl = ms => new Promise(r => setTimeout(r, ms)), report = {};
+    for (const n of list) {
+      location.hash = '#/g/' + n; for (let k = 0; k < 40 && !(CH[n] && cur === CH[n]); k++) await sl(120); await sl(150);
+      const c = CH[n]; if (!c) { report[n] = 'NOT LOADED'; continue; }
+      const r = []; if (!document.querySelector('.gr-art svg')) r.push('no art');
+      for (const x of c.exercises) {
+        const ue = $('ue-' + x.id); if (!ue) { r.push(x.id + ' missing'); continue; } if (x.type === 'free') continue;
+        ue.querySelectorAll('.gr-it').forEach((el, i) => { const it = x.items[i];
+          if (x.type === 'cases') el.querySelectorAll('.gr-tag').forEach(t => { for (let j = 0; j < { n: 1, d: 2, a: 3 }[t.dataset.k]; j++) t.click(); });
+          if (x.type === 'choice') el.querySelectorAll('.gr-gap').forEach(g => [...g.querySelectorAll('button')].find(b => b.textContent === g.dataset.ok).click());
+          if (x.type === 'fill') el.querySelectorAll('.gr-fill').forEach(f => f.value = JSON.parse(f.dataset.ok)[0]);
+          if (x.type === 'type') el.querySelector('input').value = it.ok[0];
+          if (x.type === 'order') { let rest = it.ok[0], g = 0; while (rest && g++ < 20) { const t = [...el.querySelectorAll('.gr-pool .gr-tile')].filter(t => rest === t.textContent || rest.startsWith(t.textContent + ' ')).sort((a, b) => b.textContent.length - a.textContent.length)[0]; if (!t) { r.push(x.id + ' item' + (i + 1) + ' cannot build: ' + rest); break; } t.click(); rest = rest.slice(t.textContent.length).trim(); } }
+        });
+        ue.querySelector('[data-act=check]').click(); await sl(30);
+        const res = ue.querySelector('.gr-res').textContent, m = /(\d+) von (\d+)/.exec(res); if (!m || m[1] !== m[2]) r.push(x.id + ': ' + res);
+      }
+      report[n] = r.length ? r : 'ok';
+    }
+    try { localStorage.removeItem(LKEY); } catch (e) {} remote = null;
+    return JSON.stringify(report);
+  } } };
 })();
