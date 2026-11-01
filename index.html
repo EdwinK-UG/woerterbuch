@@ -468,7 +468,7 @@ const gcol=a=>a==='der'?'var(--der)':a==='die'?'var(--die)':a==='das'?'var(--das
 function route(){
   const h=location.hash.slice(2)||'';
   const [p,arg]=[h.split('/')[0],decodeURIComponent(h.split('/').slice(1).join('/')||'')];
-  if(!FULL&&!['','cats','g','v','lists','decks'].includes(p)){        // definitions are still arriving
+  if(!FULL&&!['','cats','g','v','lists','decks','klasse','admin','aufgaben'].includes(p)){        // definitions are still arriving
     if(!V().querySelector('.loading[data-full]'))V().innerHTML='<div class="loading" data-full="1"><div class="spin"></div>Einträge werden geladen …</div>';
     FULLP.then(()=>{ if(location.hash.slice(2)===h)route() }); return }
   document.querySelectorAll('#tabs a').forEach(a=>a.classList.remove('on'));
@@ -484,6 +484,7 @@ function route(){
   else if(p==='play'&&window.PLAY){setOn('play');PLAY.view(arg)}
   else if(p==='g'){setOn('gram');openGram(arg,'g')}
   else if(p==='v'){setOn('wort');openGram(arg,'v')}
+  else if(['klasse','admin','aufgaben'].includes(p)){if(window.KONTO)KONTO.view(p,arg);else viewHome()}
   else viewHome();
   if(p!=='play'&&window.PLAY)PLAY.leave();
   if(p!=='g'&&p!=='v'&&window.GRAM)GRAM.leave();
@@ -492,7 +493,7 @@ function route(){
 window.addEventListener('hashchange',route);
 /* grammar: its code and chapters load only when the tab is opened, so the dictionary is not slowed down */
 let gramP=null;
-function loadGram(){ if(window.GRAM)return Promise.resolve(); if(!gramP){gramP=new Promise((res,rej)=>{const s=document.createElement('script');s.src='grammatik/grammatik.js?v=7';s.onload=res;s.onerror=()=>{gramP=null;rej()};document.head.appendChild(s)})} return gramP }
+function loadGram(){ if(window.GRAM)return Promise.resolve(); if(!gramP){gramP=new Promise((res,rej)=>{const s=document.createElement('script');s.src='grammatik/grammatik.js?v=12';s.onload=res;s.onerror=()=>{gramP=null;rej()};document.head.appendChild(s)})} return gramP }
 function openGram(arg,m){
   m=m||'g'; const name=m==='v'?'Der Wortschatz':'Die Grammatik';
   if(window.GRAM){GRAM.view(arg,m);return}
@@ -1460,6 +1461,7 @@ saveDecks=function(){session?schedule():guestDecks()};
 
 async function afterLogin(fresh){
   setBtn();
+  try{window.dispatchEvent(new CustomEvent('acct:in',{detail:{fresh}}))}catch(e){}
   const c=LS.get(cacheKey(),null);
   if(c){lists=c.lists||{};decks=c.decks||{};prefs=c.prefs||{};dirty=!!c.dirty}else{lists={};decks={};prefs={};dirty=false}
   rerender();
@@ -1485,6 +1487,7 @@ function endSession(msg){
   try{localStorage.removeItem(SKEY)}catch(e){}
   lists=LS.get('gd_lists',{});decks=LS.get('gd_decks',{});prefs=LS.get('gd_prefs',{});
   setBtn();closeSheet();rerender();
+  try{window.dispatchEvent(new Event('acct:out'))}catch(e){}
   if(msg)toast(msg);
 }
 async function signOut(){
@@ -1513,9 +1516,11 @@ function sheet(mode){
     openSheet(`<h3>Dein Konto</h3>
       <div class="acct-who"><div class="av">${esc((session.user.email||'?')[0].toUpperCase())}</div>
       <div><div class="em">${esc(session.user.email||'')}</div><div class="muted" style="font-size:.82rem">${n} ${n===1?'Liste':'Listen'} · ${k} ${k===1?'Stapel':'Stapel'} · ${dirty?'wird gespeichert …':'gespeichert ✓'}</div></div></div>
+      <div id="acct_prof"></div>
       <p>Deine Listen und Karten gehören nur zu diesem Konto und werden auf jedem Gerät geladen, auf dem du dich anmeldest.</p>
       <div class="row"><button class="acct-link" onclick="ACCT.sheet('newpw')">Passwort ändern</button><span class="spacer"></span>
       <button class="btn" onclick="closeSheet()">Schließen</button><button class="btn primary" onclick="ACCT.signOut()">Abmelden</button></div>`);
+    if(window.KONTO)KONTO.fillMe();
     return;
   }
   const T={in:['Anmelden','Anmelden'],up:['Konto erstellen','Registrieren'],reset:['Passwort vergessen','Link senden'],newpw:['Neues Passwort','Speichern']}[mode];
@@ -1532,6 +1537,7 @@ function sheet(mode){
     <div class="row">${mode==='in'?`<button type="button" class="acct-link" onclick="ACCT.sheet('reset')">Passwort vergessen?</button>`:''}${mode==='reset'?`<button type="button" class="acct-link" onclick="ACCT.sheet('in')">Zurück zur Anmeldung</button>`:''}
     <span class="spacer"></span><button type="button" class="btn" onclick="closeSheet()">Abbrechen</button><button class="btn primary" id="ac_go" type="submit">${T[1]}</button></div></form>`);
   setTimeout(()=>{const f=$(mode==='newpw'||lastEmail?'ac_pw':'ac_em')||$('ac_em');if(f)f.focus()},60);
+  if(mode==='up'&&window.KONTO)KONTO.signupFields();
 }
 async function submit(mode){
   const em=($('ac_em')||{}).value, pw=($('ac_pw')||{}).value, go=$('ac_go');
@@ -1542,6 +1548,7 @@ async function submit(mode){
       const s=await api('/auth/v1/token?grant_type=password',{method:'POST',body:{email:em.trim(),password:pw}});
       keep(s);closeSheet();toast('Angemeldet als '+s.user.email);await afterLogin(true);
     }else if(mode==='up'){
+      if(window.KONTO)KONTO.rememberSignup(em.trim());
       const r=await api('/auth/v1/signup?redirect_to='+encodeURIComponent(SITE),{method:'POST',body:{email:em.trim(),password:pw}});
       if(r&&r.access_token){keep(r);closeSheet();toast('Konto erstellt');welcomeMail(r.access_token);await afterLogin(true)}
       else if(r&&Array.isArray(r.identities)&&r.identities.length===0)msg('Für diese E-Mail gibt es schon ein Konto. Bitte melde dich an.');
@@ -1594,7 +1601,7 @@ document.addEventListener('visibilitychange',async()=>{
 });
 window.addEventListener('beforeunload',e=>{if(session&&(dirty||timer)){push();e.preventDefault();e.returnValue=''}});
 
-window.ACCT={sheet,submit,signOut};
+Object.assign(window.ACCT,{sheet,submit,signOut});
 })();
 </script>
 <!-- ===== sign-up invitation (signed-out visitors only) ===== -->
@@ -1653,7 +1660,7 @@ setInterval(()=>{ if(document.visibilityState==='visible'&&Date.now()-lastAct<20
 @media(min-width:1181px){nav.tabs a{padding:.45rem .5rem;gap:.3rem}}
 @media(min-width:641px) and (max-width:1180px){nav.tabs a .lic{display:none} nav.tabs a{padding:.45rem .55rem}}
 @media(min-width:641px) and (max-width:880px){nav.tabs a .lic{display:inline-flex} nav.tabs a span{display:none} nav.tabs a{padding:.5rem .6rem}}
-@media(max-width:640px){nav.tabs{grid-template-columns:repeat(7,1fr);padding-left:.3rem;padding-right:.3rem} nav.tabs a{font-size:.62rem;letter-spacing:-.01em} body.ingame nav.tabs{display:none} body.ingame main{padding-bottom:1rem}}
+@media(max-width:640px){nav.tabs{grid-template-columns:repeat(7,minmax(0,1fr));padding-left:.2rem;padding-right:.2rem;gap:.05rem} nav.tabs a{font-size:.6rem;letter-spacing:-.02em;min-width:0} nav.tabs a span{max-width:100%;overflow:hidden;text-overflow:ellipsis} body.ingame nav.tabs{display:none} body.ingame main{padding-bottom:1rem}}
 .ghub h1{margin-bottom:.2rem}
 .ghero{border-radius:1.4rem;padding:1.4rem 1.4rem 1.2rem;margin:.4rem 0 1.1rem;color:#fff;position:relative;overflow:hidden;
   background:radial-gradient(120% 140% at 0% 0%,#5b4bdb 0%,#3a2f9e 40%,#1d6f8a 100%)}
@@ -2739,7 +2746,7 @@ function viewSetup(kind){   // kind: solo | host | memory | blitz
   f.querySelectorAll('.gseg').forEach(g=>g.querySelectorAll('button').forEach(b=>b.onclick=()=>{g.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));s[g.dataset.f]=+b.dataset.v}));
   const srcSel=$('gsrc'), qo=$('gqopts'); const syncQ=()=>{if(qo)qo.style.display=srcSel.value.startsWith('quiz:')?'none':''; const tw=$('gtypesw'); if(tw)tw.style.display=srcSel.value.startsWith('gram:')?'none':''}; srcSel.onchange=syncQ; syncQ();
   if(quizzy)loadGram().then(()=>{ if(!$('gsrc'))return; const by={}; GRAM.list().forEach(c=>(by[c.group]=by[c.group]||[]).push(c));
-    srcSel.insertAdjacentHTML('beforeend',Object.keys(by).map(g=>`<optgroup label="${/^Wortschatz/.test(g)?'':'Grammatik · '}${H(g)}">${by[g].map(c=>`<option value="gram:${c.n}">${c.n>200?(c.n-200)+'. ':c.n>100?'':c.n+'. '}${H(c.title)}</option>`).join('')}</optgroup>`).join(''));
+    srcSel.insertAdjacentHTML('beforeend',Object.keys(by).map(g=>`<optgroup label="${/^Wortschatz/.test(g)?'':'Grammatik · '}${H(g)}">${by[g].map(c=>`<option value="gram:${c.n}">${c.n>200?(c.n>240?c.n-240:c.n>220?c.n-220:c.n-200)+'. ':c.n>100?'':c.n+'. '}${H(c.title)}</option>`).join('')}</optgroup>`).join(''));
     if(cur.startsWith('gram:'))srcSel.value=cur; syncQ() }).catch(()=>{});
   f.onsubmit=ev=>{ev.preventDefault(); AU.wake();
     const [src,id]=srcSel.value.split(':'); s.src=src; if(src==='all'){s.lvl=+id;delete s.id}else s.id=id;
@@ -2797,4 +2804,5 @@ if(tabs&&!tabs.querySelector('[data-t="play"]')){const a=document.createElement(
 })();
 </script>
 <!-- ===== /Spiele ===== -->
+<script src="konto.js?v=2"></script>
 </body></html>
