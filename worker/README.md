@@ -12,6 +12,7 @@ From this folder run `npm test` with Node 18 or later and Python 3. The tests us
 2. Set the real staging origins, site URL and Supabase URL. Keep `GENERATION_ENABLED = "false"` initially.
 3. Add secrets named `SUPABASE_PUBLISHABLE_KEY`, `GMAIL_USER`, `GMAIL_APP_PASSWORD` and `WELCOME_HOOK_SECRET` through the platform's secret interface. Credentials stay outside tracked files.
 4. Apply `migrations/0001_review_and_operations.sql` to staging D1. Existing AI entries become drafts awaiting review. Keep a restorable D1 export before upgrading an existing database.
+   Apply `migrations/0002_mail_diagnostics.sql` once afterward. The added `last_error` field records only a protocol stage and status category, without SMTP replies or credentials.
 5. Set explicit global and per-user daily job limits. Enable generation after checking the Auth endpoint and quotas. Each reservation counts even if an upstream request fails. A job can make multiple AI calls, so job limits need to fit the provider allowance.
 6. Test the five-minute scheduled mail handler. Set `WELCOME_FROM` to an explicit UTC rollout instant so existing users do not unexpectedly receive a new welcome campaign.
 7. Optionally configure an Auth users INSERT/UPDATE database webhook to `/hooks/welcome`, with `Authorization: Bearer <WELCOME_HOOK_SECRET>`. The receiver checks that the event concerns confirmation. Browser sign-in also queues eligible accounts.
@@ -44,6 +45,8 @@ Set a rejected draft's state to `rejected`. Existing source-dictionary definitio
 ## Operations and recovery
 
 Inspect counts in `generation_jobs`, pending/failed `welcome_jobs`, `entry_drafts` and `entry_flags`. These tables provide operational state without storing submitted exercise writing or browser session tokens. The scheduled task removes old generation reservations and clears failed-mail recipients after seven days.
+
+For a failed welcome job, inspect `last_error` with its attempt count. `smtp_535_login_message` indicates rejected SMTP credentials. Transport categories identify the connection stage without storing the remote reply. Correct the service configuration, then reset `next_try` for the selected job to retry; keep the same job ID for deduplication.
 
 The example disables image transformations until they are provisioned. Export D1 and inventory KV before a release. Test restoring them to separate resources. Roll back the Worker code through Cloudflare and retain the additive tables for diagnosis.
 

@@ -115,21 +115,26 @@ export async function drainMail(env, send = smtpSend) {
           htmlBody(site.href),
           user_id,
         );
-    } catch {
+    } catch (error) {
+      const reason = /bad address/.test(error?.message || "") ? "address" : /timed? ?out/i.test(error?.message || "") ? "timeout" : /tls|ssl/i.test(error?.message || "") ? "tls" : /closed|reset|connection/i.test(error?.message || "") ? "connection" : "error";
+      const diagnostic = Number.isInteger(error?.smtpCode)
+        ? "smtp_" + error.smtpCode + "_" + error.smtpStage
+        : "transport_" + (error?.smtpStage || "connect") + "_" + reason;
       await env.DB.prepare(
-        "UPDATE welcome_jobs SET state=?1,next_try=?2,claim=NULL WHERE user_id=?3 AND claim=?4",
+        "UPDATE welcome_jobs SET state=?1,next_try=?2,claim=NULL,last_error=?5 WHERE user_id=?3 AND claim=?4",
       )
         .bind(
           row.attempts >= 5 ? "failed" : "queued",
           Date.now() + 60000 * 2 ** Math.min(row.attempts, 5),
           user_id,
           claim,
+          diagnostic,
         )
         .run();
       continue;
     }
     await env.DB.prepare(
-      "UPDATE welcome_jobs SET state='sent',email=NULL,claim=NULL WHERE user_id=?1 AND claim=?2",
+      "UPDATE welcome_jobs SET state='sent',email=NULL,claim=NULL,last_error=NULL WHERE user_id=?1 AND claim=?2",
     )
       .bind(user_id, claim)
       .run();

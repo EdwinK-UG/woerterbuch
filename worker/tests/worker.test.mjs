@@ -58,6 +58,7 @@ test("Worker contract: authenticated generation, durable bounds, review, delayed
   try {
     DB.exec(migration);
     DB.exec(migration);
+    DB.exec(readFileSync(new URL("../migrations/0002_mail_diagnostics.sql", import.meta.url), "utf8"));
     const kv = new Map(),
       meta = new Map(),
       calls = [];
@@ -219,6 +220,7 @@ test("Worker contract: authenticated generation, durable bounds, review, delayed
     let row = await DB.prepare("SELECT * FROM welcome_jobs").first();
     assert.equal(row.state, "queued");
     assert.equal(row.attempts, 1);
+    assert.equal(row.last_error, "transport_connect_error");
     await DB.prepare("UPDATE welcome_jobs SET next_try=0").run();
     await Promise.all([
       drainMail(env, async () => {
@@ -232,6 +234,7 @@ test("Worker contract: authenticated generation, durable bounds, review, delayed
     assert.equal(attempts, 2);
     assert.equal(row.state, "sent");
     assert.equal(row.email, null);
+    assert.equal(row.last_error, null);
     u.id = "00000000-0000-4000-ab00-000000000003";
     const payload = JSON.stringify({
       schema: "auth",

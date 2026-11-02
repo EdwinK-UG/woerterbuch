@@ -69,6 +69,7 @@ export async function smtpSend(
     rd = sock.readable.getReader(),
     dec = new TextDecoder();
   let buf = "";
+  let transportStage = "greeting";
   async function reply() {
     // one full (possibly multi-line) reply
     for (;;) {
@@ -87,19 +88,16 @@ export async function smtpSend(
   }
   const send = (s) => w.write(new TextEncoder().encode(s + "\r\n"));
   async function step(cmd, ok) {
+    transportStage = cmd == null ? "greeting" : /^(EHLO|AUTH|MAIL|RCPT|DATA)\b/.test(cmd) ? cmd.split(" ")[0] : "login_message";
     if (cmd != null) await send(cmd);
     const r = await reply();
-    if (!ok.includes(r.code))
-      throw new Error(
-        "SMTP " +
-          (cmd == null
-            ? "greeting"
-            : /^(EHLO|AUTH|MAIL|RCPT|DATA)\b/.test(cmd)
-              ? cmd.slice(0, 4)
-              : "login/message") +
-          ": " +
-          r.text.slice(0, 160),
-      );
+    if (!ok.includes(r.code)) {
+      const stage = cmd == null ? "greeting" : /^(EHLO|AUTH|MAIL|RCPT|DATA)\b/.test(cmd) ? cmd.split(" ")[0] : "login_message";
+      const error = new Error("SMTP " + stage + " " + r.code);
+      error.smtpCode = r.code;
+      error.smtpStage = stage;
+      throw error;
+    }
     return r;
   }
   try {
@@ -136,6 +134,9 @@ export async function smtpSend(
     ].join("\r\n");
     await step(msg, [250]);
     await send("QUIT").catch(() => {});
+  } catch (error) {
+    error.smtpStage ||= transportStage;
+    throw error;
   } finally {
     clearTimeout(timeout);
     try {
