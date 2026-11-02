@@ -57,6 +57,10 @@ The study-data upgrade adds preferences and revision checks. Practice results ga
 
 Validate Auth confirmation, password reset, custom SMTP, allowed redirects, Storage and Realtime settings in staging. Database source and local tests do not establish the hosted project's settings.
 
+For hosted welcome delivery, store the Worker's `WELCOME_HOOK_SECRET` in Supabase Vault as `deutschklinik_welcome_hook`, then apply `supabase/migrations/20261102_welcome_delivery.sql`. This enables pg_net and queues a small confirmation event asynchronously. It sends only the account ID, email address and confirmation time to the existing Worker. It never sends the Auth row's password hash or tokens. Trigger permissions exclude browser callers. Browser sign-in remains a fallback if the initial notification cannot be queued. See the [Supabase webhook](https://supabase.com/docs/guides/database/webhooks) and [Vault](https://supabase.com/docs/guides/database/vault) documentation.
+
+The dictionary corrections in `tools/dictionary-corrections.json` record their sources. Run `npm run dictionary:correct` after a source rebuild to reapply them. It preserves entry order and saved-word aliases across the split and legacy data files. Asset versions follow the actual file contents. Game interface strings live in `js/game-i18n.js`; authored questions, dictionary meanings and German lessons retain their own language.
+
 ## Worker and site release
 
 Follow `worker/README.md` for D1 migration, quotas, Auth verification, editorial publishing, welcome queue and mail secrets. Existing AI entries move into the draft queue until reviewed.
