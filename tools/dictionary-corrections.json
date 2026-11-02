@@ -1,0 +1,16 @@
+[
+  {
+    "lemma": "Haushaltsjahr",
+    "oldLemma": "Haushältstjahr",
+    "syllables": "Haus·halts·jahr",
+    "source": "https://www.duden.de/rechtschreibung/Haushaltsjahr",
+    "note": "Correct the extracted headword and syllables; preserve the existing definition."
+  },
+  {
+    "lemma": "Haus",
+    "before": "<span class=\"sn\">10</span> Präsident der USA wohnt und arbeitet",
+    "after": "<span class=\"sn\">10</span> <b>das Weiße Haus</b> der Amts- und Wohnsitz des US-Präsidenten in Washington, D.C.",
+    "source": "https://www.nps.gov/places/white-house.htm",
+    "note": "Replace a truncated extraction with an original factual explanation, without claiming to restore the publisher's wording."
+  }
+]

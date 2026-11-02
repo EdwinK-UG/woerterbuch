@@ -396,9 +396,10 @@ kbd{font:600 .66rem Inter,system-ui,sans-serif;padding:.1rem .35rem;border-radiu
 <script src="js/pages.js?v=2f0835f195f5"></script>
 <script src="js/course-counts.js?v=a500004e0728"></script>
 <script src="js/study-sync.js?v=9de759f82df1"></script>
+<script src="js/game-i18n.js?v=9cb89f5a1bfd"></script>
 <script src="js/game-messages.js?v=f0e0633452ab"></script>
 <script src="js/render-safety.js?v=cbceea56a80a"></script>
-<script id="data" type="application/octet-stream" data-src="core.bin?v=3846fea8f4" data-defs="defs.bin?v=db398139f0"></script>
+<script id="data" type="application/octet-stream" data-src="core.bin?v=4c9f34b8d0dd" data-defs="defs.bin?v=5e525dc56850"></script>
 <script>
 "use strict";
 /* ---------- storage helpers (safe) ---------- */
@@ -1907,9 +1908,6 @@ window.addEventListener('hashchange',()=>{ if(location.hash.startsWith('#/w/')&&
 setInterval(()=>{ if(document.visibilityState==='visible'&&Date.now()-lastAct<20000){active+=5; if(active>=60)show('use')} },5000);
 })();
 </script>
-</body>
-</html>
-
 <!-- ===== Spiele ===== -->
 <style>
 /* ===== Spiele ===== */
@@ -2146,13 +2144,14 @@ setInterval(()=>{ if(document.visibilityState==='visible'&&Date.now()-lastAct<20
 "use strict";
 /* ===== SPIELE: quiz games alone or live with a group (Supabase Realtime), memory, Artikel-Blitz, own quizzes ===== */
 (function(){
+const gt = german => ui(GAME_EN[german] ?? german, german);
 const $=id=>document.getElementById(id);
 const rnd=n=>Math.floor(Math.random()*n);
 const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=rnd(i+1);[a[i],a[j]]=[a[j],a[i]]}return a};
 const sample=(a,n)=>shuffle(a).slice(0,n);
 const H=s=>esc(String(s==null?'':s));
 const A=s=>H(s).replace(/"/g,'&quot;');
-const fmt=n=>Math.round(n).toLocaleString('de-DE');
+const fmt=n=>Math.round(n).toLocaleString(window.KONTO?.lang() === 'de' ? 'de-DE' : 'en-GB');
 const LET='A-Za-zÄÖÜäöüß';
 const reEsc=s=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
 const wordRe=(s,tail)=>new RegExp(`(?<![${LET}])${reEsc(s)}${tail?`[${LET}]*`:''}(?![${LET}])`,'gi');
@@ -2220,22 +2219,22 @@ function choice(t,p,right,wrong,extra){const o=shuffle([right,...wrong]);return 
 const GEN={
   mc(e,pool){ const w=plainW(e.w), g=qGloss(e);
     if(Math.random()<.5){const d=distract(e,3,x=>short(qGloss(x)),pool);return d&&choice('mc',`Was bedeutet „${w}"?`,short(g),d,{sub:POSL[e.ps]||''})}
-    const d=distract(e,3,x=>plainW(x.w),pool);return d&&choice('mc',g,w,d,{sub:'Welches Wort passt?'}) },
+    const d=distract(e,3,x=>plainW(x.w),pool);return d&&choice('mc',g,w,d,{sub:gt("Welches Wort passt?")}) },
   gap(e,pool){ const w=plainW(e.w);
     const ex=examples(e,5).filter(s=>s.length<=120&&!/[|\/…]/.test(s)&&(s.match(wordRe(w))||[]).length===1); if(!ex.length)return null;
     const s=ex[rnd(ex.length)].replace(wordRe(w),'_____'); const d=distract(e,3,x=>plainW(x.w),pool);
-    return d&&choice('gap',s,w,d,{sub:'Welches Wort fehlt?'}) },
+    return d&&choice('gap',s,w,d,{sub:gt("Welches Wort fehlt?")}) },
   tf(e,pool){ const w=plainW(e.w), truth=Math.random()<.5; let g=qGloss(e);
     if(!truth){const d=distract(e,1,qGloss,pool);if(!d)return null;g=d[0]}
-    return {t:'tf',p:`„${w}" bedeutet: ${g}`,o:['Wahr','Falsch'],c:truth?0:1,sub:'Stimmt das?'} },
+    return {t:'tf',p:`„${w}" bedeutet: ${g}`,o:[gt("Wahr"),gt("Falsch")],c:truth?0:1,sub:gt("Stimmt das?")} },
   art(e){ if(e.ps!=='n'||!['der','die','das'].includes(e.ar))return null;
-    return {t:'art',p:plainW(e.w),sub:'Welcher Artikel?',o:['der','die','das'],c:['der','die','das'].indexOf(e.ar)} },
+    return {t:'art',p:plainW(e.w),sub:gt("Welcher Artikel?"),o:['der','die','das'],c:['der','die','das'].indexOf(e.ar)} },
   type(e){ const w=plainW(e.w); if(w.length>14)return null;
-    return {t:'type',p:qGloss(e),sub:`${POSL[e.ps]||'Wort'} · ${w.length} Buchstaben · beginnt mit „${w[0]}"`,ans:[w]} },
+    return {t:'type',p:qGloss(e),sub:`${POSL[e.ps]||gt("Wort")} · ${w.length} Buchstaben · beginnt mit „${w[0]}"`,ans:[w]} },
   order(e){ const ex=examples(e,5).map(s=>s.replace(/\s+/g,' ').trim()).filter(s=>!/[|\/…„“"()]/.test(s));
     for(const s of shuffle(ex)){ const toks=s.split(' '); if(toks.length<4||toks.length>9)continue;
       let sh=toks; for(let k=0;k<10&&sh.join(' ')===s;k++)sh=shuffle(toks); if(sh.join(' ')===s)continue;
-      return {t:'order',p:'Bring die Wörter in die richtige Reihenfolge.',sub:`Satz mit „${plainW(e.w)}"`,o:sh,sol:toks} }
+      return {t:'order',p:gt("Bring die Wörter in die richtige Reihenfolge."),sub:`Satz mit „${plainW(e.w)}"`,o:sh,sol:toks} }
     return null }
 };
 // lead picture of the German Wikipedia article with exactly this title (follows redirects, skips ambiguous words)
@@ -2263,7 +2262,7 @@ async function buildQs(s){
     const res=await Promise.all(cands.map(i=>withTimeout(wikiExact(plainW(E[i].w)),5000,[]).then(l=>({i,l}))));
     for(const {i,l} of res){ if(imgQs.length>=want)break; if(!l||!l.length)continue;
       const e=E[i], d=distract(e,3,x=>plainW(x.w),pool); if(!d)continue;
-      imgQs.push(choice('img','Was ist auf dem Bild?',plainW(e.w),d,{img:l[0].src,wi:i})); used.add(i) }
+      imgQs.push(choice('img',gt("Was ist auf dem Bild?"),plainW(e.w),d,{img:l[0].src,wi:i})); used.add(i) }
   }
   const gens=types.length?types:['mc'];
   let guard=0;
@@ -2375,10 +2374,10 @@ const TEAMS=[['Mond','moon'],['Sonne','sun'],['Wolke','cloud'],['Stern','star']]
 function stage(title,opts={}){
   document.body.classList.add('ingame');
   V().innerHTML=`<div class="gm" id="gm"><div class="gmbar">
-      <button class="gmb" title="Spiel verlassen" onclick="PLAY.quit()">${ic('x')}</button>
+      <button class="gmb" title="${gt("Spiel verlassen")}" onclick="PLAY.quit()">${ic('x')}</button>
       <span class="gmt">${H(title)}</span><span class="sp"></span><span id="gmscore"></span>
-      <button class="gmb" id="gmsnd" title="Ton an/aus" onclick="PLAY.snd()">${ic(AU.on?'volume-2':'volume-x')}</button>
-      ${opts.fs?`<button class="gmb" title="Vollbild" onclick="PLAY.fs()">${ic('maximize')}</button>`:''}
+      <button class="gmb" id="gmsnd" title="${gt("Ton an/aus")}" onclick="PLAY.snd()">${ic(AU.on?'volume-2':'volume-x')}</button>
+      ${opts.fs?`<button class="gmb" title="${gt("Vollbild")}" onclick="PLAY.fs()">${ic('maximize')}</button>`:''}
     </div><div class="gmin" id="gmin"></div></div>`;
   drawIcons();
 }
@@ -2402,8 +2401,8 @@ function tile(i,text,q,extra=''){
   return `<button class="gt ${cls}" data-i="${i}" ${extra}><span class="gti">${ic(OIC[i%4])}</span><span class="gtt">${H(text)}</span></button>`;
 }
 function qHead(q,n,total){
-  const [lab,icn]=TYPES[q.t]||['Frage','help-circle'];
-  return `<div class="gqtop"><span>${n+1} / ${total}</span><span class="gqty">${ic(icn)} ${lab}</span>${q.dbl?'<span class="dbl">✕2 Punkte</span>':''}</div>`;
+  const [lab,icn]=TYPES[q.t]||[gt("Frage"),'help-circle'];
+  return `<div class="gqtop"><span>${n+1} / ${total}</span><span class="gqty">${ic(icn)} ${gt(lab)}</span>${q.dbl?`<span class="dbl">✕2 ${gt('Punkte')}</span>`:''}</div>`;
 }
 function qCard(q){
   return `<div class="gq">${q.img?`<img class="gqimg" src="${A(q.img)}" alt="" referrerpolicy="no-referrer">`:''}
@@ -2413,8 +2412,8 @@ const isChoice=q=>['mc','gap','tf','art','img','poll'].includes(q.t);
 // the answer area a player touches (solo and on the phone)
 function qInput(q){
   if(isChoice(q))return `<div class="gts n${q.o.length} ${q.t} ${q.o.some(o=>String(o).length>32)?'long':''}">${q.o.map((o,i)=>tile(i,o,q)).join('')}</div>`;
-  if(q.t==='type')return `<form class="gtype" id="gtype"><input id="gtypei" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Antwort eingeben …" enterkeyhint="done"><button class="gbtn">OK</button></form>`;
-  if(q.t==='order')return `<div class="gord"><div class="gordans" id="gordans"></div><div class="gchips" id="gordpool">${q.o.map((t,i)=>`<button class="gchip" data-i="${i}">${H(t)}</button>`).join('')}</div><button class="gbtn" id="gorddone" disabled>Fertig</button></div>`;
+  if(q.t==='type')return `<form class="gtype" id="gtype"><input id="gtypei" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="${gt("Antwort eingeben …")}" enterkeyhint="done"><button class="gbtn">OK</button></form>`;
+  if(q.t==='order')return `<div class="gord"><div class="gordans" id="gordans"></div><div class="gchips" id="gordpool">${q.o.map((t,i)=>`<button class="gchip" data-i="${i}">${H(t)}</button>`).join('')}</div><button class="gbtn" id="gorddone" disabled>${gt("Fertig")}</button></div>`;
   if(q.t==='slider'){const mid=Math.round(((q.min+q.max)/2)/(q.step||1))*(q.step||1);
     return `<div class="gsl"><output id="gslv">${mid}${q.unit?' '+H(q.unit):''}</output><input type="range" id="gsl" min="${q.min}" max="${q.max}" step="${q.step||1}" value="${mid}"><button class="gbtn" id="gsldone">OK</button></div>`}
   return '';
@@ -2447,8 +2446,8 @@ function markTiles(q,v){
     if(q.t!=='poll'&&i===q.c){b.classList.add('right');b.classList.remove('dim')} else if(!b.classList.contains('picked'))b.classList.add('dim')});
 }
 function readyScreen(q,n,total,hist,ms,cb){
-  const [lab,icn]=TYPES[q.t]||['Frage','help-circle'];
-  gin(center(`<div class="gready"><div class="gnum">${n+1}</div></div><div class="gtyp">${ic(icn)} ${lab}${q.dbl?' · doppelte Punkte!':''}</div>
+  const [lab,icn]=TYPES[q.t]||[gt("Frage"),'help-circle'];
+  gin(center(`<div class="gready"><div class="gnum">${n+1}</div></div><div class="gtyp">${ic(icn)} ${gt(lab)}${q.dbl?gt(" · doppelte Punkte!"):''}</div>
     <div class="gdots">${Array.from({length:total},(_,k)=>`<i class="${k<n?(hist[k]&&hist[k].ok?'ok':(hist[k]&&hist[k].ok===null?'':'bad')):k===n?'cur':''}"></i>`).join('')}</div>`));
   later(cb,ms);
 }
@@ -2456,15 +2455,15 @@ function readyScreen(q,n,total,hist,ms,cb){
 /* ---------- SOLO ---------- */
 const setupKey=s=>[s.src,s.id||'',s.lvl||'',s.n,(s.types||[]).slice().sort().join('+'),s.speed||1].join('|');
 async function soloStart(s){
-  stage('Allein spielen'); gin(spinner(s.types&&s.types.includes('img')?'Fragen und Bilder werden vorbereitet …':'Fragen werden vorbereitet …'));
+  stage(gt("Allein spielen")); gin(spinner(s.types&&s.types.includes('img')?gt("Fragen und Bilder werden vorbereitet …"):gt("Fragen werden vorbereitet …")));
   const qs=await buildQs(s);
   if(!G||G.mode!=='solo-wait')return;      // left in the meantime
-  if(!qs.length){gin(center(`<h2>Keine Fragen</h2><p>Mit dieser Auswahl lassen sich keine Fragen bilden. Nimm mehr Wörter oder andere Fragetypen.</p><a class="gbtn" href="#/play/solo">Zurück</a>`));return}
+  if(!qs.length){gin(center(`<h2>${gt("Keine Fragen")}</h2><p>${gt("Mit dieser Auswahl lassen sich keine Fragen bilden. Nimm mehr Wörter oder andere Fragetypen.")}</p><a class="gbtn" href="#/play/solo">${gt("Zurück")}</a>`));return}
   const best=LS.get('gd_gbest',{})[setupKey(s)]||null;
   G={mode:'solo',kind:'solo',s,qs,n:0,score:0,streak:0,ok:0,hist:[],best,cum:[]};
   soloNext();
 }
-function soloScore(){setScore(`<span class="gscore">${fmt(G.score)}${G.best?`<small>Rekord ${fmt(G.best.score)}</small>`:''}</span>`)}
+function soloScore(){setScore(`<span class="gscore">${fmt(G.score)}${G.best?`<small>${gt("Rekord")} ${fmt(G.best.score)}</small>`:''}</span>`)}
 function soloNext(){
   if(G.n>=G.qs.length)return soloEnd();
   soloScore(); const q=G.qs[G.n];
@@ -2477,14 +2476,14 @@ function soloAnswer(q,v,t){
   if(r.ok){G.streak++; r.pts+=streakBonus(G.streak); G.ok++; AU.sfx('ok')} else if(r.ok===false){G.streak=0; AU.sfx('bad')} else AU.sfx('send');
   G.score+=r.pts; G.hist.push({ok:r.ok,v}); G.cum.push(G.score); soloScore(); markTiles(q,v);
   const e=q.wi!=null?E[q.wi]:null, right=rightText(q);
-  let ghost=''; if(G.best&&G.best.cum&&G.best.cum[G.n]!=null){const d=G.score-G.best.cum[G.n]; ghost=`<div class="gghost">${d>=0?'▲':'▼'} ${fmt(Math.abs(d))} ${d>=0?'vor':'hinter'} deinem Rekord</div>`}
+  let ghost=''; if(G.best&&G.best.cum&&G.best.cum[G.n]!=null){const d=G.score-G.best.cum[G.n]; ghost=`<div class="gghost">${d>=0?'▲':'▼'} ${fmt(Math.abs(d))} ${d>=0?gt("vor"):gt("hinter")} ${gt("deinem Rekord")}</div>`}
   const last=G.n+1>=G.qs.length;
   $('gafter').innerHTML=`<div class="gres ${r.ok?'ok':r.ok===null?'poll':'bad'}">
-    <h3>${r.ok?'Richtig!':r.ok===null?'Danke für deine Stimme':v==null?'Zeit abgelaufen':'Leider falsch'}</h3>
-    ${r.ok?`<div class="pts">+${fmt(r.pts)}</div>`:''}${G.streak>=2?`<div class="gstreak">🔥 ${G.streak} richtig in Folge</div>`:''}
-    ${!r.ok&&right?`<div class="ans">Richtig ist: <b>${H(right)}</b></div>`:''}
+    <h3>${r.ok?gt("Richtig!"):r.ok===null?gt("Danke für deine Stimme"):v==null?gt("Zeit abgelaufen"):gt("Leider falsch")}</h3>
+    ${r.ok?`<div class="pts">+${fmt(r.pts)}</div>`:''}${G.streak>=2?`<div class="gstreak">🔥 ${G.streak} ${gt("richtig in Folge")}</div>`:''}
+    ${!r.ok&&right?`<div class="ans">${gt("Richtig ist:")} <b>${H(right)}</b></div>`:''}
     ${e?`<div class="ans"><a href="#/w/${encodeURIComponent(e.w)}" target="_blank" rel="noopener">„${H(plainW(e.w))}" im Wörterbuch ansehen ↗</a></div>`:''}${ghost}
-    <div class="row"><button class="gbtn" id="gnext">${last?'Ergebnis':'Weiter'} ${ic('arrow-right')}</button></div></div>`;
+    <div class="row"><button class="gbtn" id="gnext">${last?gt("Ergebnis"):gt("Weiter")} ${ic('arrow-right')}</button></div></div>`;
   drawIcons();
   G.n++;
   const nx=$('gnext'); nx.onclick=()=>{clearTimers();soloNext()}; nx.focus({preventScroll:true});
@@ -2496,11 +2495,11 @@ function soloEnd(){
   if(rec){all[key]={score:G.score,cum:G.cum,at:Date.now()}; LS.set('gd_gbest',all)}
   const miss=G.qs.map((q,k)=>({q,h:G.hist[k]})).filter(x=>x.h&&x.h.ok===false&&x.q.wi!=null);
   AU.sfx('fanfare'); if(rec||G.ok===G.qs.length)confetti();
-  gin(center(`<div class="gend"><h2>${rec&&prev?'Neuer Rekord!':G.ok===G.qs.length?'Perfekt!':'Geschafft!'}</h2><div class="gbig">${fmt(G.score)}<small>Punkte</small></div></div>
-    <div class="gstats"><div><b>${G.ok} / ${G.qs.filter(q=>q.t!=='poll').length}</b><span>richtig</span></div><div><b>${prev?fmt(Math.max(prev.score,G.score)):fmt(G.score)}</b><span>Rekord</span></div></div>
-    ${miss.length?`<div class="gmiss"><h4>Diese Wörter üben</h4>${miss.map(x=>`<a href="#/w/${encodeURIComponent(E[x.q.wi].w)}"><b>${H(plainW(E[x.q.wi].w))}</b> – ${H(qGloss(E[x.q.wi])||'')}</a>`).join('')}</div>
-      <button class="gbtn ghost" onclick="PLAY.saveMiss()">${ic('list-plus')} In Liste „Aus Spielen" speichern</button>`:''}
-    <div class="row" style="justify-content:center;gap:.5rem"><button class="gbtn" onclick="PLAY.again()">${ic('rotate-ccw')} Nochmal</button><a class="gbtn ghost" href="#/play">Andere Spiele</a></div>`));
+  gin(center(`<div class="gend"><h2>${rec&&prev?gt("Neuer Rekord!"):G.ok===G.qs.length?gt("Perfekt!"):gt("Geschafft!")}</h2><div class="gbig">${fmt(G.score)}<small>${gt("Punkte")}</small></div></div>
+    <div class="gstats"><div><b>${G.ok} / ${G.qs.filter(q=>q.t!=='poll').length}</b><span>${gt("richtig")}</span></div><div><b>${prev?fmt(Math.max(prev.score,G.score)):fmt(G.score)}</b><span>${gt("Rekord")}</span></div></div>
+    ${miss.length?`<div class="gmiss"><h4>${gt("Diese Wörter üben")}</h4>${miss.map(x=>`<a href="#/w/${encodeURIComponent(E[x.q.wi].w)}"><b>${H(plainW(E[x.q.wi].w))}</b> – ${H(qGloss(E[x.q.wi])||'')}</a>`).join('')}</div>
+      <button class="gbtn ghost" onclick="PLAY.saveMiss()">${ic('list-plus')} ${gt("In Liste „Aus Spielen\" speichern")}</button>`:''}
+    <div class="row" style="justify-content:center;gap:.5rem"><button class="gbtn" onclick="PLAY.again()">${ic('rotate-ccw')} ${gt("Nochmal")}</button><a class="gbtn ghost" href="#/play">${gt("Andere Spiele")}</a></div>`));
   G.miss=miss.map(x=>E[x.q.wi].w); G.mode='solo-end';
 }
 function saveMiss(){
@@ -2510,7 +2509,7 @@ function saveMiss(){
   let id=Object.keys(lists).find(k=>lists[k].name==='Aus Spielen');
   if(!id){id=uid();lists[id]={name:'Aus Spielen',words:[],created:now()}}
   const l=lists[id]; let n=0; G.miss.forEach(w=>{if(!l.words.includes(w)){l.words.push(w);n++}}); saveLists();
-  toast(n?`${n} ${n===1?'Wort':'Wörter'} in „Aus Spielen" gespeichert`:'Schon alle in der Liste');
+  toast(n?`${n} ${n===1?gt("Wort"):gt("Wörter")} in „Aus Spielen" gespeichert`:gt("Schon alle in der Liste"));
 }
 
 /* ---------- LIVE: connection (Supabase Realtime broadcast, no database needed) ---------- */
@@ -2536,14 +2535,14 @@ const joinURL=pin=>location.origin+location.pathname+'#/play/join/'+pin;
 
 /* ---------- LIVE: host (big screen) ---------- */
 async function hostStart(s){
-  stage('Live-Quiz',{fs:true}); gin(spinner('Spiel wird vorbereitet …'));
+  stage('Live-Quiz',{fs:true}); gin(spinner(gt("Spiel wird vorbereitet …")));
   const qs=await buildQs(s);
   if(!G||G.mode!=='host-wait')return;
-  if(!qs.length){gin(center(`<h2>Keine Fragen</h2><p>Mit dieser Auswahl lassen sich keine Fragen bilden.</p><a class="gbtn" href="#/play/host">Zurück</a>`));return}
+  if(!qs.length){gin(center(`<h2>${gt("Keine Fragen")}</h2><p>${gt("Mit dieser Auswahl lassen sich keine Fragen bilden.")}</p><a class="gbtn" href="#/play/host">${gt("Zurück")}</a>`));return}
   const pin=String(100000+rnd(900000));
   G={mode:'host',kind:'host',s,qs,pin,n:-1,phase:'lobby',players:new Map(),kicked:new Set(),teams:+s.teams||0,ans:new Map(),title:s.title||'Live-Quiz'};
   try{ G.ch=await openCh(pin,{join:hJoin,ans:hAns,leave:hLeave}) }
-  catch(e){ gin(center(`<h2>Keine Verbindung</h2><p>Der Spielserver ist gerade nicht erreichbar. Prüfe die Internetverbindung und versuche es noch einmal.</p><a class="gbtn" href="#/play/host">Zurück</a>`)); return }
+  catch(e){ gin(center(`<h2>${gt("Keine Verbindung")}</h2><p>${gt("Der Spielserver ist gerade nicht erreichbar. Prüfe die Internetverbindung und versuche es noch einmal.")}</p><a class="gbtn" href="#/play/host">${gt("Zurück")}</a>`)); return }
   G.hb=setInterval(()=>send('hb',{phase:G.phase,n:G.n}),4000);
   hostLobby(); AU.play('lobby');
 }
@@ -2552,7 +2551,7 @@ function hJoin(p){
   if(!G||G.mode!=='host'||!p.pid||G.kicked.has(p.pid))return;
   let pl=G.players.get(p.pid);
   if(!pl){ if(G.players.size>=80)return;
-    let base=String(p.name||'Gast').replace(/\s+/g,' ').trim().slice(0,18)||'Gast', nm=base, k=2;
+    let base=String(p.name||gt("Gast")).replace(/\s+/g,' ').trim().slice(0,18)||gt("Gast"), nm=base, k=2;
     const names=new Set([...G.players.values()].map(x=>x.name.toLowerCase())); while(names.has(nm.toLowerCase()))nm=base+' '+k++;
     pl={pid:p.pid,name:nm,av:AVS.includes(p.av)?p.av:AVS[rnd(AVS.length)],score:0,streak:0,ok:0,team:G.teams?teamFor():0,res:[],rank:0};
     G.players.set(p.pid,pl); AU.sfx('join');
@@ -2565,20 +2564,20 @@ function kick(pid){ if(!G||G.mode!=='host')return; G.players.delete(pid); G.kick
 function hostLobby(){
   G.phase='lobby';
   const url=joinURL(G.pin), short=location.host+location.pathname.replace(/\/$/,'');
-  gin(`<div class="glob"><div class="gpin"><div class="lbl">Spiel-PIN</div><div class="pin">${G.pin.slice(0,3)} ${G.pin.slice(3)}</div>
-      <div class="how">Auf dem Handy <b>${H(short)}</b> öffnen → <b>Spiele</b> → <b>Mitspielen</b>, oder den Code scannen.</div></div>
+  gin(`<div class="glob"><div class="gpin"><div class="lbl">${gt("Spiel-PIN")}</div><div class="pin">${G.pin.slice(0,3)} ${G.pin.slice(3)}</div>
+      <div class="how">${gt("Auf dem Handy")} <b>${H(short)}</b> ${gt("öffnen →")} <b>${gt("Spiele")}</b> → <b>${gt("Mitspielen")}</b>${gt(", oder den Code scannen.")}</div></div>
       <div class="gqr" id="gqr" title="${A(url)}"></div></div>
     ${G.teams?`<div class="gteams" style="justify-content:center;margin-bottom:.4rem">${TEAMS.slice(0,G.teams).map((t,k)=>`<span class="gpl" style="cursor:default"><span class="tm t${k+1}">${ic(t[1])}</span> Team ${t[0]}</span>`).join('')}</div>`:''}
     <div class="gplrs" id="gplrs"></div>
-    <div class="globbot"><span><span class="n" id="gpn">0</span> Spieler</span>
-      <span class="muted" style="opacity:.8;font-size:.85rem">${G.qs.length} Fragen · Spieler antippen zum Entfernen</span>
+    <div class="globbot"><span><span class="n" id="gpn">0</span> ${gt("Spieler")}</span>
+      <span class="muted" style="opacity:.8;font-size:.85rem">${G.qs.length} ${gt("Fragen · Spieler antippen zum Entfernen")}</span>
       <button class="gbtn" id="gstart" onclick="PLAY.hostGo()" disabled>${ic('play')} Start</button></div>`);
   lobbyPlayers(); qr($('gqr'),url);
 }
 function lobbyPlayers(){
   const b=$('gplrs'); if(!b)return; const ps=[...G.players.values()];
   b.innerHTML=ps.length?ps.map(p=>`<button class="gpl" data-player="${A(p.pid)}" title="Entfernen"><span class="av">${p.av}</span>${H(p.name)}${p.team?`<span class="tm t${p.team}">${TEAMS[p.team-1][0]}</span>`:''}</button>`).join('')
-    :`<div class="gwait">Warte auf Spieler …</div>`;
+    :`<div class="gwait">${gt("Warte auf Spieler …")}</div>`;
   b.onclick=ev=>{const player=ev.target.closest('button[data-player]');if(player)kick(player.dataset.player)};
   $('gpn').textContent=ps.length; $('gstart').disabled=!ps.length;
 }
@@ -2592,8 +2591,8 @@ function hostNext(){
   if(G.n>=G.qs.length)return hostPodium();
   const q=G.qs[G.n]; G.phase='ready'; AU.play('calm');
   send('ready',{n:G.n,total:G.qs.length,t:q.t,dbl:q.dbl||0});
-  const [lab,icn]=TYPES[q.t]||['Frage','help-circle'];
-  gin(center(`<div class="gtyp">${ic(icn)} ${lab}${q.dbl?' · doppelte Punkte!':''}</div><h2>Frage ${G.n+1} von ${G.qs.length}</h2><div class="gready"><div class="gnum" id="gcd">3</div></div>`));
+  const [lab,icn]=TYPES[q.t]||[gt("Frage"),'help-circle'];
+  gin(center(`<div class="gtyp">${ic(icn)} ${gt(lab)}${q.dbl?gt(" · doppelte Punkte!"):''}</div><h2>${gt("Frage ")}${G.n+1} ${gt("von")} ${G.qs.length}</h2><div class="gready"><div class="gnum" id="gcd">3</div></div>`));
   AU.sfx('beep'); later(()=>{const c=$('gcd');if(c){c.textContent='2';c.style.animation='none';void c.offsetWidth;c.style.animation=''}AU.sfx('beep')},1000);
   later(()=>{const c=$('gcd');if(c){c.textContent='1';c.style.animation='none';void c.offsetWidth;c.style.animation=''}AU.sfx('beep')},2000);
   later(hostQ,3000);
@@ -2604,9 +2603,9 @@ function hostQ(){
   AU.sfx('go'); AU.play('think');
   const body=isChoice(q)?`<div class="gts n${q.o.length} ${q.t}">${q.o.map((o,i)=>tile(i,o,q,'disabled')).join('')}</div>`
     :q.t==='order'?`<div class="gchips">${q.o.map(t=>`<span class="gchip" style="cursor:default">${H(t)}</span>`).join('')}</div>`
-    :`<div class="ghint">${q.t==='type'?'Tippt die Antwort auf eurem Gerät ein.':`Wählt einen Wert zwischen ${q.min} und ${q.max}${q.unit?' '+H(q.unit):''}.`}</div>`;
-  gin(`${qHead(q,G.n,G.qs.length)}<div class="gcount"><div class="gbig" id="gsec">${q.dur}<small>Sekunden</small></div>
-      <button class="gbtn ghost" onclick="PLAY.hostEnd()">Überspringen</button><div class="gbig" id="gacnt" style="text-align:right">0<small>Antworten</small></div></div>
+    :`<div class="ghint">${q.t==='type'?gt("Tippt die Antwort auf eurem Gerät ein."):`${gt("Wählt einen Wert zwischen")} ${q.min} ${gt("und")} ${q.max}${q.unit?' '+H(q.unit):''}.`}</div>`;
+  gin(`${qHead(q,G.n,G.qs.length)}<div class="gcount"><div class="gbig" id="gsec">${q.dur}<small>${gt("Sekunden")}</small></div>
+      <button class="gbtn ghost" onclick="PLAY.hostEnd()">${gt("Überspringen")}</button><div class="gbig" id="gacnt" style="text-align:right">0<small>${gt("Antworten")}</small></div></div>
     <div class="gtimer"><i style="animation-duration:${q.dur}s"></i></div>${qCard(q)}${body}`);
   const t0=Date.now();
   G.sec=setInterval(()=>{const left=Math.max(0,Math.ceil(q.dur-(Date.now()-t0)/1000)); const s=$('gsec'); if(s)s.firstChild.nodeValue=left; if(left<=5&&left>0)AU.sfx('tick')},1000);
@@ -2638,10 +2637,10 @@ function hostEnd(){
   const last=G.n+1>=G.qs.length, mx=dist?Math.max(1,...dist):1;
   const body=dist?`<div class="gts n${q.o.length} ${q.t}">${q.o.map((o,i)=>`<button class="gt ${q.t==='art'?o:q.t==='tf'?(i?'tff':'tfw'):'o'+(i%4+1)} ${q.t!=='poll'&&i!==q.c?'dim':q.t!=='poll'?'right':''}" disabled>
         <span class="gti">${ic(OIC[i%4])}</span><span class="gtt">${H(o)}</span><span class="gtc">${dist[i]}</span></button>`).join('')}</div>`
-    :`<div class="gres ok"><h3>${H(rightText(q))}</h3><div class="ans">${nOk} von ${G.players.size} richtig</div></div>`;
+    :`<div class="gres ok"><h3>${H(rightText(q))}</h3><div class="ans">${nOk} ${gt("von")} ${G.players.size} ${gt("richtig")}</div></div>`;
   gin(`${qHead(q,G.n,G.qs.length)}${qCard(q)}${body}
-    <div class="globbot"><span>${q.t==='poll'?`${nAns} Stimmen`:`<b>${nOk}</b> von ${G.players.size} richtig`}</span>
-    <button class="gbtn" id="gnext" onclick="PLAY.hostScores()">${last?'Siegerehrung':'Rangliste'} ${ic('arrow-right')}</button></div>`);
+    <div class="globbot"><span>${q.t==='poll'?`${nAns} ${gt("Stimmen")}`:`<b>${nOk}</b> ${gt("von")} ${G.players.size} ${gt("richtig")}`}</span>
+    <button class="gbtn" id="gnext" onclick="PLAY.hostScores()">${last?gt("Siegerehrung"):gt("Rangliste")} ${ic('arrow-right')}</button></div>`);
   if(dist)document.querySelectorAll('#gmin .gtc').forEach((c,i)=>c.style.opacity=.6+.4*dist[i]/mx);
 }
 function hostScores(){
@@ -2650,11 +2649,11 @@ function hostScores(){
   G.phase='scores'; AU.play('calm');
   const ps=ranking().slice(0,5);
   const teamRows=G.teams?teamScores().map((t,k)=>`<div class="r" style="animation-delay:${k*.08}s"><span class="rk">${k+1}</span><span class="tm t${t.k}" style="border-radius:.5rem;padding:.2rem .4rem;color:#fff">${ic(t.icon)}</span><span class="nm">${H(t.name)} <small style="opacity:.6">(${t.n})</small></span><span class="sc">${fmt(t.score)}</span></div>`).join(''):'';
-  gin(`<div class="gcenter" style="justify-content:flex-start;gap:1rem"><h2>${G.teams?'Teamwertung':'Rangliste'}</h2>
+  gin(`<div class="gcenter" style="justify-content:flex-start;gap:1rem"><h2>${G.teams?gt("Teamwertung"):gt("Rangliste")}</h2>
     <div class="gsb">${G.teams?teamRows:ps.map((p,k)=>`<div class="r" style="animation-delay:${k*.08}s"><span class="rk">${k+1}</span><span class="av">${p.av}</span><span class="nm">${H(p.name)}</span>
       ${p.prev>p.rank?`<span class="mv">▲ ${p.prev-p.rank}</span>`:''}${p.streak>=3?`<span title="Serie">🔥${p.streak}</span>`:''}<span class="sc">${fmt(p.score)}</span></div>`).join('')}</div>
-    ${G.teams?`<div class="gsb" style="opacity:.9"><div style="font-weight:700;margin-top:.4rem">Beste Einzelspieler</div>${ps.slice(0,3).map((p,k)=>`<div class="r"><span class="rk">${k+1}</span><span class="av">${p.av}</span><span class="nm">${H(p.name)}</span><span class="sc">${fmt(p.score)}</span></div>`).join('')}</div>`:''}
-    </div><div class="globbot"><span>Frage ${G.n+1} von ${G.qs.length}</span><button class="gbtn" id="gnext" onclick="PLAY.hostNext()">Nächste Frage ${ic('arrow-right')}</button></div>`);
+    ${G.teams?`<div class="gsb" style="opacity:.9"><div style="font-weight:700;margin-top:.4rem">${gt("Beste Einzelspieler")}</div>${ps.slice(0,3).map((p,k)=>`<div class="r"><span class="rk">${k+1}</span><span class="av">${p.av}</span><span class="nm">${H(p.name)}</span><span class="sc">${fmt(p.score)}</span></div>`).join('')}</div>`:''}
+    </div><div class="globbot"><span>${gt("Frage ")}${G.n+1} ${gt("von")} ${G.qs.length}</span><button class="gbtn" id="gnext" onclick="PLAY.hostNext()">${gt("Nächste Frage")} ${ic('arrow-right')}</button></div>`);
   send('scores',{n:G.n});
 }
 function hostPodium(){
@@ -2664,10 +2663,10 @@ function hostPodium(){
   send('end',{res,teams:ts,top:ps.slice(0,3).map(p=>({name:p.name,av:p.av,score:p.score}))});
   const top=ts?ts.slice(0,3).map(t=>({name:t.name,av:`<span class="tm t${t.k}" style="display:inline-grid;place-items:center;width:3rem;height:3rem;border-radius:1rem">${ic(t.icon)}</span>`,score:t.score}))
     :ps.slice(0,3).map(p=>({name:H(p.name),av:p.av,score:p.score}));
-  const slot=(k)=>top[k]?`<div class="p p${k+1}" id="gp${k+1}"><div class="av">${top[k].av}</div><div class="nm">${ts?H(top[k].name):top[k].name}</div><div class="sc">${fmt(top[k].score)} Punkte</div><div class="blk">${k+1}</div></div>`:'';
-  gin(`<div class="gcenter" style="justify-content:flex-end"><h2>${ts?'Siegerteams':'Siegerehrung'}</h2><div class="gpod">${slot(1)}${slot(0)}${slot(2)}</div></div>
-    <div class="globbot"><button class="gbtn ghost" onclick="PLAY.report()">${ic('table')} Ergebnisbericht</button>
-      <button class="gbtn" onclick="PLAY.rematch()">${ic('rotate-ccw')} Neue Runde</button></div>`);
+  const slot=(k)=>top[k]?`<div class="p p${k+1}" id="gp${k+1}"><div class="av">${top[k].av}</div><div class="nm">${ts?H(top[k].name):top[k].name}</div><div class="sc">${fmt(top[k].score)} ${gt("Punkte")}</div><div class="blk">${k+1}</div></div>`:'';
+  gin(`<div class="gcenter" style="justify-content:flex-end"><h2>${ts?gt("Siegerteams"):gt("Siegerehrung")}</h2><div class="gpod">${slot(1)}${slot(0)}${slot(2)}</div></div>
+    <div class="globbot"><button class="gbtn ghost" onclick="PLAY.report()">${ic('table')} ${gt("Ergebnisbericht")}</button>
+      <button class="gbtn" onclick="PLAY.rematch()">${ic('rotate-ccw')} ${gt("Neue Runde")}</button></div>`);
   AU.sfx('roll');
   later(()=>{const e=$('gp3');if(e){e.classList.add('on');AU.sfx('place')}},1300);
   later(()=>{const e=$('gp2');if(e){e.classList.add('on');AU.sfx('place')}},2400);
@@ -2677,23 +2676,23 @@ function report(){
   if(!G||G.mode!=='host')return;
   const ps=ranking();
   const qrows=G.qs.map((q,k)=>{const s=q.stat||{ok:0,of:G.players.size}; const pc=s.of?Math.round(100*s.ok/s.of):0;
-    return `<tr><td>${k+1}</td><td>${H(TYPES[q.t][0])}</td><td style="white-space:normal;min-width:180px">${H(q.p.length>70?q.p.slice(0,68)+'…':q.p)}</td><td>${H(rightText(q))}</td><td>${q.t==='poll'?'–':pc+' %'}</td><td>${q.t==='poll'?'':`<div class="bar"><i style="width:${pc}%"></i></div>`}</td></tr>`}).join('');
+    return `<tr><td>${k+1}</td><td>${H(gt(TYPES[q.t][0]))}</td><td style="white-space:normal;min-width:180px">${H(q.p.length>70?q.p.slice(0,68)+'…':q.p)}</td><td>${H(rightText(q))}</td><td>${q.t==='poll'?'–':pc+' %'}</td><td>${q.t==='poll'?'':`<div class="bar"><i style="width:${pc}%"></i></div>`}</td></tr>`}).join('');
   const prow=ps.map(p=>`<tr><td>${p.rank}</td><td>${p.av} ${H(p.name)}</td>${G.teams?`<td>${TEAMS[p.team-1][0]}</td>`:''}<td><b>${fmt(p.score)}</b></td><td>${p.ok}</td>
     ${G.qs.map((q,k)=>{const r=p.res[k];return `<td class="${r&&r.ok?'ok':r&&r.ok===false?'bad':''}">${!r||r.v==null?'·':r.ok?'✓':r.ok===false?'✗':'○'}</td>`}).join('')}</tr>`).join('');
-  gin(`<div class="gcenter" style="justify-content:flex-start;align-items:stretch"><h2>Ergebnisbericht</h2>
-    <div class="grep"><table><tr><th>#</th><th>Typ</th><th>Frage</th><th>Lösung</th><th>Richtig</th><th></th></tr>${qrows}</table></div>
-    <div class="grep"><table><tr><th>Platz</th><th>Name</th>${G.teams?'<th>Team</th>':''}<th>Punkte</th><th>✓</th>${G.qs.map((_,k)=>`<th>${k+1}</th>`).join('')}</tr>${prow}</table></div></div>
-    <div class="globbot"><button class="gbtn ghost" onclick="PLAY.csv()">${ic('download')} Als CSV speichern</button><button class="gbtn" onclick="PLAY.rematch()">${ic('rotate-ccw')} Neue Runde</button></div>`);
+  gin(`<div class="gcenter" style="justify-content:flex-start;align-items:stretch"><h2>${gt("Ergebnisbericht")}</h2>
+    <div class="grep"><table><tr><th>#</th><th>${gt("Typ")}</th><th>${gt("Frage")}</th><th>${gt("Lösung")}</th><th>${gt("Richtig")}</th><th></th></tr>${qrows}</table></div>
+    <div class="grep"><table><tr><th>${gt("Platz")}</th><th>Name</th>${G.teams?'<th>Team</th>':''}<th>${gt("Punkte")}</th><th>✓</th>${G.qs.map((_,k)=>`<th>${k+1}</th>`).join('')}</tr>${prow}</table></div></div>
+    <div class="globbot"><button class="gbtn ghost" onclick="PLAY.csv()">${ic('download')} ${gt("Als CSV speichern")}</button><button class="gbtn" onclick="PLAY.rematch()">${ic('rotate-ccw')} ${gt("Neue Runde")}</button></div>`);
 }
 function csv(){
   const ps=ranking(), q=s=>'"'+String(s).replace(/"/g,'""')+'"';
-  const rows=[['Platz','Name',...(G.teams?['Team']:[]),'Punkte','Richtig',...G.qs.map((_,k)=>'Frage '+(k+1))].map(q).join(';')];
-  ps.forEach(p=>rows.push([p.rank,/^[\s]*[=+@-]/.test(p.name)?"'"+p.name:p.name,...(G.teams?[TEAMS[p.team-1][0]]:[]),p.score,p.ok,...G.qs.map((_,k)=>{const r=p.res[k];return !r||r.v==null?'':r.ok?'richtig':r.ok===false?'falsch':'abgestimmt'})].map(q).join(';')));
+  const rows=[[gt("Platz"),'Name',...(G.teams?['Team']:[]),gt("Punkte"),gt("Richtig"),...G.qs.map((_,k)=>gt("Frage ")+(k+1))].map(q).join(';')];
+  ps.forEach(p=>rows.push([p.rank,/^[\s]*[=+@-]/.test(p.name)?"'"+p.name:p.name,...(G.teams?[TEAMS[p.team-1][0]]:[]),p.score,p.ok,...G.qs.map((_,k)=>{const r=p.res[k];return !r||r.v==null?'':r.ok?gt("richtig"):r.ok===false?gt("falsch"):'abgestimmt'})].map(q).join(';')));
   const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob(['﻿'+rows.join('\n')],{type:'text/csv'})); a.download='quiz-ergebnisse.csv'; a.click();
 }
 async function rematch(){
   if(!G||G.mode!=='host')return; clearTimers();
-  gin(spinner('Neue Fragen werden vorbereitet …'));
+  gin(spinner(gt("Neue Fragen werden vorbereitet …")));
   const qs=await buildQs(G.s); if(!G||G.mode!=='host')return;
   G.qs=qs; G.n=-1; G.players.forEach(p=>{p.score=0;p.streak=0;p.ok=0;p.res=[];p.rank=0});
   send('lobby',{again:1}); hostLobby(); AU.play('lobby');
@@ -2701,23 +2700,23 @@ async function rematch(){
 
 /* ---------- LIVE: player (phone) ---------- */
 function joinForm(pin,err){
-  stage('Mitspielen'); AU.stop();
+  stage(gt("Mitspielen")); AU.stop();
   const saved=LS.get('gd_gname',null)||{name:NAMES[rnd(NAMES.length)],av:AVS[rnd(AVS.length)]};
   let av=saved.av;
-  gin(center(`<div class="gme" id="gav">${av}</div><h2>Mitspielen</h2>
+  gin(center(`<div class="gme" id="gav">${av}</div><h2>${gt("Mitspielen")}</h2>
     <form class="gjoin" id="gjf">${err?`<div class="gerr">${H(err)}</div>`:''}
-      <input class="pin" id="gpin" inputmode="numeric" pattern="[0-9 ]*" maxlength="7" placeholder="Spiel-PIN" value="${A(pin||'')}" autocomplete="off">
-      <input id="gname" maxlength="18" placeholder="Dein Name" value="${A(saved.name)}" autocomplete="nickname">
+      <input class="pin" id="gpin" inputmode="numeric" pattern="[0-9 ]*" maxlength="7" placeholder="${gt("Spiel-PIN")}" value="${A(pin||'')}" autocomplete="off">
+      <input id="gname" maxlength="18" placeholder="${gt("Dein Name")}" value="${A(saved.name)}" autocomplete="nickname">
       <div class="gavs">${AVS.slice(0,16).map(a=>`<button type="button" data-a="${a}" class="${a===av?'on':''}">${a}</button>`).join('')}</div>
-      <button class="gbtn" style="justify-content:center">${ic('log-in')} Los geht's</button>
-      <button type="button" class="gbtn ghost" style="justify-content:center" id="gnm">${ic('dice-5')} Zufälliger Name</button></form>`));
+      <button class="gbtn" style="justify-content:center">${ic('log-in')} ${gt("Los geht's")}</button>
+      <button type="button" class="gbtn ghost" style="justify-content:center" id="gnm">${ic('dice-5')} ${gt("Zufälliger Name")}</button></form>`));
   const f=$('gjf');
   f.querySelectorAll('.gavs button').forEach(b=>b.onclick=()=>{av=b.dataset.a;f.querySelectorAll('.gavs button').forEach(x=>x.classList.toggle('on',x===b));$('gav').textContent=av;AU.sfx('join')});
   $('gnm').onclick=()=>{$('gname').value=NAMES[rnd(NAMES.length)]};
   if(!pin)setTimeout(()=>$('gpin').focus(),60);
   f.onsubmit=ev=>{ev.preventDefault(); AU.wake();
     const p=$('gpin').value.replace(/\D/g,''), n=$('gname').value.trim();
-    if(p.length!==6){joinForm(p,'Die PIN hat 6 Ziffern.');return}
+    if(p.length!==6){joinForm(p,gt("Die PIN hat 6 Ziffern."));return}
     if(!n){$('gname').focus();return}
     LS.set('gd_gname',{name:n,av}); playerJoin(p,n,av)};
 }
@@ -2725,62 +2724,62 @@ async function playerJoin(pin,name,av){
   const prev=LS.get('gd_gjoin',null);
   const pid=prev&&prev.pin===pin&&Date.now()-prev.at<3*3600e3?prev.pid:uid()+uid();
   G={mode:'player',pin,pid,name,av,joined:false,last:Date.now(),score:0,q:null};
-  stage('Spiel '+pin.slice(0,3)+' '+pin.slice(3)); gin(spinner('Verbinde mit dem Spiel …'));
+  stage(gt("Spiel ")+pin.slice(0,3)+' '+pin.slice(3)); gin(spinner(gt("Verbinde mit dem Spiel …")));
   try{ G.ch=await openCh(pin,{welcome:pWelcome,kick:pKick,ready:pReady,q:pQ,count:pCount,reveal:pReveal,scores:()=>{},end:pEnd,hb:pHb,lobby:pLobby,bye:pBye}) }
-  catch(e){ if(G&&G.mode==='player')joinForm(pin,'Keine Verbindung zum Spielserver. Bitte noch einmal versuchen.'); return }
+  catch(e){ if(G&&G.mode==='player')joinForm(pin,gt("Keine Verbindung zum Spielserver. Bitte noch einmal versuchen.")); return }
   let tries=0;
-  const tryJoin=()=>{ if(!G||G.mode!=='player'||G.joined)return; if(tries++>=5){closeCh();joinForm(pin,'Kein laufendes Spiel mit dieser PIN gefunden.');return}
+  const tryJoin=()=>{ if(!G||G.mode!=='player'||G.joined)return; if(tries++>=5){closeCh();joinForm(pin,gt("Kein laufendes Spiel mit dieser PIN gefunden."));return}
     send('join',{pid,name,av}); later(tryJoin,2200) };
   tryJoin();
   G.watch=setInterval(()=>{ if(!G||G.mode!=='player'||!G.joined)return; const off=Date.now()-G.last>15000, m=$('gm');
-    let b=m&&m.querySelector('.goff'); if(off&&!b&&m){b=document.createElement('div');b.className='goff';b.textContent='Verbindung unterbrochen …';m.appendChild(b)} else if(!off&&b)b.remove() },3000);
+    let b=m&&m.querySelector('.goff'); if(off&&!b&&m){b=document.createElement('div');b.className='goff';b.textContent=gt("Verbindung unterbrochen …");m.appendChild(b)} else if(!off&&b)b.remove() },3000);
 }
 const mine=p=>p&&p.pid===G.pid;
 const alive=()=>{if(G)G.last=Date.now()};
 function pWelcome(p){ if(!G||G.mode!=='player'||!mine(p))return; alive();
   const first=!G.joined; G.joined=true; G.name=p.name; G.team=p.team; G.title=p.title;
   LS.set('gd_gjoin',{pin:G.pin,pid:G.pid,at:Date.now()});
-  if(first){AU.sfx('join'); if(p.phase==='lobby'||p.phase==='end')pWait(); else gin(center(`<div class="gme">${G.av}</div><h2>Du bist dabei!</h2><p>Bei der nächsten Frage geht es los.</p>`))}
+  if(first){AU.sfx('join'); if(p.phase==='lobby'||p.phase==='end')pWait(); else gin(center(`<div class="gme">${G.av}</div><h2>${gt("Du bist dabei!")}</h2><p>${gt("Bei der nächsten Frage geht es los.")}</p>`))}
 }
 function pWait(){
-  gin(center(`<div class="gme">${G.av}</div><h2>Du bist dabei, ${H(G.name)}!</h2><p>Siehst du deinen Namen auf dem großen Bildschirm?</p>
-    ${G.team?`<div class="gpl" style="cursor:default"><span class="tm t${G.team}">${ic(TEAMS[G.team-1][1])}</span> Team ${TEAMS[G.team-1][0]}</div>`:''}<p style="opacity:.7">Warte, bis die Spielleitung startet …</p>`));
+  gin(center(`<div class="gme">${G.av}</div><h2>${gt("Du bist dabei,")} ${H(G.name)}!</h2><p>${gt("Siehst du deinen Namen auf dem großen Bildschirm?")}</p>
+    ${G.team?`<div class="gpl" style="cursor:default"><span class="tm t${G.team}">${ic(TEAMS[G.team-1][1])}</span> Team ${TEAMS[G.team-1][0]}</div>`:''}<p style="opacity:.7">${gt("Warte, bis die Spielleitung startet …")}</p>`));
 }
 function pLobby(){ if(!G||G.mode!=='player'||!G.joined)return; alive(); G.score=0; pWait() }
 function pKick(p){ if(!G||G.mode!=='player'||!mine(p))return; closeCh(); LS.set('gd_gjoin',null); G.mode='player-out';
-  gin(center(`<h2>Du wurdest aus dem Spiel entfernt</h2><a class="gbtn" href="#/play">Zu den Spielen</a>`)) }
-function pBye(){ if(!G||G.mode!=='player')return; closeCh(); G.mode='player-out'; gin(center(`<h2>Die Spielleitung hat das Spiel beendet</h2><a class="gbtn" href="#/play">Zu den Spielen</a>`)) }
+  gin(center(`<h2>${gt("Du wurdest aus dem Spiel entfernt")}</h2><a class="gbtn" href="#/play">${gt("Zu den Spielen")}</a>`)) }
+function pBye(){ if(!G||G.mode!=='player')return; closeCh(); G.mode='player-out'; gin(center(`<h2>${gt("Die Spielleitung hat das Spiel beendet")}</h2><a class="gbtn" href="#/play">${gt("Zu den Spielen")}</a>`)) }
 function pHb(p){ if(!G||G.mode!=='player')return; alive() }
 function pReady(p){ if(!G||G.mode!=='player'||!G.joined)return; alive(); clearTimers();
-  const [lab,icn]=TYPES[p.t]||['Frage','help-circle'];
-  gin(center(`<div class="gready"><div class="gnum">${p.n+1}</div></div><div class="gtyp">${ic(icn)} ${lab}${p.dbl?' · doppelte Punkte!':''}</div><p>Schau nach vorne – gleich geht's los!</p>`));
+  const [lab,icn]=TYPES[p.t]||[gt("Frage"),'help-circle'];
+  gin(center(`<div class="gready"><div class="gnum">${p.n+1}</div></div><div class="gtyp">${ic(icn)} ${gt(lab)}${p.dbl?gt(" · doppelte Punkte!"):''}</div><p>${gt("Schau nach vorne – gleich geht's los!")}</p>`));
 }
 function pQ(q){ if(!G||G.mode!=='player'||!G.joined)return; alive(); clearTimers(); G.q=q; G.sent=false;
   askQ(q,q.n,q.total,(v)=>{ if(G.sent)return; G.sent=true;
     if(v!=null){send('ans',{pid:G.pid,n:q.n,v}); AU.sfx('send')}
-    later(()=>{ if(G&&G.q===q&&G.mode==='player')gin(center(`<div class="gspin"></div><h2>${v==null?'Zeit abgelaufen':'Antwort ist raus!'}</h2><p id="gpc">Warte auf die anderen …</p>`)) },v==null?0:500);
+    later(()=>{ if(G&&G.q===q&&G.mode==='player')gin(center(`<div class="gspin"></div><h2>${v==null?gt("Zeit abgelaufen"):gt("Antwort ist raus!")}</h2><p id="gpc">${gt("Warte auf die anderen …")}</p>`)) },v==null?0:500);
   });
 }
-function pCount(p){ alive(); const c=$('gpc'); if(c&&p)c.textContent=`${p.a} von ${p.of} haben geantwortet …`}
+function pCount(p){ alive(); const c=$('gpc'); if(c&&p)c.textContent=`${p.a} ${gt("von")} ${p.of} ${gt("haben geantwortet …")}`}
 function pReveal(p){ if(!G||G.mode!=='player'||!G.joined)return; alive(); clearTimers();
-  const r=p.res&&p.res[G.pid]; if(!r){gin(center(`<h2>Gleich bist du dabei</h2><p>Ab der nächsten Frage zählen deine Punkte.</p>`));return}
+  const r=p.res&&p.res[G.pid]; if(!r){gin(center(`<h2>${gt("Gleich bist du dabei")}</h2><p>${gt("Ab der nächsten Frage zählen deine Punkte.")}</p>`));return}
   G.score=r.score; setScore(`<span class="gscore">${fmt(r.score)}</span>`);
   if(r.ok)AU.sfx('ok'); else if(r.ok===false)AU.sfx('bad');
   gin(center(`<div class="gres ${r.ok?'ok':r.ok===null?'poll':'bad'}" style="width:100%;max-width:420px">
-    <h3>${r.ok?'Richtig!':r.ok===null?'Stimme gezählt':r.answered?'Leider falsch':'Zeit abgelaufen'}</h3>
-    ${r.ok?`<div class="pts">+${fmt(r.pts)}</div>`:''}${r.streak>=2?`<div class="gstreak">🔥 ${r.streak} richtig in Folge</div>`:''}
-    ${r.ok===false&&p.right?`<div class="ans">Richtig ist: <b>${H(p.right)}</b></div>`:''}</div>
-    <h2>Platz ${r.rank} <span style="opacity:.6;font-size:1rem">von ${r.of}</span></h2>
-    <p>${r.ahead?`${fmt(r.ahead.gap)} Punkte hinter ${H(r.ahead.name)}`:'Du führst! 🏆'}</p>`));
+    <h3>${r.ok?gt("Richtig!"):r.ok===null?gt("Stimme gezählt"):r.answered?gt("Leider falsch"):gt("Zeit abgelaufen")}</h3>
+    ${r.ok?`<div class="pts">+${fmt(r.pts)}</div>`:''}${r.streak>=2?`<div class="gstreak">🔥 ${r.streak} ${gt("richtig in Folge")}</div>`:''}
+    ${r.ok===false&&p.right?`<div class="ans">${gt("Richtig ist:")} <b>${H(p.right)}</b></div>`:''}</div>
+    <h2>${gt("Platz")} ${r.rank} <span style="opacity:.6;font-size:1rem">${gt("von")} ${r.of}</span></h2>
+    <p>${r.ahead?`${fmt(r.ahead.gap)} ${gt("Punkte hinter")} ${H(r.ahead.name)}`:gt("Du führst! 🏆")}</p>`));
 }
 function pEnd(p){ if(!G||G.mode!=='player'||!G.joined)return; alive(); clearTimers();
   const r=p.res&&p.res[G.pid];
   if(!r){pWait();return}
   const medal=['🥇','🥈','🥉'][r.rank-1]||'🎉';
   const tr=p.teams&&r.team?p.teams.findIndex(t=>t.k===r.team)+1:0;
-  gin(center(`<div class="gme">${medal}</div><h2>Platz ${r.rank} von ${r.of}</h2><div class="gbig">${fmt(r.score)}<small>Punkte</small></div>
-    <div class="gstats"><div><b>${r.ok}</b><span>richtig</span></div>${tr?`<div><b>${tr}.</b><span>Team ${TEAMS[r.team-1][0]}</span></div>`:''}</div>
-    <p style="opacity:.75">Bleib hier – vielleicht startet gleich eine neue Runde.</p>`));
+  gin(center(`<div class="gme">${medal}</div><h2>${gt("Platz")} ${r.rank} ${gt("von")} ${r.of}</h2><div class="gbig">${fmt(r.score)}<small>${gt("Punkte")}</small></div>
+    <div class="gstats"><div><b>${r.ok}</b><span>${gt("richtig")}</span></div>${tr?`<div><b>${tr}.</b><span>Team ${TEAMS[r.team-1][0]}</span></div>`:''}</div>
+    <p style="opacity:.75">${gt("Bleib hier – vielleicht startet gleich eine neue Runde.")}</p>`));
   AU.sfx(r.rank<=3?'fanfare':'place'); if(r.rank<=3)confetti();
 }
 
@@ -2789,14 +2788,14 @@ function memoryStart(s){
   const pool=poolFor(s).filter(i=>{const g=qGloss(E[i]);return g&&g.length<=75&&!g.includes('___')});
   const pairs=Math.min(s.pairs||6,pool.length);
   stage('Memory');
-  if(pairs<3){gin(center(`<h2>Zu wenige Wörter</h2><p>Für Memory brauchst du mindestens 3 Wörter mit kurzer Bedeutung.</p><a class="gbtn" href="#/play/memory">Zurück</a>`));return}
+  if(pairs<3){gin(center(`<h2>${gt("Zu wenige Wörter")}</h2><p>${gt("Für Memory brauchst du mindestens 3 Wörter mit kurzer Bedeutung.")}</p><a class="gbtn" href="#/play/memory">${gt("Zurück")}</a>`));return}
   const pick=sample(pool,pairs), cards=shuffle(pick.flatMap((i,k)=>[{k,w:1,t:plainW(E[i].w),i},{k,w:0,t:qGloss(E[i]),i}]));
   G={mode:'memory',kind:'memory',s,cards,open:[],done:0,moves:0,t0:Date.now(),pairs,lock:false};
   gin(`<div class="gmem" id="gmem">${cards.map((c,j)=>`<button class="gcd" data-j="${j}"><div class="in"><div class="fa">${ic('sparkles')}</div><div class="ba ${c.w?'w':''}">${H(c.t)}</div></div></button>`).join('')}</div>`);
   G.clock=setInterval(memScore,1000); memScore(); AU.play('calm');
   document.querySelectorAll('#gmem .gcd').forEach(b=>b.onclick=()=>memFlip(+b.dataset.j,b));
 }
-function memScore(){ if(!G||G.mode!=='memory')return; setScore(`<span class="gscore">${G.done}/${G.pairs}<small>${G.moves} Züge · ${Math.round((Date.now()-G.t0)/1000)} s</small></span>`) }
+function memScore(){ if(!G||G.mode!=='memory')return; setScore(`<span class="gscore">${G.done}/${G.pairs}<small>${G.moves} ${gt("Züge ·")} ${Math.round((Date.now()-G.t0)/1000)} s</small></span>`) }
 function memFlip(j,b){
   if(G.lock||b.classList.contains('up')||b.classList.contains('done'))return;
   b.classList.add('up'); AU.sfx('flip'); G.open.push([j,b]);
@@ -2814,20 +2813,20 @@ function memEnd(){
   const stars=G.moves<=G.pairs*1.5?3:G.moves<=G.pairs*2.2?2:1, rec=!prev||sec<prev.sec;
   if(rec){best[key]={sec,moves:G.moves};LS.set('gd_gbest',best)}
   AU.sfx('fanfare'); confetti();
-  gin(center(`<h2>Alle Paare gefunden!</h2><div class="gbig" style="font-size:3rem">${'⭐'.repeat(stars)}</div>
-    <div class="gstats"><div><b>${G.moves}</b><span>Züge</span></div><div><b>${sec} s</b><span>Zeit</span></div><div><b>${prev?Math.min(prev.sec,sec):sec} s</b><span>Bestzeit</span></div></div>
-    <div class="gmiss"><h4>Deine Wörter</h4>${[...new Set(G.cards.map(c=>c.i))].map(i=>`<a href="#/w/${encodeURIComponent(E[i].w)}"><b>${H(plainW(E[i].w))}</b> – ${H(qGloss(E[i]))}</a>`).join('')}</div>
-    <div class="row" style="justify-content:center;gap:.5rem"><button class="gbtn" onclick="PLAY.again()">${ic('rotate-ccw')} Nochmal</button><a class="gbtn ghost" href="#/play">Andere Spiele</a></div>`));
+  gin(center(`<h2>${gt("Alle Paare gefunden!")}</h2><div class="gbig" style="font-size:3rem">${'⭐'.repeat(stars)}</div>
+    <div class="gstats"><div><b>${G.moves}</b><span>${gt("Züge")}</span></div><div><b>${sec} s</b><span>${gt("Zeit")}</span></div><div><b>${prev?Math.min(prev.sec,sec):sec} s</b><span>${gt("Bestzeit")}</span></div></div>
+    <div class="gmiss"><h4>${gt("Deine Wörter")}</h4>${[...new Set(G.cards.map(c=>c.i))].map(i=>`<a href="#/w/${encodeURIComponent(E[i].w)}"><b>${H(plainW(E[i].w))}</b> – ${H(qGloss(E[i]))}</a>`).join('')}</div>
+    <div class="row" style="justify-content:center;gap:.5rem"><button class="gbtn" onclick="PLAY.again()">${ic('rotate-ccw')} ${gt("Nochmal")}</button><a class="gbtn ghost" href="#/play">${gt("Andere Spiele")}</a></div>`));
   G.mode='memory-end';
 }
 
 /* ---------- ARTIKEL-BLITZ: as many der/die/das as possible in 60 seconds ---------- */
 function blitzStart(s){
   const pool=poolFor(Object.assign({},s)).filter(i=>E[i].ps==='n'&&['der','die','das'].includes(E[i].ar));
-  stage('Artikel-Blitz');
-  if(pool.length<5){gin(center(`<h2>Zu wenige Nomen</h2><p>Wähle eine Auswahl mit mehr Nomen.</p><a class="gbtn" href="#/play/blitz">Zurück</a>`));return}
+  stage(gt("Artikel-Blitz"));
+  if(pool.length<5){gin(center(`<h2>${gt("Zu wenige Nomen")}</h2><p>${gt("Wähle eine Auswahl mit mehr Nomen.")}</p><a class="gbtn" href="#/play/blitz">${gt("Zurück")}</a>`));return}
   G={mode:'blitz',kind:'blitz',s,pool,score:0,streak:0,mult:1,ok:0,bad:0,miss:[],cur:null,end:0,dur:60,last:-1};
-  gin(center(`<h2>Artikel-Blitz</h2><p>60 Sekunden: Tippe für jedes Wort den richtigen Artikel.<br>Fünf richtige hintereinander erhöhen deinen Multiplikator.</p>
+  gin(center(`<h2>${gt("Artikel-Blitz")}</h2><p>${gt("60 Sekunden: Tippe für jedes Wort den richtigen Artikel.")}<br>${gt("Fünf richtige hintereinander erhöhen deinen Multiplikator.")}</p>
     <button class="gbtn" id="gbgo">${ic('zap')} Start</button>`));
   $('gbgo').onclick=()=>{AU.wake(); blitzCount(3)};
 }
@@ -2859,11 +2858,11 @@ function blitzEnd(){
   if(rec){best[key]={score:G.score};LS.set('gd_gbest',best)}
   AU.sfx('fanfare'); if(rec&&G.score>0)confetti();
   G.miss=[...new Set(G.miss)];
-  gin(center(`<h2>${rec&&prev?'Neuer Rekord!':'Zeit um!'}</h2><div class="gbig">${G.score}<small>Punkte</small></div>
-    <div class="gstats"><div><b>${G.ok}</b><span>richtig</span></div><div><b>${G.bad}</b><span>falsch</span></div><div><b>${prev?Math.max(prev.score,G.score):G.score}</b><span>Rekord</span></div></div>
-    ${G.miss.length?`<div class="gmiss"><h4>Diese Artikel merken</h4>${G.miss.map(i=>`<a href="#/w/${encodeURIComponent(E[i].w)}"><b>${E[i].ar} ${H(plainW(E[i].w))}</b></a>`).join('')}</div>
-      <button class="gbtn ghost" onclick="PLAY.saveMiss()">${ic('list-plus')} In Liste „Aus Spielen" speichern</button>`:''}
-    <div class="row" style="justify-content:center;gap:.5rem"><button class="gbtn" onclick="PLAY.again()">${ic('rotate-ccw')} Nochmal</button><a class="gbtn ghost" href="#/play">Andere Spiele</a></div>`));
+  gin(center(`<h2>${rec&&prev?gt("Neuer Rekord!"):gt("Zeit um!")}</h2><div class="gbig">${G.score}<small>${gt("Punkte")}</small></div>
+    <div class="gstats"><div><b>${G.ok}</b><span>${gt("richtig")}</span></div><div><b>${G.bad}</b><span>${gt("falsch")}</span></div><div><b>${prev?Math.max(prev.score,G.score):G.score}</b><span>${gt("Rekord")}</span></div></div>
+    ${G.miss.length?`<div class="gmiss"><h4>${gt("Diese Artikel merken")}</h4>${G.miss.map(i=>`<a href="#/w/${encodeURIComponent(E[i].w)}"><b>${E[i].ar} ${H(plainW(E[i].w))}</b></a>`).join('')}</div>
+      <button class="gbtn ghost" onclick="PLAY.saveMiss()">${ic('list-plus')} ${gt("In Liste „Aus Spielen\" speichern")}</button>`:''}
+    <div class="row" style="justify-content:center;gap:.5rem"><button class="gbtn" onclick="PLAY.again()">${ic('rotate-ccw')} ${gt("Nochmal")}</button><a class="gbtn ghost" href="#/play">${gt("Andere Spiele")}</a></div>`));
   G.miss=G.miss.map(i=>E[i].w); G.mode='blitz-end';
 }
 
@@ -2873,14 +2872,14 @@ const ETYPES={mc:'Quiz (Auswahl)',tf:'Wahr oder falsch',type:'Antwort tippen',or
 function viewQuizzes(){
   document.body.classList.remove('ingame');
   const ids=Object.keys(QZ()).sort((a,b)=>(QZ()[b].at||0)-(QZ()[a].at||0));
-  V().innerHTML=`<div class="row" style="margin-bottom:.4rem"><a class="btn sm" href="#/play">${ic('arrow-left')} Spiele</a></div>
-    <h1 class="page">Eigene Quizze</h1><p class="sub">Schreibe eigene Fragen und spiele sie allein oder live mit deiner Gruppe. Mit Konto werden sie auf allen Geräten gespeichert.</p>
-    <div class="row" style="margin-bottom:1rem"><button class="btn primary" onclick="PLAY.newQuiz()">＋ Neues Quiz</button></div>
-    ${ids.length?ids.map(id=>{const q=QZ()[id];return `<div class="panelcard" style="cursor:default"><span class="ic">${ic('file-question')}</span><div style="flex:1"><div class="big">${H(q.title||'Ohne Titel')}</div>
-      <div class="meta">${q.qs.length} ${q.qs.length===1?'Frage':'Fragen'}</div></div>
-      <div class="row" style="gap:.35rem;flex-wrap:wrap;justify-content:flex-end"><a class="btn sm" href="#/play/edit/${encodeURIComponent(id)}">${ic('pencil')} Bearbeiten</a>
-      <button class="btn sm" onclick="PLAY.playQuiz(${jsArg(id)},'solo')">${ic('user')} Allein</button><button class="btn sm primary" onclick="PLAY.playQuiz(${jsArg(id)},'host')">${ic('users')} Live</button></div></div>`}).join('')
-      :`<div class="empty"><span class="em">${ic('file-question')}</span>Noch keine eigenen Quizze.</div>`}`;
+  V().innerHTML=`<div class="row" style="margin-bottom:.4rem"><a class="btn sm" href="#/play">${ic('arrow-left')} ${gt("Spiele")}</a></div>
+    <h1 class="page">${gt("Eigene Quizze")}</h1><p class="sub">${gt("Schreibe eigene Fragen und spiele sie allein oder live mit deiner Gruppe. Mit Konto werden sie auf allen Geräten gespeichert.")}</p>
+    <div class="row" style="margin-bottom:1rem"><button class="btn primary" onclick="PLAY.newQuiz()">${gt("＋ Neues Quiz")}</button></div>
+    ${ids.length?ids.map(id=>{const q=QZ()[id];return `<div class="panelcard" style="cursor:default"><span class="ic">${ic('file-question')}</span><div style="flex:1"><div class="big">${H(q.title||gt("Ohne Titel"))}</div>
+      <div class="meta">${q.qs.length} ${q.qs.length===1?gt("Frage"):gt("Fragen")}</div></div>
+      <div class="row" style="gap:.35rem;flex-wrap:wrap;justify-content:flex-end"><a class="btn sm" href="#/play/edit/${encodeURIComponent(id)}">${ic('pencil')} ${gt("Bearbeiten")}</a>
+      <button class="btn sm" onclick="PLAY.playQuiz(${jsArg(id)},'solo')">${ic('user')} ${gt("Allein")}</button><button class="btn sm primary" onclick="PLAY.playQuiz(${jsArg(id)},'host')">${ic('users')} Live</button></div></div>`}).join('')
+      :`<div class="empty"><span class="em">${ic('file-question')}</span>${gt("Noch keine eigenen Quizze.")}</div>`}`;
   drawIcons();
 }
 function newQuiz(){ const id=uid(); QZ()[id]={title:'',qs:[{t:'mc',p:'',o:['','','',''],c:0,dur:20}],at:Date.now()}; savePrefs(); go('play/edit/'+id) }
@@ -2892,29 +2891,29 @@ function viewEdit(id){
 }
 function drawEdit(){
   const q=EDIT.q;
-  V().innerHTML=`<div class="row" style="margin-bottom:.4rem"><a class="btn sm" href="#/play/quizzes">${ic('arrow-left')} Eigene Quizze</a></div>
-    <div class="gset" style="max-width:780px"><label class="f">Titel</label><input type="text" id="qt" value="${A(q.title)}" placeholder="z. B. Lektion 5 – Wohnen">
+  V().innerHTML=`<div class="row" style="margin-bottom:.4rem"><a class="btn sm" href="#/play/quizzes">${ic('arrow-left')} ${gt("Eigene Quizze")}</a></div>
+    <div class="gset" style="max-width:780px"><label class="f">${gt("Titel")}</label><input type="text" id="qt" value="${A(q.title)}" placeholder="${gt("z. B. Lektion 5 – Wohnen")}">
     <div id="qes">${q.qs.map((x,k)=>qeHTML(x,k)).join('')}</div>
-    <div class="row" style="gap:.4rem;flex-wrap:wrap"><button class="btn" onclick="PLAY.qeAdd()">＋ Frage</button><span class="spacer"></span>
-      <button class="btn" onclick="PLAY.qeDel()" style="color:#e5484d">${ic('trash-2')} Quiz löschen</button><button class="btn primary" onclick="PLAY.qeSave()">${ic('save')} Speichern</button></div></div>`;
+    <div class="row" style="gap:.4rem;flex-wrap:wrap"><button class="btn" onclick="PLAY.qeAdd()">${gt("＋ Frage")}</button><span class="spacer"></span>
+      <button class="btn" onclick="PLAY.qeDel()" style="color:#e5484d">${ic('trash-2')} ${gt("Quiz löschen")}</button><button class="btn primary" onclick="PLAY.qeSave()">${ic('save')} ${gt("Speichern")}</button></div></div>`;
   drawIcons();
 }
 function qeHTML(x,k){
-  const opts=(x.o||[]).map((o,j)=>`<div class="opt">${x.t==='poll'?'':`<input type="radio" name="c${k}" value="${j}" ${x.c===j?'checked':''} title="Richtige Antwort">`}<input type="text" data-k="${k}" data-o="${j}" value="${A(o)}" placeholder="Antwort ${j+1}"></div>`).join('');
+  const opts=(x.o||[]).map((o,j)=>`<div class="opt">${x.t==='poll'?'':`<input type="radio" name="c${k}" value="${j}" ${x.c===j?'checked':''} title="${gt("Richtige Antwort")}">`}<input type="text" data-k="${k}" data-o="${j}" value="${A(o)}" placeholder="${gt("Antwort ")}${j+1}"></div>`).join('');
   let body='';
-  if(x.t==='mc'||x.t==='poll')body=opts+(x.o.length<4?`<button class="btn sm" onclick="PLAY.qeOpt(${k},1)">＋ Antwort</button>`:'')+(x.o.length>2?` <button class="btn sm" onclick="PLAY.qeOpt(${k},-1)">− Antwort</button>`:'');
-  else if(x.t==='tf')body=`<div class="gseg"><button class="${x.c===0?'on':''}" onclick="PLAY.qeSet(${k},'c',0)">Wahr</button><button class="${x.c===1?'on':''}" onclick="PLAY.qeSet(${k},'c',1)">Falsch</button></div>`;
-  else if(x.t==='type')body=`<label class="f">Richtige Antworten (mit Komma trennen)</label><input type="text" data-k="${k}" data-f="ans" value="${A((x.ans||[]).join(', '))}">`;
-  else if(x.t==='order')body=`<label class="f">Teile in der richtigen Reihenfolge (eine Zeile pro Teil)</label><textarea rows="4" data-k="${k}" data-f="items">${H((x.items||[]).join('\n'))}</textarea>`;
-  else if(x.t==='slider')body=`<div class="two"><div><label class="f">Von</label><input type="number" data-k="${k}" data-f="min" value="${A(x.min??0)}"></div><div><label class="f">Bis</label><input type="number" data-k="${k}" data-f="max" value="${A(x.max??100)}"></div>
-    <div><label class="f">Richtig</label><input type="number" data-k="${k}" data-f="c" value="${A(x.c??50)}"></div><div><label class="f">Einheit</label><input type="text" data-k="${k}" data-f="unit" value="${A(x.unit||'')}"></div></div>`;
-  return `<div class="gqe"><div class="hd"><b>Frage ${k+1}</b>
-    <select onchange="PLAY.qeType(${k},this.value)">${Object.entries(ETYPES).map(([t,l])=>`<option value="${t}" ${t===x.t?'selected':''}>${l}</option>`).join('')}</select>
+  if(x.t==='mc'||x.t==='poll')body=opts+(x.o.length<4?`<button class="btn sm" onclick="PLAY.qeOpt(${k},1)">${gt("＋ Antwort")}</button>`:'')+(x.o.length>2?` <button class="btn sm" onclick="PLAY.qeOpt(${k},-1)">${gt("− Antwort")}</button>`:'');
+  else if(x.t==='tf')body=`<div class="gseg"><button class="${x.c===0?'on':''}" onclick="PLAY.qeSet(${k},'c',0)">${gt("Wahr")}</button><button class="${x.c===1?'on':''}" onclick="PLAY.qeSet(${k},'c',1)">${gt("Falsch")}</button></div>`;
+  else if(x.t==='type')body=`<label class="f">${gt("Richtige Antworten (mit Komma trennen)")}</label><input type="text" data-k="${k}" data-f="ans" value="${A((x.ans||[]).join(', '))}">`;
+  else if(x.t==='order')body=`<label class="f">${gt("Teile in der richtigen Reihenfolge (eine Zeile pro Teil)")}</label><textarea rows="4" data-k="${k}" data-f="items">${H((x.items||[]).join('\n'))}</textarea>`;
+  else if(x.t==='slider')body=`<div class="two"><div><label class="f">${gt("Von")}</label><input type="number" data-k="${k}" data-f="min" value="${A(x.min??0)}"></div><div><label class="f">${gt("Bis")}</label><input type="number" data-k="${k}" data-f="max" value="${A(x.max??100)}"></div>
+    <div><label class="f">${gt("Richtig")}</label><input type="number" data-k="${k}" data-f="c" value="${A(x.c??50)}"></div><div><label class="f">${gt("Einheit")}</label><input type="text" data-k="${k}" data-f="unit" value="${A(x.unit||'')}"></div></div>`;
+  return `<div class="gqe"><div class="hd"><b>${gt("Frage ")}${k+1}</b>
+    <select onchange="PLAY.qeType(${k},this.value)">${Object.entries(ETYPES).map(([t,l])=>`<option value="${t}" ${t===x.t?'selected':''}>${gt(l)}</option>`).join('')}</select>
     <select onchange="PLAY.qeSet(${k},'dur',+this.value)">${[5,10,20,30,60,90].map(s=>`<option value="${s}" ${s===(x.dur||20)?'selected':''}>${s} s</option>`).join('')}</select>
-    <button class="btn sm" title="Löschen" onclick="PLAY.qeRm(${k})">${ic('x')}</button></div>
-    <input type="text" data-k="${k}" data-f="p" value="${A(x.p)}" placeholder="Frage eingeben">
+    <button class="btn sm" title="${gt("Löschen")}" onclick="PLAY.qeRm(${k})">${ic('x')}</button></div>
+    <input type="text" data-k="${k}" data-f="p" value="${A(x.p)}" placeholder="${gt("Frage eingeben")}">
     <div style="margin-top:.4rem">${body}</div>
-    <label style="display:inline-flex;gap:.4rem;align-items:center;margin-top:.5rem;font-size:.85rem"><input type="checkbox" ${x.dbl?'checked':''} onchange="PLAY.qeSet(${k},'dbl',this.checked?1:0)"> doppelte Punkte</label></div>`;
+    <label style="display:inline-flex;gap:.4rem;align-items:center;margin-top:.5rem;font-size:.85rem"><input type="checkbox" ${x.dbl?'checked':''} onchange="PLAY.qeSet(${k},'dbl',this.checked?1:0)"> ${gt("doppelte Punkte")}</label></div>`;
 }
 function qeRead(){ // copy the inputs into EDIT
   const q=EDIT.q; const t=$('qt'); if(t)q.title=t.value.trim();
@@ -2933,44 +2932,44 @@ const QE={
   opt(k,d){qeRead();const x=EDIT.q.qs[k];if(d>0&&x.o.length<4)x.o.push('');if(d<0&&x.o.length>2){x.o.pop();if(x.c>=x.o.length)x.c=0}drawEdit()},
   set(k,f,v){qeRead();EDIT.q.qs[k][f]=v;drawEdit()},
   type(k,t){qeRead();const x=EDIT.q.qs[k], p=x.p, dur=x.dur||DUR[t];
-    EDIT.q.qs[k]=t==='mc'||t==='poll'?{t,p,o:(x.o&&x.o.length>=2?x.o:['','','','']).slice(0,4),c:0,dur}:t==='tf'?{t,p,o:['Wahr','Falsch'],c:0,dur}:t==='type'?{t,p,ans:[],dur}
+    EDIT.q.qs[k]=t==='mc'||t==='poll'?{t,p,o:(x.o&&x.o.length>=2?x.o:['','','','']).slice(0,4),c:0,dur}:t==='tf'?{t,p,o:[gt("Wahr"),gt("Falsch")],c:0,dur}:t==='type'?{t,p,ans:[],dur}
       :t==='order'?{t,p,items:[],dur}:{t,p,min:0,max:100,c:50,unit:'',step:1,dur}; drawEdit()},
   save(){qeRead();const q=EDIT.q, bad=[];
     q.qs.forEach((x,k)=>{ if(!x.p.trim())bad.push(k+1); else if((x.t==='mc'||x.t==='poll')&&x.o.filter(o=>o.trim()).length<2)bad.push(k+1);
       else if(x.t==='type'&&!(x.ans||[]).length)bad.push(k+1); else if(x.t==='order'&&(x.items||[]).length<2)bad.push(k+1); else if(x.t==='slider'&&!(x.max>x.min))bad.push(k+1)});
-    if(bad.length){toast('Bitte Frage '+bad.join(', ')+' vervollständigen');return}
+    if(bad.length){toast(gt("Bitte Frage ")+bad.join(', ')+gt(" vervollständigen"));return}
     q.qs.forEach(x=>{if(x.o&&(x.t==='mc'||x.t==='poll')){const keep=x.o.map((o,j)=>[o.trim(),j]).filter(([o])=>o); const ci=keep.findIndex(([,j])=>j===x.c); x.o=keep.map(([o])=>o); x.c=Math.max(0,ci)}
       if(x.t==='slider')x.step=Math.max(1,Math.round((x.max-x.min)/100))});
-    q.title=q.title||'Mein Quiz'; q.at=Date.now(); QZ()[EDIT.id]=q; savePrefs(); toast('Quiz gespeichert'); go('play/quizzes')},
-  del(){ if(!confirm('Dieses Quiz löschen?'))return; delete QZ()[EDIT.id]; savePrefs(); go('play/quizzes') }
+    q.title=q.title||gt("Mein Quiz"); q.at=Date.now(); QZ()[EDIT.id]=q; savePrefs(); toast(gt("Quiz gespeichert")); go('play/quizzes')},
+  del(){ if(!confirm(gt("Dieses Quiz löschen?")))return; delete QZ()[EDIT.id]; savePrefs(); go('play/quizzes') }
 };
 
 /* ---------- HUB and setup ---------- */
 function viewHub(){
   document.body.classList.remove('ingame');
   const card=(cls,href,icon,title,desc,tag)=>`<a class="gcard ${cls}" href="${href}">${tag?`<span class="gtag">${tag}</span>`:''}<span class="gci">${icon}</span><b>${title}</b><span class="d">${desc}</span></a>`;
-  V().innerHTML=`<div class="ghub"><div class="ghero"><span class="gdeco">🎲</span><h1>Spiele</h1><p>Wörter lernen mit Spaß – allein, gegen deinen Rekord oder live mit der ganzen Gruppe.</p></div>
+  V().innerHTML=`<div class="ghub"><div class="ghero"><span class="gdeco">🎲</span><h1>${gt("Spiele")}</h1><p>${gt("Wörter lernen mit Spaß – allein, gegen deinen Rekord oder live mit der ganzen Gruppe.")}</p></div>
     <div class="gcards">
-      ${card('gc1','#/play/host','👥','Live-Quiz mit Gruppe','Du zeigst die Fragen auf einem großen Bildschirm, alle spielen mit ihrem Handy mit – auch in Teams.','Gruppe')}
-      ${card('gc2','#/play/join','📱','Mitspielen','Spiel-PIN eingeben und bei einem Live-Quiz mitmachen.','PIN')}
-      ${card('gc3','#/play/solo','🎯','Allein spielen','Alle Fragetypen mit Zeit, Punkten und Serien – und dein Rekord spielt mit.','Solo')}
-      ${card('gc4','#/play/memory','🃏','Memory','Finde die Paare aus Wort und Bedeutung.','Solo')}
-      ${card('gc5','#/play/blitz','⚡','Artikel-Blitz','der, die oder das? So viele wie möglich in 60 Sekunden.','Solo')}
-      ${card('gc6','#/play/quizzes','✏️','Eigene Quizze','Schreibe eigene Fragen und spiele sie allein oder live.','Editor')}
-      ${card('gc7','#/play/gram','📘','Grammatik-Quiz','Wähle ein Grammatik-Kapitel oder eine Verbliste und übe sie im Quiz – allein oder live mit der Gruppe.','Grammatik')}
+      ${card('gc1','#/play/host','👥',gt("Live-Quiz mit Gruppe"),gt("Du zeigst die Fragen auf einem großen Bildschirm, alle spielen mit ihrem Handy mit – auch in Teams."),gt("Gruppe"))}
+      ${card('gc2','#/play/join','📱',gt("Mitspielen"),gt("Spiel-PIN eingeben und bei einem Live-Quiz mitmachen."),'PIN')}
+      ${card('gc3','#/play/solo','🎯',gt("Allein spielen"),gt("Alle Fragetypen mit Zeit, Punkten und Serien – und dein Rekord spielt mit."),'Solo')}
+      ${card('gc4','#/play/memory','🃏','Memory',gt("Finde die Paare aus Wort und Bedeutung."),'Solo')}
+      ${card('gc5','#/play/blitz','⚡',gt("Artikel-Blitz"),gt("der, die oder das? So viele wie möglich in 60 Sekunden."),'Solo')}
+      ${card('gc6','#/play/quizzes','✏️',gt("Eigene Quizze"),gt("Schreibe eigene Fragen und spiele sie allein oder live."),'Editor')}
+      ${card('gc7','#/play/gram','📘',ui('Grammar quiz','Grammatik-Quiz'),gt("Wähle ein Grammatik-Kapitel oder eine Verbliste und übe sie im Quiz – allein oder live mit der Gruppe."),gt("Grammatik"))}
     </div>
-    <h3 class="gsec">Fragetypen</h3>
-    <div class="gchk" style="pointer-events:none">${Object.values(TYPES).map(([l,i])=>`<label>${ic(i)} ${l}</label>`).join('')}</div></div>`;
+    <h3 class="gsec">${gt("Fragetypen")}</h3>
+    <div class="gchk" style="pointer-events:none">${Object.values(TYPES).map(([l,i])=>`<label>${ic(i)} ${gt(l)}</label>`).join('')}</div></div>`;
   drawIcons();
 }
 const SDEF={src:'all',lvl:1,n:10,types:['mc','gap','tf','art','type'],speed:1,dbl:1,teams:0,pairs:6};
 function srcOptions(cur,kind){
   const o=(v,l)=>`<option value="${A(v)}" ${v===cur?'selected':''}>${H(l)}</option>`;
-  let h=`<optgroup label="Alle Wörter">${o('all:1','Häufige Wörter (leicht)')}${o('all:2','Mehr Wörter (mittel)')}${o('all:3','Großer Wortschatz (schwer)')}</optgroup>`;
-  const ls=Object.keys(lists); if(ls.length)h+=`<optgroup label="Meine Listen">${ls.map(id=>o('list:'+id,`${lists[id].name} (${lists[id].words.length})`)).join('')}</optgroup>`;
-  const ds=Object.keys(decks); if(ds.length)h+=`<optgroup label="Meine Kartenstapel">${ds.map(id=>o('deck:'+id,decks[id].name)).join('')}</optgroup>`;
-  if(kind==='quiz'){const qz=Object.keys(QZ()); if(qz.length)h+=`<optgroup label="Eigene Quizze">${qz.map(id=>o('quiz:'+id,QZ()[id].title||'Mein Quiz')).join('')}</optgroup>`}
-  h+=`<optgroup label="Themen">${CATS.map(c=>o('cat:'+c.id,`${c.emoji} ${c.label}`)).join('')}</optgroup>`;
+  let h=`<optgroup label="${gt("Alle Wörter")}">${o('all:1',gt("Häufige Wörter (leicht)"))}${o('all:2',gt("Mehr Wörter (mittel)"))}${o('all:3',gt("Großer Wortschatz (schwer)"))}</optgroup>`;
+  const ls=Object.keys(lists); if(ls.length)h+=`<optgroup label="${gt("Meine Listen")}">${ls.map(id=>o('list:'+id,`${lists[id].name} (${lists[id].words.length})`)).join('')}</optgroup>`;
+  const ds=Object.keys(decks); if(ds.length)h+=`<optgroup label="${gt("Meine Kartenstapel")}">${ds.map(id=>o('deck:'+id,decks[id].name)).join('')}</optgroup>`;
+  if(kind==='quiz'){const qz=Object.keys(QZ()); if(qz.length)h+=`<optgroup label="${gt("Eigene Quizze")}">${qz.map(id=>o('quiz:'+id,QZ()[id].title||gt("Mein Quiz"))).join('')}</optgroup>`}
+  h+=`<optgroup label="${gt("Themen")}">${CATS.map(c=>o('cat:'+c.id,`${c.emoji} ${c.label}`)).join('')}</optgroup>`;
   return h;
 }
 function viewSetup(kind){   // kind: solo | host | memory | blitz
@@ -2978,43 +2977,43 @@ function viewSetup(kind){   // kind: solo | host | memory | blitz
   const s=Object.assign({},SDEF,LS.get('gd_gset_'+kind,{}));
   if(s.src==='gram'&&!(kind==='solo'||kind==='host')){s.src='all';s.lvl=1}
   const cur=s.src==='all'?'all:'+s.lvl:s.src+':'+s.id;
-  const T={solo:['Allein spielen','Beantworte die Fragen so schnell du kannst. Richtig und schnell gibt die meisten Punkte, Serien bringen Bonus.'],
-    host:['Live-Quiz mit Gruppe','Zeige diese Seite auf einem großen Bildschirm. Die anderen spielen auf ihrem Handy mit der Spiel-PIN mit.'],
-    memory:['Memory','Decke immer zwei Karten auf und finde Wort und Bedeutung, die zusammengehören.'],
-    blitz:['Artikel-Blitz','60 Sekunden, so viele Artikel wie möglich. Auf dem Computer gehen auch die Tasten 1, 2, 3.']}[kind];
+  const T={solo:[gt("Allein spielen"),gt("Beantworte die Fragen so schnell du kannst. Richtig und schnell gibt die meisten Punkte, Serien bringen Bonus.")],
+    host:[gt("Live-Quiz mit Gruppe"),gt("Zeige diese Seite auf einem großen Bildschirm. Die anderen spielen auf ihrem Handy mit der Spiel-PIN mit.")],
+    memory:['Memory',gt("Decke immer zwei Karten auf und finde Wort und Bedeutung, die zusammengehören.")],
+    blitz:[gt("Artikel-Blitz"),gt("60 Sekunden, so viele Artikel wie möglich. Auf dem Computer gehen auch die Tasten 1, 2, 3.")]}[kind];
   const quizzy=kind==='solo'||kind==='host';
   const seg=(f,vals)=>`<div class="gseg" data-f="${f}">${vals.map(([v,l])=>`<button type="button" data-v="${v}" class="${String(s[f])===String(v)?'on':''}">${l}</button>`).join('')}</div>`;
-  V().innerHTML=`<div class="row" style="margin-bottom:.4rem"><a class="btn sm" href="#/play">${ic('arrow-left')} Spiele</a></div>
+  V().innerHTML=`<div class="row" style="margin-bottom:.4rem"><a class="btn sm" href="#/play">${ic('arrow-left')} ${gt("Spiele")}</a></div>
     <h1 class="page">${T[0]}</h1><p class="sub">${T[1]}</p>
     <form class="gset" id="gsetf">
-      <label class="f">Wörter oder Grammatik</label><select id="gsrc">${srcOptions(cur,quizzy?'quiz':'')}</select>
+      <label class="f" for="gsrc">${gt("Wörter oder Grammatik")}</label><select id="gsrc">${srcOptions(cur,quizzy?'quiz':'')}</select>
       <div id="gqopts">${quizzy?`
-      <label class="f">Anzahl Fragen</label>${seg('n',[[5,'5'],[10,'10'],[15,'15'],[20,'20']])}
-      <div id="gtypesw"><label class="f">Fragetypen</label><div class="gchk">${AUTO.map(t=>`<label><input type="checkbox" value="${t}" ${s.types.includes(t)?'checked':''}> ${ic(TYPES[t][1])} ${TYPES[t][0]}</label>`).join('')}</div></div>`:''}</div>
-      ${quizzy?`<label class="f">Tempo</label>${seg('speed',[[1.5,'Entspannt'],[1,'Normal'],[0.7,'Schnell']])}
-      <label class="gchk" style="margin-top:.8rem;display:flex"><label><input type="checkbox" id="gdbl" ${s.dbl?'checked':''}> Letzte Frage zählt doppelt</label></label>`:''}
-      ${kind==='host'?`<label class="f">Spielart</label>${seg('teams',[[0,'Jeder für sich'],[2,'2 Teams'],[3,'3 Teams'],[4,'4 Teams']])}`:''}
-      ${kind==='memory'?`<label class="f">Paare</label>${seg('pairs',[[4,'4'],[6,'6'],[8,'8']])}`:''}
-      <div class="go"><button class="btn primary">${ic('play')} ${kind==='host'?'Spiel erstellen':'Los geht\'s'}</button></div>
+      <label class="f">${gt("Anzahl Fragen")}</label>${seg('n',[[5,'5'],[10,'10'],[15,'15'],[20,'20']])}
+      <div id="gtypesw"><label class="f">${gt("Fragetypen")}</label><div class="gchk">${AUTO.map(t=>`<label><input type="checkbox" value="${t}" ${s.types.includes(t)?'checked':''}> ${ic(TYPES[t][1])} ${gt(TYPES[t][0])}</label>`).join('')}</div></div>`:''}</div>
+      ${quizzy?`<label class="f">${gt("Tempo")}</label>${seg('speed',[[1.5,gt("Entspannt")],[1,'Normal'],[0.7,gt("Schnell")]])}
+      <div class="gchk" style="margin-top:.8rem;display:flex"><label><input type="checkbox" id="gdbl" ${s.dbl?'checked':''}> ${ui('Double points for the last question','Letzte Frage zählt doppelt')}</label></div>`:''}
+      ${kind==='host'?`<label class="f">${gt("Spielart")}</label>${seg('teams',[[0,gt("Jeder für sich")],[2,'2 Teams'],[3,'3 Teams'],[4,'4 Teams']])}`:''}
+      ${kind==='memory'?`<label class="f">${gt("Paare")}</label>${seg('pairs',[[4,'4'],[6,'6'],[8,'8']])}`:''}
+      <div class="go"><button class="btn primary">${ic('play')} ${kind==='host'?gt("Spiel erstellen"):gt("Los geht's")}</button></div>
     </form>`;
   drawIcons();
   const f=$('gsetf');
   f.querySelectorAll('.gseg').forEach(g=>g.querySelectorAll('button').forEach(b=>b.onclick=()=>{g.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));s[g.dataset.f]=+b.dataset.v}));
   const srcSel=$('gsrc'), qo=$('gqopts'); const syncQ=()=>{if(qo)qo.style.display=srcSel.value.startsWith('quiz:')?'none':''; const tw=$('gtypesw'); if(tw)tw.style.display=srcSel.value.startsWith('gram:')?'none':''}; srcSel.onchange=syncQ; syncQ();
   if(quizzy)loadGram().then(()=>{ if(!$('gsrc'))return; const by={}; GRAM.list().forEach(c=>(by[c.group]=by[c.group]||[]).push(c));
-    srcSel.insertAdjacentHTML('beforeend',Object.keys(by).map(g=>`<optgroup label="${/^Wortschatz/.test(g)?'':'Grammatik · '}${H(g)}">${by[g].map(c=>`<option value="gram:${c.n}">${c.n>200?(c.n>240?c.n-240:c.n>220?c.n-220:c.n-200)+'. ':c.n>100?'':c.n+'. '}${H(c.title)}</option>`).join('')}</optgroup>`).join(''));
+    srcSel.insertAdjacentHTML('beforeend',Object.keys(by).map(g=>`<optgroup label="${/^Wortschatz/.test(g)?'':gt("Grammatik · ")}${H(g)}">${by[g].map(c=>`<option value="gram:${c.n}">${c.n>200?(c.n>240?c.n-240:c.n>220?c.n-220:c.n-200)+'. ':c.n>100?'':c.n+'. '}${H(c.title)}</option>`).join('')}</optgroup>`).join(''));
     if(cur.startsWith('gram:'))srcSel.value=cur; syncQ() }).catch(()=>{});
   f.onsubmit=ev=>{ev.preventDefault(); AU.wake();
     const [src,id]=srcSel.value.split(':'); s.src=src; if(src==='all'){s.lvl=+id;delete s.id}else s.id=id;
-    if(quizzy){s.types=[...f.querySelectorAll('.gchk input[type=checkbox][value]:checked')].map(x=>x.value); if(!s.types.length&&src!=='quiz'&&src!=='gram'){toast('Wähle mindestens einen Fragetyp');return} s.dbl=$('gdbl').checked?1:0}
+    if(quizzy){s.types=[...f.querySelectorAll('.gchk input[type=checkbox][value]:checked')].map(x=>x.value); if(!s.types.length&&src!=='quiz'&&src!=='gram'){toast(gt("Wähle mindestens einen Fragetyp"));return} s.dbl=$('gdbl').checked?1:0}
     if(src==='quiz')s.title=(QZ()[id]||{}).title;
-    if(src==='gram')s.title='Grammatik: '+((window.GRAM&&GRAM.list().find(c=>String(c.n)===id))||{}).title;
+    if(src==='gram')s.title=gt("Grammatik: ")+((window.GRAM&&GRAM.list().find(c=>String(c.n)===id))||{}).title;
     LS.set('gd_gset_'+kind,s); start(kind,s)};
 }
 async function start(kind,s){
   const hash=location.hash;
   if(s.src!=='quiz'&&s.src!=='gram'){
-    try{await (kind==='blitz'?ensureCore():ensureDefinitions())}catch{toast('Wörterbuch konnte nicht geladen werden. Bitte erneut starten.');return}
+    try{await (kind==='blitz'?ensureCore():ensureDefinitions())}catch{toast(gt("Wörterbuch konnte nicht geladen werden. Bitte erneut starten."));return}
     if(hash!==location.hash)return;
   }
   leave(); G={mode:kind+'-wait',kind,s};
@@ -3032,8 +3031,8 @@ function leave(){
   if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});
 }
 function quit(){
-  if(G&&G.mode==='host'&&G.phase!=='end'&&G.players&&G.players.size&&!confirm('Spiel für alle beenden?'))return;
-  if(G&&G.mode==='player'&&G.joined&&!confirm('Spiel verlassen?'))return;
+  if(G&&G.mode==='host'&&G.phase!=='end'&&G.players&&G.players.size&&!confirm(gt("Spiel für alle beenden?")))return;
+  if(G&&G.mode==='player'&&G.joined&&!confirm(gt("Spiel verlassen?")))return;
   leave(); go('play');
 }
 function view(arg){
@@ -3060,7 +3059,7 @@ window.PLAY={view,leave,quit,again,saveMiss,kick,hostGo,hostNext,hostEnd,hostSco
 
 /* nav tab */
 const tabs=document.getElementById('tabs');
-if(tabs&&!tabs.querySelector('[data-t="play"]')){const a=document.createElement('a');a.href='#/play';a.dataset.t='play';a.title='Spiele';a.innerHTML='<i data-lucide="gamepad-2" class="lic"></i><span>Spiele</span>';tabs.appendChild(a);drawIcons()}
+if(tabs&&!tabs.querySelector('[data-t="play"]')){const a=document.createElement('a');a.href='#/play';a.dataset.t='play';a.title=gt("Spiele");a.innerHTML='<i data-lucide="gamepad-2" class="lic"></i><span>Spiele</span>';tabs.appendChild(a);drawIcons()}
 })();
 </script>
 <!-- ===== /Spiele ===== -->

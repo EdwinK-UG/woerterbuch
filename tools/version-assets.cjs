@@ -11,12 +11,17 @@ const files = [
   "js/course-counts.js",
   "js/study-sync.js",
   "js/game-messages.js",
+  "js/game-i18n.js",
   "js/render-safety.js",
   "js/pages.js",
   "grammatik/catalog.js",
   "grammatik/grammatik.js",
 ];
 let index = read("index.html");
+for (const file of ["core.bin", "defs.bin"]) {
+  index = index.replace(new RegExp(file.replace(".", "\\.") + "\\?v=[a-zA-Z0-9]+", "g"),
+    file + "?v=" + hash(fs.readFileSync(path.join(root, file))));
+}
 for (const file of files) {
   const escaped = file.replace(/[.*+?^$\{\}()|[\]\\]/g, "\\$&");
   index = index.replace(
