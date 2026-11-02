@@ -380,6 +380,7 @@ kbd{font:600 .66rem Inter,system-ui,sans-serif;padding:.1rem .35rem;border-radiu
 <div id="toast"></div>
 <div class="modal" id="modal"><div class="sheet" id="sheet"></div></div>
 
+<script src="js/render-safety.js?v=1"></script>
 <script id="data" type="application/octet-stream" data-src="core.bin?v=3846fea8f4" data-defs="defs.bin?v=db398139f0"></script>
 <script>
 "use strict";
@@ -507,7 +508,8 @@ function openGram(arg,m){
 }
 const isGram=()=>/^#\/[gv](\/|$)/.test(location.hash);
 const V=()=>document.getElementById('view');
-const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+const jsArg=value=>esc(JSON.stringify(String(value)));
 /* ---------- HOME / SEARCH ---------- */
 function viewHome(){
   V().innerHTML=`
@@ -595,7 +597,7 @@ window.addEventListener('load',drawIcons);
 /* ---------- ENTRY LAYOUT: grammar line, numbered senses with examples, compounds, idioms, derived words ---------- */
 function fmtDef(e,compact){
   const card=compact==='card';
-  let h=e.df, star=/^\s*<span class="core"/.test(h);
+  let h=definitionHTML(e.df), star=/^\s*<span class="core"/.test(h);
   h=h.replace(/^\s*<span class="core"[^>]*>★<\/span>\s*/,'').replace(/^\s*<b>[^<]*<\/b>\s*/,'');
   if(/abgeleitet von/.test(h)||e.ps==='Info')return (star?'<span class="core">★</span> ':'')+h;
   // idioms: "■ ID ..." at the end
@@ -672,7 +674,7 @@ function viewWord(w){
   const i=WIDX.get(w);
   if(i==null){V().innerHTML=`<div class="aimiss"><span class="em">${ic('search-x')}</span><h1 class="page">„${esc(w)}“ ist nicht im Wörterbuch</h1>
     <p class="sub">Die KI kann einen Eintrag mit einfacher Erklärung und echten Beispielsätzen aus Zeitungen und Wikipedia erstellen. Danach finden ihn alle.</p>
-    <div class="row"><button class="btn primary" onclick="createAI(${JSON.stringify(w).replace(/"/g,'&quot;')})">${ic('sparkles')} Eintrag mit KI erstellen</button><a class="btn" href="#/" onclick="home(event)">← Suche</a></div></div>`;return}
+    <div class="row"><button class="btn primary" onclick="createAI(${jsArg(w)})">${ic('sparkles')} Eintrag mit KI erstellen</button><a class="btn" href="#/" onclick="home(event)">← Suche</a></div></div>`;return}
   const e=E[i];
   V().innerHTML=`<div class="row" style="margin-bottom:.8rem"><a class="btn sm" href="#/">← Suche</a></div>`+entryHTML(e);
   loadImg(e);
@@ -862,9 +864,9 @@ async function findImgs(e){
 function showImg(e,box,list,k){
   if(!list.length){box.innerHTML=`<div class="aicta"><button class="imgai" onclick="aiBack(${e.i})">${ic('sparkles')} Bild mit KI erzeugen</button></div>`;box.classList.add('on');return}
   k=((k%list.length)+list.length)%list.length; const d=list[k];
-  box.innerHTML=`<figure><img src="${d.src}" alt="${esc(plainW(e.w))}" loading="lazy" referrerpolicy="no-referrer">
+  box.innerHTML=`<figure><img src="${esc(safeLink(d.src))}" alt="${esc(plainW(e.w))}" loading="lazy" referrerpolicy="no-referrer">
     <figcaption><span class="capb"><button class="imgnext" title="Anderes Bild">↻ anderes Bild</button><button class="imgai" title="KI-Bild zeigen" onclick="aiBack(${e.i})">${ic('sparkles')} KI</button></span>
-    <a href="${d.url||d.src}" target="_blank" rel="noopener">${esc(d.cap)}</a></figcaption></figure>`;
+    <a href="${esc(safeLink(d.url||d.src))}" target="_blank" rel="noopener">${esc(d.cap)}</a></figcaption></figure>`;
   box.classList.add('on');
   box.querySelector('img').onerror=()=>{list.splice(k,1);showImg(e,box,list,k)};
   box.querySelector('.imgnext').onclick=()=>{const n=k+1; LSI.set(plainW(e.w),list[n%list.length]); showImg(e,box,list,n)};
@@ -985,9 +987,9 @@ function aiToDf(x){
 function addAIEntries(list){
   let added=0;
   for(const x of list||[]){
-    if(!x||!x.w||!Array.isArray(x.senses)||WIDX.has(x.w))continue;   // the book's own entry always wins
-    const e={i:E.length,w:x.w,sy:x.w,ar:x.ar||'',ps:AIPOS[x.ps]||x.ps||'',df:aiToDf(x),rel:[],cat:'',pg:'KI',wm:null,ai:true};
-    E.push(e); WIDX.set(e.w,e.i); FOLD.push(fold(e.w)); (x.q||[]).forEach(q=>{if(!WIDX.has(q))WIDX.set(q,e.i)}); added++;
+    if(!x||typeof x.w!=='string'||!x.w||!Array.isArray(x.senses)||!x.senses.every(s=>s&&Array.isArray(s.ex)&&s.ex.every(e=>e&&typeof e.t==='string'))||WIDX.has(x.w))continue;   // the book's own entry always wins
+    const e={i:E.length,w:x.w,sy:x.w,ar:['der','die','das'].includes(x.ar)?x.ar:'',ps:Object.hasOwn(AIPOS,x.ps)?AIPOS[x.ps]:'',df:aiToDf(x),rel:[],cat:'',pg:'KI',wm:null,ai:true};
+    E.push(e); WIDX.set(e.w,e.i); FOLD.push(fold(e.w)); (Array.isArray(x.q)?x.q:[]).forEach(q=>{if(typeof q==='string'&&!WIDX.has(q))WIDX.set(q,e.i)}); added++;
   }
   return added;
 }
@@ -1126,7 +1128,7 @@ function viewCat(id){
     <h1 class="page cathead" style="--h:${catHue(c.id)}"><span class="badge big">${ic(CICON[c.id]||'tag')}</span>${c.label}</h1>
     <div class="row" style="margin-bottom:.9rem">
       <span class="muted">${words.length} Wörter</span><span class="spacer"></span>
-      <button class="btn" onclick="listFromWords([${words.map(e=>e.i).join(',')}],'${c.label}')">＋ Als Revisionsliste speichern</button>
+      <button class="btn" onclick="listFromWords([${words.map(e=>e.i).join(',')}],${jsArg(c.label)})">＋ Als Revisionsliste speichern</button>
     </div>
     <div class="wlist">${words.map(rowWord).join('')}</div>`;
 }
@@ -1141,7 +1143,7 @@ function viewLists(){
   V().innerHTML=`<h1 class="page">Revisionslisten</h1>
     <p class="sub">Sammle Wörter und verwandle sie in Karteikarten.</p>
     <div class="row" style="margin-bottom:1rem"><button class="btn primary" onclick="newList()">＋ Neue Liste</button></div>
-    ${ids.length?ids.map(id=>{const l=lists[id];return `<a class="panelcard" href="#/list/${id}">
+    ${ids.length?ids.map(id=>{const l=lists[id];return `<a class="panelcard" href="#/list/${encodeURIComponent(id)}">
        <span class="ic">${ic('list')}</span><div><div class="big">${esc(l.name)}</div>
        <div class="meta">${l.words.length} Wörter</div></div></a>`}).join(''):
       `<div class="empty"><span class="em">${ic('list-plus')}</span>Noch keine Listen. Lege eine an oder füge Wörter über ein Stichwort hinzu.</div>`}`;
@@ -1155,9 +1157,9 @@ function viewList(id){
       <button class="btn sm" onclick="pickAll(true)">Alle wählen</button>
       <button class="btn sm" onclick="pickAll(false)">Keine</button>
       <span class="spacer"></span>
-      <button class="btn primary sm" onclick="makeCards('${id}')">⚡ Karten erstellen</button>
-      <button class="btn sm" onclick="renameList('${id}')">Umbenennen</button>
-      <button class="btn sm" onclick="delList('${id}')">Löschen</button>
+      <button class="btn primary sm" onclick="makeCards(${jsArg(id)})">⚡ Karten erstellen</button>
+      <button class="btn sm" onclick="renameList(${jsArg(id)})">Umbenennen</button>
+      <button class="btn sm" onclick="delList(${jsArg(id)})">Löschen</button>
     </div></div>
     ${items.length?`<div class="wlist" id="picklist">${items.map(e=>`
       <label class="wrow" onclick="event.stopPropagation()">
@@ -1165,7 +1167,7 @@ function viewList(id){
         <span class="gdot" style="background:${gcol(e.ar)}"></span>
         <a class="hw" href="#/w/${encodeURIComponent(e.w)}">${esc(e.w)}</a>
         <span class="spacer"></span>
-        <button class="btn sm" onclick="rmFromList('${id}','${encodeURIComponent(e.w)}')">✕</button>
+        <button class="btn sm" onclick="rmFromList(${jsArg(id)},${jsArg(encodeURIComponent(e.w))})">✕</button>
       </label>`).join('')}</div>`:
       `<div class="empty"><span class="em">🔍</span>Diese Liste ist leer. Öffne ein Stichwort und tippe „Zur Liste".</div>`}`;
 }
@@ -1185,7 +1187,7 @@ function createList(){
 function renameList(id){
   openSheet(`<h3>Umbenennen</h3><input class="input" id="nl" style="width:100%" value="${esc(lists[id].name)}">
    <div class="row" style="margin-top:1rem;justify-content:flex-end"><button class="btn" onclick="closeSheet()">Abbrechen</button>
-   <button class="btn primary" onclick="(function(){lists['${id}'].name=document.getElementById('nl').value.trim()||lists['${id}'].name;saveLists();closeSheet();route()})()">Speichern</button></div>`);
+   <button class="btn primary" onclick="(function(){lists[${jsArg(id)}].name=document.getElementById('nl').value.trim()||lists[${jsArg(id)}].name;saveLists();closeSheet();route()})()">Speichern</button></div>`);
 }
 function delList(id){ if(confirm('Liste löschen?')){delete lists[id];saveLists();go('lists')} }
 function rmFromList(id,w){ w=decodeURIComponent(w); lists[id].words=lists[id].words.filter(x=>x!==w); saveLists(); route() }
@@ -1197,7 +1199,7 @@ function listFromWords(ixs,name){
 function openAdd(i){
   const e=E[i], ids=Object.keys(lists);
   openSheet(`<h3>„${esc(e.w)}" hinzufügen</h3><p>Wähle eine Liste oder erstelle eine neue.</p>
-   <div class="listpick">${ids.length?ids.map(id=>`<div class="lp" onclick="addTo('${id}',${i})">
+   <div class="listpick">${ids.length?ids.map(id=>`<div class="lp" onclick="addTo(${jsArg(id)},${i})">
       <span>📑</span><span>${esc(lists[id].name)}</span><span class="spacer"></span><span class="muted">${lists[id].words.length}</span></div>`).join(''):'<p class="muted">Noch keine Listen.</p>'}</div>
    <input class="input" id="nlq" placeholder="Neue Liste …" style="width:100%">
    <div class="row" style="margin-top:.8rem;justify-content:flex-end"><button class="btn" onclick="closeSheet()">Schließen</button>
@@ -1266,13 +1268,13 @@ function viewDecks(){
   V().innerHTML=`<h1 class="page">Karteikarten</h1>
     <p class="sub">Anki-ähnliche Stapel mit SM-2 Wiederholung. Vorderseite: Wort ohne Artikel. Rückseite: Artikel + Bedeutung.</p>
     ${ids.length?ids.map(id=>{const d=decks[id];const q=dueQueue(d);
-      return `<a class="panelcard" href="#/study/${id}"><span class="ic">${ic('layers')}</span>
+      return `<a class="panelcard" href="#/study/${encodeURIComponent(id)}"><span class="ic">${ic('layers')}</span>
         <div><div class="big">${esc(d.name)}</div>
         <div class="meta">${Object.keys(d.cards).length} Karten ·
           <span style="color:var(--neu)">${q.nw.length} neu</span> ·
           <span style="color:var(--die)">${q.lr.length} lernen</span> ·
           <span style="color:var(--das)">${q.rv.length} fällig</span></div></div>
-        <span class="spacer"></span><span class="btn sm" onclick="event.preventDefault();event.stopPropagation();delDeck('${id}')">✕</span></a>`}).join(''):
+        <span class="spacer"></span><span class="btn sm" onclick="event.preventDefault();event.stopPropagation();delDeck(${jsArg(id)})">✕</span></a>`}).join(''):
       `<div class="empty"><span class="em">${ic('layers')}</span>Noch keine Stapel. Erstelle Karten aus einer Liste oder über „Als Karte lernen" bei einem Wort.</div>`}`;
 }
 function delDeck(id){if(confirm('Stapel löschen?')){delete decks[id];saveDecks();route()}}
@@ -2638,8 +2640,8 @@ function viewQuizzes(){
     <div class="row" style="margin-bottom:1rem"><button class="btn primary" onclick="PLAY.newQuiz()">＋ Neues Quiz</button></div>
     ${ids.length?ids.map(id=>{const q=QZ()[id];return `<div class="panelcard" style="cursor:default"><span class="ic">${ic('file-question')}</span><div style="flex:1"><div class="big">${H(q.title||'Ohne Titel')}</div>
       <div class="meta">${q.qs.length} ${q.qs.length===1?'Frage':'Fragen'}</div></div>
-      <div class="row" style="gap:.35rem;flex-wrap:wrap;justify-content:flex-end"><a class="btn sm" href="#/play/edit/${id}">${ic('pencil')} Bearbeiten</a>
-      <button class="btn sm" onclick="PLAY.playQuiz('${id}','solo')">${ic('user')} Allein</button><button class="btn sm primary" onclick="PLAY.playQuiz('${id}','host')">${ic('users')} Live</button></div></div>`}).join('')
+      <div class="row" style="gap:.35rem;flex-wrap:wrap;justify-content:flex-end"><a class="btn sm" href="#/play/edit/${encodeURIComponent(id)}">${ic('pencil')} Bearbeiten</a>
+      <button class="btn sm" onclick="PLAY.playQuiz(${jsArg(id)},'solo')">${ic('user')} Allein</button><button class="btn sm primary" onclick="PLAY.playQuiz(${jsArg(id)},'host')">${ic('users')} Live</button></div></div>`}).join('')
       :`<div class="empty"><span class="em">${ic('file-question')}</span>Noch keine eigenen Quizze.</div>`}`;
   drawIcons();
 }
@@ -2820,5 +2822,5 @@ if(tabs&&!tabs.querySelector('[data-t="play"]')){const a=document.createElement(
 })();
 </script>
 <!-- ===== /Spiele ===== -->
-<script src="konto.js?v=7"></script>
+<script src="konto.js?v=8"></script>
 </body></html>

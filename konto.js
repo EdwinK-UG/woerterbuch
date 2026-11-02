@@ -105,12 +105,13 @@ async function unlock(l) {
   if (await saveProfile({ level: l, unlocked: lvSort([...(P.unlocked || []), l]) }, T(`You are enrolled in ${l} – have fun!`, `Du bist für ${l} eingeschrieben – viel Spaß!`))) refreshView();
 }
 function lockSheet(l) {
+  if (!LV.includes(l)) return;
   const st = lvState(l), school = P && P.org_id;
   openSheet(`<h3>${icn('lock')} ${T('Level', 'Niveau')} ${esc(l)} · ${esc(lvName(l))}</h3>
-    <p>${!me() ? T('Create a free account and choose your level.', 'Erstelle ein kostenloses Konto und wähle dein Niveau.')
+    <p>${esc(!me() ? T('Create a free account and choose your level.', 'Erstelle ein kostenloses Konto und wähle dein Niveau.')
       : school ? (st === 'pending' ? T(`You asked for ${l}. Your teacher at ${ORG ? ORG.name : 'your school'} will unlock it.`, `Du hast ${l} angefragt. Deine Lehrkraft (${ORG ? ORG.name : 'deine Schule'}) schaltet es frei.`)
         : T(`Your teacher at ${ORG ? ORG.name : 'your school'} unlocks new levels for you. Ask for ${l} and they will see your request.`, `Neue Niveaus schaltet deine Lehrkraft (${ORG ? ORG.name : 'deine Schule'}) frei. Frag nach ${l} – sie sieht deine Anfrage.`))
-      : T(`Enroll in ${l} to open its topics and exercises. They stay open for you until you unenroll.`, `Schreib dich für ${l} ein, um seine Themen und Übungen zu öffnen. Sie bleiben offen, bis du dich abmeldest.`)}</p>
+      : T(`Enroll in ${l} to open its topics and exercises. They stay open for you until you unenroll.`, `Schreib dich für ${l} ein, um seine Themen und Übungen zu öffnen. Sie bleiben offen, bis du dich abmeldest.`))}</p>
     <div class="row"><span class="spacer"></span><button class="btn" onclick="closeSheet()">${T('Not now', 'Später')}</button>
     ${!me() ? `<button class="btn primary" onclick="ACCT.sheet('up')">${T('Sign up', 'Registrieren')}</button>`
       : st === 'pending' ? '' : `<button class="btn primary" onclick="closeSheet();KONTO.unlock('${l}')">${school ? T('Ask my teacher', 'Lehrkraft fragen') : T('Enroll', 'Einschreiben') + ' ' + l}</button>`}</div>`);
@@ -150,7 +151,7 @@ function gate(f) {
     b = `<button class="btn primary" onclick="ACCT.sheet('up')">${T('Create free account', 'Kostenloses Konto')}</button><button class="btn" onclick="ACCT.sheet('in')">${T('Sign in', 'Anmelden')}</button>`; }
   else if (P && P.org_id) { ic = 'hourglass'; h = T('Waiting for your teacher', 'Wartet auf deine Lehrkraft'); p = T(`${name} open as soon as your teacher at ${ORG ? ORG.name : 'your school'} unlocks a level for you.`, `${name} öffnen sich, sobald deine Lehrkraft (${ORG ? ORG.name : 'deine Schule'}) ein Niveau für dich freischaltet.`); b = `<a class="btn primary" href="#/start">${T('My home', 'Meine Startseite')}</a>`; }
   else { h = T('Choose your level', 'Wähle dein Niveau'); p = T(`${name} open when you enroll in a level. Choose yours – you can change it later.`, `${name} öffnen sich, wenn du dich für ein Niveau einschreibst. Wähle deins – du kannst es später ändern.`); b = `<button class="btn primary" onclick="KONTO.askLevel()">${T('Choose my level', 'Niveau wählen')}</button>`; }
-  V().innerHTML = `<div class="ks-page kd"><div class="kd-gate"><span class="ic">${icn(ic)}</span><p class="kd-eye">${esc(name)}</p><h1>${h}</h1><p>${p}</p><div class="row">${b}</div>
+  V().innerHTML = `<div class="ks-page kd"><div class="kd-gate"><span class="ic">${icn(ic)}</span><p class="kd-eye">${esc(name)}</p><h1>${esc(h)}</h1><p>${esc(p)}</p><div class="row">${b}</div>
     <p class="ks-tip">${T('Free for everyone:', 'Für alle frei:')} ${['dict', 'games'].filter(x => mode(x) === 'everyone').map(x => `<a href="${x === 'dict' ? '#/' : '#/play'}">${T(FEAT[x][0], FEAT[x][1])}</a>`).join(' · ') || '–'}</p></div></div>`;
   icons();
 }
@@ -293,7 +294,7 @@ function signupFields() {
   SU = { role: fixed || SU.role || 'learner', logo: null };
   const box = document.createElement('div'); box.id = 'su_box'; box.className = 'ks-box';
   const banner = pv ? `<div class="ks-invite" style="--org:${esc(/^#[0-9a-f]{6}$/i.test(pv.theme || '') ? pv.theme : 'var(--ac)')}">${pv.type === 'org'
-      ? `${okUrl(pv.logo_url) ? `<img src="${esc(pv.logo_url)}" alt="" referrerpolicy="no-referrer">` : `<span class="ic">${icn('school')}</span>`}<span><b>${esc(pv.org)}</b><small>${pv.role === 'teacher' ? T('invites you to teach with them', 'lädt Sie als Lehrkraft ein') : pv.class ? T(`invites you to the class ${pv.class} (${pv.level})`, `lädt dich in die Klasse ${pv.class} (${pv.level}) ein`) : T('invites you to learn German with them', 'lädt dich zum Deutschlernen ein')}</small></span>`
+      ? `${okUrl(pv.logo_url) ? `<img src="${esc(pv.logo_url)}" alt="" referrerpolicy="no-referrer">` : `<span class="ic">${icn('school')}</span>`}<span><b>${esc(pv.org)}</b><small>${pv.role === 'teacher' ? T('invites you to teach with them', 'lädt Sie als Lehrkraft ein') : pv.class ? T(`invites you to the class ${esc(pv.class)} (${esc(pv.level)})`, `lädt dich in die Klasse ${esc(pv.class)} (${esc(pv.level)}) ein`) : T('invites you to learn German with them', 'lädt dich zum Deutschlernen ein')}</small></span>`
       : `<span class="ic">${icn('mail-open')}</span><span><b>${T('You are invited', 'Sie sind eingeladen')}</b><small>${pv.role === 'school' ? T('to set up your school on Deutschklinik', 'Ihre Schule bei Deutschklinik einzurichten') : pv.role === 'teacher' ? T('to teach with Deutschklinik', 'mit Deutschklinik zu unterrichten') : T('to learn German with Deutschklinik', 'mit Deutschklinik Deutsch zu lernen')}</small></span>`}</div>` : '';
   box.innerHTML = banner + (fixed ? '' : `<div class="ks-seg" role="radiogroup" aria-label="${T('I am', 'Ich bin')}">${[['learner', 'user-round', T('Learner', 'Lernende/r')], ['teacher', 'presentation', T('Teacher', 'Lehrkraft')], ['school', 'school', T('School', 'Schule')]]
       .map(r => `<button type="button" role="radio" data-role="${r[0]}" aria-checked="${SU.role === r[0]}">${icn(r[1])}<span>${r[2]}</span></button>`).join('')}</div>`)
@@ -310,7 +311,7 @@ function suMore() {
   const name = keep('su_pname') || (pv.type === 'site' && pv.role !== 'school' ? pv.name || '' : '');
   let h = `<label class="ks-l">${r === 'school' ? T('Your name (contact person)', 'Ihr Name (Ansprechperson)') : T('Your name', 'Dein Name')}${r === 'learner' ? '' : ' *'}<input class="input" id="su_pname" maxlength="60" autocomplete="name" placeholder="${T('First and last name', 'Vor- und Nachname')}" value="${esc(name)}"></label>`;
   if (r === 'learner') {
-    if (pv.type === 'org' && pv.level && pv.class) h += `<p class="ks-n">${icn('lock-open')} ${T(`Your class is at level ${pv.level} – it is unlocked for you.`, `Deine Klasse ist auf Niveau ${pv.level} – es ist für dich freigeschaltet.`)}</p>`;
+    if (pv.type === 'org' && pv.level && pv.class) h += `<p class="ks-n">${icn('lock-open')} ${T(`Your class is at level ${esc(pv.level)} – it is unlocked for you.`, `Deine Klasse ist auf Niveau ${esc(pv.level)} – es ist für dich freigeschaltet.`)}</p>`;
     else h += `<label class="ks-l">${T('My level', 'Mein Niveau')}<select class="input" id="su_level">${lvOpts(pv.level || '', T('Not sure yet', 'Noch nicht sicher'))}</select></label>
       ${pv.type === 'org' ? `<p class="ks-n">${icn('info')} ${T('Your teacher unlocks your level for you.', 'Deine Lehrkraft schaltet dein Niveau für dich frei.')}</p>` : ''}`;
   } else {
