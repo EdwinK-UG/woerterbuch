@@ -84,8 +84,10 @@ test("Worker contract: authenticated generation, durable bounds, review, delayed
       USER_DAILY_JOBS: "3",
       GENERATION_ENABLED: "true",
       WELCOME_FROM: "2025-01-01T00:00:00Z",
-      GMAIL_USER: "sender@example.invalid",
-      GMAIL_APP_PASSWORD: "test-placeholder",
+      SMTP_USER: "sender@example.invalid",
+      SMTP_PASSWORD: "test-placeholder",
+      SMTP_HOST: "smtppro.zoho.com",
+      SMTP_PORT: "465",
       WELCOME_HOOK_SECRET: "fixture-hook",
       AI: {
         async run(name, opts) {

@@ -19,7 +19,7 @@ export async function enqueue(u, env, h) {
     return json(200, { sent: false, reason: "not eligible" }, h);
   const cutoff = Date.parse(env.WELCOME_FROM || ""),
     confirmed = Date.parse(u.email_confirmed_at);
-  if (!Number.isFinite(cutoff) || !env.GMAIL_USER || !env.GMAIL_APP_PASSWORD)
+  if (!Number.isFinite(cutoff) || !env.SMTP_USER || !env.SMTP_PASSWORD)
     return json(503, { error: "Mail not configured." }, h);
   if (!Number.isFinite(confirmed) || confirmed < cutoff)
     return json(200, { sent: false, reason: "outside welcome cohort" }, h);
@@ -86,7 +86,9 @@ export async function drainMail(env, send = smtpSend) {
   )
     .bind(now - 7 * 86400000)
     .run();
-  if (!env.GMAIL_USER || !env.GMAIL_APP_PASSWORD) return;
+  if (!env.SMTP_USER || !env.SMTP_PASSWORD) return;
+  const smtpHost = String(env.SMTP_HOST || "smtppro.zoho.com").trim();
+  const smtpPort = Number(env.SMTP_PORT || 465);
   const site = new URL(env.SITE_URL);
   if (site.protocol !== "https:" || /[<>"']/.test(site.href))
     throw Error("Invalid site URL");
@@ -107,13 +109,15 @@ export async function drainMail(env, send = smtpSend) {
     try {
       if (!(await env.IMG.get("welcome|" + user_id)))
         await send(
-          env.GMAIL_USER.trim(),
-          env.GMAIL_APP_PASSWORD.replace(/\s+/g, ""),
+          env.SMTP_USER.trim(),
+          env.SMTP_PASSWORD.replace(/\s+/g, ""),
           row.email,
           "Welcome to Deutschklinik!",
           textBody(site.href),
           htmlBody(site.href),
           user_id,
+          smtpHost,
+          smtpPort,
         );
     } catch (error) {
       const reason = /bad address/.test(error?.message || "") ? "address" : /timed? ?out/i.test(error?.message || "") ? "timeout" : /tls|ssl/i.test(error?.message || "") ? "tls" : /closed|reset|connection/i.test(error?.message || "") ? "connection" : "error";
