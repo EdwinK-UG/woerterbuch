@@ -275,3 +275,16 @@ test("failed profiles close enrolled content and retry restores only enrolled le
     await s.close();
   }
 });
+test("a late account language updates the games page without navigation", async () => {
+  let release;
+  const profile = new Promise(resolve => release = resolve);
+  const s = await site("#/play", { account: true, profile: () => profile });
+  try {
+    await until(() => s.document.querySelector(".ghero h1"));
+    assert.equal(s.document.querySelector(".ghero h1").textContent, "Games");
+    release(new Response('[{"user_id":"fixture","role":"learner","level":"A1","unlocked":["A1"],"ui_lang":"de"}]'));
+    await until(() => s.document.querySelector(".ghero h1")?.textContent === "Spiele");
+    assert.ok(s.document.querySelector('a[href="#/play/solo"]').textContent.includes("Allein spielen"));
+    assert.deepEqual(s.errors, []);
+  } finally { await s.close(); }
+});

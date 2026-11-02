@@ -209,6 +209,7 @@ function applyBrand() {
 function apply() {
   applyNav(); applyBrand();
   if (window.GRAM) { GRAM.setPass(passMark()); GRAM.refresh(); }
+  if (window.PLAY?.refresh) PLAY.refresh();
   refreshView(); gateCheck();
   const u = me();   // a learner on their own without a level: ask once
   if (P && u && P.role === 'learner' && !P.level && !P.org_id && !P.requested_role && !LSg('gd_lvask_' + u.id, 0)) { LSs('gd_lvask_' + u.id, 1); setTimeout(askLevel, 900); }
