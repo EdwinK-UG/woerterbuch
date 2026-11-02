@@ -32,6 +32,7 @@ async function site(hash='',options={}) {
           if(u.pathname.endsWith('defs.bin'))return options.definitions?.()||new Response(defs);
         }
         if(u.pathname==='/entries')return new Response('[]');
+        if(u.pathname==='/entry')return options.entry?.(request)||new Response('{}',{status:404});
         if(u.pathname.includes('site_settings'))return new Response(JSON.stringify([{features:options.features||{},welcome:{}}]));
         if(u.pathname.includes('profiles'))return options.profile?.()||new Response(JSON.stringify([{user_id:'fixture',role:'learner',unlocked:['B1'],level:'B1'}]));
         if(u.pathname.includes('grammar_results'))return options.results?.(u)||new Response('[]');
@@ -111,6 +112,18 @@ test('result history follows stable cursors even when the API caps each response
     const all=await s.window.ACCT.resultRows('&user_id=eq.fixture');
     assert.equal(all.length,5010);assert.equal(all[5009].id,5010);
     assert.deepEqual(s.errors,[]);
+  }finally{await s.close()}
+});
+test('an AI suggestion awaiting review stays off the public dictionary',async()=>{
+  const s=await site('#/',{account:true,entry:request=>{
+    assert.match(request.headers.Authorization,/^Bearer /);
+    return new Response('{"pending":true}',{status:202});
+  }});
+  try{
+    await until(()=>s.document.querySelector('#q'));
+    await s.window.createAI('Testvorschlag');
+    assert.match(s.document.querySelector('#view').textContent,/Submitted for review/);
+    assert.equal(s.document.querySelector('.entry'),null);
   }finally{await s.close()}
 });
 test('failed profiles close enrolled content and retry restores only enrolled levels',async()=>{

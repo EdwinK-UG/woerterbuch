@@ -1,0 +1,25 @@
+# Copy to an ignored wrangler.toml ONLY after provisioning separate staging resources.
+name = "dictionary-staging-example"
+main = "src/index.js"
+compatibility_date = "2024-09-23"
+[vars]
+ALLOWED_ORIGINS = "https://staging.example.invalid"
+SITE_URL = "https://staging.example.invalid/"
+SUPABASE_URL = "https://staging-project.example.invalid"
+GENERATION_ENABLED = "false"
+GLOBAL_DAILY_JOBS = "25"
+USER_DAILY_JOBS = "3"
+IMAGE_TRANSFORM_ENABLED = "false"
+WELCOME_FROM = ""
+[triggers]
+crons = ["*/5 * * * *"]
+[ai]
+binding = "AI"
+[[kv_namespaces]]
+binding = "IMG"
+id = "REPLACE_WITH_STAGING_KV_ID"
+[[d1_databases]]
+binding = "DB"
+database_name = "dictionary-staging-example"
+database_id = "REPLACE_WITH_STAGING_D1_ID"
+# Add [images] binding = "IMAGES" only if image transformations are provisioned.
