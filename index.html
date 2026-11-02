@@ -380,6 +380,7 @@ kbd{font:600 .66rem Inter,system-ui,sans-serif;padding:.1rem .35rem;border-radiu
 <div id="toast"></div>
 <div class="modal" id="modal"><div class="sheet" id="sheet"></div></div>
 
+<script src="js/game-messages.js?v=1"></script>
 <script src="js/render-safety.js?v=1"></script>
 <script id="data" type="application/octet-stream" data-src="core.bin?v=3846fea8f4" data-defs="defs.bin?v=db398139f0"></script>
 <script>
@@ -2164,7 +2165,7 @@ function confetti(){
 }
 function tile(i,text,q,extra=''){
   let cls='o'+(i%4+1);
-  if(q.t==='art')cls=text; if(q.t==='tf')cls=i===0?'tfw':'tff';
+  if(q.t==='art'&&['der','die','das'].includes(text))cls=text; if(q.t==='tf')cls=i===0?'tfw':'tff';
   return `<button class="gt ${cls}" data-i="${i}" ${extra}><span class="gti">${ic(OIC[i%4])}</span><span class="gtt">${H(text)}</span></button>`;
 }
 function qHead(q,n,total){
@@ -2288,7 +2289,7 @@ async function openCh(pin,handlers){
   await loadSB();
   CLIENT=CLIENT||window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
   const ch=CLIENT.channel('wbq-'+pin,{config:{broadcast:{self:false,ack:false}}});
-  for(const ev in handlers)ch.on('broadcast',{event:ev},m=>{try{handlers[ev](m.payload||{})}catch(e){console.error(e)}});
+  for(const ev in handlers)ch.on('broadcast',{event:ev},m=>{if(validGameMessage(ev,m.payload))handlers[ev](m.payload)});
   await new Promise((ok,no)=>{const t=setTimeout(()=>no(new Error('timeout')),12000);
     ch.subscribe(st=>{if(st==='SUBSCRIBED'){clearTimeout(t);ok()}else if(st==='CHANNEL_ERROR'||st==='TIMED_OUT'){clearTimeout(t);no(new Error(st))}})});
   return ch;
@@ -2340,8 +2341,9 @@ function hostLobby(){
 }
 function lobbyPlayers(){
   const b=$('gplrs'); if(!b)return; const ps=[...G.players.values()];
-  b.innerHTML=ps.length?ps.map(p=>`<button class="gpl" onclick="PLAY.kick('${A(p.pid)}')" title="Entfernen"><span class="av">${p.av}</span>${H(p.name)}${p.team?`<span class="tm t${p.team}">${TEAMS[p.team-1][0]}</span>`:''}</button>`).join('')
+  b.innerHTML=ps.length?ps.map(p=>`<button class="gpl" data-player="${A(p.pid)}" title="Entfernen"><span class="av">${p.av}</span>${H(p.name)}${p.team?`<span class="tm t${p.team}">${TEAMS[p.team-1][0]}</span>`:''}</button>`).join('')
     :`<div class="gwait">Warte auf Spieler …</div>`;
+  b.onclick=ev=>{const player=ev.target.closest('button[data-player]');if(player)kick(player.dataset.player)};
   $('gpn').textContent=ps.length; $('gstart').disabled=!ps.length;
 }
 let QRP=null;
@@ -2450,7 +2452,7 @@ function report(){
 function csv(){
   const ps=ranking(), q=s=>'"'+String(s).replace(/"/g,'""')+'"';
   const rows=[['Platz','Name',...(G.teams?['Team']:[]),'Punkte','Richtig',...G.qs.map((_,k)=>'Frage '+(k+1))].map(q).join(';')];
-  ps.forEach(p=>rows.push([p.rank,p.name,...(G.teams?[TEAMS[p.team-1][0]]:[]),p.score,p.ok,...G.qs.map((_,k)=>{const r=p.res[k];return !r||r.v==null?'':r.ok?'richtig':r.ok===false?'falsch':'abgestimmt'})].map(q).join(';')));
+  ps.forEach(p=>rows.push([p.rank,/^[\s]*[=+@-]/.test(p.name)?"'"+p.name:p.name,...(G.teams?[TEAMS[p.team-1][0]]:[]),p.score,p.ok,...G.qs.map((_,k)=>{const r=p.res[k];return !r||r.v==null?'':r.ok?'richtig':r.ok===false?'falsch':'abgestimmt'})].map(q).join(';')));
   const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob(['﻿'+rows.join('\n')],{type:'text/csv'})); a.download='quiz-ergebnisse.csv'; a.click();
 }
 async function rematch(){
@@ -2668,8 +2670,8 @@ function qeHTML(x,k){
   else if(x.t==='tf')body=`<div class="gseg"><button class="${x.c===0?'on':''}" onclick="PLAY.qeSet(${k},'c',0)">Wahr</button><button class="${x.c===1?'on':''}" onclick="PLAY.qeSet(${k},'c',1)">Falsch</button></div>`;
   else if(x.t==='type')body=`<label class="f">Richtige Antworten (mit Komma trennen)</label><input type="text" data-k="${k}" data-f="ans" value="${A((x.ans||[]).join(', '))}">`;
   else if(x.t==='order')body=`<label class="f">Teile in der richtigen Reihenfolge (eine Zeile pro Teil)</label><textarea rows="4" data-k="${k}" data-f="items">${H((x.items||[]).join('\n'))}</textarea>`;
-  else if(x.t==='slider')body=`<div class="two"><div><label class="f">Von</label><input type="number" data-k="${k}" data-f="min" value="${x.min??0}"></div><div><label class="f">Bis</label><input type="number" data-k="${k}" data-f="max" value="${x.max??100}"></div>
-    <div><label class="f">Richtig</label><input type="number" data-k="${k}" data-f="c" value="${x.c??50}"></div><div><label class="f">Einheit</label><input type="text" data-k="${k}" data-f="unit" value="${A(x.unit||'')}"></div></div>`;
+  else if(x.t==='slider')body=`<div class="two"><div><label class="f">Von</label><input type="number" data-k="${k}" data-f="min" value="${A(x.min??0)}"></div><div><label class="f">Bis</label><input type="number" data-k="${k}" data-f="max" value="${A(x.max??100)}"></div>
+    <div><label class="f">Richtig</label><input type="number" data-k="${k}" data-f="c" value="${A(x.c??50)}"></div><div><label class="f">Einheit</label><input type="text" data-k="${k}" data-f="unit" value="${A(x.unit||'')}"></div></div>`;
   return `<div class="gqe"><div class="hd"><b>Frage ${k+1}</b>
     <select onchange="PLAY.qeType(${k},this.value)">${Object.entries(ETYPES).map(([t,l])=>`<option value="${t}" ${t===x.t?'selected':''}>${l}</option>`).join('')}</select>
     <select onchange="PLAY.qeSet(${k},'dur',+this.value)">${[5,10,20,30,60,90].map(s=>`<option value="${s}" ${s===(x.dur||20)?'selected':''}>${s} s</option>`).join('')}</select>
