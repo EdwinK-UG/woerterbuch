@@ -1,5 +1,7 @@
 # Deutschklinik
 
+Primary website: https://deutschklinik.com/ . The root CNAME file configures the GitHub Pages custom domain. Cloudflare DNS points the apex and www to GitHub Pages; GitHub redirects www and the old Pages URL to the primary domain. Worker allowed origins include the new domain and the old origin during transition; its SITE_URL must point to the new root. Supabase Auth Site URL and allowed redirects must include the new domain. Users sign in again on the new origin to restore cloud-saved work.
+
 A static German-learning site with a dictionary, vocabulary topics, grammar exercises, flashcards, practice games and school accounts.
 
 The browser runs plain JavaScript. GitHub Pages serves the files. Supabase provides authentication, database permissions and account storage. The separately deployed Cloudflare Worker supplies AI, photo and welcome-email functions.
