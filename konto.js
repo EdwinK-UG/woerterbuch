@@ -58,7 +58,7 @@ async function load() {
       rows = await q('/rest/v1/profiles?select=*&user_id=eq.' + u.id); P = rows && rows[0];
     }
     if (fresh) LSs('gd_signup', null);
-    if (P && !Array.isArray(P.unlocked)) P.unlocked = [];
+    if (P && !Array.isArray(P.unlocked)) { P.unlocked = []; P._noUnl = true; }
     ORG = null;
     if (P && P.org_id) { try { ORG = await rpc('my_org'); } catch (e) {} }
     mine = { orgs: [], staff: [] };
@@ -82,15 +82,13 @@ const isStaff = () => !!(P && P.role !== 'learner');
 function unlockedSet() {
   if (!P) return [];
   const u = new Set(P.unlocked || []);
-  if (!P.org_id && LV.includes(P.level)) u.add(P.level);       // learners on their own: their level is always open
+  if (P._noUnl && LV.includes(P.level)) u.add(P.level);       // database not updated yet: the chosen level counts as enrolled
   return lvSort([...u]);
 }
-// a level is open if it is at or below the highest unlocked level; no level chosen = everything open (unless in a school)
+// a learner opens exactly the levels they are enrolled in (until they unenroll); teachers, schools and the owner open everything
 function canOpen(l) {
   if (!LV.includes(l) || OFF || !me() || !P || isStaff()) return true;
-  const u = unlockedSet();
-  if (!u.length) return !P.org_id;
-  return LV.indexOf(l) <= LV.indexOf(u[u.length - 1]);
+  return unlockedSet().includes(l);
 }
 const lvState = l => (canOpen(l) ? 'open' : P && P.org_id && P.level === l ? 'pending' : 'locked');
 const level = () => (P && P.role === 'learner' ? (LV.includes(P.level) && canOpen(P.level) ? P.level : unlockedSet().slice(-1)[0] || null) : null);
@@ -104,7 +102,7 @@ async function unlock(l) {
     if (await saveProfile({ level: l }, T(`Your teacher has been asked to unlock ${l}.`, `Deine Lehrkraft wurde gebeten, ${l} freizuschalten.`))) refreshView();
     return;
   }
-  if (await saveProfile({ level: l, unlocked: lvSort([...(P.unlocked || []), l]) }, T(`${l} is unlocked – have fun!`, `${l} ist freigeschaltet – viel Spaß!`))) refreshView();
+  if (await saveProfile({ level: l, unlocked: lvSort([...(P.unlocked || []), l]) }, T(`You are enrolled in ${l} – have fun!`, `Du bist für ${l} eingeschrieben – viel Spaß!`))) refreshView();
 }
 function lockSheet(l) {
   const st = lvState(l), school = P && P.org_id;
@@ -112,10 +110,10 @@ function lockSheet(l) {
     <p>${!me() ? T('Create a free account and choose your level.', 'Erstelle ein kostenloses Konto und wähle dein Niveau.')
       : school ? (st === 'pending' ? T(`You asked for ${l}. Your teacher at ${ORG ? ORG.name : 'your school'} will unlock it.`, `Du hast ${l} angefragt. Deine Lehrkraft (${ORG ? ORG.name : 'deine Schule'}) schaltet es frei.`)
         : T(`Your teacher at ${ORG ? ORG.name : 'your school'} unlocks new levels for you. Ask for ${l} and they will see your request.`, `Neue Niveaus schaltet deine Lehrkraft (${ORG ? ORG.name : 'deine Schule'}) frei. Frag nach ${l} – sie sieht deine Anfrage.`))
-      : T(`Unlock ${l} to open its topics and exercises. Your results then count for ${l}.`, `Schalte ${l} frei, um seine Themen und Übungen zu öffnen. Deine Ergebnisse zählen dann für ${l}.`)}</p>
+      : T(`Enroll in ${l} to open its topics and exercises. They stay open for you until you unenroll.`, `Schreib dich für ${l} ein, um seine Themen und Übungen zu öffnen. Sie bleiben offen, bis du dich abmeldest.`)}</p>
     <div class="row"><span class="spacer"></span><button class="btn" onclick="closeSheet()">${T('Not now', 'Später')}</button>
     ${!me() ? `<button class="btn primary" onclick="ACCT.sheet('up')">${T('Sign up', 'Registrieren')}</button>`
-      : st === 'pending' ? '' : `<button class="btn primary" onclick="closeSheet();KONTO.unlock('${l}')">${school ? T('Ask my teacher', 'Lehrkraft fragen') : T('Unlock', 'Freischalten') + ' ' + l}</button>`}</div>`);
+      : st === 'pending' ? '' : `<button class="btn primary" onclick="closeSheet();KONTO.unlock('${l}')">${school ? T('Ask my teacher', 'Lehrkraft fragen') : T('Enroll', 'Einschreiben') + ' ' + l}</button>`}</div>`);
   icons();
 }
 
@@ -466,7 +464,7 @@ async function viewLearner() {
       ${st === 'open' && has ? `<div class="kd-bar"><i style="width:${pct(s.tried, s.cs.length)}%"></i></div><p class="m">${T(`${s.tried} of ${s.cs.length} practised · ${s.passed} exercises passed`, `${s.tried} von ${s.cs.length} geübt · ${s.passed} Übungen bestanden`)}${s.avg != null ? ` · Ø ${s.avg} %` : ''}</p>
         <div class="row"><a class="btn sm primary" href="#/kurs/${l}">${T('Open course', 'Kurs öffnen')}</a>${s.nextV ? `<a class="btn sm" href="${chHash(s.nextV.n)}">${T('Continue', 'Weiter')}: ${esc(s.nextV.title)}</a>` : ''}</div>`
       : st === 'pending' ? `<p class="m">${T('Waiting for your teacher to unlock it.', 'Wartet auf Freischaltung durch deine Lehrkraft.')}</p>`
-      : st === 'locked' ? `<div class="row"><button class="btn sm" onclick="KONTO.lockSheet('${l}')">${icn(P.org_id ? 'hand' : 'lock-open')} ${P.org_id ? T('Ask my teacher', 'Lehrkraft fragen') : T('Unlock', 'Freischalten')}</button></div>` : ''}</div>`;
+      : st === 'locked' ? `<div class="row"><button class="btn sm" onclick="KONTO.lockSheet('${l}')">${icn(P.org_id ? 'hand' : 'lock-open')} ${P.org_id ? T('Ask my teacher', 'Lehrkraft fragen') : T('Enroll', 'Einschreiben')}</button></div>` : ''}</div>`;
   };
   const b = bestMap(res.map(r => ({ uid: 'me', ch: r.ch, ex: r.ex, score: r.score, total: r.total }))), pm = passMark();
   const taskRows = tasks.map(t => { const need = t.pass_mark || pm, its = t.items || [], done = doneTask(b, 'me', t, need), ok = its.length && done === its.length, late = !ok && t.due_at && new Date(t.due_at) < new Date();
@@ -499,7 +497,7 @@ async function viewCourse(arg) {
   page('', `<p class="row"><a class="btn sm" href="#/start">${icn('arrow-left')} ${T('My home', 'Startseite')}</a></p>
     <section class="kd-course"><span class="gr-lv ${l}">${l}</span><h1 class="page">${T('German', 'Deutsch')} ${l} · ${esc(lvName(l))}</h1>
       <div class="kd-lvtabs">${LV.map(x => `<a href="#/kurs/${x}" class="${x === l ? 'on' : ''} ${lvState(x)}">${lvState(x) === 'open' ? '' : icn('lock')}${x}</a>`).join('')}</div></section>
-    ${st !== 'open' ? `<div class="kd-locked">${icn(st === 'pending' ? 'hourglass' : 'lock')}<div><b>${st === 'pending' ? T('Waiting for your teacher', 'Wartet auf deine Lehrkraft') : T('This level is locked', 'Dieses Niveau ist gesperrt')}</b><p>${st === 'pending' ? T('You asked for this level. Your teacher will unlock it.', 'Du hast dieses Niveau angefragt. Deine Lehrkraft schaltet es frei.') : T('Unlock it to open the topics below.', 'Schalte es frei, um die Themen unten zu öffnen.')}</p></div>${st === 'locked' ? `<button class="btn primary" onclick="KONTO.lockSheet('${l}')">${P && P.org_id ? T('Ask my teacher', 'Lehrkraft fragen') : T('Unlock', 'Freischalten') + ' ' + l}</button>` : ''}</div>` : ''}
+    ${st !== 'open' ? `<div class="kd-locked">${icn(st === 'pending' ? 'hourglass' : 'lock')}<div><b>${st === 'pending' ? T('Waiting for your teacher', 'Wartet auf deine Lehrkraft') : T('You are not enrolled in this level', 'Du bist für dieses Niveau nicht eingeschrieben')}</b><p>${st === 'pending' ? T('You asked for this level. Your teacher will unlock it.', 'Du hast dieses Niveau angefragt. Deine Lehrkraft schaltet es frei.') : T('Enroll to open the topics below.', 'Schreib dich ein, um die Themen unten zu öffnen.')}</p></div>${st === 'locked' ? `<button class="btn primary" onclick="KONTO.lockSheet('${l}')">${P && P.org_id ? T('Ask my teacher', 'Lehrkraft fragen') : T('Enroll', 'Einschreiben') + ' ' + l}</button>` : ''}</div>` : ''}
     ${chs.length ? '' : `<p class="sub">${T('The topics for this level are being written.', 'Die Themen für dieses Niveau sind in Arbeit.')}</p>`}
     <div class="kd-cols2 ${st !== 'open' ? 'dim' : ''}">${voc.length ? `<div><h2 class="kd-h">${icn('book-a')} ${T('Vocabulary', 'Wortschatz')} <small>${voc.length}</small></h2>${voc.map(row).join('')}</div>` : ''}
       ${gram.length ? `<div><h2 class="kd-h">${icn('book-open-text')} ${T('Grammar', 'Grammatik')} <small>${gram.length}</small></h2>${gram.map(row).join('')}</div>` : ''}</div>`, 'kd');
@@ -565,7 +563,7 @@ async function viewStaff(arg) {
 }
 function student(uid) {
   const p = D.profiles[uid] || { unlocked: [] }, m = D.members.find(x => x.user_id === uid) || {};
-  openSheet(`<h3>${sName(uid)}</h3><p>${wants(p) ? T(`Asked for level ${wants(p)}.`, `Hat Niveau ${wants(p)} angefragt.`) + ' ' : ''}${T('Tick the levels this learner may open. Lower levels stay open for revision.', 'Haken Sie die Niveaus an, die diese Person öffnen darf. Niedrigere Niveaus bleiben zum Wiederholen offen.')}</p>
+  openSheet(`<h3>${sName(uid)}</h3><p>${wants(p) ? T(`Asked for level ${wants(p)}.`, `Hat Niveau ${wants(p)} angefragt.`) + ' ' : ''}${T('Tick the levels this learner is enrolled in. Only these levels open for them.', 'Haken Sie die Niveaus an, in denen diese Person eingeschrieben ist. Nur diese Niveaus öffnen sich.')}</p>
     <div class="kd-unl">${LV.map(l => `<label><input type="checkbox" ${p.unlocked.includes(l) ? 'checked' : ''} onchange="KONTO.unlockFor('${uid}','${l}',this.checked,true)"><span class="gr-lv ${l}">${l}</span> ${esc(lvName(l))}</label>`).join('')}</div>
     <label class="ks-l" style="margin-top:.8rem">${T('Class', 'Klasse')}<select class="input" onchange="KONTO.moveMember('${uid}',this.value)"><option value="">${T('no class', 'ohne Klasse')}</option>${D.classes.map(c => `<option value="${c.id}"${m.class_id === c.id ? ' selected' : ''}>${esc(c.name)} (${c.level})</option>`).join('')}</select></label>
     <div class="row" style="margin-top:1rem"><button class="btn sm" onclick="KONTO.removeMember('${uid}')">${icn('user-x')} ${T('Remove', 'Entfernen')}</button><span class="spacer"></span><button class="btn primary" onclick="closeSheet();KONTO.refresh()">${T('Done', 'Fertig')}</button></div>`);
@@ -790,9 +788,9 @@ async function viewSettings() {
       <label>${T('Language of menus and account pages', 'Sprache der Menüs und Kontoseiten')}<select class="input" id="ks_lang"><option value="auto"${P.ui_lang === 'auto' ? ' selected' : ''}>${T('Automatic (English)', 'Automatisch (Englisch)')}</option><option value="en"${P.ui_lang === 'en' ? ' selected' : ''}>English</option><option value="de"${P.ui_lang === 'de' ? ' selected' : ''}>Deutsch</option></select></label>
       <p class="ks-tip">${icn('info')} ${T('The courses themselves (topics, exercises) are always in German.', 'Die Kurse selbst (Themen, Übungen) sind immer auf Deutsch.')}</p>
       <div class="row"><span class="spacer"></span><button class="btn primary" onclick="KONTO.saveSettings()">${T('Save', 'Speichern')}</button></div></div>`)}
-    ${learner ? sec('graduation-cap', T('My levels', 'Meine Niveaus'), `<div class="kd-lvset">${LV.map(l => { const st = lvState(l); return `<div class="${st}"><span class="gr-lv ${l}">${l}</span><span class="t">${esc(lvName(l))}<small>${st === 'open' ? (unlockedSet().includes(l) ? T('unlocked', 'freigeschaltet') : T('open for revision', 'offen zum Wiederholen')) : st === 'pending' ? T('asked – waiting for your teacher', 'angefragt – wartet auf Lehrkraft') : T('locked', 'gesperrt')}</small></span>
-        ${st === 'open' ? (l === level() ? `<span class="tag">${T('my course', 'mein Kurs')}</span>` : unlockedSet().includes(l) ? `<button class="btn sm" onclick="KONTO.setCourse('${l}')">${T('Make my course', 'Als Kurs wählen')}</button>` : '') : st === 'locked' ? `<button class="btn sm" onclick="KONTO.lockSheet('${l}')">${icn(P.org_id ? 'hand' : 'lock-open')} ${P.org_id ? T('Ask', 'Anfragen') : T('Unlock', 'Freischalten')}</button>` : ''}</div>`; }).join('')}</div>
-      ${P.org_id ? `<p class="ks-tip">${icn('info')} ${T('Your teacher unlocks new levels. Lower levels stay open for revision.', 'Neue Niveaus schaltet deine Lehrkraft frei. Niedrigere Niveaus bleiben zum Wiederholen offen.')}</p>` : ''}`) : ''}
+    ${learner ? sec('graduation-cap', T('My levels', 'Meine Niveaus'), `<div class="kd-lvset">${LV.map(l => { const st = lvState(l); return `<div class="${st}"><span class="gr-lv ${l}">${l}</span><span class="t">${esc(lvName(l))}<small>${st === 'open' ? T('enrolled', 'eingeschrieben') : st === 'pending' ? T('asked – waiting for your teacher', 'angefragt – wartet auf Lehrkraft') : T('locked', 'gesperrt')}</small></span>
+        ${st === 'open' ? (l === level() ? `<span class="tag">${T('my course', 'mein Kurs')}</span>` : `<button class="btn sm" onclick="KONTO.setCourse('${l}')">${T('Make my course', 'Als Kurs wählen')}</button>`) + `<button class="btn sm" onclick="KONTO.unenroll('${l}')">${icn('log-out')} ${T('Unenroll', 'Abmelden')}</button>` : st === 'locked' ? `<button class="btn sm" onclick="KONTO.lockSheet('${l}')">${icn(P.org_id ? 'hand' : 'lock-open')} ${P.org_id ? T('Ask', 'Anfragen') : T('Enroll', 'Einschreiben')}</button>` : ''}</div>`; }).join('')}</div>
+      ${P.org_id ? `<p class="ks-tip">${icn('info')} ${T('Your teacher enrolls you in new levels. You can open every level you are enrolled in until you unenroll.', 'In neue Niveaus schreibt dich deine Lehrkraft ein. Jedes Niveau, in dem du eingeschrieben bist, bleibt offen, bis du dich abmeldest.')}</p>` : ''}`) : ''}
     ${learner || school ? sec('school', T('School', 'Schule'), `${ORG ? `<p><b>${esc(ORG.name)}</b>${ORG.class ? ' · ' + esc(ORG.class.name) : ''} <a href="#/schule/${ORG.id}">${T('School page', 'Schulseite')}</a></p><p><button class="btn sm" onclick="KONTO.leave()">${icn('log-out')} ${T('Leave this school', 'Schule verlassen')}</button></p>` : `<p class="sub">${T('You are learning on your own.', 'Du lernst selbstständig.')}</p>`}
       <div class="ks-row"><span>${T('Code', 'Code')}</span><input class="input" id="ks_code" placeholder="${T('Invitation code from a school or teacher', 'Einladungscode einer Schule oder Lehrkraft')}" autocomplete="off"><button class="btn sm" onclick="KONTO.join(document.getElementById('ks_code').value)">${T('Use', 'Einlösen')}</button></div>`) : ''}
     ${own ? sec(own.kind === 'school' ? 'school' : 'presentation', own.kind === 'school' ? T('School page', 'Schulseite') : T('My teacher page', 'Meine Seite als Lehrkraft'), `<p class="ks-tip">${T('This is what your learners and visitors see. Your colour and logo also appear across the site for your learners.', 'Das sehen Ihre Lernenden und Besucher. Farbe und Logo erscheinen für Ihre Lernenden auch auf der ganzen Seite.')}</p><div class="ks-form">${orgForm(own)}</div>`)
@@ -808,6 +806,12 @@ async function viewSettings() {
 async function saveSettings() {
   const body = { display_name: ($('ks_name').value || '').trim() || null, ui_lang: $('ks_lang').value };
   if (await saveProfile(body, T('Saved', 'Gespeichert'))) { applyNav(); refreshView(); }
+}
+async function unenroll(l) {
+  if (!P || !confirm(T(`Unenroll from ${l}? Its topics and exercises close for you; your results are kept.` + (P.org_id ? ' Only your teacher can enroll you again.' : ''), `Von ${l} abmelden? Die Themen und Übungen schließen sich für dich; deine Ergebnisse bleiben gespeichert.` + (P.org_id ? ' Nur deine Lehrkraft kann dich wieder einschreiben.' : '')))) return;
+  const rest = unlockedSet().filter(x => x !== l), body = { unlocked: rest };
+  if (P.level === l) body.level = rest.slice(-1)[0] || null;
+  if (await saveProfile(body, T(`You left ${l}.`, `Du hast dich von ${l} abgemeldet.`))) { delete P._noUnl; applyNav(); refreshView(); }
 }
 async function setCourse(l) { if (await saveProfile({ level: l }, T(`${l} is now your course`, `${l} ist jetzt dein Kurs`))) refreshView(); }
 async function leave() {
@@ -996,7 +1000,7 @@ document.head.appendChild(st);
 window.KONTO = { level, lang, passMark, canOpen, lvState, unlock, lockSheet, unlocked: unlockedSet, profile: () => P, org: () => ORG, view, routes: ROUTES, fillMe, saveLevel, askLevel,
   signupFields, signupCheck, signupData, request, reqFields, sendRequest, join, decide, inviteSheet, makeSiteInvite, delSiteInvite, codeSheet,
   saveOrg, dropLogo, orgPass, addClass, classPass, invite, delInvite, moveMember, removeMember, addTask, delTask, copy, reload, refresh,
-  student, unlockFor, saveSettings, setCourse, leave, T, can, gate, featureOf, saveSite, lookup, signupAs, previewWelcome: () => { location.hash = '#/start/besucher'; } };
+  student, unlockFor, saveSettings, setCourse, unenroll, leave, T, can, gate, featureOf, saveSite, lookup, signupAs, previewWelcome: () => { location.hash = '#/start/besucher'; } };
 window.addEventListener('acct:in', e => { reload().then(() => { if (e.detail && e.detail.fresh && /^#?\/?$/.test(location.hash)) location.hash = '#/start'; }); });
 window.addEventListener('acct:out', () => { P = null; ORG = null; mine = { orgs: [], staff: [] }; apply(); if (/^#?\/?$/.test(location.hash)) location.hash = '#/start'; });
 // invitation links: …/?join=CODE (school or teacher) and …/?invite=CODE (from the site owner)

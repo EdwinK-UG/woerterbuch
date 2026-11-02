@@ -120,7 +120,7 @@ const lvOpen = l => !LVS.includes(l) || !(window.KONTO && KONTO.canOpen) || KONT
 const allowed = n => lvOpen(chLevel(n));
 const topicNo = n => n > 260 ? n - 260 : n > 240 ? n - 240 : n > 220 ? n - 220 : n - 200;
 const en = () => !!(window.KONTO && KONTO.lang && KONTO.lang() === 'en');
-const lockBtn = l => window.KONTO && KONTO.lockSheet ? `<button class="btn sm gr-unl" data-unlock="${l}">${icn(KONTO.lvState(l) === 'pending' ? 'hourglass' : 'lock-open')} ${KONTO.lvState(l) === 'pending' ? (en() ? 'Requested' : 'Angefragt') : KONTO.org && KONTO.org() ? (en() ? 'Ask my teacher' : 'Lehrkraft fragen') : (en() ? 'Unlock' : 'Freischalten')}</button>` : '';
+const lockBtn = l => window.KONTO && KONTO.lockSheet ? `<button class="btn sm gr-unl" data-unlock="${l}">${icn(KONTO.lvState(l) === 'pending' ? 'hourglass' : 'lock-open')} ${KONTO.lvState(l) === 'pending' ? (en() ? 'Requested' : 'Angefragt') : KONTO.org && KONTO.org() ? (en() ? 'Ask my teacher' : 'Lehrkraft fragen') : (en() ? 'Enroll' : 'Einschreiben')}</button>` : '';
 const numLabel = n => n > 200 ? String(topicNo(n)) : n > 100 ? icn('book-marked') : String(n);
 const chInfo = n => { for (const g of GROUPS) for (const c of g.ch) if (c[0] === n) return { g, c }; return null; };
 
@@ -1020,7 +1020,7 @@ function jump(anchor) {
 }
 async function chapter(n, anchor) {
   const back = `<div class="row" style="margin-bottom:.6rem"><a class="btn sm" href="#/${isV(n) ? 'v' : 'g'}">${icn('arrow-left')} ${isV(n) ? 'Wortschatz' : 'Grammatik'}</a></div>`;
-  if (READY[n] && !allowed(n)) { const l = chLevel(n); V().innerHTML = `${back}<div class="empty"><span class="em">${icn('lock')}</span><h1 class="page">${en() ? 'Level' : 'Niveau'} ${H(l)} ${en() ? 'is locked' : 'ist gesperrt'}</h1><p class="sub">${window.KONTO && KONTO.org() ? (en() ? 'Your teacher unlocks new levels for you.' : 'Neue Niveaus schaltet deine Lehrkraft für dich frei.') : (en() ? `Unlock ${l} to open this ${isV(n) ? 'topic' : 'chapter'}.` : `Schalte ${l} frei, um dieses ${isV(n) ? 'Thema' : 'Kapitel'} zu öffnen.`)}</p><p>${lockBtn(l)}</p></div>`; icons(); return; }
+  if (READY[n] && !allowed(n)) { const l = chLevel(n); V().innerHTML = `${back}<div class="empty"><span class="em">${icn('lock')}</span><h1 class="page">${en() ? 'Level' : 'Niveau'} ${H(l)} ${en() ? 'is locked' : 'ist gesperrt'}</h1><p class="sub">${window.KONTO && KONTO.org() ? (en() ? 'Your teacher unlocks new levels for you.' : 'Neue Niveaus schaltet deine Lehrkraft für dich frei.') : (en() ? `Enroll in ${l} to open this ${isV(n) ? 'topic' : 'chapter'}.` : `Schreib dich für ${l} ein, um dieses ${isV(n) ? 'Thema' : 'Kapitel'} zu öffnen.`)}</p><p>${lockBtn(l)}</p></div>`; icons(); return; }
   if (!READY[n]) { V().innerHTML = `${back}<div class="empty"><span class="em">${icn('hourglass')}</span><h1 class="page">${isV(n) ? 'Dieses Thema' : 'Kapitel ' + n} kommt bald</h1><p class="sub">Daran wird gerade gearbeitet.</p></div>`; icons(); return; }
   if (!CH[n]) { V().innerHTML = `<div class="loading"><div class="spin"></div>${isV(n) ? 'Thema' : 'Kapitel'} wird geladen …</div>`;
     try { await loadChapter(n); } catch (e) { V().innerHTML = `<div class="empty"><span class="em">⚠️</span>Das Kapitel konnte nicht geladen werden. Bitte prüfe die Internetverbindung.</div>`; return; } }

@@ -296,12 +296,13 @@ do $$ begin
   end if;
 end $$;
 
--- a learner in a school cannot unlock levels themselves; the teacher or the school does that.
--- (They can still choose the level they want – the teacher sees it as a request.)
+-- a learner in a school cannot enroll themselves in a level; the teacher or the school does that.
+-- (They can choose the level they want – the teacher sees it as a request – and they can unenroll.)
+-- A learner opens exactly the levels in "unlocked" (no automatic access to lower levels).
 create or replace function public.lock_level() returns trigger
 language plpgsql security definer set search_path = public as $$
 begin
-  if new.unlocked is distinct from old.unlocked and old.org_id is not null and old.role = 'learner'
+  if exists (select 1 from unnest(new.unlocked) x where not (x = any(old.unlocked))) and old.org_id is not null and old.role = 'learner'
      and auth.uid() = old.user_id and not public.is_founder()
      and coalesce(current_setting('app.join', true), '') <> '1' then
     raise exception 'levels are unlocked by your teacher';
