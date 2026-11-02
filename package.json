@@ -1,6 +1,6 @@
 {
   "name": "deutschklinik",
   "private": true,
-  "scripts": { "test": "node --test tests/*.test.cjs" },
+  "scripts": { "test": "node --test tests/*.test.cjs", "assets": "node tools/build-course-catalog.cjs && node tools/version-assets.cjs" },
   "devDependencies": { "jsdom": "22.1.0", "@electric-sql/pglite": "0.5.14" }
 }

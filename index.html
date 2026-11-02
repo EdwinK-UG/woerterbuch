@@ -392,11 +392,11 @@ kbd{font:600 .66rem Inter,system-ui,sans-serif;padding:.1rem .35rem;border-radiu
 <div id="toast" role="status" aria-live="polite"></div>
 <div class="modal" id="modal" aria-hidden="true"><div class="sheet" id="sheet" role="dialog" aria-modal="true" tabindex="-1"></div></div>
 
-<script src="js/pages.js?v=1"></script>
-<script src="js/course-counts.js?v=1"></script>
-<script src="js/study-sync.js?v=1"></script>
-<script src="js/game-messages.js?v=1"></script>
-<script src="js/render-safety.js?v=1"></script>
+<script src="js/pages.js?v=d3012ce1e8e4"></script>
+<script src="js/course-counts.js?v=a500004e0728"></script>
+<script src="js/study-sync.js?v=2c8a0af1f4c9"></script>
+<script src="js/game-messages.js?v=0d17b9239d41"></script>
+<script src="js/render-safety.js?v=bca8f1d25d96"></script>
 <script id="data" type="application/octet-stream" data-src="core.bin?v=3846fea8f4" data-defs="defs.bin?v=db398139f0"></script>
 <script>
 "use strict";
@@ -556,8 +556,8 @@ function scriptFile(src){
 }
 function loadGram(){
   if(!gramP)gramP=(async()=>{
-    if(typeof LESSON_EXERCISES==='undefined')await scriptFile('grammatik/catalog.js?v=1');
-    if(!window.GRAM)await scriptFile('grammatik/grammatik.js?v=19');
+    if(typeof LESSON_EXERCISES==='undefined')await scriptFile('grammatik/catalog.js?v=606c7f51c6cd');
+    if(!window.GRAM)await scriptFile('grammatik/grammatik.js?v=a6567201c3b3');
   })().catch(e=>{gramP=null;throw e});
   return gramP;
 }
@@ -1483,7 +1483,7 @@ document.getElementById('theme').onclick=()=>{
 Object.assign(window,{go,openAdd,addTo,addNew,quickCard,makeCards,newList,createList,renameList,delList,rmFromList,pickAll,listFromWords,closeSheet,reveal,ans,delDeck});
 document.addEventListener('DOMContentLoaded',()=>{
   if(window.KONTO)route();else V().innerHTML='<p>Deutschklinik could not load. <button class="btn" onclick="location.reload()">Retry</button></p>';
-  if('serviceWorker' in navigator && window.isSecureContext)navigator.serviceWorker.register('sw.js').catch(()=>{});
+  if('serviceWorker' in navigator && window.isSecureContext)navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).catch(()=>{});
 });
 </script>
 <!-- ===== Konten (Supabase) – add-on, changes no existing feature ===== -->
@@ -3054,5 +3054,5 @@ if(tabs&&!tabs.querySelector('[data-t="play"]')){const a=document.createElement(
 })();
 </script>
 <!-- ===== /Spiele ===== -->
-<script src="konto.js?v=11"></script>
+<script src="konto.js?v=279f857ab822"></script>
 </body></html>
