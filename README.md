@@ -29,7 +29,8 @@ After changing JavaScript or lesson content, run `npm run assets` before committ
 | `index.html` | Page shell, navigation, dictionary, account synchronization and games |
 | `konto.js` | Enrollment, schools, invitations, dashboards and settings |
 | `grammatik/grammatik.js` | Shared lesson renderer and practice result synchronization |
-| `grammatik/k*.js` | Individual lessons |
+| `.local/lessons/k*.js` (private, ignored) | Individual lesson sources |
+| `supabase/functions/lessons/` | Server checks enrolment before sending lesson code |
 | `grammatik/catalog.js` | Generated exercise IDs and titles for progress and assignments |
 | `js/` | Rendering safety, message validation, save merging and shared pages |
 | `config.js` | Public service addresses and the local preview guard |
@@ -68,6 +69,16 @@ Generate vocabulary from private reviewed inputs using `tools/vocabulary/README.
 
 The dictionary identifies Langenscheidt as its source. Confirm redistribution permissions before expanding publication. Keep Wiktionary, Tatoeba and image/audio attribution with generated lessons. Fluency, translation quality and level suitability need editorial review.
 
-The service worker caches the page shell and visited lessons. The dictionary search page offers an explicit offline download. A signed-in account's pending saves stay in its own local cache after sign-out. Browser storage can be cleared or evicted, so synchronize before moving devices.
+The service worker caches the page shell. The dictionary search page offers an explicit offline download. Lessons require an online account and a current enrolment check. The release deletes the old public lesson cache. A signed-in account's pending saves stay in its own local cache after sign-out. Browser storage can be cleared or evicted, so synchronize before moving devices.
+
+## Private lessons
+
+Lesson source files are no longer published through GitHub Pages. Restore the private lesson archive into `.local/lessons/`, or set `LESSON_SOURCE_DIR` to its location. `npm run lessons:bundle` checks all 141 sources against the public exercise catalog and builds `.local/lesson-bundle/lessons.json`. Deploy that file with `supabase/functions/lessons/index.ts` and `handler.mjs` as the `lessons` Edge Function, keeping JWT verification enabled. Deploy the function before publishing a site that uses it. Never commit the generated bundle or private lesson sources.
+
+The function verifies the account with Supabase Auth and reads its current profile using that account's JWT and database policies. Learners receive only their unlocked levels. Teachers, schools and the founder can receive all lessons. Reference lessons require at least one unlocked level for learners. The public catalog contains titles and exercise IDs, without lesson bodies or answers. Marking a course as visible to everyone affects its overview, while opening a lesson always requires enrolment. Account changes discard lessons held in browser memory.
+
+Public Git history may retain earlier copies of lessons. They cannot be recalled from existing clones or downloads. B2 remains empty until the owner supplies its content.
+
+Public CI validates the catalog, engine and access rules without private content. A release also requires `npm run lessons:bundle` with the restored private sources. Back up private source changes separately before deploying a new lesson bundle.
 
 Maintain independent exports of Supabase and Worker data. Test restoration into separate projects. The source bundle backs up authoring inputs, while account and service data need their own backup process.

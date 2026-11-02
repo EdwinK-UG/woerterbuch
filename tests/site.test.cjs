@@ -79,6 +79,7 @@ async function site(hash = "", options = {}) {
         if (u.pathname.includes("grammar_results"))
           return options.results?.(u) || new Response("[]");
         if (u.pathname.includes("user_data")) return new Response("[]");
+        if (u.pathname.includes("/functions/v1/lessons")) return new Response("Unavailable", { status: 503 });
         return new Response("[]");
       };
       if (options.features)
@@ -185,7 +186,7 @@ test("failed definitions settle, show retry and recover on the next click", asyn
   }
 });
 test("course overview, contents and progress need no full chapter or dictionary", async () => {
-  const s = await site("#/v", { features: { vocab: "everyone" } });
+  const s = await site("#/v", { account: true, features: { vocab: "everyone" }, profile: () => new Response('[{"user_id":"fixture","role":"learner","unlocked":["A1"],"level":"A1"}]') });
   try {
     await until(() => s.document.querySelector("#grlist .gr-row[data-n]"));
     s.document.querySelector(".gr-exp").click();
@@ -195,11 +196,9 @@ test("course overview, contents and progress need no full chapter or dictionary"
     await until(() => s.document.querySelector(".gr-ptab"));
     assert.ok(!s.calls.some((p) => /k\d+\.js$|\.bin$/.test(p)));
     s.window.location.hash = "#/v/201";
-    await until(() => s.document.querySelector(".gr-ch"));
-    assert.deepEqual(
-      s.calls.filter((p) => /k\d+\.js$/.test(p)),
-      ["/grammatik/k201.js"],
-    );
+    await until(() => s.document.querySelector("#view .empty"));
+    assert.ok(s.calls.includes("/functions/v1/lessons"));
+    assert.deepEqual(s.calls.filter((p) => /k\d+\.js$/.test(p)), []);
     assert.deepEqual(s.errors, []);
   } finally {
     await s.close();

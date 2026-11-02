@@ -13,15 +13,26 @@ const context = vm.createContext({
 });
 vm.runInContext(read("grammatik/grammatik.js"), context);
 context.GRAM = context.window.GRAM;
-for (const f of fs
-  .readdirSync(path.join(root, "grammatik"))
-  .filter((f) => /^k\d+\.js$/.test(f)))
-  vm.runInContext(read("grammatik/" + f), context, { filename: f });
+const directory = process.env.LESSON_SOURCE_DIR || path.join(root, ".local/lessons");
+const privateSources = fs.existsSync(directory);
+if (!privateSources && (!process.argv.includes("--check") || process.argv.includes("--require-private")))
+  throw Error("Restore private lessons to .local/lessons or set LESSON_SOURCE_DIR first.");
+if (privateSources) {
+  for (const f of fs.readdirSync(directory).filter((f) => /^k\d+\.js$/.test(f)))
+    vm.runInContext(fs.readFileSync(path.join(directory, f), "utf8"), context, { filename: f });
+} else {
+  vm.runInContext(read("grammatik/catalog.js") + "\nthis.catalog = LESSON_EXERCISES", context);
+}
 const metadata = {},
   counts = {};
 for (const { n, level, vocab } of context.GRAM.chapters()) {
-  const ch = context.GRAM._test.CH[n];
-  assert.equal(ch.n, n);
+  const ch = privateSources ? context.GRAM._test.CH[n] : { n, exercises: (context.catalog[n] || []).map(([id, title, flags]) => ({ id, title, more: !!(flags & 1), graded: !(flags & 2) })) };
+  assert.equal(ch?.n, n, "missing private lesson " + n);
+  assert.ok(ch.exercises.length, "missing exercises in " + n);
+  for (const x of ch.exercises) {
+    assert.equal(typeof x.id, "string");
+    assert.equal(typeof x.title, "string");
+  }
   assert.equal(
     new Set(ch.exercises.map((x) => x.id)).size,
     ch.exercises.length,
@@ -39,7 +50,7 @@ for (const { n, level, vocab } of context.GRAM.chapters()) {
 }
 assert.equal(
   Object.keys(metadata).length,
-  Object.keys(context.GRAM._test.CH).length,
+  Object.keys(privateSources ? context.GRAM._test.CH : context.catalog).length,
 );
 const outputs = {
   "grammatik/catalog.js":

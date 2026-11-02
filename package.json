@@ -4,6 +4,7 @@
   "scripts": {
     "test": "node --test tests/*.test.cjs",
     "assets": "node tools/build-course-catalog.cjs && node tools/version-assets.cjs",
+    "lessons:bundle": "node tools/build-course-catalog.cjs --check --require-private && node tools/build-lesson-bundle.cjs",
     "check": "npm test && npm --prefix worker test && node tools/build-course-catalog.cjs --check && node tools/version-assets.cjs --check"
   },
   "devDependencies": {

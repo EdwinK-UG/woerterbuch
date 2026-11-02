@@ -2,7 +2,7 @@ const { test } = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const vm = require("node:vm");
-test("offline shell and visited lessons survive without prefetching dictionary or chapters", async () => {
+test("offline shell survives while legacy lesson caches and public chapter URLs are retired", async () => {
   const scope = "https://fixture.invalid/site/",
     stores = new Map(),
     events = {},
@@ -54,6 +54,11 @@ test("offline shell and visited lessons survive without prefetching dictionary o
   let installed;
   events.install({ waitUntil: (p) => (installed = p) });
   await installed;
+  stores.set("wb-lessons-/site/", new Map([[scope + "grammatik/k201.js?v=old", new Response("PRIVATE")]]));
+  let activated;
+  events.activate({ waitUntil: p => activated = p });
+  await activated;
+  assert.equal(stores.has("wb-lessons-/site/"), false);
   assert.ok(
     requests.every(
       (url) => !url.includes(".bin") && !url.includes("/grammatik/"),
@@ -73,12 +78,10 @@ test("offline shell and visited lessons survive without prefetching dictionary o
   };
   await get("grammatik/grammatik.js?v=test");
   await get("grammatik/catalog.js?v=test");
-  await get("grammatik/k201.js?v=test");
+  assert.equal((await get("grammatik/k201.js?v=test")).status, 410);
   offline = true;
   assert.ok((await (await get("", "navigate")).text()).includes(scope));
-  assert.ok(
-    (await (await get("grammatik/k201.js?v=test")).text()).includes("k201"),
-  );
+  assert.equal((await get("grammatik/k201.js?v=test")).status, 410);
   assert.ok(
     (await (await get("grammatik/grammatik.js?v=test")).text()).includes(
       "grammatik.js",
