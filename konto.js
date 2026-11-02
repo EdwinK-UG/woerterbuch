@@ -15,6 +15,7 @@ const V = () => $('view');
 const lvSort = a => LV.filter(l => (a || []).includes(l));
 const okUrl = u => /^https:\/\/[^\s<>"']+$/.test(String(u || ''));
 
+let profileRequest = 0;
 let P = null, ORG = null, OFF = false, loading = null, mine = { orgs: [], staff: [] }, CUR = '';
 
 /* ---------- language: menus and account pages in English or German; the courses themselves stay German ---------- */
@@ -40,14 +41,17 @@ function err(e) { return notInstalled(e) ? T('This is not set up yet.', 'Diese F
 const PATCH = (path, body) => q(path, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body });
 
 async function load() {
-  const u = me();
+  const u = me(), request = ++profileRequest;
+  const current = () => request === profileRequest && me()?.id === u?.id;
+  OFF = false;
+  if (P?.user_id !== u?.id) { P = null; ORG = null; mine = {orgs:[],staff:[]}; }
   if (!u) { P = null; ORG = null; mine = { orgs: [], staff: [] }; apply(); return; }
-  if (OFF) return;
   try {
     let rows = await q('/rest/v1/profiles?select=*&user_id=eq.' + u.id);
-    P = rows && rows[0];
+    if (!current()) return;
+    let profile = rows && rows[0];
     const su = LSg('gd_signup', null), fresh = su && su.email && u.email && su.email.toLowerCase() === u.email.toLowerCase();
-    if (!P) {   // the database normally makes the profile at sign-up; this is the fallback for older accounts
+    if (!profile) {   // the database normally makes the profile at sign-up; this is the fallback for older accounts
       const body = { user_id: u.id }, d = fresh && su.data || {};
       if (d.name) body.display_name = String(d.name).slice(0, 60);
       if (LV.includes(d.level)) { body.level = d.level; if (!d.join) body.unlocked = [d.level]; }
@@ -55,24 +59,27 @@ async function load() {
       if (d.lang === 'en' || d.lang === 'de') body.ui_lang = d.lang;
       try { await q('/rest/v1/profiles', { method: 'POST', headers: { Prefer: 'return=minimal' }, body }); }
       catch (e) { if (e.status === 400) await q('/rest/v1/profiles', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: { user_id: u.id } }); else if (e.status !== 409) throw e; }
-      rows = await q('/rest/v1/profiles?select=*&user_id=eq.' + u.id); P = rows && rows[0];
+      rows = await q('/rest/v1/profiles?select=*&user_id=eq.' + u.id); profile = rows && rows[0];
     }
+    if (!current()) return;
+    if (!profile) throw new Error('Profile unavailable');
     if (fresh) LSs('gd_signup', null);
-    if (P && !Array.isArray(P.unlocked)) { P.unlocked = []; P._noUnl = true; }
-    ORG = null;
-    if (P && P.org_id) { try { ORG = await rpc('my_org'); } catch (e) {} }
-    mine = { orgs: [], staff: [] };
-    if (P && P.role !== 'learner') {
+    if (!Array.isArray(profile.unlocked)) throw new Error('Enrollment schema unavailable');
+    const org = profile.org_id ? await rpc('my_org') : null;
+    const memberships = { orgs: [], staff: [] };
+    if (profile.role !== 'learner') {
       try {
-        mine.orgs = await q('/rest/v1/orgs?select=*&owner=eq.' + u.id + '&order=created_at') || [];
+        memberships.orgs = await q('/rest/v1/orgs?select=*&owner=eq.' + u.id + '&order=created_at') || [];
         const ms = await q('/rest/v1/org_members?select=org_id&member_role=eq.teacher&user_id=eq.' + u.id) || [];
-        mine.staff = ms.map(m => m.org_id).filter(id => !mine.orgs.some(o => o.id === id));
+        memberships.staff = ms.map(m => m.org_id).filter(id => !memberships.orgs.some(o => o.id === id));
       } catch (e) {}
     }
+    if (!current()) return;
+    P = profile; ORG = org; mine = memberships;
     await pendingLogo();
-    if (await handleInvite()) return;
-  } catch (e) { if (notInstalled(e)) { OFF = true; P = null; } else console.warn('konto', e); }
-  apply();
+    if (!current() || await handleInvite()) return;
+  } catch (e) { if (!current()) return; OFF = true; P = null; ORG = null; mine = {orgs:[],staff:[]}; }
+  if (current()) apply();
 }
 function reload() { loading = load(); return loading; }
 const ready = () => loading || reload();
@@ -82,13 +89,13 @@ const isStaff = () => !!(P && P.role !== 'learner');
 function unlockedSet() {
   if (!P) return [];
   const u = new Set(P.unlocked || []);
-  if (P._noUnl && LV.includes(P.level)) u.add(P.level);       // database not updated yet: the chosen level counts as enrolled
   return lvSort([...u]);
 }
 // a learner opens exactly the levels they are enrolled in (until they unenroll); teachers, schools and the owner open everything
 function canOpen(l) {
-  if (!LV.includes(l) || OFF || !me() || !P || isStaff()) return true;
-  return unlockedSet().includes(l);
+  if (!LV.includes(l)) return true;
+  if (!me()) return false;
+  return !!P && P.user_id === me().id && (isStaff() || unlockedSet().includes(l));
 }
 const lvState = l => (canOpen(l) ? 'open' : P && P.org_id && P.level === l ? 'pending' : 'locked');
 const level = () => (P && P.role === 'learner' ? (LV.includes(P.level) && canOpen(P.level) ? P.level : unlockedSet().slice(-1)[0] || null) : null);
@@ -105,12 +112,13 @@ async function unlock(l) {
   if (await saveProfile({ level: l, unlocked: lvSort([...(P.unlocked || []), l]) }, T(`You are enrolled in ${l} – have fun!`, `Du bist für ${l} eingeschrieben – viel Spaß!`))) refreshView();
 }
 function lockSheet(l) {
+  if (!LV.includes(l)) return;
   const st = lvState(l), school = P && P.org_id;
   openSheet(`<h3>${icn('lock')} ${T('Level', 'Niveau')} ${esc(l)} · ${esc(lvName(l))}</h3>
-    <p>${!me() ? T('Create a free account and choose your level.', 'Erstelle ein kostenloses Konto und wähle dein Niveau.')
+    <p>${esc(!me() ? T('Create a free account and choose your level.', 'Erstelle ein kostenloses Konto und wähle dein Niveau.')
       : school ? (st === 'pending' ? T(`You asked for ${l}. Your teacher at ${ORG ? ORG.name : 'your school'} will unlock it.`, `Du hast ${l} angefragt. Deine Lehrkraft (${ORG ? ORG.name : 'deine Schule'}) schaltet es frei.`)
         : T(`Your teacher at ${ORG ? ORG.name : 'your school'} unlocks new levels for you. Ask for ${l} and they will see your request.`, `Neue Niveaus schaltet deine Lehrkraft (${ORG ? ORG.name : 'deine Schule'}) frei. Frag nach ${l} – sie sieht deine Anfrage.`))
-      : T(`Enroll in ${l} to open its topics and exercises. They stay open for you until you unenroll.`, `Schreib dich für ${l} ein, um seine Themen und Übungen zu öffnen. Sie bleiben offen, bis du dich abmeldest.`)}</p>
+      : T(`Enroll in ${l} to open its topics and exercises. They stay open for you until you unenroll.`, `Schreib dich für ${l} ein, um seine Themen und Übungen zu öffnen. Sie bleiben offen, bis du dich abmeldest.`))}</p>
     <div class="row"><span class="spacer"></span><button class="btn" onclick="closeSheet()">${T('Not now', 'Später')}</button>
     ${!me() ? `<button class="btn primary" onclick="ACCT.sheet('up')">${T('Sign up', 'Registrieren')}</button>`
       : st === 'pending' ? '' : `<button class="btn primary" onclick="closeSheet();KONTO.unlock('${l}')">${school ? T('Ask my teacher', 'Lehrkraft fragen') : T('Enroll', 'Einschreiben') + ' ' + l}</button>`}</div>`);
@@ -133,9 +141,9 @@ function can(f) {
   const m = mode(f);
   if (m === 'everyone') return true;
   if (m === 'off' || !me()) return false;
-  if (OFF || !P) return true;          // accounts not set up, or the profile is still loading
   return m === 'account' || enrolled();
 }
+const retryProfile = () => `<button class="btn" onclick="KONTO.reload()">${T('Retry connection', 'Verbindung erneut versuchen')}</button>`;
 const ROUTE_F = { '': 'dict', w: 'dict', cats: 'dict', cat: 'dict', lists: 'lists', list: 'lists', decks: 'cards', study: 'cards', v: 'vocab', g: 'grammar', play: 'games' };
 const featureOf = p => ROUTE_F[p == null ? location.hash.slice(2).split('/')[0] : p];
 const TAB_F = { home: 'dict', cats: 'dict', lists: 'lists', decks: 'cards', wort: 'vocab', gram: 'grammar', play: 'games' };
@@ -143,14 +151,15 @@ const TAB_F = { home: 'dict', cats: 'dict', lists: 'lists', decks: 'cards', wort
 function gate(f) {
   const m = mode(f), name = T(FEAT[f][0], FEAT[f][1]);
   let ic = 'lock', h, p, b;
-  if (m === 'off') { h = T('Not available right now', 'Im Moment nicht verfügbar'); p = T(`${name}: this part of Deutschklinik is switched off at the moment.`, `${name}: Dieser Teil von Deutschklinik ist im Moment ausgeschaltet.`); b = `<a class="btn primary" href="#/start">${T('Home', 'Startseite')}</a>`; }
+  if (me() && !P) { h = OFF ? T('Your course access could not be checked', 'Dein Kurszugang konnte nicht geprüft werden') : T('Checking your course access …', 'Dein Kurszugang wird geprüft …'); p = ''; b = OFF ? retryProfile() : ''; }
+  else if (m === 'off') { h = T('Not available right now', 'Im Moment nicht verfügbar'); p = T(`${name}: this part of Deutschklinik is switched off at the moment.`, `${name}: Dieser Teil von Deutschklinik ist im Moment ausgeschaltet.`); b = `<a class="btn primary" href="#/start">${T('Home', 'Startseite')}</a>`; }
   else if (!me()) { h = m === 'account' ? T('Sign in to continue', 'Bitte anmelden') : T('Enroll to unlock this', 'Einschreiben und freischalten');
     p = m === 'account' ? T(`${name} are for members. Create a free account – it takes 20 seconds.`, `${name} gibt es für Mitglieder. Erstelle ein kostenloses Konto – das dauert 20 Sekunden.`)
       : T(`${name} open when you enroll in a level. Create a free account, choose your level (A1 to C1) and your course starts right away.`, `${name} öffnen sich, wenn du dich für ein Niveau einschreibst. Erstelle ein kostenloses Konto, wähle dein Niveau (A1 bis C1) und dein Kurs beginnt sofort.`);
     b = `<button class="btn primary" onclick="ACCT.sheet('up')">${T('Create free account', 'Kostenloses Konto')}</button><button class="btn" onclick="ACCT.sheet('in')">${T('Sign in', 'Anmelden')}</button>`; }
   else if (P && P.org_id) { ic = 'hourglass'; h = T('Waiting for your teacher', 'Wartet auf deine Lehrkraft'); p = T(`${name} open as soon as your teacher at ${ORG ? ORG.name : 'your school'} unlocks a level for you.`, `${name} öffnen sich, sobald deine Lehrkraft (${ORG ? ORG.name : 'deine Schule'}) ein Niveau für dich freischaltet.`); b = `<a class="btn primary" href="#/start">${T('My home', 'Meine Startseite')}</a>`; }
   else { h = T('Choose your level', 'Wähle dein Niveau'); p = T(`${name} open when you enroll in a level. Choose yours – you can change it later.`, `${name} öffnen sich, wenn du dich für ein Niveau einschreibst. Wähle deins – du kannst es später ändern.`); b = `<button class="btn primary" onclick="KONTO.askLevel()">${T('Choose my level', 'Niveau wählen')}</button>`; }
-  V().innerHTML = `<div class="ks-page kd"><div class="kd-gate"><span class="ic">${icn(ic)}</span><p class="kd-eye">${esc(name)}</p><h1>${h}</h1><p>${p}</p><div class="row">${b}</div>
+  V().innerHTML = `<div class="ks-page kd"><div class="kd-gate"><span class="ic">${icn(ic)}</span><p class="kd-eye">${esc(name)}</p><h1>${esc(h)}</h1><p>${esc(p)}</p><div class="row">${b}</div>
     <p class="ks-tip">${T('Free for everyone:', 'Für alle frei:')} ${['dict', 'games'].filter(x => mode(x) === 'everyone').map(x => `<a href="${x === 'dict' ? '#/' : '#/play'}">${T(FEAT[x][0], FEAT[x][1])}</a>`).join(' · ') || '–'}</p></div></div>`;
   icons();
 }
@@ -158,17 +167,19 @@ function gate(f) {
 function gateCheck() {
   const f = featureOf(); if (!f || typeof window.route !== 'function') return;
   const shown = !!document.querySelector('.kd-gate');
-  if (shown === can(f)) window.route();
+  if (shown || !can(f)) window.route();
 }
 
 /* ---------- applying the profile to the site ---------- */
 const NAV = { start: ['Home', 'Start'], home: ['Search', 'Suche'], cats: ['Topics', 'Themen'], lists: ['Lists', 'Listen'], decks: ['Cards', 'Karten'], wort: ['Vocabulary', 'Wortschatz'], gram: ['Grammar', 'Grammatik'], play: ['Games', 'Spiele'] };
 function applyNav() {
   const tabs = $('tabs'); if (!tabs) return;
+  tabs.setAttribute('aria-label',T('Main navigation','Hauptnavigation'));
   let st = tabs.querySelector('a[data-t="start"]');
   if (!st) { st = document.createElement('a'); st.href = '#/start'; st.dataset.t = 'start'; st.innerHTML = icn('house') + '<span></span>'; tabs.prepend(st); }
   const en = lang() === 'en';
   document.documentElement.dataset.ui = en ? 'en' : 'de';
+  document.documentElement.lang = en ? 'en' : 'de';
   tabs.querySelectorAll('a[data-t]').forEach(a => {
     const t = NAV[a.dataset.t]; if (!t) return; const s = a.querySelector('span'); if (s) s.textContent = t[en ? 0 : 1];
     const f = TAB_F[a.dataset.t], off = f && mode(f) === 'off' && !isFounder(), lk = f && !off && !can(f);
@@ -192,11 +203,13 @@ function applyBrand() {
     else { root.style.removeProperty('--ac'); root.style.removeProperty('--org'); }
     document.title = ORG.name + ' · Deutschklinik';
   } else { if (el) el.remove(); root.style.removeProperty('--ac'); root.style.removeProperty('--org'); document.title = 'Deutschklinik'; }
+  if(window.updatePageMetadata)updatePageMetadata();
   icons();
 }
 function apply() {
   applyNav(); applyBrand();
   if (window.GRAM) { GRAM.setPass(passMark()); GRAM.refresh(); }
+  if (window.PLAY?.refresh) PLAY.refresh();
   refreshView(); gateCheck();
   const u = me();   // a learner on their own without a level: ask once
   if (P && u && P.role === 'learner' && !P.level && !P.org_id && !P.requested_role && !LSg('gd_lvask_' + u.id, 0)) { LSs('gd_lvask_' + u.id, 1); setTimeout(askLevel, 900); }
@@ -293,7 +306,7 @@ function signupFields() {
   SU = { role: fixed || SU.role || 'learner', logo: null };
   const box = document.createElement('div'); box.id = 'su_box'; box.className = 'ks-box';
   const banner = pv ? `<div class="ks-invite" style="--org:${esc(/^#[0-9a-f]{6}$/i.test(pv.theme || '') ? pv.theme : 'var(--ac)')}">${pv.type === 'org'
-      ? `${okUrl(pv.logo_url) ? `<img src="${esc(pv.logo_url)}" alt="" referrerpolicy="no-referrer">` : `<span class="ic">${icn('school')}</span>`}<span><b>${esc(pv.org)}</b><small>${pv.role === 'teacher' ? T('invites you to teach with them', 'lädt Sie als Lehrkraft ein') : pv.class ? T(`invites you to the class ${pv.class} (${pv.level})`, `lädt dich in die Klasse ${pv.class} (${pv.level}) ein`) : T('invites you to learn German with them', 'lädt dich zum Deutschlernen ein')}</small></span>`
+      ? `${okUrl(pv.logo_url) ? `<img src="${esc(pv.logo_url)}" alt="" referrerpolicy="no-referrer">` : `<span class="ic">${icn('school')}</span>`}<span><b>${esc(pv.org)}</b><small>${pv.role === 'teacher' ? T('invites you to teach with them', 'lädt Sie als Lehrkraft ein') : pv.class ? T(`invites you to the class ${esc(pv.class)} (${esc(pv.level)})`, `lädt dich in die Klasse ${esc(pv.class)} (${esc(pv.level)}) ein`) : T('invites you to learn German with them', 'lädt dich zum Deutschlernen ein')}</small></span>`
       : `<span class="ic">${icn('mail-open')}</span><span><b>${T('You are invited', 'Sie sind eingeladen')}</b><small>${pv.role === 'school' ? T('to set up your school on Deutschklinik', 'Ihre Schule bei Deutschklinik einzurichten') : pv.role === 'teacher' ? T('to teach with Deutschklinik', 'mit Deutschklinik zu unterrichten') : T('to learn German with Deutschklinik', 'mit Deutschklinik Deutsch zu lernen')}</small></span>`}</div>` : '';
   box.innerHTML = banner + (fixed ? '' : `<div class="ks-seg" role="radiogroup" aria-label="${T('I am', 'Ich bin')}">${[['learner', 'user-round', T('Learner', 'Lernende/r')], ['teacher', 'presentation', T('Teacher', 'Lehrkraft')], ['school', 'school', T('School', 'Schule')]]
       .map(r => `<button type="button" role="radio" data-role="${r[0]}" aria-checked="${SU.role === r[0]}">${icn(r[1])}<span>${r[2]}</span></button>`).join('')}</div>`)
@@ -310,7 +323,7 @@ function suMore() {
   const name = keep('su_pname') || (pv.type === 'site' && pv.role !== 'school' ? pv.name || '' : '');
   let h = `<label class="ks-l">${r === 'school' ? T('Your name (contact person)', 'Ihr Name (Ansprechperson)') : T('Your name', 'Dein Name')}${r === 'learner' ? '' : ' *'}<input class="input" id="su_pname" maxlength="60" autocomplete="name" placeholder="${T('First and last name', 'Vor- und Nachname')}" value="${esc(name)}"></label>`;
   if (r === 'learner') {
-    if (pv.type === 'org' && pv.level && pv.class) h += `<p class="ks-n">${icn('lock-open')} ${T(`Your class is at level ${pv.level} – it is unlocked for you.`, `Deine Klasse ist auf Niveau ${pv.level} – es ist für dich freigeschaltet.`)}</p>`;
+    if (pv.type === 'org' && pv.level && pv.class) h += `<p class="ks-n">${icn('lock-open')} ${T(`Your class is at level ${esc(pv.level)} – it is unlocked for you.`, `Deine Klasse ist auf Niveau ${esc(pv.level)} – es ist für dich freigeschaltet.`)}</p>`;
     else h += `<label class="ks-l">${T('My level', 'Mein Niveau')}<select class="input" id="su_level">${lvOpts(pv.level || '', T('Not sure yet', 'Noch nicht sicher'))}</select></label>
       ${pv.type === 'org' ? `<p class="ks-n">${icn('info')} ${T('Your teacher unlocks your level for you.', 'Deine Lehrkraft schaltet dein Niveau für dich frei.')}</p>` : ''}`;
   } else {
@@ -360,20 +373,24 @@ async function join(code) {
 }
 async function handleInvite() {
   const I = INV(); if (!I || !P) return false;
-  const pv = I.pv || {}; let act = null;
-  if (I.t === 'join') { if (!(pv.org_id && P.org_id === pv.org_id)) act = 'join_with_code'; }
-  else if (pv.role === 'teacher' || pv.role === 'school' ? P.role === 'learner' : pv.level && !P.level) act = 'redeem_invite';
-  LSs('gd_inv', null);
-  if (!act) return false;
-  try { await rpc(act, { p_code: I.code }); toastM(act === 'join_with_code' ? T(`Welcome to ${pv.org}!`, `Willkommen bei ${pv.org}!`) : T('Invitation accepted', 'Einladung angenommen')); }
-  catch (e) { toastM(/invalid code/i.test(String(e.message)) ? T('This invitation is no longer valid.', 'Diese Einladung ist nicht mehr gültig.') : err(e)); return false; }
+  const pv = I.pv || {}, act = I.t === 'join' ? 'join_with_code' : 'redeem_invite';
+  const user = me().id;
+  try {
+    await rpc(act, {p_code:I.code});
+    if (me()?.id !== user) return false;
+    LSs('gd_inv',null); toastM(T('Invitation accepted', 'Einladung angenommen'));
+  } catch (e) {
+    if (me()?.id !== user) return false;
+    if (/invalid code|expired/i.test(String(e.message))) LSs('gd_inv',null);
+    toastM(err(e)); return false;
+  }
   await reload(); return true;
 }
 
 /* ---------- account sheet ---------- */
 function fillMe() {
   const box = $('acct_prof'); if (!box) return;
-  if (OFF || !me()) { box.innerHTML = ''; return; }
+  if (OFF || !me()) { box.innerHTML = OFF ? retryProfile() : ''; return; }
   if (!P) { box.innerHTML = `<p class="muted" style="font-size:.82rem">${T('Loading profile …', 'Profil wird geladen …')}</p>`; ready().then(fillMe); return; }
   const go = h => `onclick="closeSheet();location.hash='${h}'"`;
   box.innerHTML = `<div class="ks-card">
@@ -410,7 +427,13 @@ function bestMap(rows) {
   const b = {}; for (const r of rows) { const k = (r.user_id || r.uid || '') + '|' + (r.chapter != null ? r.chapter : r.ch) + '|' + (r.exercise || r.ex), s = r.score / r.total; if (!(k in b) || s > b[k]) b[k] = s; }
   return b;
 }
-const doneTask = (best, uid, t, need) => (t.items || []).filter(it => Object.keys(best).some(k => k.startsWith(uid + '|' + it.ch + '|') && (!it.ex || k.endsWith('|' + it.ex)) && best[k] * 100 >= need)).length;
+function doneTask(best, uid, task, need) {
+  return (task.items || []).filter(item => {
+    const ids = item.ex ? [item.ex] : item.required || window.GRAM?.requiredExercises(item.ch) || [];
+    return Array.isArray(ids) && ids.length > 0 &&
+      ids.every(id => best[uid + '|' + item.ch + '|' + id] * 100 >= need);
+  }).length;
+}
 function kpis(list) { return `<div class="kd-kpis">${list.map(k => `<div class="kd-kpi"><span class="ic">${icn(k[0])}</span><b>${esc(k[1])}</b><span>${esc(k[2])}</span>${k[3] ? `<small>${esc(k[3])}</small>` : ''}</div>`).join('')}</div>`; }
 function hero(o, inner) {
   const col = o && /^#[0-9a-f]{6}$/i.test(o.theme || '') ? o.theme : null;
@@ -518,7 +541,8 @@ async function loadOrg(org) {
   const ids = D.members.map(m => m.user_id);
   if (ids.length) {
     (await q('/rest/v1/profiles?select=user_id,display_name,level,unlocked,created_at&user_id=in.(' + ids.join(',') + ')') || []).forEach(p => { p.unlocked = p.unlocked || []; D.profiles[p.user_id] = p; });
-    try { D.res = await q('/rest/v1/grammar_results?select=user_id,chapter,exercise,score,total,created_at&user_id=in.(' + ids.join(',') + ')&order=created_at.desc&limit=20000') || []; } catch (e) { D.res = []; }
+    D.members = D.members.filter(member => D.profiles[member.user_id]);
+    D.res = await A().practiceSummary(Object.keys(D.profiles));
   }
   D.tasks = D.classes.length ? await q('/rest/v1/assignments?select=*&class_id=in.(' + D.classes.map(c => c.id).join(',') + ')&order=due_at.asc.nullslast') || [] : [];
 }
@@ -537,7 +561,8 @@ async function viewStaff(arg) {
   const studs = D.members.filter(m => m.member_role === 'student'), teachers = D.members.filter(m => m.member_role === 'teacher');
   const lastAct = {}, b = bestMap(D.res); D.res.forEach(r => { const t = Date.parse(r.created_at); if (!lastAct[r.user_id] || t > lastAct[r.user_id]) lastAct[r.user_id] = t; });
   const active = studs.filter(m => Date.now() - (lastAct[m.user_id] || 0) < 7 * 864e5).length;
-  const r30 = D.res.filter(r => Date.now() - Date.parse(r.created_at) < 30 * 864e5), avg30 = r30.length ? Math.round(r30.reduce((a, r) => a + r.score / r.total, 0) / r30.length * 100) : null;
+  const recentCount = D.res.reduce((sum, row) => sum + Number(row.recent_count), 0);
+  const avg30 = recentCount ? Math.round(D.res.reduce((sum, row) => sum + Number(row.recent_score), 0) / recentCount * 100) : null;
   const pend = studs.filter(m => wants(D.profiles[m.user_id]) || !(D.profiles[m.user_id] || { unlocked: [] }).unlocked.length);
   const avgOf = (uid, l) => { const ks = Object.keys(b).filter(k => k.startsWith(uid + '|') && (!l || (window.GRAM && GRAM.chLevel(+k.split('|')[1]) === l))); return ks.length ? Math.round(ks.reduce((a, k) => a + b[k], 0) / ks.length * 100) : null; };
   const cls = id => { const c = D.classes.find(x => x.id === id); return c ? esc(c.name) : ''; };
@@ -642,7 +667,8 @@ const delInvite = code => act(async () => { await q('/rest/v1/invites?code=eq.' 
 const moveMember = (u, c) => act(async () => { await PATCH('/rest/v1/org_members?org_id=eq.' + D.org.id + '&user_id=eq.' + u, { class_id: c || null }); const m = D.members.find(x => x.user_id === u); if (m) m.class_id = c || null; }, T('Moved', 'Verschoben'));
 const removeMember = u => { if (!confirm(T('Remove this person from your school?', 'Diese Person aus der Schule entfernen?'))) return; act(async () => { await q('/rest/v1/org_members?org_id=eq.' + D.org.id + '&user_id=eq.' + u, { method: 'DELETE' }); window.closeSheet && closeSheet(); refresh(); }, T('Removed', 'Entfernt')); };
 const addTask = c => act(async () => {
-  const title = $('kt_t_' + c).value.trim(), sel = [...$('kt_ch_' + c).selectedOptions].map(o => ({ ch: +o.value, ex: null })), d = $('kt_d_' + c).value;
+  const title = $('kt_t_' + c).value.trim(), sel = [...$('kt_ch_' + c).selectedOptions].map(o => ({ ch: +o.value, ex: null, required: GRAM.requiredExercises(+o.value) })), d = $('kt_d_' + c).value;
+  if (sel.some(item => !item.required.length)) throw new Error(T('Choose a chapter with graded exercises.', 'Bitte ein Kapitel mit bewerteten Übungen wählen.'));
   if (!title || !sel.length) throw new Error(T('Please enter a title and choose at least one chapter.', 'Bitte Titel und mindestens ein Kapitel wählen.'));
   await q('/rest/v1/assignments', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: { class_id: c, title, items: sel, due_at: d ? new Date(d + 'T23:59:00').toISOString() : null, pass_mark: num('kt_p_' + c) } });
   refresh();
@@ -656,7 +682,7 @@ async function viewTasks() {
   busy(); await ready(); await ensureGram();
   if (OFF) return page(T('My assignments', 'Meine Aufgaben'), `<p class="sub">${T('This is not set up yet.', 'Diese Funktion ist noch nicht eingerichtet.')}</p>`);
   let as = [], res = [];
-  try { as = await q('/rest/v1/assignments?select=*&order=due_at.asc.nullslast') || []; res = await q('/rest/v1/grammar_results?select=user_id,chapter,exercise,score,total&user_id=eq.' + me().id + '&limit=5000') || []; }
+  try { as = await q('/rest/v1/assignments?select=*&order=due_at.asc.nullslast') || []; res = await A().practiceSummary([me().id]); }
   catch (e) { return page(T('My assignments', 'Meine Aufgaben'), `<p class="sub">${esc(err(e))}</p>`); }
   const b = bestMap(res), pm = passMark();
   const rows = as.map(a => { const items = a.items || [], need = a.pass_mark || pm, done = doneTask(b, me().id, a, need), ok = items.length && done === items.length, late = !ok && a.due_at && new Date(a.due_at) < new Date();
@@ -779,7 +805,7 @@ const dropLogo = id => act(async () => { await PATCH('/rest/v1/orgs?id=eq.' + id
 async function viewSettings() {
   if (!me()) return need();
   busy(); await ready();
-  if (OFF || !P) return page(T('Settings', 'Einstellungen'), `<p class="sub">${T('Accounts are not set up yet.', 'Konten sind noch nicht eingerichtet.')}</p>`);
+  if (OFF || !P) return page(T('Settings', 'Einstellungen'), `<p class="sub">${T('Your account could not be loaded.', 'Dein Konto konnte nicht geladen werden.')}</p>${retryProfile()}`);
   const learner = P.role === 'learner', own = mine.orgs[0], school = P.org_id && ORG && !ORG.owner;
   const sec = (ic, h, body) => `<section class="kd-card kd-set"><h3>${icn(ic)} ${h}</h3>${body}</section>`;
   page(T('Settings', 'Einstellungen'), `
@@ -835,13 +861,13 @@ async function sendRequest() {
 /* ---------- home for visitors who are not signed in: Deutschklinik ---------- */
 const LVDESC = { A1: ['First words, first conversations', 'Erste Wörter, erste Gespräche'], A2: ['Everyday life with confidence', 'Sicher im Alltag'], B1: ['Work, travel and your opinion', 'Beruf, Reisen und die eigene Meinung'],
   B2: ['Discuss, argue, understand the news', 'Diskutieren, argumentieren, Nachrichten verstehen'], C1: ['Precise, professional, almost native', 'Präzise, professionell, fast muttersprachlich'] };
-async function viewWelcome() {
+function viewWelcome() {
   const w = SITE.welcome || {}, h = w.headline || T('Welcome to Deutschklinik', 'Willkommen in der Deutschklinik'),
-    msg = w.message || T('Your German, diagnosed and treated. Choose your level, follow a clear course from A1 to C1 and practise with real examples, pictures and games – until German feels natural.', 'Dein Deutsch – untersucht und behandelt. Wähle dein Niveau, folge einem klaren Kurs von A1 bis C1 und übe mit echten Beispielen, Bildern und Spielen – bis Deutsch sich natürlich anfühlt.');
+    msg = w.message || T('Build your German with vocabulary, grammar, real examples, pictures and games. Choose an available level and practise at your own pace.', 'Lerne Deutsch mit Wortschatz, Grammatik, echten Beispielen, Bildern und Spielen. Wähle ein verfügbares Niveau und übe in deinem Tempo.');
   const free = ['dict', 'games'].filter(f => mode(f) === 'everyone');
   const draw = counts => page('', `<section class="kd-hero kd-land cv-waves"><div><p class="kd-eye">Deutschklinik</p><h1>${esc(h)}</h1><p class="kd-hi">${esc(msg)}</p>
       <div class="row"><button class="btn kd-cta" onclick="ACCT.sheet('up')">${icn('sparkles')} ${T('Start learning – it’s free', 'Kostenlos loslegen')}</button><button class="btn kd-ghost" onclick="ACCT.sheet('in')">${T('Sign in', 'Anmelden')}</button></div>
-      ${mode('dict') === 'everyone' ? `<form class="kd-look" onsubmit="event.preventDefault();KONTO.lookup(this.q.value)"><input name="q" class="input" placeholder="${T('Look up a German word …', 'Ein deutsches Wort nachschlagen …')}" autocomplete="off" lang="de"><button class="btn">${icn('search')}</button></form>` : ''}</div>
+      ${mode('dict') === 'everyone' ? `<form class="kd-look" onsubmit="event.preventDefault();KONTO.lookup(this.q.value)"><input name="q" class="input" aria-label="${T('Look up a German word','Deutsches Wort nachschlagen')}" placeholder="${T('Look up a German word …', 'Ein deutsches Wort nachschlagen …')}" autocomplete="off" lang="de"><button class="btn" aria-label="${T('Search','Suchen')}">${icn('search')}</button></form>` : ''}</div>
       <div class="kd-land-art" aria-hidden="true"><span>Hallo!</span><span>Guten Tag</span><span>Wie geht’s?</span><span>Tschüss!</span><span>Danke</span></div></section>
     <h2 class="kd-h">${icn('route')} ${T('How it works', 'So funktioniert es')}</h2>
     <div class="kd-steps"><div><b>1</b><h3>${T('Choose your level', 'Wähle dein Niveau')}</h3><p>${T('From A1 (first words) to C1 (advanced). Not sure? Start at A1 – you can move up any time.', 'Von A1 (erste Wörter) bis C1 (fortgeschritten). Unsicher? Starte bei A1 – du kannst jederzeit aufsteigen.')}</p></div>
@@ -855,15 +881,9 @@ async function viewWelcome() {
       : `<a href="#/play">${icn('gamepad-2')}<b>${T('Games', 'Spiele')}</b><small>${T('quizzes alone or live with your class', 'Quiz allein oder live mit der Klasse')}</small></a>`).join('')}</div>` : ''}
     <div class="kd-card kd-schools"><div><h3>${icn('school')} ${T('For schools and teachers', 'Für Schulen und Lehrkräfte')}</h3><p class="m">${T('Your own branded page, classes with invitation links, assignments with deadlines, your own pass mark and a dashboard of every learner, grouped by level.', 'Eine eigene Seite mit Ihrer Marke, Klassen mit Einladungslinks, Aufgaben mit Abgabetermin, eine eigene Bestehensgrenze und eine Übersicht über alle Lernenden nach Niveau.')}</p></div>
       <button class="btn primary" onclick="KONTO.signupAs('school')">${T('Register your school', 'Schule registrieren')}</button><button class="btn" onclick="KONTO.signupAs('teacher')">${T('I am a teacher', 'Ich bin Lehrkraft')}</button></div>`, 'kd');
-  draw(null);
-  await ensureGram();
-  if (window.GRAM && GRAM.chapters) { const c = {}; GRAM.chapters().forEach(x => { if (!LV.includes(x.level)) return; c[x.level] = c[x.level] || { v: 0, g: 0 }; c[x.level][x.vocab ? 'v' : 'g']++; }); if (location.hash.slice(2).split('/')[0] === 'start' && !me()) draw(c); }
+  draw(COURSE_COUNTS);
 }
-function lookup(w) {
-  w = String(w || '').trim(); location.hash = '#/';
-  if (!w) return;
-  setTimeout(() => { const q = $('q'); if (q) { q.value = w; q.dispatchEvent(new Event('input', { bubbles: true })); q.focus(); } }, 150);
-}
+function lookup(w) { openLookup(w); }
 function signupAs(r) { SU.role = r; A() && A().sheet && A().sheet('up'); }
 async function saveSite() {
   const features = {}; Object.keys(FDEF).forEach(f => { const v = ($('sf_' + f) || {}).value; if (v) features[f] = v; });
@@ -877,7 +897,7 @@ const ROUTES = ['start', 'kurs', 'settings', 'schule', 'klasse', 'admin', 'aufga
 async function viewStart(arg) {
   if (!me() || arg === 'besucher') return viewWelcome();
   busy(); await ready();
-  if (OFF || !P) return page(T('Home', 'Start'), `<p class="sub">${T('Accounts are not set up yet.', 'Konten sind noch nicht eingerichtet.')}</p><p><a class="btn" href="#/">${T('Dictionary', 'Wörterbuch')}</a></p>`);
+  if (OFF || !P) return page(T('Home', 'Start'), `<p class="sub">${T('Your account could not be loaded.', 'Dein Konto konnte nicht geladen werden.')}</p>${retryProfile()}<p><a class="btn" href="#/">${T('Dictionary', 'Wörterbuch')}</a></p>`);
   if (P.role === 'founder' && !arg) return viewAdmin();
   if (isStaff()) return viewStaff(arg);
   return viewLearner();
@@ -905,7 +925,21 @@ st.textContent = `#orgbrand{display:flex;align-items:center;gap:.4rem;font-weigh
 #orgbrand img{height:28px;width:auto;max-width:64px;border-radius:5px;object-fit:contain}
 @media(max-width:1360px){#orgbrand span{display:none}}
 .sheet{max-height:calc(100vh - 2rem);overflow-y:auto}
-@media(max-width:640px){nav.tabs{grid-template-columns:none!important;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr)}nav.tabs a{font-size:.56rem}}
+@media(max-width:640px){
+  nav.tabs{grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-flow:row;grid-auto-columns:auto;gap:.1rem;padding:.35rem .5rem calc(.35rem + env(safe-area-inset-bottom))}
+  nav.tabs a{font-size:.72rem;letter-spacing:normal;min-height:46px;padding:.3rem .1rem}
+  nav.tabs a span{display:block;overflow:visible;text-overflow:clip}
+  main{padding-bottom:1rem}.site-footer{padding-bottom:calc(8rem + env(safe-area-inset-bottom))}
+  #toast{bottom:calc(7.5rem + env(safe-area-inset-bottom))}
+  .grades{bottom:calc(7.5rem + env(safe-area-inset-bottom))}
+}
+@media(min-width:641px) and (max-width:1180px){
+  header .bar{height:auto;min-height:58px;flex-wrap:wrap;gap:.5rem;padding-top:.5rem;padding-bottom:.5rem}
+  #theme{margin-left:auto}
+  nav.tabs{order:3;flex-basis:100%;margin:0;overflow:visible;justify-content:space-between}
+  nav.tabs a{flex:1;justify-content:center;padding:.4rem .2rem;font-size:.75rem}
+  nav.tabs a span{display:inline}nav.tabs a .lic{display:none}
+}
 nav.tabs a{position:relative}nav.tabs a.ks-lk{opacity:.62}.ks-lki{position:absolute;top:3px;right:3px;opacity:.9}
 header .brand{flex-shrink:0}@media(min-width:1100px){header .wrap{max-width:1220px}}
 .kd-gate{max-width:560px;margin:2.5rem auto;text-align:center;display:grid;justify-items:center;gap:.5rem;padding:2rem 1.2rem;border:1px solid var(--line);border-radius:1.2rem;background:var(--card)}
@@ -1002,11 +1036,11 @@ window.KONTO = { level, lang, passMark, canOpen, lvState, unlock, lockSheet, unl
   saveOrg, dropLogo, orgPass, addClass, classPass, invite, delInvite, moveMember, removeMember, addTask, delTask, copy, reload, refresh,
   student, unlockFor, saveSettings, setCourse, unenroll, leave, T, can, gate, featureOf, saveSite, lookup, signupAs, previewWelcome: () => { location.hash = '#/start/besucher'; } };
 window.addEventListener('acct:in', e => { reload().then(() => { if (e.detail && e.detail.fresh && /^#?\/?$/.test(location.hash)) location.hash = '#/start'; }); });
-window.addEventListener('acct:out', () => { P = null; ORG = null; mine = { orgs: [], staff: [] }; apply(); if (/^#?\/?$/.test(location.hash)) location.hash = '#/start'; });
+window.addEventListener('acct:out', () => { profileRequest++; loading=null; OFF=false; P = null; ORG = null; mine = { orgs: [], staff: [] }; apply(); if (/^#?\/?$/.test(location.hash)) location.hash = '#/start'; });
 // invitation links: …/?join=CODE (school or teacher) and …/?invite=CODE (from the site owner)
 const sp = new URLSearchParams(location.search), jc = sp.get('join'), ic = sp.get('invite');
 if (jc || ic) { history.replaceState(null, '', location.pathname + location.hash); setTimeout(() => openInvite(jc ? 'join' : 'invite', jc || ic), 500); }
 loadSite();
-if (/^#?\/?$/.test(location.hash)) location.replace('#/start');
+if (!location.hash) location.replace('#/start');
 if (me()) reload(); else apply();
 })();
