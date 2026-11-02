@@ -10,7 +10,8 @@ test("SQL upgrades replay safely and enforce school, save and attempt boundaries
     for (let pass = 0; pass < 2; pass++) {
       await db.exec(read("supabase_setup.sql"));
       await db.exec(read("accounts_setup.sql"));
-      for (const file of fs.readdirSync("supabase/migrations").sort())
+      // The hosted pg_net/Vault integration has a separate webhook test with stubs.
+      for (const file of fs.readdirSync("supabase/migrations").filter(f => !f.endsWith("_welcome_delivery.sql")).sort())
         await db.exec(read("supabase/migrations/" + file));
     }
     await db.exec(read("tests/school-security.sql"));
