@@ -21,7 +21,7 @@ function server(){
 function device(db,store=new Map()){
   store.set('gd_session',{expires_at:Date.now()/1000+3600,user:{id:'me'},access_token:'offline'});
   const nothing=()=>{};
-  const ctx={structuredClone,console,Event:class{},CustomEvent:class{},URLSearchParams, setTimeout:()=>1,clearTimeout:nothing,
+  const ctx={APP_CONFIG:{supabaseUrl:'https://offline.test',supabaseKey:'fixture'},CONFIG_READY:Promise.resolve(),assertWritable(){},structuredClone,console,Event:class{},CustomEvent:class{},URLSearchParams, setTimeout:()=>1,clearTimeout:nothing,
     lists:{},decks:{},prefs:{},saveLists:nothing,saveDecks:nothing,savePrefs:nothing,closeSheet:nothing,toast:nothing,confirm:()=>true,
     location:{origin:'https://offline.test',pathname:'/',hash:'#/start'},document:{getElementById:()=>null},window:{dispatchEvent:nothing},
     fetch:db.request.bind(db), LS:{get:(k,v)=>store.has(k)?structuredClone(store.get(k)):v,set:(k,v)=>store.set(k,structuredClone(v))},

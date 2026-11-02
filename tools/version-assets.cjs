@@ -4,7 +4,7 @@ const path = require('node:path');
 const root=path.resolve(__dirname,'..');
 const read=file=>fs.readFileSync(path.join(root,file),'utf8');
 const hash=text=>crypto.createHash('sha256').update(text).digest('hex').slice(0,12);
-const files=['konto.js','js/course-counts.js','js/study-sync.js','js/game-messages.js','js/render-safety.js',
+const files=['config.js','konto.js','js/course-counts.js','js/study-sync.js','js/game-messages.js','js/render-safety.js',
   'js/pages.js','grammatik/catalog.js','grammatik/grammatik.js'];
 let index=read('index.html');
 for(const file of files) {

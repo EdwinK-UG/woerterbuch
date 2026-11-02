@@ -2,5 +2,6 @@ node_modules/
 .local/
 __pycache__/
 *.pyc
+config.local.json
 .env*
 .dev.vars*
