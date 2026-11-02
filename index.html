@@ -6,7 +6,6 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Deutschklinik</title>
 <meta name="description" content="German learner dictionary with categories, revision lists, word maps and Anki-style flashcards.">
-<link rel="preload" href="core.bin?v=3846fea8f4" as="fetch" crossorigin="anonymous">
 <link rel="preconnect" href="https://woerterbuch-bilder.edwin1kitaka.workers.dev">
 <link rel="preconnect" href="https://upload.wikimedia.org">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -400,10 +399,8 @@ function saveLists(){LS.set('gd_lists',lists)} function saveDecks(){LS.set('gd_d
 const fold=s=>s.toLowerCase().replace(/ä/g,'a').replace(/ö/g,'o').replace(/ü/g,'u').replace(/ß/g,'ss').replace(/[^a-z0-9]/g,'');
 let FOLD=[];
 /* ---------- load packed data ---------- */
-/* The website loads the dictionary in two parts: core.bin (~0.5 MB: headwords for search, topics, home page)
-   first, then defs.bin (definitions, word families, word maps) in the background. Pages that show definitions
-   wait for the second part (FULLP). The single-file copy has everything inside the page. */
-let FULL=false, NMAIN=0, fullRes; const FULLP=new Promise(r=>fullRes=r);
+let FULL=false, NMAIN=0, corePromise=null, definitionsPromise=null, coreLength=0;
+let searchText='';
 async function fetchBin(url,progress){
   const r=await fetch(url); if(!r.ok)throw new Error('Wörterbuch-Daten: '+r.status);
   const total=+r.headers.get('content-length')||0, lo=progress&&document.querySelector('#view .loading:not([data-g])');
@@ -422,38 +419,57 @@ async function unpack(bin){
     :new TextDecoder().decode(bin);    // in case a server already unpacked it
   return JSON.parse(txt);
 }
-function setFull(){ FULL=true; fullRes() }
-async function load(){
+function ensureCore(){
+  if(!corePromise)corePromise=loadCore().catch(e=>{corePromise=null;throw e});
+  return corePromise;
+}
+async function loadCore(){
   const el=document.getElementById('data'), b64=el.textContent.trim();
-  const aip=fetchAIEntries();          // AI entries load in parallel with the dictionary
-  let j, defsP=null;
-  if(b64){ j=await unpack(Uint8Array.from(atob(b64),c=>c.charCodeAt(0))) }   // single-file copy: data inside the page
-  else{ j=await fetchBin(el.dataset.src,true); defsP=fetchBin(el.dataset.defs) }   // one after the other: on a slow line the small file is not slowed down
+  const j=b64 ? await unpack(Uint8Array.from(atob(b64),c=>c.charCodeAt(0))) : await fetchBin(el.dataset.src,true);
   CATS=j.c; CATS.forEach(c=>CATMAP.set(c.id,c));
-  if(defsP){
+  if(!b64){
     NMAIN=j.n;
     E=j.e.map((a,i)=>({i,w:a[0],sy:a[1],ar:a[2],ps:a[3],df:'',rel:[],cat:a[4],pg:a[5],wm:null,st:a[6]&1,dl:a[7]}));
   } else {
     E=j.e.map((a,i)=>({i,w:a[0],sy:a[1],ar:a[2],ps:a[3],df:a[4],rel:a[5],cat:a[6],pg:a[7],wm:a[8]||null,st:/^\s*<span class="core"/.test(a[4])?1:0,dl:a[4].length}));
     NMAIN=E.filter(e=>e.ps!=='Info'&&!/abgeleitet von/.test(e.df)).length;
   }
-  const NB=E.length;                   // AI entries are added after these and bring their own definitions
+  coreLength=E.length;                   // AI entries are added after these and bring their own definitions
   E.forEach(e=>{if(!WIDX.has(e.w))WIDX.set(e.w,e.i)});
   // older spellings and words without homograph number still open the right entry (saved lists, flashcards)
   for(const [o,n] of Object.entries(j.a||{})){if(!WIDX.has(o)&&WIDX.has(n))WIDX.set(o,WIDX.get(n))}
   E.forEach(e=>{const p=e.w.replace(/[¹²³⁴⁵⁶⁷⁸⁹]/g,'');if(!WIDX.has(p))WIDX.set(p,e.i)});
   FOLD=E.map(e=>fold(e.w));
-  if(defsP){
-    defsP.then(d=>{ for(let i=0;i<NB&&i<d.length;i++){const x=d[i],e=E[i]; e.df=x[0]; e.rel=x[1]||[]; e.wm=x[2]||null} setFull() })
-      .catch(()=>{ const v=V(); if(v&&v.querySelector('.loading[data-full]'))v.innerHTML='<div class="empty"><span class="em">⚠️</span>Die Wörterbuch-Daten konnten nicht geladen werden. Bitte prüfe die Internetverbindung und lade die Seite neu.</div>' });
-  } else setFull();
-  // AI entries arrive on their own; only pages that may need one are drawn again
-  aip.then(list=>{ if(!list)return; addAIEntries(list);
-    const h=location.hash, w=h.startsWith('#/w/')?decodeURIComponent(h.slice(4)):null;
-    if(FULL&&((w&&WIDX.get(w)!=null&&E[WIDX.get(w)].ai)||/^#\/(study|list)\//.test(h)))route() });
-  if(!isGram())route();
-  if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
+  FULL=!!b64;
+  fetchAIEntries().then(list=>{
+    if(!Array.isArray(list)||!addAIEntries(list))return;
+    const h=location.hash,w=h.startsWith('#/w/')?decodeURIComponent(h.slice(4)):null;
+    if((w&&E[WIDX.get(w)]?.ai)||/^#\/list\//.test(h))route();
+  });
 }
+function ensureDefinitions(){
+  if(!definitionsPromise)definitionsPromise=(async()=>{
+    await ensureCore();if(FULL)return;
+    const rows=await fetchBin(document.getElementById('data').dataset.defs);
+    if(!Array.isArray(rows)||rows.length!==coreLength)throw new Error('Dictionary version mismatch');
+    rows.forEach(([df,rel,wm],i)=>Object.assign(E[i],{df,rel:rel||[],wm:wm||null}));
+    FULL=true;
+  })().catch(e=>{definitionsPromise=null;throw e});
+  return definitionsPromise;
+}
+async function downloadDictionary(button){
+  button.disabled=true;
+  try{
+    if(!('caches' in window)||!('serviceWorker' in navigator))throw new Error();
+    const registration=await navigator.serviceWorker.getRegistration();
+    if(!registration)throw new Error();
+    await navigator.serviceWorker.ready;
+    const data=document.getElementById('data').dataset,cache=await caches.open('wb-data');
+    for(const url of [data.src,data.defs])if(!await cache.match(url))await cache.add(url);
+    button.textContent=KONTO.T('Dictionary saved on this device','Wörterbuch auf diesem Gerät gespeichert');
+  }catch{button.disabled=false;toast(KONTO.T('Download failed. Please try again online.','Download fehlgeschlagen. Bitte online erneut versuchen.'))}
+}
+function openLookup(word){searchText=String(word||'').trim();if(location.hash==='#/')route();else go('')}
 /* ---------- search ---------- */
 function search(qr,limit=60){
   const f=fold(qr); if(!f)return [];
@@ -469,16 +485,28 @@ function search(qr,limit=60){
 const POSL={n:'Substantiv',v:'Verb',adj:'Adjektiv',adv:'Adverb',prp:'Präp.',kon:'Konj.',pro:'Pron.',num:'Num.',ptk:'Partikel'};
 const gcol=a=>a==='der'?'var(--der)':a==='die'?'var(--die)':a==='das'?'var(--das)':'var(--faint)';
 /* ---------- router ---------- */
+let routeGeneration=0;
 function route(){
+  if(!window.KONTO)return;
+  const request=++routeGeneration;
   const h=location.hash.slice(2)||'';
   const [p,arg]=[h.split('/')[0],decodeURIComponent(h.split('/').slice(1).join('/')||'')];
   // features the visitor may not use (yet): show the lock page instead (the owner decides in Settings)
   const gf=window.KONTO&&KONTO.featureOf&&KONTO.featureOf(p);
   if(gf&&!KONTO.can(gf)){document.querySelectorAll('#tabs a').forEach(a=>a.classList.toggle('on',a.dataset.t===({dict:'home',lists:'lists',cards:'decks',vocab:'wort',grammar:'gram',games:'play'}[gf]||'')));
     if(window.PLAY)PLAY.leave(); if(window.GRAM)GRAM.leave(); KONTO.gate(gf); window.scrollTo(0,0); return}
-  if(!FULL&&!['','cats','g','v','lists','decks','klasse','admin','aufgaben','start','kurs','settings','schule'].includes(p)){        // definitions are still arriving
-    if(!V().querySelector('.loading[data-full]'))V().innerHTML='<div class="loading" data-full="1"><div class="spin"></div>Einträge werden geladen …</div>';
-    FULLP.then(()=>{ if(location.hash.slice(2)===h)route() }); return }
+  const gameSetup=p==='play'&&/^(gram|host|solo|memory|blitz)(\/|$)/.test(arg);
+  const needCore=['','cats','cat','w','list','study'].includes(p)||gameSetup;
+  const needDefinitions=['w','study'].includes(p);
+  if((needCore&&!coreLength)||(needDefinitions&&!FULL)){
+    V().innerHTML='<div class="loading"><div class="spin"></div>'+KONTO.T('Loading dictionary …','Wörterbuch wird geladen …')+'</div>';
+    (needDefinitions?ensureDefinitions():ensureCore()).then(()=>{
+      if(request===routeGeneration&&location.hash.slice(2)===h)route();
+    }).catch(()=>{
+      if(request===routeGeneration&&location.hash.slice(2)===h)V().innerHTML='<div class="empty">'+KONTO.T('The dictionary download failed.','Der Wörterbuch-Download ist fehlgeschlagen.')+
+        ' <button class="btn" onclick="route()">'+KONTO.T('Retry','Erneut versuchen')+'</button></div>';
+    });return;
+  }
   document.querySelectorAll('#tabs a').forEach(a=>a.classList.remove('on'));
   const setOn=t=>{const el=document.querySelector(`#tabs a[data-t="${t}"]`);if(el)el.classList.add('on')};
   if(p===''){setOn('home');viewHome()}
@@ -510,7 +538,7 @@ function scriptFile(src){
 function loadGram(){
   if(!gramP)gramP=(async()=>{
     if(typeof LESSON_EXERCISES==='undefined')await scriptFile('grammatik/catalog.js?v=1');
-    if(!window.GRAM)await scriptFile('grammatik/grammatik.js?v=16');
+    if(!window.GRAM)await scriptFile('grammatik/grammatik.js?v=17');
   })().catch(e=>{gramP=null;throw e});
   return gramP;
 }
@@ -550,7 +578,7 @@ function viewHome(){
       <span class="hw">${esc(e.w)}</span><small>${e.ar?e.ar+' · ':''}${POSL[e.ps]||''}</small></li>`).join('');
     sug.style.display='block';
   };
-  q.addEventListener('input',()=>{sel=-1;render()});
+  q.addEventListener('input',()=>{searchText=q.value;sel=-1;render()});
   q.addEventListener('keydown',ev=>{
     if(ev.key==='ArrowDown'){sel=Math.min(sel+1,cur.length-1);render();ev.preventDefault()}
     else if(ev.key==='ArrowUp'){sel=Math.max(sel-1,0);render();ev.preventDefault()}
@@ -567,7 +595,7 @@ function viewHome(){
     ${wd?`<a class="wotd" href="#/w/${encodeURIComponent(wd.w)}">
       <div class="wotd-l"><span class="eyebrow">${ic('sparkles')} Wort des Tages</span>
         <div class="wotd-w">${wd.ar?`<span class="art ${wd.ar}">${wd.ar}</span>`:''}<span class="wotd-hw">${sylHTML(wd.sy)}</span></div>
-        <p class="wotd-d" id="wotdd">${FULL?esc(gloss(wd)):'…'}</p>
+        <p class="wotd-d" id="wotdd">${FULL?esc(gloss(wd)):''}</p>
         <span class="wotd-go">Eintrag öffnen ${ic('arrow-right')}</span></div>
       <button class="wotd-say" title="Aussprache anhören" onclick="event.preventDefault();event.stopPropagation();say(${wd.i},this)">${ic('volume-2')}</button></a>`:''}
     <div class="sec"><h2>Themen entdecken</h2><a href="#/cats">Alle ${CATS.length} Themen ${ic('arrow-right')}</a></div>
@@ -577,8 +605,9 @@ function viewHome(){
       <div><b>${(E.length-nMain-E.filter(e=>e.ps==='Info').length).toLocaleString('de')}</b><span>abgeleitete Wörter</span></div>
       <div><b>${E.filter(e=>e.ps==='Info').length}</b><span>Infokästen</span></div>
       <div><b>${CATS.length}</b><span>Themen</span></div></div>
+    <p><button class="btn" onclick="downloadDictionary(this)">${KONTO.T('Save the dictionary for offline use (5.65 MiB)','Wörterbuch offline speichern (5,65 MiB)')}</button></p>
     <p class="src">Grundlage: Langenscheidt Großwörterbuch Deutsch als Fremdsprache</p>`;
-  if(!FULL&&wd)FULLP.then(()=>{const d=document.getElementById('wotdd'); if(d)d.textContent=gloss(wd)});
+  if(searchText){q.value=searchText;render()}
 }
 /* word of the day: a core-vocabulary word, the same for everyone on a given day */
 function wordOfDay(){
@@ -1384,8 +1413,10 @@ document.getElementById('theme').onclick=()=>{
 };
 /* expose for inline handlers */
 Object.assign(window,{go,openAdd,addTo,addNew,quickCard,makeCards,newList,createList,renameList,delList,rmFromList,pickAll,listFromWords,closeSheet,reveal,ans,delDeck});
-if(isGram())route();   // grammar does not need the dictionary download to start
-load().catch(err=>{if(!isGram())V().innerHTML='<div class="empty"><span class="em">⚠️</span>Laden fehlgeschlagen: '+esc(String(err))+'</div>'});
+document.addEventListener('DOMContentLoaded',()=>{
+  if(window.KONTO)route();else V().innerHTML='<p>Deutschklinik could not load. <button class="btn" onclick="location.reload()">Retry</button></p>';
+  if('serviceWorker' in navigator && window.isSecureContext)navigator.serviceWorker.register('sw.js').catch(()=>{});
+});
 </script>
 <!-- ===== Konten (Supabase) – add-on, changes no existing feature ===== -->
 <style>
@@ -2863,7 +2894,12 @@ function viewSetup(kind){   // kind: solo | host | memory | blitz
     if(src==='gram')s.title='Grammatik: '+((window.GRAM&&GRAM.list().find(c=>String(c.n)===id))||{}).title;
     LS.set('gd_gset_'+kind,s); start(kind,s)};
 }
-function start(kind,s){
+async function start(kind,s){
+  const hash=location.hash;
+  if(s.src!=='quiz'&&s.src!=='gram'){
+    try{await (kind==='blitz'?ensureCore():ensureDefinitions())}catch{toast('Wörterbuch konnte nicht geladen werden. Bitte erneut starten.');return}
+    if(hash!==location.hash)return;
+  }
   leave(); G={mode:kind+'-wait',kind,s};
   ({solo:soloStart,host:hostStart,memory:memoryStart,blitz:blitzStart})[kind](s);
 }
@@ -2884,7 +2920,6 @@ function quit(){
   leave(); go('play');
 }
 function view(arg){
-  if(!E.length){V().innerHTML='<div class="loading"><div class="spin"></div>Wörterbuch wird geladen …</div>';return}
   const [a,b]=(arg||'').split('/');
   if(G&&!(a==='join'&&G.mode==='player'))leave();
   if(a==='gram'){const st=LS.get('gd_gset_solo',{}); if(st.src!=='gram'){st.src='gram';st.id='1'} LS.set('gd_gset_solo',st); viewSetup('solo')}

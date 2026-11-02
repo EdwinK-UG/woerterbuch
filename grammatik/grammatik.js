@@ -8,7 +8,7 @@
 const VER = '10';
 let PASS = 0.7;                         // share of correct answers needed to pass an exercise (a teacher/school can change it)
 const $ = id => document.getElementById(id);
-const H = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const H = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 const icn = n => (typeof ic === 'function' ? ic(n) : '');
 const icons = () => { if (typeof drawIcons === 'function') drawIcons(); };
 const CASE = { n: 'Nominativ', d: 'Dativ', a: 'Akkusativ' };
@@ -812,8 +812,16 @@ function findWord(w) {
   return null;
 }
 function closePop() { const p = $('grpop'); if (p) p.remove(); }
-function pop(el) {
+async function pop(el) {
   closePop();
+  if(typeof ensureDefinitions==='function'&&!FULL){
+    const wait=document.createElement('div');wait.id='grpop';wait.className='gr-pop';wait.textContent='Wörterbuch wird geladen …';document.body.append(wait);
+    try{await ensureDefinitions()}catch{
+      if(document.getElementById('grpop')===wait){wait.textContent='Wörterbuch konnte nicht geladen werden. ';const retry=document.createElement('button');retry.className='btn sm';retry.textContent='Erneut versuchen';retry.onclick=()=>pop(el);wait.append(retry)}return;
+    }
+    if(!document.contains(el)||document.getElementById('grpop')!==wait)return;
+    wait.remove();
+  }
   const w = el.textContent, i = findWord(w), r = el.getBoundingClientRect(), d = document.createElement('div');
   d.id = 'grpop'; d.className = 'gr-pop';
   if (typeof E === 'undefined' || !E.length) d.innerHTML = `<p style="margin:0">Das Wörterbuch lädt noch …</p>`;
@@ -1155,7 +1163,11 @@ function selPaint() {
   const b = $('vksel'); if (b) { b.innerHTML = selBar(cur); b.classList.toggle('on', vselOn); }
   icons();
 }
-function deckFrom(c, words, label) {
+async function deckFrom(c, words, label) {
+  if(typeof requireFeature==='function'&&!requireFeature('cards'))return;
+  const user=acct()?.id, hash=location.hash;
+  try{if(typeof ensureCore==='function')await ensureCore()}catch{if(typeof toast==='function')toast('Wörterbuch konnte nicht geladen werden. Bitte erneut versuchen.');return}
+  if(user!==acct()?.id||hash!==location.hash)return;
   if (typeof decks === 'undefined' || typeof newCard !== 'function' || typeof WIDX === 'undefined') { if (typeof toast === 'function') toast('Lernkarten sind gerade nicht verfügbar.'); return; }
   const name = `Wortschatz ${c.level} · ${c.title}${label ? ' · ' + label : ''}`;
   const ws = words.map(w => WIDX.has(w) ? E[WIDX.get(w)].w : WIDX.has(w + '¹') ? w + '¹' : null).filter(Boolean);
@@ -1239,7 +1251,7 @@ function vocabSheet(c, w) {
   openSheet(`<div class="vk-sh">
     <div class="vk-shh"><span class="vk-shp">${c.pic ? c.pic(x.w) : ''}</span><div class="vk-sht">
       <div class="vk-shw ${x.ar && !x.pf ? x.ar : x.pf ? 'die' : 'x'}">${x.ar ? `<span class="vk-ar">${H(x.ar)}</span> ` : ''}<b>${H(vdisp(x))}</b>
-        <button class="gr-say" title="Aussprache anhören" onclick="GRAM.voc.play(${c.n},'${H(x.w)}',this)">${icn('volume-2')}</button></div>
+        <button class="gr-say" title="Aussprache anhören" onclick="GRAM.voc.play(${c.n},${H(JSON.stringify(x.w))},this)">${icn('volume-2')}</button></div>
       <div class="vk-meta">${H(VPOS[x.ps] || '')}${x.ipa ? ` · <span class="ipa">${H(x.ipa)}</span>` : ''}</div>
       ${forms ? `<div class="vk-fm">${forms}</div>` : ''}</div></div>
     <div class="vk-tr"><span class="lab">EN</span><span>${x.en.map((e, i) => i === 0 ? `<b>${H(e)}</b>` : H(e)).join('<i>·</i>')}</span></div>
@@ -1250,7 +1262,7 @@ function vocabSheet(c, w) {
       <div class="en">${H(e[1])} <a class="vk-tl" href="https://tatoeba.org/de/sentences/show/${e[2]}" target="_blank" rel="noopener" title="Satz bei Tatoeba">Tatoeba</a></div></div>`).join('')}</div>
     <div class="vk-shf"><button class="btn sm" onclick="GRAM.voc.open(${c.n},'${H(prev.w)}')">${icn('arrow-left')} ${H(prev.w)}</button>
       <button class="btn sm" onclick="GRAM.voc.open(${c.n},'${H(next.w)}')">${H(next.w)} ${icn('arrow-right')}</button><span class="spacer"></span>
-      ${big ? `<a class="btn sm" href="#/w/${encodeURIComponent(big)}" onclick="closeSheet()">${icn('book-open')} Großes Wörterbuch</a>` : ''}
+      ${`<a class="btn sm" href="#/w/${encodeURIComponent(big||x.w)}" onclick="closeSheet()">${icn('book-open')} Großes Wörterbuch</a>`}
       <button class="btn sm primary" onclick="closeSheet()">Fertig</button></div>
     ${x.af ? `<p class="vk-cred">Aussprache: <a href="https://commons.wikimedia.org/wiki/File:${encodeURIComponent(x.af)}" target="_blank" rel="noopener">${H(x.af)}</a> (Wikimedia Commons) · Formen: <a href="https://de.wiktionary.org/wiki/${encodeURIComponent(x.w)}" target="_blank" rel="noopener">Wiktionary</a></p>` : ''}
   </div>`);

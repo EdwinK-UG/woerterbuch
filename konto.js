@@ -876,11 +876,7 @@ function viewWelcome() {
       <button class="btn primary" onclick="KONTO.signupAs('school')">${T('Register your school', 'Schule registrieren')}</button><button class="btn" onclick="KONTO.signupAs('teacher')">${T('I am a teacher', 'Ich bin Lehrkraft')}</button></div>`, 'kd');
   draw(COURSE_COUNTS);
 }
-function lookup(w) {
-  w = String(w || '').trim(); location.hash = '#/';
-  if (!w) return;
-  setTimeout(() => { const q = $('q'); if (q) { q.value = w; q.dispatchEvent(new Event('input', { bubbles: true })); q.focus(); } }, 150);
-}
+function lookup(w) { openLookup(w); }
 function signupAs(r) { SU.role = r; A() && A().sheet && A().sheet('up'); }
 async function saveSite() {
   const features = {}; Object.keys(FDEF).forEach(f => { const v = ($('sf_' + f) || {}).value; if (v) features[f] = v; });
@@ -1024,6 +1020,6 @@ window.addEventListener('acct:out', () => { profileRequest++; loading=null; OFF=
 const sp = new URLSearchParams(location.search), jc = sp.get('join'), ic = sp.get('invite');
 if (jc || ic) { history.replaceState(null, '', location.pathname + location.hash); setTimeout(() => openInvite(jc ? 'join' : 'invite', jc || ic), 500); }
 loadSite();
-if (/^#?\/?$/.test(location.hash)) location.replace('#/start');
+if (!location.hash) location.replace('#/start');
 if (me()) reload(); else apply();
 })();
