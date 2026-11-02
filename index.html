@@ -2145,6 +2145,7 @@ setInterval(()=>{ if(document.visibilityState==='visible'&&Date.now()-lastAct<20
 /* ===== SPIELE: quiz games alone or live with a group (Supabase Realtime), memory, Artikel-Blitz, own quizzes ===== */
 (function(){
 const gt = german => ui(GAME_EN[german] ?? german, german);
+let gameUiLanguage = null;
 const $=id=>document.getElementById(id);
 const rnd=n=>Math.floor(Math.random()*n);
 const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=rnd(i+1);[a[i],a[j]]=[a[j],a[i]]}return a};
@@ -3036,6 +3037,7 @@ function quit(){
   leave(); go('play');
 }
 function view(arg){
+  gameUiLanguage = window.KONTO?.lang() || 'en';
   const [a,b]=(arg||'').split('/');
   if(G&&!(a==='join'&&G.mode==='player'))leave();
   if(a==='gram'){const st=LS.get('gd_gset_solo',{}); if(st.src!=='gram'){st.src='gram';st.id='1'} LS.set('gd_gset_solo',st); viewSetup('solo')}
@@ -3052,6 +3054,7 @@ document.addEventListener('keydown',ev=>{
 window.addEventListener('beforeunload',()=>{ if(G&&G.mode==='host'&&G.ch)send('bye',{}) });
 
 window.PLAY={view,leave,quit,again,saveMiss,kick,hostGo,hostNext,hostEnd,hostScores,report,csv,rematch,playQuiz,newQuiz,
+  refresh(){ if (!G && gameUiLanguage !== (window.KONTO?.lang() || 'en') && /^#\/play(?:\/|$)/.test(location.hash) && !location.hash.startsWith('#/play/edit/')) view(location.hash.split('/').slice(2).join('/')); },
   snd(){AU.wake();AU.set(!AU.on);const b=$('gmsnd');if(b){b.innerHTML=ic(AU.on?'volume-2':'volume-x');drawIcons()}},
   fs(){const m=$('gm'); if(!m)return; if(document.fullscreenElement)document.exitFullscreen(); else if(m.requestFullscreen)m.requestFullscreen().catch(()=>{})},
   qeAdd:QE.add,qeRm:QE.rm,qeOpt:QE.opt,qeSet:QE.set,qeType:QE.type,qeSave:QE.save,qeDel:QE.del,
@@ -3063,5 +3066,5 @@ if(tabs&&!tabs.querySelector('[data-t="play"]')){const a=document.createElement(
 })();
 </script>
 <!-- ===== /Spiele ===== -->
-<script src="konto.js?v=cf33df717c07"></script>
+<script src="konto.js?v=8f671ee7ab82"></script>
 </body></html>
