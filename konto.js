@@ -15,6 +15,7 @@ const V = () => $('view');
 const lvSort = a => LV.filter(l => (a || []).includes(l));
 const okUrl = u => /^https:\/\/[^\s<>"']+$/.test(String(u || ''));
 
+let profileRequest = 0;
 let P = null, ORG = null, OFF = false, loading = null, mine = { orgs: [], staff: [] }, CUR = '';
 
 /* ---------- language: menus and account pages in English or German; the courses themselves stay German ---------- */
@@ -40,14 +41,17 @@ function err(e) { return notInstalled(e) ? T('This is not set up yet.', 'Diese F
 const PATCH = (path, body) => q(path, { method: 'PATCH', headers: { Prefer: 'return=minimal' }, body });
 
 async function load() {
-  const u = me();
+  const u = me(), request = ++profileRequest;
+  const current = () => request === profileRequest && me()?.id === u?.id;
+  OFF = false;
+  if (P?.user_id !== u?.id) { P = null; ORG = null; mine = {orgs:[],staff:[]}; }
   if (!u) { P = null; ORG = null; mine = { orgs: [], staff: [] }; apply(); return; }
-  if (OFF) return;
   try {
     let rows = await q('/rest/v1/profiles?select=*&user_id=eq.' + u.id);
-    P = rows && rows[0];
+    if (!current()) return;
+    let profile = rows && rows[0];
     const su = LSg('gd_signup', null), fresh = su && su.email && u.email && su.email.toLowerCase() === u.email.toLowerCase();
-    if (!P) {   // the database normally makes the profile at sign-up; this is the fallback for older accounts
+    if (!profile) {   // the database normally makes the profile at sign-up; this is the fallback for older accounts
       const body = { user_id: u.id }, d = fresh && su.data || {};
       if (d.name) body.display_name = String(d.name).slice(0, 60);
       if (LV.includes(d.level)) { body.level = d.level; if (!d.join) body.unlocked = [d.level]; }
@@ -55,24 +59,27 @@ async function load() {
       if (d.lang === 'en' || d.lang === 'de') body.ui_lang = d.lang;
       try { await q('/rest/v1/profiles', { method: 'POST', headers: { Prefer: 'return=minimal' }, body }); }
       catch (e) { if (e.status === 400) await q('/rest/v1/profiles', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: { user_id: u.id } }); else if (e.status !== 409) throw e; }
-      rows = await q('/rest/v1/profiles?select=*&user_id=eq.' + u.id); P = rows && rows[0];
+      rows = await q('/rest/v1/profiles?select=*&user_id=eq.' + u.id); profile = rows && rows[0];
     }
+    if (!current()) return;
+    if (!profile) throw new Error('Profile unavailable');
     if (fresh) LSs('gd_signup', null);
-    if (P && !Array.isArray(P.unlocked)) { P.unlocked = []; P._noUnl = true; }
-    ORG = null;
-    if (P && P.org_id) { try { ORG = await rpc('my_org'); } catch (e) {} }
-    mine = { orgs: [], staff: [] };
-    if (P && P.role !== 'learner') {
+    if (!Array.isArray(profile.unlocked)) throw new Error('Enrollment schema unavailable');
+    const org = profile.org_id ? await rpc('my_org') : null;
+    const memberships = { orgs: [], staff: [] };
+    if (profile.role !== 'learner') {
       try {
-        mine.orgs = await q('/rest/v1/orgs?select=*&owner=eq.' + u.id + '&order=created_at') || [];
+        memberships.orgs = await q('/rest/v1/orgs?select=*&owner=eq.' + u.id + '&order=created_at') || [];
         const ms = await q('/rest/v1/org_members?select=org_id&member_role=eq.teacher&user_id=eq.' + u.id) || [];
-        mine.staff = ms.map(m => m.org_id).filter(id => !mine.orgs.some(o => o.id === id));
+        memberships.staff = ms.map(m => m.org_id).filter(id => !memberships.orgs.some(o => o.id === id));
       } catch (e) {}
     }
+    if (!current()) return;
+    P = profile; ORG = org; mine = memberships;
     await pendingLogo();
-    if (await handleInvite()) return;
-  } catch (e) { if (notInstalled(e)) { OFF = true; P = null; } else console.warn('konto', e); }
-  apply();
+    if (!current() || await handleInvite()) return;
+  } catch (e) { if (!current()) return; OFF = true; P = null; ORG = null; mine = {orgs:[],staff:[]}; }
+  if (current()) apply();
 }
 function reload() { loading = load(); return loading; }
 const ready = () => loading || reload();
@@ -82,13 +89,12 @@ const isStaff = () => !!(P && P.role !== 'learner');
 function unlockedSet() {
   if (!P) return [];
   const u = new Set(P.unlocked || []);
-  if (P._noUnl && LV.includes(P.level)) u.add(P.level);       // database not updated yet: the chosen level counts as enrolled
   return lvSort([...u]);
 }
 // a learner opens exactly the levels they are enrolled in (until they unenroll); teachers, schools and the owner open everything
 function canOpen(l) {
-  if (!LV.includes(l) || OFF || !me() || !P || isStaff()) return true;
-  return unlockedSet().includes(l);
+  if (!LV.includes(l) || !me()) return true;
+  return !!P && P.user_id === me().id && (isStaff() || unlockedSet().includes(l));
 }
 const lvState = l => (canOpen(l) ? 'open' : P && P.org_id && P.level === l ? 'pending' : 'locked');
 const level = () => (P && P.role === 'learner' ? (LV.includes(P.level) && canOpen(P.level) ? P.level : unlockedSet().slice(-1)[0] || null) : null);
@@ -134,9 +140,9 @@ function can(f) {
   const m = mode(f);
   if (m === 'everyone') return true;
   if (m === 'off' || !me()) return false;
-  if (OFF || !P) return true;          // accounts not set up, or the profile is still loading
   return m === 'account' || enrolled();
 }
+const retryProfile = () => `<button class="btn" onclick="KONTO.reload()">${T('Retry connection', 'Verbindung erneut versuchen')}</button>`;
 const ROUTE_F = { '': 'dict', w: 'dict', cats: 'dict', cat: 'dict', lists: 'lists', list: 'lists', decks: 'cards', study: 'cards', v: 'vocab', g: 'grammar', play: 'games' };
 const featureOf = p => ROUTE_F[p == null ? location.hash.slice(2).split('/')[0] : p];
 const TAB_F = { home: 'dict', cats: 'dict', lists: 'lists', decks: 'cards', wort: 'vocab', gram: 'grammar', play: 'games' };
@@ -144,7 +150,8 @@ const TAB_F = { home: 'dict', cats: 'dict', lists: 'lists', decks: 'cards', wort
 function gate(f) {
   const m = mode(f), name = T(FEAT[f][0], FEAT[f][1]);
   let ic = 'lock', h, p, b;
-  if (m === 'off') { h = T('Not available right now', 'Im Moment nicht verfügbar'); p = T(`${name}: this part of Deutschklinik is switched off at the moment.`, `${name}: Dieser Teil von Deutschklinik ist im Moment ausgeschaltet.`); b = `<a class="btn primary" href="#/start">${T('Home', 'Startseite')}</a>`; }
+  if (me() && !P) { h = OFF ? T('Your course access could not be checked', 'Dein Kurszugang konnte nicht geprüft werden') : T('Checking your course access …', 'Dein Kurszugang wird geprüft …'); p = ''; b = OFF ? retryProfile() : ''; }
+  else if (m === 'off') { h = T('Not available right now', 'Im Moment nicht verfügbar'); p = T(`${name}: this part of Deutschklinik is switched off at the moment.`, `${name}: Dieser Teil von Deutschklinik ist im Moment ausgeschaltet.`); b = `<a class="btn primary" href="#/start">${T('Home', 'Startseite')}</a>`; }
   else if (!me()) { h = m === 'account' ? T('Sign in to continue', 'Bitte anmelden') : T('Enroll to unlock this', 'Einschreiben und freischalten');
     p = m === 'account' ? T(`${name} are for members. Create a free account – it takes 20 seconds.`, `${name} gibt es für Mitglieder. Erstelle ein kostenloses Konto – das dauert 20 Sekunden.`)
       : T(`${name} open when you enroll in a level. Create a free account, choose your level (A1 to C1) and your course starts right away.`, `${name} öffnen sich, wenn du dich für ein Niveau einschreibst. Erstelle ein kostenloses Konto, wähle dein Niveau (A1 bis C1) und dein Kurs beginnt sofort.`);
@@ -159,7 +166,7 @@ function gate(f) {
 function gateCheck() {
   const f = featureOf(); if (!f || typeof window.route !== 'function') return;
   const shown = !!document.querySelector('.kd-gate');
-  if (shown === can(f)) window.route();
+  if (shown || !can(f)) window.route();
 }
 
 /* ---------- applying the profile to the site ---------- */
@@ -361,20 +368,24 @@ async function join(code) {
 }
 async function handleInvite() {
   const I = INV(); if (!I || !P) return false;
-  const pv = I.pv || {}; let act = null;
-  if (I.t === 'join') { if (!(pv.org_id && P.org_id === pv.org_id)) act = 'join_with_code'; }
-  else if (pv.role === 'teacher' || pv.role === 'school' ? P.role === 'learner' : pv.level && !P.level) act = 'redeem_invite';
-  LSs('gd_inv', null);
-  if (!act) return false;
-  try { await rpc(act, { p_code: I.code }); toastM(act === 'join_with_code' ? T(`Welcome to ${pv.org}!`, `Willkommen bei ${pv.org}!`) : T('Invitation accepted', 'Einladung angenommen')); }
-  catch (e) { toastM(/invalid code/i.test(String(e.message)) ? T('This invitation is no longer valid.', 'Diese Einladung ist nicht mehr gültig.') : err(e)); return false; }
+  const pv = I.pv || {}, act = I.t === 'join' ? 'join_with_code' : 'redeem_invite';
+  const user = me().id;
+  try {
+    await rpc(act, {p_code:I.code});
+    if (me()?.id !== user) return false;
+    LSs('gd_inv',null); toastM(T('Invitation accepted', 'Einladung angenommen'));
+  } catch (e) {
+    if (me()?.id !== user) return false;
+    if (/invalid code|expired/i.test(String(e.message))) LSs('gd_inv',null);
+    toastM(err(e)); return false;
+  }
   await reload(); return true;
 }
 
 /* ---------- account sheet ---------- */
 function fillMe() {
   const box = $('acct_prof'); if (!box) return;
-  if (OFF || !me()) { box.innerHTML = ''; return; }
+  if (OFF || !me()) { box.innerHTML = OFF ? retryProfile() : ''; return; }
   if (!P) { box.innerHTML = `<p class="muted" style="font-size:.82rem">${T('Loading profile …', 'Profil wird geladen …')}</p>`; ready().then(fillMe); return; }
   const go = h => `onclick="closeSheet();location.hash='${h}'"`;
   box.innerHTML = `<div class="ks-card">
@@ -780,7 +791,7 @@ const dropLogo = id => act(async () => { await PATCH('/rest/v1/orgs?id=eq.' + id
 async function viewSettings() {
   if (!me()) return need();
   busy(); await ready();
-  if (OFF || !P) return page(T('Settings', 'Einstellungen'), `<p class="sub">${T('Accounts are not set up yet.', 'Konten sind noch nicht eingerichtet.')}</p>`);
+  if (OFF || !P) return page(T('Settings', 'Einstellungen'), `<p class="sub">${T('Your account could not be loaded.', 'Dein Konto konnte nicht geladen werden.')}</p>${retryProfile()}`);
   const learner = P.role === 'learner', own = mine.orgs[0], school = P.org_id && ORG && !ORG.owner;
   const sec = (ic, h, body) => `<section class="kd-card kd-set"><h3>${icn(ic)} ${h}</h3>${body}</section>`;
   page(T('Settings', 'Einstellungen'), `
@@ -878,7 +889,7 @@ const ROUTES = ['start', 'kurs', 'settings', 'schule', 'klasse', 'admin', 'aufga
 async function viewStart(arg) {
   if (!me() || arg === 'besucher') return viewWelcome();
   busy(); await ready();
-  if (OFF || !P) return page(T('Home', 'Start'), `<p class="sub">${T('Accounts are not set up yet.', 'Konten sind noch nicht eingerichtet.')}</p><p><a class="btn" href="#/">${T('Dictionary', 'Wörterbuch')}</a></p>`);
+  if (OFF || !P) return page(T('Home', 'Start'), `<p class="sub">${T('Your account could not be loaded.', 'Dein Konto konnte nicht geladen werden.')}</p>${retryProfile()}<p><a class="btn" href="#/">${T('Dictionary', 'Wörterbuch')}</a></p>`);
   if (P.role === 'founder' && !arg) return viewAdmin();
   if (isStaff()) return viewStaff(arg);
   return viewLearner();
@@ -1003,7 +1014,7 @@ window.KONTO = { level, lang, passMark, canOpen, lvState, unlock, lockSheet, unl
   saveOrg, dropLogo, orgPass, addClass, classPass, invite, delInvite, moveMember, removeMember, addTask, delTask, copy, reload, refresh,
   student, unlockFor, saveSettings, setCourse, unenroll, leave, T, can, gate, featureOf, saveSite, lookup, signupAs, previewWelcome: () => { location.hash = '#/start/besucher'; } };
 window.addEventListener('acct:in', e => { reload().then(() => { if (e.detail && e.detail.fresh && /^#?\/?$/.test(location.hash)) location.hash = '#/start'; }); });
-window.addEventListener('acct:out', () => { P = null; ORG = null; mine = { orgs: [], staff: [] }; apply(); if (/^#?\/?$/.test(location.hash)) location.hash = '#/start'; });
+window.addEventListener('acct:out', () => { profileRequest++; loading=null; OFF=false; P = null; ORG = null; mine = { orgs: [], staff: [] }; apply(); if (/^#?\/?$/.test(location.hash)) location.hash = '#/start'; });
 // invitation links: …/?join=CODE (school or teacher) and …/?invite=CODE (from the site owner)
 const sp = new URLSearchParams(location.search), jc = sp.get('join'), ic = sp.get('invite');
 if (jc || ic) { history.replaceState(null, '', location.pathname + location.hash); setTimeout(() => openInvite(jc ? 'join' : 'invite', jc || ic), 500); }
