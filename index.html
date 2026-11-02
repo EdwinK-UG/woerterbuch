@@ -931,7 +931,7 @@ async function findImgs(e){
   return out;
 }
 function showImg(e,box,list,k){
-  if(!list.length){box.innerHTML=`<div class="aicta"><button class="imgai" onclick="aiBack(${e.i})">${ic('sparkles')} Bild mit KI erzeugen</button></div>`;box.classList.add('on');return}
+  if(!list.length){box.innerHTML=`<div class="aicta"><p>${ui('No picture is available right now.','Im Moment ist kein Bild verfügbar.')}</p><button class="imgai" ${APP_CONFIG.readOnly?'disabled':''} onclick="freeShow(E[${e.i}],document.getElementById('wimg'),true)">${ic('sparkles')} ${ui('Generate an AI picture','KI-Bild erzeugen')}</button></div>`;box.classList.add('on');return}
   k=((k%list.length)+list.length)%list.length; const d=list[k];
   box.innerHTML=`<figure><img src="${esc(safeLink(d.src))}" alt="${esc(plainW(e.w))}" loading="lazy" referrerpolicy="no-referrer">
     <figcaption><span class="capb"><button class="imgnext" title="Anderes Bild">↻ anderes Bild</button><button class="imgai" title="KI-Bild zeigen" onclick="aiBack(${e.i})">${ic('sparkles')} KI</button></span>
@@ -947,7 +947,7 @@ async function loadImg(e){
   if(saved){showImg(e,box,[saved],0)}
   let list=IMGC.get(w);
   if(!list){const c=LSI.get('list|'+w); if(c&&Date.now()-c.t<7*864e5&&c.l.length)list=c.l}
-  if(!list){list=await findImgs(e); if(list.length)LSI.set('list|'+w,{t:Date.now(),l:list.slice(0,8)})}
+  if(!list){let timeout;try{list=await Promise.race([findImgs(e).catch(()=>[]),new Promise(resolve=>{timeout=setTimeout(()=>resolve([]),12000)})])}finally{clearTimeout(timeout)} if(list.length)LSI.set('list|'+w,{t:Date.now(),l:list.slice(0,8)})}
   IMGC.set(w,list);
   if(!document.body.contains(box))return;
   if(saved){const k=list.findIndex(x=>x.src===saved.src); if(k<0)list.unshift(saved); showImg(e,box,list,Math.max(0,k)); return}
@@ -1001,12 +1001,16 @@ async function freeShow(e,box,fresh){
     <button class="imgai" onclick="(b=>{b.dataset.photo='1';loadImg(E[${e.i}])})(document.getElementById('wimg'))">Foto</button></span>
     <a href="#" onclick="event.preventDefault();AI.open()">${ic('sparkles')} KI-Bild</a></figcaption>`;
   box.classList.add('on');
-  box.innerHTML=`<figure><div class="aiload"><span class="spin"></span><span>Bild wird erzeugt …</span></div>${cap}</figure>`;
+  box.innerHTML=`<figure><div class="aiload"><span class="spin"></span><span>${ui('Loading picture …','Bild wird geladen …')}</span></div>${cap}</figure>`;
   // a picture that already exists comes straight from storage as a small file, without waiting for anything else
   if(!fresh&&!box.dataset.nopic){
-    const ok=await new Promise(res=>{const im=new Image(); im.alt='KI-Bild: '+w; im.decoding='async';
-      im.onload=()=>{if(document.body.contains(box)){const l=box.querySelector('.aiload'); if(l)l.replaceWith(im)} res(true)};
-      im.onerror=()=>res(false); im.src=picURL(e,seed)});
+    const ok=await new Promise(resolve=>{
+      const im=new Image();im.alt='KI-Bild: '+w;im.decoding='async';
+      let settled=false;
+      const done=success=>{if(settled)return;settled=true;clearTimeout(timeout);if(success&&document.body.contains(box)){const loading=box.querySelector('.aiload');if(loading)loading.replaceWith(im)}resolve(success)};
+      const timeout=setTimeout(()=>{done(false);im.src=''},4000);
+      im.onload=()=>done(true);im.onerror=()=>done(false);im.src=picURL(e,seed);
+    });
     if(ok)return;
   }
   if(!window.ACCT?.user()||APP_CONFIG.readOnly){
@@ -1018,6 +1022,8 @@ async function freeShow(e,box,fresh){
   // our own Cloudflare picture service: a text model turns the meaning into a scene, FLUX draws it, stored per word
   const def=gloss(e).replace(/[⟨⟩]/g,'').slice(0,300), ex=(examples({df:e.df.split(/<span class="sn">2<\/span>/)[0]},1)[0]||'').slice(0,180);
   const qs=new URLSearchParams({w, pos:POSL[e.ps]||e.ps||'', en:en||'', def, ex, seed});
+  if(!document.body.contains(box)||ACCT.user()?.id!==actor)return;
+  const loading=box.querySelector('.aiload span:last-child');if(loading)loading.textContent=ui('Generating picture …','Bild wird erzeugt …');
   const url=APP_CONFIG.workerUrl+'/img?'+qs.toString();
   const fallback=()=>{ if(!document.body.contains(box))return; box.dataset.photo='1'; loadImg(e) };
   if(Date.now()<AIWAIT.until){fallback();return}           // daily allowance used up: photos until it resets
@@ -1073,14 +1079,14 @@ async function createAI(w){
   w=w.trim(); if(!w)return;
   if(!window.ACCT?.user()){ACCT.sheet('in');toast(ui('Sign in to suggest an entry.','Bitte anmelden, um einen Eintrag vorzuschlagen.'));return}
   try{assertWritable()}catch(e){toast(e.message);return}
-  const user=ACCT.user().id;
+  const user=ACCT.user().id,requestHash=location.hash;
   const steps=['Echte Beispielsätze werden in Zeitungen und Wikipedia gesucht …','Die Bedeutung wird einfach erklärt …','Der Eintrag wird gespeichert …'];
   V().innerHTML=`<div class="aimake"><span class="spin"></span><h1 class="page">„${esc(w)}“</h1><p class="sub" id="aistep">${steps[0]}</p>
     <p class="muted" style="font-size:.85rem">Das dauert meist 10–30 Sekunden.</p></div>`;
   let k=0; const tick=setInterval(()=>{k=Math.min(k+1,steps.length-1); const el=document.getElementById('aistep'); if(el)el.textContent=steps[k]},6000);
   try{
     const r=await fetch(APP_CONFIG.workerUrl+'/entry?w='+encodeURIComponent(w),{method:'POST',headers:{Authorization:'Bearer '+await ACCT.token()}}); const d=await r.json(); clearInterval(tick);
-    if(ACCT.user()?.id!==user)return;
+    if(ACCT.user()?.id!==user||location.hash!==requestHash)return;
     if(r.status===202&&d.pending){V().innerHTML=`<div class="aimiss"><h1 class="page">${ui('Submitted for review','Zur Prüfung eingereicht')}</h1><p>${ui('Your suggested entry will become public after editorial review.','Dein vorgeschlagener Eintrag wird nach redaktioneller Prüfung veröffentlicht.')}</p><a class="btn" href="#/">${ui('Back to search','Zur Suche')}</a></div>`;return}
     if(!r.ok||!d.entry){
       V().innerHTML=`<div class="aimiss"><span class="em">${ic('circle-help')}</span><h1 class="page">Kein Eintrag erstellt</h1>
@@ -1089,7 +1095,7 @@ async function createAI(w){
     if(WIDX.has(x.w)&&!E[WIDX.get(x.w)].ai){toast('Gefunden als „'+x.w+'“'); go('w/'+encodeURIComponent(x.w)); return}
     addAIEntries([x]); if(!WIDX.has(w))WIDX.set(w,WIDX.get(x.w));
     go('w/'+encodeURIComponent(x.w));
-  }catch(err){ clearInterval(tick); V().innerHTML=`<div class="aimiss"><h1 class="page">Keine Verbindung</h1><p class="sub">Der Eintrag konnte gerade nicht erstellt werden.</p><a class="btn" href="#/" onclick="home(event)">← Suche</a></div>` }
+  }catch(err){ clearInterval(tick); if(location.hash!==requestHash)return; V().innerHTML=`<div class="aimiss"><h1 class="page">Keine Verbindung</h1><p class="sub">Der Eintrag konnte gerade nicht erstellt werden.</p><a class="btn" href="#/" onclick="home(event)">← Suche</a></div>` }
 }
 /* ---------- WORD MAP: synonyms, opposites, word family and words close in meaning ---------- */
 const WMG=[{k:'s',label:'Synonyme (≈)',col:'var(--das)',max:5},{k:'g',label:'Gegenteil (↔)',col:'var(--die)',max:3},
