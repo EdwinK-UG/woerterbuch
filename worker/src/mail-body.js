@@ -54,12 +54,20 @@ export async function smtpSend(
   text,
   html,
   messageId,
+  smtpHost = "smtppro.zoho.com",
+  smtpPort = 465,
   open = connect,
 ) {
-  if (![to, user].every((x) => /^[^\s@<>]+@[^\s@<>]+$/.test(x)))
+  if (
+    ![to, user].every((x) => /^[^\s@<>]+@[^\s@<>]+$/.test(x)) ||
+    !/^[a-z0-9.-]+$/i.test(smtpHost) ||
+    !Number.isInteger(smtpPort) ||
+    smtpPort < 1 ||
+    smtpPort > 65535
+  )
     throw new Error("bad address");
   const sock = open(
-    { hostname: "smtp.gmail.com", port: 465 },
+    { hostname: smtpHost, port: smtpPort },
     { secureTransport: "on" },
   );
   const timeout = setTimeout(() => {
