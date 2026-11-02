@@ -5,7 +5,7 @@
    Attempts are kept in this browser and, for signed-in users, saved to Supabase (table grammar_results). */
 (function () {
 'use strict';
-const VER = '9';
+const VER = '10';
 let PASS = 0.7;                         // share of correct answers needed to pass an exercise (a teacher/school can change it)
 const $ = id => document.getElementById(id);
 const H = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -40,7 +40,14 @@ const GROUPS = [
     [247, 'Gesundheit', 'Alltag, Krankenhaus', 'B1'], [248, 'Umwelt', 'Tiere, Umweltprobleme, Wetter und Klima', 'B1'],
     [249, 'Beruf und Karriere', 'Bewerben, Arbeitsalltag, Rechte', 'B1'], [250, 'Behörden und Institutionen', 'Verwaltung, Bank, Versicherungen', 'B1'] ] },
   { t: 'Wortschatz B2', ic: 'book-a', h: 340, vocab: true, lv: 'B2', soon: true, ch: [] },
-  { t: 'Wortschatz C1', ic: 'book-a', h: 10, vocab: true, lv: 'C1', soon: true, ch: [] },
+  { t: 'Wortschatz C1', ic: 'book-a', h: 10, vocab: true, lv: 'C1', ch: [
+    [261, 'Alltag', 'Tätigkeiten, Gegenstände', 'C1'], [262, 'Eigenschaften und Gefühle', 'Charakter, Empfindungen', 'C1'],
+    [263, 'Kommunikation und Medien', 'Gespräche, Presse', 'C1'], [264, 'Landwirtschaft und Ernährung', 'Anbau, Nahrung', 'C1'],
+    [265, 'Körper und Medizin', 'Organe, Behandlungen', 'C1'], [266, 'Arbeit und Beruf', 'Bewerbung, Arbeitsmarkt', 'C1'],
+    [267, 'Geräte und Verfahren', 'Bedienung, Abläufe beschreiben', 'C1'], [268, 'Infrastruktur', 'Versorgung und Energie, Verkehr und Logistik', 'C1'],
+    [269, 'Rechtliches', 'Strafrecht, Zivilrecht', 'C1'], [270, 'Politik und Ideologie', 'Demokratie, Gesinnungen', 'C1'],
+    [271, 'Geistes- und Sozialwissenschaften', 'Theorien, Gesellschaft', 'C1'], [272, 'Mathematik und Logik', 'Rechnen, Schlussfolgern', 'C1'],
+    [273, 'Finanzen und Wirtschaft', 'Geld, Märkte', 'C1'] ] },
   { t: 'Verben 1', ic: 'zap', h: 216, open: true, ch: [
     [1, 'Personalpronomen', 'ich, du, er, sie, es …', 'A1'], [2, 'Präsens: regelmäßige Verben', 'ich wohne, du wohnst', 'A1'],
     [3, 'sein, haben und möchten', 'ich bin, ich habe', 'A1'], [4, 'Verben mit Vokalwechsel', 'essen → isst, fahren → fährt', 'A1'],
@@ -103,14 +110,17 @@ const GROUPS = [
     [101, 'Unregelmäßige Verben', 'Präteritum, Partizip, haben oder sein – mit Trainer', 'Liste'], [102, 'Verben mit Dativ', 'helfen, danken, gefallen … – mit Trainer', 'Liste'],
     [103, 'Verben mit Dativ und Akkusativ', 'jemandem etwas geben … – mit Trainer', 'Liste'], [104, 'Verben mit Präpositionen', 'warten auf, denken an … – mit Trainer', 'Liste'] ] }
 ];
-const READY = Object.fromEntries([...Array.from({ length: 85 }, (_, i) => i + 1), 101, 102, 103, 104, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250].map(n => [n, 1]));   // chapters that exist so far   // chapters that exist so far
+const READY = Object.fromEntries([...Array.from({ length: 85 }, (_, i) => i + 1), 101, 102, 103, 104, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 261, 262, 263, 264, 265, 266, 267, 268, 269, 270, 271, 272, 273].map(n => [n, 1]));   // chapters that exist so far
 const TOTAL = GROUPS.reduce((s, g) => s + (g.ref || g.vocab ? 0 : g.ch.length), 0);
 /* level gating: a learner enrolled at level X sees chapters up to X; no level = everything open */
 const LVS = ['A1', 'A2', 'B1', 'B2', 'C1'];
 const myLevel = () => (window.KONTO && KONTO.level && KONTO.level()) || null;
 const chLevel = n => { for (const g of GROUPS) for (const c of g.ch) if (c[0] === n) return c[3]; return null; };
-const allowed = n => { const L = myLevel(), l = chLevel(n); return !L || !LVS.includes(l) || LVS.indexOf(l) <= LVS.indexOf(L); };
-const topicNo = n => n > 240 ? n - 240 : n > 220 ? n - 220 : n - 200;
+const lvOpen = l => !LVS.includes(l) || !(window.KONTO && KONTO.canOpen) || KONTO.canOpen(l);
+const allowed = n => lvOpen(chLevel(n));
+const topicNo = n => n > 260 ? n - 260 : n > 240 ? n - 240 : n > 220 ? n - 220 : n - 200;
+const en = () => !!(window.KONTO && KONTO.lang && KONTO.lang() === 'en');
+const lockBtn = l => window.KONTO && KONTO.lockSheet ? `<button class="btn sm gr-unl" data-unlock="${l}">${icn(KONTO.lvState(l) === 'pending' ? 'hourglass' : 'lock-open')} ${KONTO.lvState(l) === 'pending' ? (en() ? 'Requested' : 'Angefragt') : KONTO.org && KONTO.org() ? (en() ? 'Ask my teacher' : 'Lehrkraft fragen') : (en() ? 'Unlock' : 'Freischalten')}</button>` : '';
 const numLabel = n => n > 200 ? String(topicNo(n)) : n > 100 ? icn('book-marked') : String(n);
 const chInfo = n => { for (const g of GROUPS) for (const c of g.ch) if (c[0] === n) return { g, c }; return null; };
 
@@ -138,9 +148,11 @@ const CSS = `
 .gr-eyebrow{font-size:.74rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--mut);margin:0 0 .35rem}
 .gr-lv{display:inline-block;font-size:.7rem;font-weight:700;padding:.12rem .45rem;border-radius:999px;letter-spacing:.03em}
 .gr-lv.Liste{background:var(--line2);color:var(--mut)}
-.gr-lv.A1{background:#e3f4ea;color:#0f7a4f}.gr-lv.A2{background:#e6eefe;color:#1d5bd6}.gr-lv.B1{background:#f6e8fd;color:#8b2fc9}
-@media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .gr-lv.A1{background:#12301f;color:#5fd69b}:root:not([data-theme="light"]) .gr-lv.A2{background:#16233a;color:#7fb0ff}:root:not([data-theme="light"]) .gr-lv.B1{background:#2a1838;color:#d29bf5}}
-:root[data-theme="dark"] .gr-lv.A1{background:#12301f;color:#5fd69b}:root[data-theme="dark"] .gr-lv.A2{background:#16233a;color:#7fb0ff}:root[data-theme="dark"] .gr-lv.B1{background:#2a1838;color:#d29bf5}
+.gr-lv.A1{background:#e3f4ea;color:#0f7a4f}.gr-lv.A2{background:#e6eefe;color:#1d5bd6}.gr-lv.B1{background:#f6e8fd;color:#8b2fc9}.gr-lv.B2{background:#fdeee3;color:#b4520f}.gr-lv.C1{background:#fde7ea;color:#b4233c}
+.gr-acc.locked{border:1px dashed var(--line);border-radius:1rem;margin:0 0 .6rem;background:var(--panel)}.gr-acc.locked .gr-lockrow{display:flex;align-items:center;gap:.6rem;padding:.75rem .9rem;flex-wrap:wrap;opacity:.9}
+.gr-acc.locked .gr-gt{color:var(--mut)}.gr-acc.locked small{color:var(--mut)}.gr-lockrow .gr-unl{margin-left:auto}.gr-chip .lic{width:.8em;height:.8em;margin-right:.15rem;vertical-align:-1px}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .gr-lv.A1{background:#12301f;color:#5fd69b}:root:not([data-theme="light"]) .gr-lv.A2{background:#16233a;color:#7fb0ff}:root:not([data-theme="light"]) .gr-lv.B1{background:#2a1838;color:#d29bf5}:root:not([data-theme="light"]) .gr-lv.B2{background:#33210f;color:#f3a76b}:root:not([data-theme="light"]) .gr-lv.C1{background:#361620;color:#f58a9c}}
+:root[data-theme="dark"] .gr-lv.A1{background:#12301f;color:#5fd69b}:root[data-theme="dark"] .gr-lv.A2{background:#16233a;color:#7fb0ff}:root[data-theme="dark"] .gr-lv.B1{background:#2a1838;color:#d29bf5}:root[data-theme="dark"] .gr-lv.B2{background:#33210f;color:#f3a76b}:root[data-theme="dark"] .gr-lv.C1{background:#361620;color:#f58a9c}
 /* overview */
 .gr-top{display:grid;grid-template-columns:1.25fr 1fr;gap:1.2rem;align-items:center;background:var(--cream);border:1px solid var(--cream-b);border-radius:1.5rem;padding:1.6rem 1.7rem;margin:.3rem 0 1.2rem;overflow:hidden}
 .gr-top h1{font-family:Fraunces,serif;font-weight:700;font-size:2.4rem;letter-spacing:-.02em;margin:0 0 .5rem;line-height:1.05;color:var(--fg)}
@@ -901,9 +913,9 @@ function overview(m) {
   <section class="gr-top"><div><p class="gr-eyebrow">${T.eye}</p><h1>${T.h}</h1><p>${T.p}</p>
     <div class="gr-stats"><span class="gr-stat"><b>${all}</b>${T.unit}</span><span class="gr-stat"><b>${ready}</b>schon fertig</span><a class="gr-stat" href="#/${m}/fortschritt" style="text-decoration:none"><b>${passedEx}</b>Übungen bestanden →</a></div></div>
     <div class="gr-topart">${T.art}</div></section>
-  ${m === 'v' ? `<a class="gr-feat" href="#/v/201"><span class="th" id="vkfeat"></span><span><span class="gr-lv A1">A1</span> <span class="gr-eyebrow" style="display:inline">Hier anfangen</span><b>Thema 1: Person</b><p>39 Themen von A1 bis B1 – mit Wortliste, Bildern, Aussprache und Übungen. Wählen Sie Wörter aus und machen Sie daraus mit einem Klick Lernkarten.</p></span></a>`
+  ${m === 'v' ? `<a class="gr-feat" href="#/v/201"><span class="th" id="vkfeat"></span><span><span class="gr-lv A1">A1</span> <span class="gr-eyebrow" style="display:inline">Hier anfangen</span><b>Thema 1: Person</b><p>52 Themen von A1 bis C1 – mit Wortliste, Bildern, Aussprache und Übungen. Wählen Sie Wörter aus und machen Sie daraus mit einem Klick Lernkarten.</p></span></a>`
     : `<a class="gr-feat" href="#/g/1"><span class="th" id="grfeat"></span><span><span class="gr-lv A1">A1</span> <span class="gr-eyebrow" style="display:inline">Hier anfangen</span><b>Kapitel 1: Personalpronomen</b><p>Alle 85 Kapitel von A1 bis B1 – mit Erklärungen, Beispielen, Übungen, Sprechtraining und Spiel. Dazu Verblisten mit Trainer.</p></span></a>`}
-  <div class="gr-filter">${['', ...lv].map(l => `<button class="gr-chip${F.lv === l ? ' on' : ''}" data-lv="${l}">${l || 'Alle'}</button>`).join('')}
+  <div class="gr-filter">${['', ...lv].map(l => `<button class="gr-chip${F.lv === l ? ' on' : ''}" data-lv="${l}">${l && !lvOpen(l) ? icn('lock') : ''}${l || 'Alle'}</button>`).join('')}
     <input id="grq" placeholder="${m === 'v' ? 'Thema suchen, z. B. Familie' : 'Thema suchen, z. B. Perfekt'}" value="${H(F.q)}" autocomplete="off"></div>
   <div class="gr-tocbar"><b>Inhalt</b><span class="spacer"></span><button class="btn sm" data-toc="open">${icn('chevrons-up-down')} Alles aufklappen</button><button class="btn sm" data-toc="close">${icn('chevrons-down-up')} Alles zuklappen</button></div>
   <div id="grlist"></div>`;
@@ -927,6 +939,12 @@ function list() {
     const cs = g.ch.filter(c => (!F.lv || c[3] === F.lv) && (!q || f(c[1] + ' ' + c[2] + ' ' + g.t).includes(q)));
     if (!cs.length && (searching && !(g.soon && F.lv === g.lv))) continue;
     const gk = m + ':' + g.t, open = searching || (st[gk] != null ? st[gk] === 1 : !!g.open);
+    const glv = g.lv || (g.ch.length && g.ch.every(c => c[3] === g.ch[0][3]) ? g.ch[0][3] : null);
+    if (glv && !g.soon && !lvOpen(glv) && g.ch.every(c => !allowed(c[0]))) {
+      html += `<div class="gr-acc locked" style="--h:${g.h}"><div class="gr-lockrow"><span class="badge">${icn('lock')}</span><span class="gr-gt">${H(g.t)}</span><span class="gr-lv ${glv}">${glv}</span>
+        <small>${g.ch.length} ${g.vocab ? 'Themen' : 'Kapitel'} · ${KONTO.lvState(glv) === 'pending' ? (en() ? 'waiting for your teacher' : 'wartet auf Freischaltung') : (en() ? 'locked' : 'gesperrt')}</small>${lockBtn(glv)}</div></div>`;
+      continue;
+    }
     const done = g.ch.filter(c => CH[c[0]] && (p => p.total && p.passed === p.total)(chapterProgress(CH[c[0]]))).length;
     const lvls = [...new Set(g.ch.map(c => c[3]))].filter(l => l !== 'Liste');
     html += `<details class="gr-acc" data-k="${H(gk)}" style="--h:${g.h}"${open ? ' open' : ''}><summary><span class="badge">${icn(g.ic)}</span><span class="gr-gt">${H(g.t)}</span>
@@ -940,6 +958,7 @@ function list() {
           <div class="gr-clbox"${copen ? '' : ' hidden'}>${copen ? contents(n) : ''}</div></div>`;
       }).join('')}</div></details>`;
   }
+  if (!$('grlist')) return;
   $('grlist').innerHTML = html || `<p class="sub" style="margin:1rem 0">Kein Thema gefunden.</p>`;
   icons();
 }
@@ -1001,7 +1020,7 @@ function jump(anchor) {
 }
 async function chapter(n, anchor) {
   const back = `<div class="row" style="margin-bottom:.6rem"><a class="btn sm" href="#/${isV(n) ? 'v' : 'g'}">${icn('arrow-left')} ${isV(n) ? 'Wortschatz' : 'Grammatik'}</a></div>`;
-  if (READY[n] && !allowed(n)) { V().innerHTML = `${back}<div class="empty"><span class="em">${icn('lock')}</span><h1 class="page">Ab Niveau ${H(chLevel(n))}</h1><p class="sub">${window.KONTO && KONTO.org() ? `Dein Kurs ist auf Niveau ${H(myLevel())}. Dieses ${isV(n) ? 'Thema' : 'Kapitel'} wird freigeschaltet, wenn deine Lehrkraft dein Niveau ändert.` : `Du lernst auf Niveau ${H(myLevel())}. Du kannst dein Niveau jederzeit im Konto ändern.`}</p></div>`; icons(); return; }
+  if (READY[n] && !allowed(n)) { const l = chLevel(n); V().innerHTML = `${back}<div class="empty"><span class="em">${icn('lock')}</span><h1 class="page">${en() ? 'Level' : 'Niveau'} ${H(l)} ${en() ? 'is locked' : 'ist gesperrt'}</h1><p class="sub">${window.KONTO && KONTO.org() ? (en() ? 'Your teacher unlocks new levels for you.' : 'Neue Niveaus schaltet deine Lehrkraft für dich frei.') : (en() ? `Unlock ${l} to open this ${isV(n) ? 'topic' : 'chapter'}.` : `Schalte ${l} frei, um dieses ${isV(n) ? 'Thema' : 'Kapitel'} zu öffnen.`)}</p><p>${lockBtn(l)}</p></div>`; icons(); return; }
   if (!READY[n]) { V().innerHTML = `${back}<div class="empty"><span class="em">${icn('hourglass')}</span><h1 class="page">${isV(n) ? 'Dieses Thema' : 'Kapitel ' + n} kommt bald</h1><p class="sub">Daran wird gerade gearbeitet.</p></div>`; icons(); return; }
   if (!CH[n]) { V().innerHTML = `<div class="loading"><div class="spin"></div>${isV(n) ? 'Thema' : 'Kapitel'} wird geladen …</div>`;
     try { await loadChapter(n); } catch (e) { V().innerHTML = `<div class="empty"><span class="em">⚠️</span>Das Kapitel konnte nicht geladen werden. Bitte prüfe die Internetverbindung.</div>`; return; } }
@@ -1371,6 +1390,7 @@ function wire(c) {
   c.exercises.forEach(x => exState[x.id] = { shown: false, checked: false });
 }
 function onClick(ev) {
+  const ul = ev.target.closest && ev.target.closest('[data-unlock]'); if (ul && window.KONTO) { ev.preventDefault(); KONTO.lockSheet(ul.dataset.unlock); return; }
   const t = ev.target;
   if (!t.closest) return;
   if (!t.closest('#grpop') && !t.closest('.gw')) closePop();
@@ -1580,7 +1600,9 @@ async function quiz(n, count) {
   // a fair mix: shuffle, but spread the exercise types
   return shuffle(pool).slice(0, count || 10);
 }
-const chapterList = () => GROUPS.flatMap(g => g.ch.filter(c => READY[c[0]] && allowed(c[0])).map(c => ({ n: c[0], title: c[1], group: g.t, level: c[3] })));
+// chapters for games and assignments: the learner's levels – or all of them while no level is unlocked yet (games are open to everyone)
+const chapterList = () => { const all = GROUPS.flatMap(g => g.ch.filter(c => READY[c[0]]).map(c => ({ n: c[0], title: c[1], group: g.t, level: c[3] }))), mine = all.filter(c => allowed(c.n));
+  return mine.some(c => LVS.includes(c.level)) ? mine : all; };
 // open the Spiele setup with this chapter already chosen as the question source
 function practice(kind) {
   if (!cur) return; const k = 'gd_gset_' + kind;
@@ -1631,7 +1653,10 @@ const VKIT = {
   }
 };
 window.GRAM = { kit: VKIT, view, leave, base, quiz, list: chapterList, practice, add(c) { CH[c.n] = c; }, allowed, chLevel,
-  setPass(p) { PASS = p > 1 ? p / 100 : p; if (cur) render(cur); }, pass: () => PASS, refresh() { if (mode && location.hash.match(/^#\/[gv](\/|$)/)) view(decodeURIComponent(location.hash.split('/').slice(2).join('/')), mode); },
+  chapters: () => GROUPS.flatMap(g => g.ch.filter(c => READY[c[0]]).map(c => ({ n: c[0], title: c[1], kick: c[2], level: c[3], vocab: !!g.vocab, group: g.t, no: c[0] > 200 ? topicNo(c[0]) : c[0] })))
+    .sort((a, b) => (a.vocab === b.vocab ? 0 : a.vocab ? -1 : 1) || a.n - b.n),
+  async results() { await pull(); return attempts(); },
+  setPass(p) { PASS = p > 1 ? p / 100 : p; if (cur) render(cur); }, pass: () => PASS, refresh() { if (window.KONTO && KONTO.can && !KONTO.can(mode === 'v' ? 'vocab' : 'grammar')) return; if (mode && location.hash.match(/^#\/[gv](\/|$)/)) view(decodeURIComponent(location.hash.split('/').slice(2).join('/')), mode); },
   voc: { open: (n, w) => CH[n] && vocabSheet(CH[n], w), play: (n, w, b) => { const x = CH[n] && CH[n].words.find(v => v.w === w); if (x) vplay(x, b); }, say: t => talk(t) }, _test: { findWord, norm, attempts, best, store, PASS, CH,
   // answers every exercise with its own key; used to check new chapters ("ok" = all 100 %)
   async check(list) {
