@@ -392,6 +392,7 @@ kbd{font:600 .66rem Inter,system-ui,sans-serif;padding:.1rem .35rem;border-radiu
 <div id="toast" role="status" aria-live="polite"></div>
 <div class="modal" id="modal" aria-hidden="true"><div class="sheet" id="sheet" role="dialog" aria-modal="true" tabindex="-1"></div></div>
 
+<script src="config.js?v=f642d12f9762"></script>
 <script src="js/pages.js?v=d3012ce1e8e4"></script>
 <script src="js/course-counts.js?v=a500004e0728"></script>
 <script src="js/study-sync.js?v=2c8a0af1f4c9"></script>
@@ -885,7 +886,7 @@ async function wikiEn(t){             // lead picture of the English article wit
     ?[{src:p.thumbnail.source,url:'https://en.wikipedia.org/wiki/'+encodeURIComponent(p.title),cap:'Wikipedia · '+p.title}]:[];
 }
 async function stock(q){              // stock photos through our worker (Pexels, when a key is set up there)
-  const j=await jget(AIURL_BASE+'/photos?v=2&q='+encodeURIComponent(q),8000); return Array.isArray(j)?j:[];
+  const j=await jget(APP_CONFIG.workerUrl+'/photos?v=2&q='+encodeURIComponent(q),8000); return Array.isArray(j)?j:[];
 }
 
 /* what kind of word is it? decides which source is tried first */
@@ -1008,8 +1009,8 @@ async function freeShow(e,box,fresh){
       im.onerror=()=>res(false); im.src=picURL(e,seed)});
     if(ok)return;
   }
-  if(!window.ACCT?.user()){
-    if(fresh){ACCT.sheet('in');toast(ui('Sign in to generate a picture.','Bitte anmelden, um ein Bild zu erzeugen.'))}
+  if(!window.ACCT?.user()||APP_CONFIG.readOnly){
+    if(fresh&&!APP_CONFIG.readOnly){ACCT.sheet('in');toast(ui('Sign in to generate a picture.','Bitte anmelden, um ein Bild zu erzeugen.'))}
     box.dataset.photo='1';loadImg(e);return;
   }
   const actor=ACCT.user().id;
@@ -1017,7 +1018,7 @@ async function freeShow(e,box,fresh){
   // our own Cloudflare picture service: a text model turns the meaning into a scene, FLUX draws it, stored per word
   const def=gloss(e).replace(/[⟨⟩]/g,'').slice(0,300), ex=(examples({df:e.df.split(/<span class="sn">2<\/span>/)[0]},1)[0]||'').slice(0,180);
   const qs=new URLSearchParams({w, pos:POSL[e.ps]||e.ps||'', en:en||'', def, ex, seed});
-  const url=AIURL_BASE+'/img?'+qs.toString();
+  const url=APP_CONFIG.workerUrl+'/img?'+qs.toString();
   const fallback=()=>{ if(!document.body.contains(box))return; box.dataset.photo='1'; loadImg(e) };
   if(Date.now()<AIWAIT.until){fallback();return}           // daily allowance used up: photos until it resets
   let src=AIBLOB.get(url);
@@ -1036,8 +1037,8 @@ async function freeShow(e,box,fresh){
   const img=new Image(); img.alt='KI-Bild: '+w; img.src=src;
   const l=box.querySelector('.aiload'); if(l)l.replaceWith(img);
 }
-const AIURL_BASE='https://woerterbuch-bilder.edwin1kitaka.workers.dev', AIBLOB=new Map(), AIWAIT={until:0};
-function picURL(e,seed){ return AIURL_BASE+'/pic?'+new URLSearchParams({w:plainW(e.w),pos:POSL[e.ps]||e.ps||'',seed:seed||'latest'}) }
+const AIBLOB=new Map(), AIWAIT={until:0};
+function picURL(e,seed){ return APP_CONFIG.workerUrl+'/pic?'+new URLSearchParams({w:plainW(e.w),pos:POSL[e.ps]||e.ps||'',seed:seed||'latest'}) }
 // warm the browser cache: the picture of a word starts loading when the pointer reaches its link
 (function(){const done=new Set();
   const warm=ev=>{const a=ev.target.closest&&ev.target.closest('a[href^="#/w/"]'); if(!a||!AI.free())return;
@@ -1052,7 +1053,7 @@ function aiBack(i){ const box=document.getElementById('wimg'); if(!box)return;
 const AIPOS={Substantiv:'n',Verb:'v',Adjektiv:'adj',Adverb:'adv','Präposition':'prp',Konjunktion:'kon',Pronomen:'pro',Partikel:'ptk'};
 async function fetchAIEntries(){
   try{const c=new AbortController(); setTimeout(()=>c.abort(),8000);
-    const r=await fetch(AIURL_BASE+'/entries',{signal:c.signal}); return r.ok?await r.json():[]}catch(e){return []}
+    const r=await fetch(APP_CONFIG.workerUrl+'/entries',{signal:c.signal}); return r.ok?await r.json():[]}catch(e){return []}
 }
 function aiToDf(x){
   const head=`<b>${esc(x.w)}</b> ${x.ar?`<i class="g">${esc(x.ar)};</i> `:''}${x.forms?esc(x.forms)+' ':''}${x.en?`<i class="g">engl. ${esc(x.en)}</i>`:''}`;
@@ -1071,13 +1072,14 @@ function home(ev){ if(ev)ev.preventDefault(); if(location.hash==='#/'||location.
 async function createAI(w){
   w=w.trim(); if(!w)return;
   if(!window.ACCT?.user()){ACCT.sheet('in');toast(ui('Sign in to suggest an entry.','Bitte anmelden, um einen Eintrag vorzuschlagen.'));return}
+  try{assertWritable()}catch(e){toast(e.message);return}
   const user=ACCT.user().id;
   const steps=['Echte Beispielsätze werden in Zeitungen und Wikipedia gesucht …','Die Bedeutung wird einfach erklärt …','Der Eintrag wird gespeichert …'];
   V().innerHTML=`<div class="aimake"><span class="spin"></span><h1 class="page">„${esc(w)}“</h1><p class="sub" id="aistep">${steps[0]}</p>
     <p class="muted" style="font-size:.85rem">Das dauert meist 10–30 Sekunden.</p></div>`;
   let k=0; const tick=setInterval(()=>{k=Math.min(k+1,steps.length-1); const el=document.getElementById('aistep'); if(el)el.textContent=steps[k]},6000);
   try{
-    const r=await fetch(AIURL_BASE+'/entry?w='+encodeURIComponent(w),{method:'POST',headers:{Authorization:'Bearer '+await ACCT.token()}}); const d=await r.json(); clearInterval(tick);
+    const r=await fetch(APP_CONFIG.workerUrl+'/entry?w='+encodeURIComponent(w),{method:'POST',headers:{Authorization:'Bearer '+await ACCT.token()}}); const d=await r.json(); clearInterval(tick);
     if(ACCT.user()?.id!==user)return;
     if(r.status===202&&d.pending){V().innerHTML=`<div class="aimiss"><h1 class="page">${ui('Submitted for review','Zur Prüfung eingereicht')}</h1><p>${ui('Your suggested entry will become public after editorial review.','Dein vorgeschlagener Eintrag wird nach redaktioneller Prüfung veröffentlicht.')}</p><a class="btn" href="#/">${ui('Back to search','Zur Suche')}</a></div>`;return}
     if(!r.ok||!d.entry){
@@ -1481,7 +1483,8 @@ document.getElementById('theme').onclick=()=>{
 };
 /* expose for inline handlers */
 Object.assign(window,{go,openAdd,addTo,addNew,quickCard,makeCards,newList,createList,renameList,delList,rmFromList,pickAll,listFromWords,closeSheet,reveal,ans,delDeck});
-document.addEventListener('DOMContentLoaded',()=>{
+document.addEventListener('DOMContentLoaded',async()=>{
+  await CONFIG_READY;
   if(window.KONTO)route();else V().innerHTML='<p>Deutschklinik could not load. <button class="btn" onclick="location.reload()">Retry</button></p>';
   if('serviceWorker' in navigator && window.isSecureContext)navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).catch(()=>{});
 });
@@ -1509,8 +1512,6 @@ document.addEventListener('DOMContentLoaded',()=>{
 <script>
 "use strict";
 (function(){
-const SB_URL='https://vnnhyhicppkexdibuqyu.supabase.co';
-const SB_KEY='sb_publishable_sNNNyEu6D9_Sjy0O0MaS5Q_VyReD7Tj'; // publishable key: safe to be public, data is protected by row level security
 const SITE=location.origin+location.pathname;
 const tr=(en,de)=>window.KONTO&&KONTO.lang&&KONTO.lang()==='en'?en:de;   // menus/account in English or German
 const SKEY='gd_session';
@@ -1522,9 +1523,11 @@ const isEmpty=o=>!o||!Object.keys(o).length;
 
 /* ---------- Supabase REST ---------- */
 async function api(path,{method='GET',body,token,headers={}}={}){
-  const h=Object.assign({apikey:SB_KEY,'Content-Type':'application/json'},headers);
+  await CONFIG_READY;
+  if(method!=='GET')assertWritable();
+  const h=Object.assign({apikey:APP_CONFIG.supabaseKey,'Content-Type':'application/json'},headers);
   if(token)h.Authorization='Bearer '+token;
-  const r=await fetch(SB_URL+path,{method,headers:h,body:body===undefined?undefined:JSON.stringify(body)});
+  const r=await fetch(APP_CONFIG.supabaseUrl+path,{method,headers:h,body:body===undefined?undefined:JSON.stringify(body)});
   const t=await r.text(); let j=null; try{j=t?JSON.parse(t):null}catch(e){}
   if(!r.ok){const e=new Error((j&&(j.msg||j.message||j.error_description||j.error))||('HTTP '+r.status));e.status=r.status;e.code=j&&(j.error_code||j.code);throw e}
   return j;
@@ -1701,7 +1704,7 @@ function setBtn(){
 }
 let lastEmail='';
 // welcome e-mail for brand-new accounts (sent by our Cloudflare worker; it checks the account is new)
-function welcomeMail(tok){fetch('https://woerterbuch-bilder.edwin1kitaka.workers.dev/welcome',{method:'POST',headers:{Authorization:'Bearer '+tok}}).catch(()=>{})}
+function welcomeMail(tok){if(APP_CONFIG.readOnly)return;fetch(APP_CONFIG.workerUrl+'/welcome',{method:'POST',headers:{Authorization:'Bearer '+tok}}).catch(()=>{})}
 function msg(t,ok){const m=$('ac_msg');if(m){m.textContent=t||'';m.classList.toggle('ok',!!ok)}}
 function sheet(mode){
   const em=$('ac_em');if(em&&em.value)lastEmail=em.value;
@@ -1842,9 +1845,10 @@ async function exportData(){
 }
 // Upload a logo to the current account's public Storage folder.
 async function upload(bucket,path,blob){
-  const r=await fetch(SB_URL+'/storage/v1/object/'+bucket+'/'+path,{method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+await token(),'Content-Type':blob.type,'x-upsert':'true'},body:blob});
+  await CONFIG_READY;assertWritable();
+  const r=await fetch(APP_CONFIG.supabaseUrl+'/storage/v1/object/'+bucket+'/'+path,{method:'POST',headers:{apikey:APP_CONFIG.supabaseKey,Authorization:'Bearer '+await token(),'Content-Type':blob.type,'x-upsert':'true'},body:blob});
   if(!r.ok){let m='HTTP '+r.status;try{const j=await r.json();m=j.message||j.error||m}catch(e){}throw new Error(m)}
-  return SB_URL+'/storage/v1/object/public/'+bucket+'/'+path;
+  return APP_CONFIG.supabaseUrl+'/storage/v1/object/public/'+bucket+'/'+path;
 }
 Object.assign(window.ACCT,{sheet,submit,signOut,upload,resultRows,practiceSummary,exportData,resolveSave:async choice=>{await push(choice);if(session)sheet('me')}});
 })();
@@ -2136,7 +2140,6 @@ setInterval(()=>{ if(document.visibilityState==='visible'&&Date.now()-lastAct<20
 "use strict";
 /* ===== SPIELE: quiz games alone or live with a group (Supabase Realtime), memory, Artikel-Blitz, own quizzes ===== */
 (function(){
-const SB_URL='https://vnnhyhicppkexdibuqyu.supabase.co', SB_KEY='sb_publishable_sNNNyEu6D9_Sjy0O0MaS5Q_VyReD7Tj';
 const $=id=>document.getElementById(id);
 const rnd=n=>Math.floor(Math.random()*n);
 const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=rnd(i+1);[a[i],a[j]]=[a[j],a[i]]}return a};
@@ -2512,8 +2515,9 @@ function loadSB(){ if(window.supabase&&window.supabase.createClient)return Promi
   return SBP }
 let CLIENT=null;
 async function openCh(pin,handlers){
+  await CONFIG_READY;assertWritable();
   await loadSB();
-  CLIENT=CLIENT||window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
+  CLIENT=CLIENT||window.supabase.createClient(APP_CONFIG.supabaseUrl,APP_CONFIG.supabaseKey,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
   const ch=CLIENT.channel('wbq-'+pin,{config:{broadcast:{self:false,ack:false}}});
   for(const ev in handlers)ch.on('broadcast',{event:ev},m=>{if(validGameMessage(ev,m.payload))handlers[ev](m.payload)});
   await new Promise((ok,no)=>{const t=setTimeout(()=>no(new Error('timeout')),12000);
