@@ -1194,11 +1194,19 @@ function renameList(id){
 function delList(id){ if(confirm('Liste löschen?')){delete lists[id];saveLists();go('lists')} }
 function rmFromList(id,w){ w=decodeURIComponent(w); lists[id].words=lists[id].words.filter(x=>x!==w); saveLists(); route() }
 function listFromWords(ixs,name){
+  if(!requireFeature('lists'))return;
+
   const id=uid(); lists[id]={name:name,words:ixs.map(i=>E[i].w),created:now()}; saveLists();
   toast('Liste „'+name+'" gespeichert'); go('list/'+id);
 }
+function requireFeature(f){
+  if(window.KONTO?.can(f))return true;
+  closeSheet();go(f==='lists'?'lists':'decks');return false;
+}
 /* add word to list (modal) */
 function openAdd(i){
+  if(!requireFeature('lists'))return;
+
   const e=E[i], ids=Object.keys(lists);
   openSheet(`<h3>„${esc(e.w)}" hinzufügen</h3><p>Wähle eine Liste oder erstelle eine neue.</p>
    <div class="listpick">${ids.length?ids.map(id=>`<div class="lp" onclick="addTo(${jsArg(id)},${i})">
@@ -1207,10 +1215,16 @@ function openAdd(i){
    <div class="row" style="margin-top:.8rem;justify-content:flex-end"><button class="btn" onclick="closeSheet()">Schließen</button>
    <button class="btn primary" onclick="addNew(${i})">＋ Neue Liste & hinzufügen</button></div>`);
 }
-function addTo(id,i){const w=E[i].w; if(!lists[id].words.includes(w))lists[id].words.push(w); saveLists(); closeSheet(); toast('Zu „'+lists[id].name+'" hinzugefügt')}
-function addNew(i){const n=(document.getElementById('nlq').value||'').trim();if(!n){toast('Name eingeben');return}const id=uid();lists[id]={name:n,words:[E[i].w],created:now()};saveLists();closeSheet();toast('Liste „'+n+'" erstellt')}
+function addTo(id,i){
+  if(!requireFeature('lists'))return;
+const w=E[i].w; if(!lists[id].words.includes(w))lists[id].words.push(w); saveLists(); closeSheet(); toast('Zu „'+lists[id].name+'" hinzugefügt')}
+function addNew(i){
+  if(!requireFeature('lists'))return;
+const n=(document.getElementById('nlq').value||'').trim();if(!n){toast('Name eingeben');return}const id=uid();lists[id]={name:n,words:[E[i].w],created:now()};saveLists();closeSheet();toast('Liste „'+n+'" erstellt')}
 /* make cards from selected list items -> deck */
 function makeCards(id){
+  if(!requireFeature('cards'))return;
+
   const picks=[...document.querySelectorAll('.pick:checked')].map(c=>+c.value);
   if(!picks.length){toast('Keine Wörter gewählt');return}
   const name=lists[id].name;
@@ -1221,6 +1235,8 @@ function makeCards(id){
 }
 /* quick single-card deck */
 function quickCard(i){
+  if(!requireFeature('cards'))return;
+
   const w=E[i].w;
   let did=Object.keys(decks).find(d=>decks[d].name==='Schnell-Lernen');
   if(!did){did=uid();decks[did]={name:'Schnell-Lernen',cards:{},created:now()}}
@@ -2328,6 +2344,8 @@ function soloEnd(){
   G.miss=miss.map(x=>E[x.q.wi].w); G.mode='solo-end';
 }
 function saveMiss(){
+  if(!requireFeature('lists'))return;
+
   if(!G||!G.miss||!G.miss.length)return;
   let id=Object.keys(lists).find(k=>lists[k].name==='Aus Spielen');
   if(!id){id=uid();lists[id]={name:'Aus Spielen',words:[],created:now()}}
@@ -2881,5 +2899,5 @@ if(tabs&&!tabs.querySelector('[data-t="play"]')){const a=document.createElement(
 })();
 </script>
 <!-- ===== /Spiele ===== -->
-<script src="konto.js?v=8"></script>
+<script src="konto.js?v=9"></script>
 </body></html>
