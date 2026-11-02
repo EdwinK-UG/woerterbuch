@@ -538,7 +538,7 @@ function scriptFile(src){
 function loadGram(){
   if(!gramP)gramP=(async()=>{
     if(typeof LESSON_EXERCISES==='undefined')await scriptFile('grammatik/catalog.js?v=1');
-    if(!window.GRAM)await scriptFile('grammatik/grammatik.js?v=17');
+    if(!window.GRAM)await scriptFile('grammatik/grammatik.js?v=18');
   })().catch(e=>{gramP=null;throw e});
   return gramP;
 }
@@ -1730,13 +1730,40 @@ document.addEventListener('visibilitychange',async()=>{
 });
 window.addEventListener('beforeunload',e=>{if(session&&(dirty||timer)){push();e.preventDefault();e.returnValue=''}});
 
-// upload a file to Supabase storage (school logos); returns its public address
+// Stable keys avoid skipping results when new attempts arrive during paging.
+async function resultRows(filter=''){
+  const id=session?.user.id,rows=[];
+  let after=0;
+  for(;;){
+    const page=await api('/rest/v1/grammar_results?select=*&order=id.asc&limit=1000&id=gt.'+after+filter,{token:await token()});
+    if(session?.user.id!==id)throw new Error('Session changed');
+    if(!page.length)return rows;
+    const next=page[page.length-1].id;
+    if(!Number.isSafeInteger(next)||next<=after)throw new Error('Invalid result cursor');
+    after=next;rows.push(...page);
+  }
+}
+async function practiceSummary(users){
+  const id=session?.user.id,rows=[];
+  let cursor={};
+  for(;;){
+    const page=await api('/rest/v1/rpc/practice_summary',{method:'POST',token:await token(),body:{p_users:users,...cursor}});
+    if(session?.user.id!==id)throw new Error('Session changed');
+    if(!page.length)return rows;
+    rows.push(...page.map(r=>({...r,score:Number(r.best_score),total:1,created_at:r.last_at})));
+    const last=page[page.length-1];
+    const next={p_after_user:last.user_id,p_after_chapter:last.chapter,p_after_exercise:last.exercise};
+    if(JSON.stringify(next)===JSON.stringify(cursor))throw new Error('Invalid summary cursor');
+    cursor=next;
+  }
+}
+// Upload a logo to the current account's public Storage folder.
 async function upload(bucket,path,blob){
   const r=await fetch(SB_URL+'/storage/v1/object/'+bucket+'/'+path,{method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+await token(),'Content-Type':blob.type,'x-upsert':'true'},body:blob});
   if(!r.ok){let m='HTTP '+r.status;try{const j=await r.json();m=j.message||j.error||m}catch(e){}throw new Error(m)}
   return SB_URL+'/storage/v1/object/public/'+bucket+'/'+path;
 }
-Object.assign(window.ACCT,{sheet,submit,signOut,upload,resolveSave:async choice=>{await push(choice);if(session)sheet('me')}});
+Object.assign(window.ACCT,{sheet,submit,signOut,upload,resultRows,practiceSummary,resolveSave:async choice=>{await push(choice);if(session)sheet('me')}});
 })();
 </script>
 <!-- ===== sign-up invitation (signed-out visitors only) ===== -->

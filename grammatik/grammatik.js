@@ -841,45 +841,110 @@ async function pop(el) {
 
 /* ---------- results: local + Supabase ---------- */
 const LKEY = 'gd_gram';
-function store() { try { return JSON.parse(localStorage.getItem(LKEY) || 'null') || { att: [] }; } catch (e) { return { att: [] }; } }
-function save(s) { try { localStorage.setItem(LKEY, JSON.stringify(s)); } catch (e) {} }
+let unsavedState=null;
+function store() {
+  if(unsavedState)return structuredClone(unsavedState);
+  try { return JSON.parse(localStorage.getItem(LKEY) || 'null') || {att:[]}; }
+  catch { return {att:[]}; }
+}
+let bestCache = null;
+function save(state) {
+  bestCache = null;
+  try { localStorage.setItem(LKEY, JSON.stringify(state)); unsavedState=null; }
+  catch { unsavedState=structuredClone(state); if (window.toast) toast('Gerätespeicher voll. Bitte diese Seite geöffnet lassen und die Ergebnisse synchronisieren.'); }
+}
 const acct = () => window.ACCT && ACCT.user && ACCT.user();
-let remote = null, noTable = false;            // results from the database (all devices)
+let remote = null, remoteUser = null, noTable = false, syncError = false;
+const attemptKey = a => a.aid || [a.ch,a.ex,a.at].join('|');
 function attempts() {
-  const me = acct(), loc = store().att.filter(a => !a.uid || (me && a.uid === me.id) || (!me && !a.uid));
-  if (!remote) return loc;
-  const seen = new Set(remote.map(a => a.at));
-  return remote.concat(loc.filter(a => !seen.has(a.at)));
+  const user = acct();
+  const local = store().att.filter(a => !a.uid || a.uid === user?.id);
+  const rows = user && remoteUser === user.id && remote || [];
+  const keys = new Set(rows.map(attemptKey));
+  const old = new Set(rows.map(a => [a.ch,a.ex,a.at].join('|')));
+  return rows.concat(local.filter(a => !keys.has(attemptKey(a)) && (a.aid || !old.has([a.ch,a.ex,a.at].join('|')))));
 }
 function best(ch, ex) {
-  let b = null; for (const a of attempts()) if (a.ch === ch && a.ex === ex) { if (!b || a.score / a.total > b.score / b.total) b = a; }
-  return b;
+  if (!bestCache) {
+    bestCache = new Map();
+    for (const attempt of attempts()) {
+      const key = attempt.ch + '/' + attempt.ex, previous = bestCache.get(key);
+      if (!previous || attempt.score / attempt.total > previous.score / previous.total) bestCache.set(key, attempt);
+    }
+  }
+  return bestCache.get(ch + '/' + ex);
 }
-function record(a) {
-  const s = store(), me = acct(); a.uid = me ? me.id : null; a.sent = false; s.att.push(a); if (s.att.length > 2000) s.att = s.att.slice(-2000); save(s); sync();
+function record(attempt) {
+  const state = store(), user = acct();
+  Object.assign(attempt,{aid:crypto.randomUUID(),uid:user?.id||null,sent:false});
+  state.att.push(attempt);
+  // Retain pending uploads even when the completed device history is full.
+  const completed = state.att.filter(a => a.sent).slice(-2000);
+  state.att = completed.concat(state.att.filter(a => !a.sent));
+  save(state); sync(); paintSyncStatus();
 }
-let syncing = false;
-async function sync() {
-  const me = acct(); if (!me || noTable || syncing || !ACCT.api) return;
-  const s = store();
-  // attempts made while signed out are given to the account that signs in on this device
-  const todo = s.att.filter(a => !a.sent && (!a.uid || a.uid === me.id)); if (!todo.length) return;
-  syncing = true;
-  try {
-    await ACCT.api('/rest/v1/grammar_results', { method: 'POST', token: await ACCT.token(), headers: { Prefer: 'return=minimal' },
-      body: todo.map(a => ({ chapter: a.ch, exercise: a.ex, score: a.score, total: a.total, passed: a.passed, answers: a.ans || null, created_at: new Date(a.at).toISOString() })) });
-    const s2 = store(); s2.att.forEach(a => { if (todo.some(t => t.at === a.at)) { a.sent = true; a.uid = me.id; } }); save(s2);
-    if (remote) remote = remote.concat(todo.map(a => Object.assign({}, a, { uid: me.id })));
-  } catch (e) { if (e && (e.status === 404 || e.code === 'PGRST205' || e.code === '42P01')) noTable = true; }
-  syncing = false;
+let syncing = null, retrySync = null;
+function syncStatus() {
+  const user = acct();
+  const pending = store().att.filter(a => !a.sent && (!a.uid || a.uid === user?.id)).length;
+  return pending ? (syncError ? 'Noch nicht synchronisiert. Ergebnisse bleiben auf diesem Gerät. ' : 'Ergebnisse werden synchronisiert … ') :
+    syncError ? 'Ergebnisse konnten nicht aktualisiert werden. ' : '';
+}
+function paintSyncStatus() {
+  const holder = V().querySelector('.gr-ch,.gr-top,#grpv');
+  if (!holder) return;
+  let notice = V().querySelector('.gr-sync');
+  const text = syncStatus();
+  if (!text || !acct()) { notice?.remove(); return; }
+  if (!notice) { notice = document.createElement('p'); notice.className = 'gr-note gr-sync'; notice.style.display = 'block'; notice.setAttribute('role','status'); holder.prepend(notice); }
+  notice.textContent = text;
+  if (syncError) { const retry=document.createElement('button');retry.className='btn sm';retry.textContent='Erneut versuchen';retry.onclick=()=>{pull().then(()=>sync())};notice.append(retry); }
+}
+function sync() {
+  if (syncing) return syncing;
+  const user = acct();
+  if (!user || !ACCT.api) return Promise.resolve();
+  clearTimeout(retrySync);
+  const state = store(), pending = state.att.filter(a => !a.sent && (!a.uid || a.uid === user.id));
+  if (!pending.length) return Promise.resolve();
+  for (const a of pending) { a.aid ||= crypto.randomUUID(); a.uid = user.id; }
+  save(state);
+  const batch = pending.slice(0,100);
+  syncing = (async()=>{
+    const token = await ACCT.token();
+    if (acct()?.id !== user.id) return;
+    await ACCT.api('/rest/v1/grammar_results?on_conflict=user_id,attempt_id', {
+      method:'POST',token,headers:{Prefer:'resolution=ignore-duplicates,return=minimal'},
+      body:batch.map(a=>({user_id:user.id,attempt_id:a.aid,chapter:a.ch,exercise:a.ex,score:a.score,total:a.total,
+        passed:a.passed,answers:a.ans||null,created_at:new Date(a.at).toISOString()}))
+    });
+    const ids=new Set(batch.map(a=>a.aid)), updated=store();
+    for (const a of updated.att) if (a.uid===user.id && ids.has(a.aid)) a.sent=true;
+    save(updated);
+    if (acct()?.id === user.id) { syncError=false; await pull(); }
+  })().catch(()=>{if (acct()?.id === user.id) syncError=true})
+    .finally(()=>{
+      syncing=null;paintSyncStatus();
+      if (acct()?.id === user.id) retrySync=setTimeout(sync,syncError?15000:300);
+    });
+  return syncing;
 }
 async function pull() {
-  const me = acct(); if (!me || noTable || !ACCT.api) { remote = null; return; }
+  const user = acct();
+  if (!user || !ACCT.api) { remote=null;remoteUser=null;bestCache=null;return; }
   try {
-    const rows = await ACCT.api('/rest/v1/grammar_results?select=chapter,exercise,score,total,passed,created_at&user_id=eq.' + me.id + '&order=created_at.asc&limit=5000', { token: await ACCT.token() });
-    remote = rows.map(r => ({ ch: r.chapter, ex: r.exercise, score: r.score, total: r.total, passed: r.passed, at: Date.parse(r.created_at), uid: me.id }));
-  } catch (e) { if (e && (e.status === 404 || e.code === 'PGRST205' || e.code === '42P01')) noTable = true; remote = null; }
+    const rows=await ACCT.resultRows('&user_id=eq.'+user.id);
+    if (acct()?.id !== user.id) return;
+    remote=rows.map(r=>({aid:r.attempt_id,ch:r.chapter,ex:r.exercise,score:r.score,total:r.total,passed:r.passed,at:Date.parse(r.created_at),uid:user.id}));
+    remoteUser=user.id;noTable=false;syncError=false;bestCache=null;
+  } catch (e) { if (acct()?.id !== user.id) return; syncError=true;noTable=!!(e.status===404||e.code==='42P01'||e.code==='PGRST205'); }
+  paintSyncStatus();
 }
+window.addEventListener('acct:in',()=>{remote=null;remoteUser=null;bestCache=null;noTable=false;pull().then(sync)});
+window.addEventListener('acct:out',()=>{remote=null;remoteUser=null;bestCache=null;noTable=false;syncError=false;clearTimeout(retrySync)});
+window.addEventListener('storage',event=>{if (event.key===LKEY) {bestCache=null;paintSyncStatus()}});
+window.addEventListener('online',()=>pull().then(sync));
+window.addEventListener('beforeunload',event=>{if(unsavedState){event.preventDefault();event.returnValue=''}});
 function chapterProgress(c) {
   const g = c.exercises.filter(x => x.graded !== false); let passed = 0;
   for (const x of g) { const b = best(c.n, x.id); if (b && b.score / b.total >= PASS) passed++; }
