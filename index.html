@@ -380,6 +380,7 @@ kbd{font:600 .66rem Inter,system-ui,sans-serif;padding:.1rem .35rem;border-radiu
 <div id="toast"></div>
 <div class="modal" id="modal"><div class="sheet" id="sheet"></div></div>
 
+<script src="js/study-sync.js?v=1"></script>
 <script src="js/game-messages.js?v=1"></script>
 <script src="js/render-safety.js?v=1"></script>
 <script id="data" type="application/octet-stream" data-src="core.bin?v=3846fea8f4" data-defs="defs.bin?v=db398139f0"></script>
@@ -1386,7 +1387,7 @@ const SITE=location.origin+location.pathname;
 const tr=(en,de)=>window.KONTO&&KONTO.lang&&KONTO.lang()==='en'?en:de;   // menus/account in English or German
 const SKEY='gd_session';
 let session=LS.get(SKEY,null);
-let timer=null, pushing=false, dirty=false, failed=false;
+let timer=null, pushing=null, dirty=false, failed=false, baseData=null, generation=0, conflicts=[];
 const cacheKey=()=>'gd_cache_'+session.user.id;
 const $=id=>document.getElementById(id);
 const isEmpty=o=>!o||!Object.keys(o).length;
@@ -1407,11 +1408,17 @@ function keep(s,user){
     user:{id:u.id,email:u.email}};
   LS.set(SKEY,session);
 }
+let refreshing=null;
 async function token(){
   if(!session)throw new Error('Nicht angemeldet');
   if(session.expires_at-60>Date.now()/1000)return session.access_token;
-  try{const s=await api('/auth/v1/token?grant_type=refresh_token',{method:'POST',body:{refresh_token:session.refresh_token}});keep(s);return session.access_token}
-  catch(e){if(e.status>=400&&e.status<500)endSession('Sitzung abgelaufen – bitte neu anmelden');throw e}
+  const original=session;
+  if(refreshing?.session===original)return refreshing.promise;
+  const promise=api('/auth/v1/token?grant_type=refresh_token',{method:'POST',body:{refresh_token:original.refresh_token}})
+    .then(s=>{if(session!==original)throw new Error('Session changed');keep(s);return session.access_token})
+    .catch(e=>{if(session===original&&e.status>=400&&e.status<500&&e.status!==429)endSession('Sitzung abgelaufen – bitte neu anmelden');throw e})
+    .finally(()=>{if(refreshing?.session===original)refreshing=null});
+  refreshing={session:original,promise};return promise;
 }
 function de(e){
   const m=String(e&&e.message||e), c=String(e&&e.code||''), s=m+' '+c;
@@ -1429,39 +1436,63 @@ function de(e){
 }
 
 /* ---------- account data ---------- */
-let NOPREFS=false;
-function writeCache(){if(session)LS.set(cacheKey(),{lists,decks,prefs,dirty})}
-function rerender(){if(E.length&&!location.hash.startsWith('#/study'))route()}
+const studyData = row => ({lists:row?.lists||{}, decks:row?.decks||{}, prefs:row?.prefs||{}});
+const snapshot = () => structuredClone({lists,decks,prefs});
+function useData(data){lists=data.lists;decks=data.decks;prefs=data.prefs}
+function writeCache(){
+  if(!session)return false;
+  try{localStorage.setItem(cacheKey(),JSON.stringify({lists,decks,prefs,dirty,base:baseData}));return true}
+  catch{toast(tr('Device storage is full. Keep this page open until your work syncs.','Gerätespeicher voll. Bitte bis zum Abgleich auf dieser Seite bleiben.'));return false}
+}
+function rerender(){if(!location.hash.startsWith('#/study')&&window.KONTO)route()}
 async function pull(){
-  let rows;
-  try{ if(NOPREFS)throw 0; rows=await api('/rest/v1/user_data?select=lists,decks,prefs&user_id=eq.'+session.user.id,{token:await token()}) }
-  catch(err){ if(err&&err.status!==400&&err!==0)throw err; NOPREFS=true; rows=await api('/rest/v1/user_data?select=lists,decks&user_id=eq.'+session.user.id,{token:await token()}) }
-  return rows&&rows[0]||null;
+  const id=session.user.id, auth=await token();
+  const rows=await api('/rest/v1/user_data?select=revision,lists,decks,prefs&user_id=eq.'+id,{token:auth});
+  return rows[0]||null;
 }
-async function push(){
-  if(!session)return;
-  if(pushing){dirty=true;return}
-  clearTimeout(timer);timer=null;
-  pushing=true;dirty=false;
-  const who=session.user.id;
-  try{
-    await api('/rest/v1/user_data?on_conflict=user_id',{method:'POST',token:await token(),
-      headers:{Prefer:'resolution=merge-duplicates,return=minimal'},
-      body:Object.assign({user_id:who,lists,decks,updated_at:new Date().toISOString()},NOPREFS?{}:{prefs})}).catch(async err=>{ if(err&&err.status===400&&!NOPREFS){NOPREFS=true; return api('/rest/v1/user_data?on_conflict=user_id',{method:'POST',token:await token(),headers:{Prefer:'resolution=merge-duplicates,return=minimal'},body:{user_id:who,lists,decks,updated_at:new Date().toISOString()}})} throw err });
-    failed=false;
-  }catch(e){
-    dirty=true;
-    if(!failed)toast('Nicht gespeichert: '+de(e));
-    failed=true;
-  }finally{
-    pushing=false;
-    if(session&&session.user.id===who){
-      writeCache();
-      if(dirty&&!timer)timer=setTimeout(push,failed?15000:300);
-    }
+async function flush(choice,gen){
+  const id=session.user.id, sent=snapshot(), base=baseData||studyData();
+  // A competing writer may win between the read and conditional write.
+  for(let attempt=0;attempt<3;attempt++){
+    const row=await pull();
+    if(gen!==generation)return;
+    const merged=mergeStudyData(base,sent,studyData(row),choice);
+    if(merged.conflicts.length&&!choice){conflicts=merged.conflicts;toast(tr('Conflicting edits. Open your account to choose which to keep.','Änderungskonflikt. Bitte im Konto die gewünschten Änderungen wählen.'));return}
+    let saved;
+    try{
+      const where=row?'&user_id=eq.'+id+'&revision=eq.'+row.revision:'';
+      saved=await api('/rest/v1/user_data?select=revision'+where,{method:row?'PATCH':'POST',token:await token(),
+        headers:{Prefer:'return=representation'},body:row?merged.value:{user_id:id,...merged.value}});
+    }catch(e){if(e.code==='23505')continue;throw e}
+    if(gen!==generation)return;
+    if(!saved?.length)continue;
+    const current=snapshot();
+    baseData=structuredClone(merged.value);
+    useData(mergeStudyData(sent,current,merged.value,'local').value);
+    dirty=JSON.stringify(current)!==JSON.stringify(sent);
+    failed=false;conflicts=[];writeCache();return;
   }
+  throw new Error(tr('Another device is saving. We will retry.','Ein anderes Gerät speichert. Der Abgleich wird wiederholt.'));
 }
-function schedule(){dirty=true;writeCache();clearTimeout(timer);timer=setTimeout(push,600)}
+function push(choice){
+  if(!session||(!dirty&&!pushing))return Promise.resolve();
+  if(pushing)return pushing;
+  if(conflicts.length&&!choice)return Promise.resolve();
+  const gen=generation;
+  clearTimeout(timer);timer=null;
+  pushing=flush(choice,gen).catch(e=>{
+    if(gen!==generation)return;
+    if(!failed)toast(tr('Saved on this device. Sync failed: ','Auf diesem Gerät gespeichert. Abgleich fehlgeschlagen: ')+de(e));
+    failed=true;
+  }).finally(()=>{
+    if(gen!==generation)return;
+    pushing=null;writeCache();
+    if(dirty&&!conflicts.length)scheduleRetry(failed?15000:300);
+  });
+  return pushing;
+}
+function scheduleRetry(ms){clearTimeout(timer);timer=setTimeout(()=>push(),ms)}
+function schedule(){dirty=true;writeCache();scheduleRetry(600)}
 
 /* keep the original guest behaviour, save to the account when signed in */
 const guestLists=saveLists, guestDecks=saveDecks, guestPrefs=savePrefs;
@@ -1470,29 +1501,52 @@ saveLists=function(){session?schedule():guestLists()};
 saveDecks=function(){session?schedule():guestDecks()};
 
 async function afterLogin(fresh){
-  setBtn();
-  try{window.dispatchEvent(new CustomEvent('acct:in',{detail:{fresh}}))}catch(e){}
-  const c=LS.get(cacheKey(),null);
-  if(c){lists=c.lists||{};decks=c.decks||{};prefs=c.prefs||{};dirty=!!c.dirty}else{lists={};decks={};prefs={};dirty=false}
-  rerender();
+  const gen=++generation, c=LS.get(cacheKey(),null);
+  clearTimeout(timer);timer=null;pushing=null;conflicts=[];failed=false;
+  useData(studyData(c));baseData=c?.base||null;dirty=!!c?.dirty;
+  const initial=snapshot();
+  setBtn();rerender();
+  window.dispatchEvent(new CustomEvent('acct:in',{detail:{fresh}}));
   let row;
-  try{
-    if(dirty&&c){await push();return}
-    row=await pull();
-  }catch(e){toast(de(e));return}
-  let L=row?row.lists||{}:{}, D=row?row.decks||{}:{}, save=!row;
-  const gp=LS.get('gd_prefs',{});
-  let P=Object.assign({},row&&row.prefs||{}); P.img=Object.assign({},gp.img||{},P.img||{}); if(!row||!row.prefs&&gp.img)save=true;
-  const gl=LS.get('gd_lists',{}), gd=LS.get('gd_decks',{});
-  if(fresh&&(!isEmpty(gl)||!isEmpty(gd))&&confirm('Auf diesem Gerät gibt es Listen oder Karten ohne Konto. Sollen sie in dein Konto übernommen werden?')){
-    L=Object.assign({},L,gl);D=Object.assign({},D,gd);
-    LS.set('gd_lists',{});LS.set('gd_decks',{});save=true;
+  try{row=await pull()}
+  catch(e){
+    if(gen!==generation)return;
+    failed=true;toast(tr('Account sync unavailable: ','Kontoabgleich nicht verfügbar: ')+de(e));
+    // Permit read-only access to older schemas. Keep every edit in the private
+    // device cache until the versioned write protocol is installed.
+    if(!c && (e.status===400||e.code==='42703')){
+      try{const old=await api('/rest/v1/user_data?select=*&user_id=eq.'+session.user.id,{token:await token()});
+        if(gen===generation&&!dirty){baseData=studyData(old[0]);useData(structuredClone(baseData));writeCache();rerender()}}catch{}
+    }
+    if(dirty)scheduleRetry(15000);
+    return;
   }
-  lists=L;decks=D;prefs=P;dirty=false;writeCache();rerender();
-  if(save)await push();
+  if(gen!==generation)return;
+  const remote=studyData(row);
+  if(!dirty){
+    useData(structuredClone(remote));
+    // Recover old clients' per-account quizzes that were never uploaded.
+    for(const [k,v] of Object.entries(c?.prefs?.quizzes||{})){
+      if(!c.base&&!Object.hasOwn(prefs.quizzes||{},k)){prefs.quizzes={...prefs.quizzes,[k]:v};dirty=true}
+    }
+    const guestImages=LS.get('gd_prefs',{}).img;
+    if(guestImages&&!prefs.img){prefs.img=guestImages;dirty=true}
+    baseData=remote;
+  }else if(!baseData){
+    // Without an acknowledged baseline, retain both sides or ask on conflict.
+    baseData=c?.dirty?studyData():initial;
+  }
+  const gl=LS.get('gd_lists',{}),gd=LS.get('gd_decks',{});
+  if(fresh&&(!isEmpty(gl)||!isEmpty(gd))&&confirm(tr('Import the guest lists and cards on this device?','Listen und Karten ohne Konto auf diesem Gerät übernehmen?'))){
+    lists={...lists,...gl};decks={...decks,...gd};dirty=true;
+    if(writeCache()){LS.set('gd_lists',{});LS.set('gd_decks',{})}
+  }
+  writeCache();rerender();
+  if(dirty)await push();
 }
 function endSession(msg){
-  if(session)try{localStorage.removeItem(cacheKey())}catch(e){}
+  if(session){if(dirty)writeCache();else localStorage.removeItem(cacheKey())}
+  generation++;pushing=null;baseData=null;conflicts=[];
   session=null;clearTimeout(timer);timer=null;dirty=false;failed=false;
   try{localStorage.removeItem(SKEY)}catch(e){}
   lists=LS.get('gd_lists',{});decks=LS.get('gd_decks',{});prefs=LS.get('gd_prefs',{});
@@ -1501,7 +1555,8 @@ function endSession(msg){
   if(msg)toast(msg);
 }
 async function signOut(){
-  if(dirty||timer){await push();if(dirty&&!confirm('Einige Änderungen konnten noch nicht gespeichert werden. Trotzdem abmelden?'))return}
+  if(dirty||pushing){await push();if(!session)return;if(dirty&&(!writeCache()||!confirm(tr('Your changes are only on this device. Sign out and resume the save next time?', 'Die Änderungen sind nur auf diesem Gerät. Abmelden und beim nächsten Anmelden synchronisieren?'))))return}
+  if(!session)return;
   const t=session.access_token;
   api('/auth/v1/logout',{method:'POST',token:t}).catch(()=>{});
   endSession('Abgemeldet');
@@ -1525,7 +1580,8 @@ function sheet(mode){
     const n=Object.keys(lists).length, k=Object.keys(decks).length;
     openSheet(`<h3>${tr('Your account','Dein Konto')}</h3>
       <div class="acct-who"><div class="av">${esc((session.user.email||'?')[0].toUpperCase())}</div>
-      <div><div class="em">${esc(session.user.email||'')}</div><div class="muted" style="font-size:.82rem">${n} ${tr(n===1?'list':'lists',n===1?'Liste':'Listen')} · ${k} ${tr(k===1?'deck':'decks','Stapel')} · ${dirty?tr('saving …','wird gespeichert …'):tr('saved ✓','gespeichert ✓')}</div></div></div>
+      <div><div class="em">${esc(session.user.email||'')}</div><div class="muted" style="font-size:.82rem">${n} ${tr(n===1?'list':'lists',n===1?'Liste':'Listen')} · ${k} ${tr(k===1?'deck':'decks','Stapel')} · ${failed||conflicts.length?tr('on this device · sync pending','auf diesem Gerät · Abgleich ausstehend'):dirty?tr('saving …','wird gespeichert …'):tr('saved ✓','gespeichert ✓')}</div></div></div>
+      ${conflicts.length ? `<p>${tr('Both devices changed the same items. Choose which conflicting edits to keep.', 'Beide Geräte haben dieselben Einträge geändert. Welche Änderungen möchtest du behalten?')}<br>${esc(conflicts.slice(0,5).join(', '))}</p><button class="btn" onclick="ACCT.resolveSave('local')">${tr('Keep this device’s edits','Änderungen dieses Geräts behalten')}</button> <button class="btn" onclick="ACCT.resolveSave('server')">${tr('Keep saved edits','Gespeicherte Änderungen behalten')}</button>` : ''}
       <div id="acct_prof"></div>
       <p>${tr('Your lists and cards belong only to this account and load on every device where you sign in.','Deine Listen und Karten gehören nur zu diesem Konto und werden auf jedem Gerät geladen, auf dem du dich anmeldest.')}</p>
       <div class="row"><button class="acct-link" onclick="ACCT.sheet('newpw')">${tr('Change password','Passwort ändern')}</button><span class="spacer"></span>
@@ -1607,8 +1663,9 @@ document.addEventListener('visibilitychange',async()=>{
   if(!session)return;
   if(document.visibilityState==='hidden'){if(dirty||timer)push();return}
   if(dirty||pushing||timer)return;
-  try{const row=await pull();if(!row||!session||dirty||timer)return;
-    if(JSON.stringify([row.lists,row.decks,row.prefs||prefs])!==JSON.stringify([lists,decks,prefs])){lists=row.lists||{};decks=row.decks||{};if(row.prefs)prefs=row.prefs;writeCache();rerender()}
+  const gen=generation;
+  try{const row=await pull();if(gen!==generation||dirty||pushing||timer)return;
+    baseData=studyData(row);useData(structuredClone(baseData));failed=false;writeCache();rerender();
   }catch(e){}
 });
 window.addEventListener('beforeunload',e=>{if(session&&(dirty||timer)){push();e.preventDefault();e.returnValue=''}});
@@ -1619,7 +1676,7 @@ async function upload(bucket,path,blob){
   if(!r.ok){let m='HTTP '+r.status;try{const j=await r.json();m=j.message||j.error||m}catch(e){}throw new Error(m)}
   return SB_URL+'/storage/v1/object/public/'+bucket+'/'+path;
 }
-Object.assign(window.ACCT,{sheet,submit,signOut,upload});
+Object.assign(window.ACCT,{sheet,submit,signOut,upload,resolveSave:async choice=>{await push(choice);if(session)sheet('me')}});
 })();
 </script>
 <!-- ===== sign-up invitation (signed-out visitors only) ===== -->
