@@ -536,7 +536,8 @@ async function loadOrg(org) {
   const ids = D.members.map(m => m.user_id);
   if (ids.length) {
     (await q('/rest/v1/profiles?select=user_id,display_name,level,unlocked,created_at&user_id=in.(' + ids.join(',') + ')') || []).forEach(p => { p.unlocked = p.unlocked || []; D.profiles[p.user_id] = p; });
-    try { D.res = await q('/rest/v1/grammar_results?select=user_id,chapter,exercise,score,total,created_at&user_id=in.(' + ids.join(',') + ')&order=created_at.desc&limit=20000') || []; } catch (e) { D.res = []; }
+    D.members = D.members.filter(member => D.profiles[member.user_id]);
+    D.res = await A().practiceSummary(Object.keys(D.profiles));
   }
   D.tasks = D.classes.length ? await q('/rest/v1/assignments?select=*&class_id=in.(' + D.classes.map(c => c.id).join(',') + ')&order=due_at.asc.nullslast') || [] : [];
 }
@@ -555,7 +556,8 @@ async function viewStaff(arg) {
   const studs = D.members.filter(m => m.member_role === 'student'), teachers = D.members.filter(m => m.member_role === 'teacher');
   const lastAct = {}, b = bestMap(D.res); D.res.forEach(r => { const t = Date.parse(r.created_at); if (!lastAct[r.user_id] || t > lastAct[r.user_id]) lastAct[r.user_id] = t; });
   const active = studs.filter(m => Date.now() - (lastAct[m.user_id] || 0) < 7 * 864e5).length;
-  const r30 = D.res.filter(r => Date.now() - Date.parse(r.created_at) < 30 * 864e5), avg30 = r30.length ? Math.round(r30.reduce((a, r) => a + r.score / r.total, 0) / r30.length * 100) : null;
+  const recentCount = D.res.reduce((sum, row) => sum + Number(row.recent_count), 0);
+  const avg30 = recentCount ? Math.round(D.res.reduce((sum, row) => sum + Number(row.recent_score), 0) / recentCount * 100) : null;
   const pend = studs.filter(m => wants(D.profiles[m.user_id]) || !(D.profiles[m.user_id] || { unlocked: [] }).unlocked.length);
   const avgOf = (uid, l) => { const ks = Object.keys(b).filter(k => k.startsWith(uid + '|') && (!l || (window.GRAM && GRAM.chLevel(+k.split('|')[1]) === l))); return ks.length ? Math.round(ks.reduce((a, k) => a + b[k], 0) / ks.length * 100) : null; };
   const cls = id => { const c = D.classes.find(x => x.id === id); return c ? esc(c.name) : ''; };
@@ -675,7 +677,7 @@ async function viewTasks() {
   busy(); await ready(); await ensureGram();
   if (OFF) return page(T('My assignments', 'Meine Aufgaben'), `<p class="sub">${T('This is not set up yet.', 'Diese Funktion ist noch nicht eingerichtet.')}</p>`);
   let as = [], res = [];
-  try { as = await q('/rest/v1/assignments?select=*&order=due_at.asc.nullslast') || []; res = await q('/rest/v1/grammar_results?select=user_id,chapter,exercise,score,total&user_id=eq.' + me().id + '&limit=5000') || []; }
+  try { as = await q('/rest/v1/assignments?select=*&order=due_at.asc.nullslast') || []; res = await A().practiceSummary([me().id]); }
   catch (e) { return page(T('My assignments', 'Meine Aufgaben'), `<p class="sub">${esc(err(e))}</p>`); }
   const b = bestMap(res), pm = passMark();
   const rows = as.map(a => { const items = a.items || [], need = a.pass_mark || pm, done = doneTask(b, me().id, a, need), ok = items.length && done === items.length, late = !ok && a.due_at && new Date(a.due_at) < new Date();

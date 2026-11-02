@@ -24,7 +24,7 @@ async function site(hash='',options={}) {
     beforeParse(w){
       w.requestAnimationFrame=callback=>w.setTimeout(()=>callback(Date.now()),16);
       w.cancelAnimationFrame=w.clearTimeout;
-      w.scrollTo=()=>{};w.matchMedia=()=>({matches:false});w.TextDecoder=TextDecoder;w.TextEncoder=TextEncoder;w.structuredClone=structuredClone;
+      w.scrollTo=()=>{};w.matchMedia=()=>({matches:false});w.TextDecoder=TextDecoder;w.TextEncoder=TextEncoder;w.crypto.randomUUID=require('node:crypto').randomUUID;w.structuredClone=structuredClone;
       w.fetch=async(url,request={})=>{
         const u=new URL(url,w.location.href);calls.push(u.pathname);
         if(u.hostname==='site.test'){
@@ -34,7 +34,8 @@ async function site(hash='',options={}) {
         if(u.pathname==='/entries')return new Response('[]');
         if(u.pathname.includes('site_settings'))return new Response(JSON.stringify([{features:options.features||{},welcome:{}}]));
         if(u.pathname.includes('profiles'))return options.profile?.()||new Response(JSON.stringify([{user_id:'fixture',role:'learner',unlocked:['B1'],level:'B1'}]));
-        if(u.pathname.includes('user_data')||u.pathname.includes('grammar_results'))return new Response('[]');
+        if(u.pathname.includes('grammar_results'))return options.results?.(u)||new Response('[]');
+        if(u.pathname.includes('user_data'))return new Response('[]');
         return new Response('[]');
       };
       if(options.features)w.localStorage.setItem('gd_site',JSON.stringify({features:options.features}));
@@ -77,6 +78,18 @@ test('course overview, contents and progress need no full chapter or dictionary'
     s.window.location.hash='#/v/201';
     await until(()=>s.document.querySelector('.gr-ch'));
     assert.deepEqual(s.calls.filter(p=>/k\d+\.js$/.test(p)),['/grammatik/k201.js']);
+    assert.deepEqual(s.errors,[]);
+  }finally{await s.close()}
+});
+test('result history follows stable cursors even when the API caps each response',async()=>{
+  const rows=Array.from({length:5010},(_,i)=>({id:i+1,chapter:1,exercise:'u1',score:1,total:1}));
+  const s=await site('#/settings',{account:true,results:url=>{
+    const after=Number(url.searchParams.get('id').slice(3));
+    return new Response(JSON.stringify(rows.filter(row=>row.id>after).slice(0,100)));
+  }});
+  try{
+    const all=await s.window.ACCT.resultRows('&user_id=eq.fixture');
+    assert.equal(all.length,5010);assert.equal(all[5009].id,5010);
     assert.deepEqual(s.errors,[]);
   }finally{await s.close()}
 });
