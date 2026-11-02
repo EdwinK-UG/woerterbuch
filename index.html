@@ -994,7 +994,7 @@ function ownSeed(w){ return prefs&&prefs.img&&prefs.img[w]||null }
 function setOwnSeed(w,seed){ prefs=prefs||{}; prefs.img=Object.assign({},prefs.img,{[w]:seed}); savePrefs() }
 async function freeShow(e,box,fresh){
   const w=plainW(e.w);
-  // new pictures are only made on "neu erzeugen" (or once, if a word has never had one)
+  // Read cached pictures publicly. Generation is tied to a confirmed account.
   const seed=fresh?String(1+Math.floor(Math.random()*999998)):(ownSeed(w)?String(ownSeed(w)):'latest');
   const cap=`<figcaption><span class="capb"><button class="imgnext" onclick="this.disabled=true;freeShow(E[${e.i}],document.getElementById('wimg'),true)">${ic('refresh-cw')} neu erzeugen</button>
     <button class="imgai" onclick="(b=>{b.dataset.photo='1';loadImg(E[${e.i}])})(document.getElementById('wimg'))">Foto</button></span>
@@ -1008,10 +1008,15 @@ async function freeShow(e,box,fresh){
       im.onerror=()=>res(false); im.src=picURL(e,seed)});
     if(ok)return;
   }
+  if(!window.ACCT?.user()){
+    if(fresh){ACCT.sheet('in');toast(ui('Sign in to generate a picture.','Bitte anmelden, um ein Bild zu erzeugen.'))}
+    box.dataset.photo='1';loadImg(e);return;
+  }
+  const actor=ACCT.user().id;
   const en=e.ps==='n'&&!fresh?await Promise.race([enCached(w),new Promise(r=>setTimeout(()=>r(null),2500))]):await Promise.race([enCached(w),new Promise(r=>setTimeout(()=>r(null),2500))]);
   // our own Cloudflare picture service: a text model turns the meaning into a scene, FLUX draws it, stored per word
   const def=gloss(e).replace(/[⟨⟩]/g,'').slice(0,300), ex=(examples({df:e.df.split(/<span class="sn">2<\/span>/)[0]},1)[0]||'').slice(0,180);
-  const qs=new URLSearchParams({w, pos:POSL[e.ps]||e.ps||'', en:en||'', def, ex, seed}); if(fresh)qs.set('set','1');
+  const qs=new URLSearchParams({w, pos:POSL[e.ps]||e.ps||'', en:en||'', def, ex, seed});
   const url=AIURL_BASE+'/img?'+qs.toString();
   const fallback=()=>{ if(!document.body.contains(box))return; box.dataset.photo='1'; loadImg(e) };
   if(Date.now()<AIWAIT.until){fallback();return}           // daily allowance used up: photos until it resets
@@ -1019,10 +1024,11 @@ async function freeShow(e,box,fresh){
   if(!src){
     const c=new AbortController(), t=setTimeout(()=>c.abort(),45000);
     try{
-      const r=await fetch(url,{signal:c.signal});
+      const r=await fetch(url,{signal:c.signal,headers:{Authorization:'Bearer '+await ACCT.token()}});
+      if(ACCT.user()?.id!==actor)return;
       if(!r.ok||!/^image\//.test(r.headers.get('content-type')||'')){ if(r.status===429)AIWAIT.until=Date.now()+30*60e3; throw new Error('ai '+r.status) }
       src=URL.createObjectURL(await r.blob()); if(seed!=='latest')AIBLOB.set(url,src);
-      if(fresh)setOwnSeed(w,+seed);
+      setOwnSeed(w,+r.headers.get('X-Seed')||+seed||1);
     }catch(err){ clearTimeout(t); fallback(); return }
     clearTimeout(t);
   }
@@ -1064,12 +1070,16 @@ function addAIEntries(list){
 function home(ev){ if(ev)ev.preventDefault(); if(location.hash==='#/'||location.hash==='')route(); else go('') }
 async function createAI(w){
   w=w.trim(); if(!w)return;
+  if(!window.ACCT?.user()){ACCT.sheet('in');toast(ui('Sign in to suggest an entry.','Bitte anmelden, um einen Eintrag vorzuschlagen.'));return}
+  const user=ACCT.user().id;
   const steps=['Echte Beispielsätze werden in Zeitungen und Wikipedia gesucht …','Die Bedeutung wird einfach erklärt …','Der Eintrag wird gespeichert …'];
   V().innerHTML=`<div class="aimake"><span class="spin"></span><h1 class="page">„${esc(w)}“</h1><p class="sub" id="aistep">${steps[0]}</p>
     <p class="muted" style="font-size:.85rem">Das dauert meist 10–30 Sekunden.</p></div>`;
   let k=0; const tick=setInterval(()=>{k=Math.min(k+1,steps.length-1); const el=document.getElementById('aistep'); if(el)el.textContent=steps[k]},6000);
   try{
-    const r=await fetch(AIURL_BASE+'/entry?w='+encodeURIComponent(w),{method:'POST'}); const d=await r.json(); clearInterval(tick);
+    const r=await fetch(AIURL_BASE+'/entry?w='+encodeURIComponent(w),{method:'POST',headers:{Authorization:'Bearer '+await ACCT.token()}}); const d=await r.json(); clearInterval(tick);
+    if(ACCT.user()?.id!==user)return;
+    if(r.status===202&&d.pending){V().innerHTML=`<div class="aimiss"><h1 class="page">${ui('Submitted for review','Zur Prüfung eingereicht')}</h1><p>${ui('Your suggested entry will become public after editorial review.','Dein vorgeschlagener Eintrag wird nach redaktioneller Prüfung veröffentlicht.')}</p><a class="btn" href="#/">${ui('Back to search','Zur Suche')}</a></div>`;return}
     if(!r.ok||!d.entry){
       V().innerHTML=`<div class="aimiss"><span class="em">${ic('circle-help')}</span><h1 class="page">Kein Eintrag erstellt</h1>
         <p class="sub">${esc(d.error||'Bitte später noch einmal versuchen.')}</p><a class="btn" href="#/" onclick="home(event)">← Suche</a></div>`; return }
@@ -1624,6 +1634,7 @@ async function afterLogin(fresh){
   useData(studyData(c));baseData=c?.base||null;dirty=!!c?.dirty;
   const initial=snapshot();
   setBtn();rerender();
+  welcomeMail(session.access_token);
   window.dispatchEvent(new CustomEvent('acct:in',{detail:{fresh}}));
   let row;
   try{row=await pull()}
