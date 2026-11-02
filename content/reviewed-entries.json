@@ -1,0 +1,45 @@
+{
+  "reviewed": "2026-11-02",
+  "note": "Original definitions and examples. References verify headword meaning and forms; their examples are not reproduced. Replaces six legacy AI suggestions with truncated news excerpts or incorrect secondary senses.",
+  "entries": [
+    {
+      "w": "Homeoffice", "q": ["homeoffice", "home-office"], "ar": "das", "ps": "Substantiv",
+      "forms": "Genitiv: des Homeoffice; Plural: die Homeoffices", "en": "home office; working from home",
+      "reference": "https://www.duden.de/rechtschreibung/Homeoffice",
+      "senses": [
+        {"d": "ein Raum oder Arbeitsplatz in der eigenen Wohnung, der für berufliche Aufgaben genutzt wird.", "ex": [{"t": "Für mein Homeoffice brauche ich einen Schreibtisch und einen guten Stuhl."}]},
+        {"d": "berufliche Arbeit, die man von zu Hause aus erledigt.", "ex": [{"t": "Am Freitag arbeite ich im Homeoffice und treffe mein Team online."}]}
+      ]
+    },
+    {
+      "w": "Lieferkette", "q": ["lieferkette"], "ar": "die", "ps": "Substantiv",
+      "forms": "Genitiv: der Lieferkette; Plural: die Lieferketten", "en": "supply chain",
+      "reference": "https://www.duden.de/rechtschreibung/Lieferkette",
+      "senses": [{"d": "die miteinander verbundenen Schritte, durch die Rohstoffe und Waren hergestellt, weitergegeben und schließlich geliefert werden.", "ex": [{"t": "Zur Lieferkette unseres Tisches gehören der Holzlieferant, die Möbelfabrik und das Möbelgeschäft."}]}]
+    },
+    {
+      "w": "googeln", "q": ["googeln"], "ar": "", "ps": "Verb",
+      "forms": "googelt, googelte, hat gegoogelt", "en": "to google",
+      "reference": "https://www.duden.de/rechtschreibung/googeln",
+      "senses": [{"d": "mit der Suchmaschine Google im Internet nach Informationen suchen.", "ex": [{"t": "Ich google die Adresse des Museums, bevor wir losfahren."}]}]
+    },
+    {
+      "w": "Wärmepumpe", "q": ["wärmepumpe"], "ar": "die", "ps": "Substantiv",
+      "forms": "Genitiv: der Wärmepumpe; Plural: die Wärmepumpen", "en": "heat pump",
+      "reference": "https://www.duden.de/rechtschreibung/Waermepumpe",
+      "senses": [{"d": "ein Gerät, das Wärme aus der Umgebung aufnimmt und zum Heizen nutzbar macht.", "ex": [{"t": "Die Wärmepumpe nutzt Wärme aus der Luft, um das Haus zu heizen."}]}]
+    },
+    {
+      "w": "Lebensbereich", "q": ["lebensbereich"], "ar": "der", "ps": "Substantiv",
+      "forms": "auch: das Lebensbereich; Genitiv: des Lebensbereichs; Plural: die Lebensbereiche", "en": "area of life",
+      "reference": "https://www.duden.de/rechtschreibung/Lebensbereich",
+      "senses": [{"d": "ein Teil des Lebens mit bestimmten Tätigkeiten oder Beziehungen, zum Beispiel Arbeit, Familie oder Freizeit.", "ex": [{"t": "Musik spielt in vielen Lebensbereichen eine wichtige Rolle."}]}]
+    },
+    {
+      "w": "Erspartes", "q": ["ersparte", "erspartes"], "ar": "", "ps": "substantiviertes Adjektiv",
+      "forms": "mit Artikel: das Ersparte; Genitiv: des Ersparten", "en": "savings",
+      "reference": "https://www.duden.de/rechtschreibung/Ersparte",
+      "senses": [{"d": "Geld, das jemand durch Sparen zurückgelegt hat.", "ex": [{"t": "Von meinem Ersparten kaufe ich mir ein Fahrrad."}]}]
+    }
+  ]
+}
