@@ -497,7 +497,7 @@ function route(){
 window.addEventListener('hashchange',route);
 /* grammar: its code and chapters load only when the tab is opened, so the dictionary is not slowed down */
 let gramP=null;
-function loadGram(){ if(window.GRAM)return Promise.resolve(); if(!gramP){gramP=new Promise((res,rej)=>{const s=document.createElement('script');s.src='grammatik/grammatik.js?v=14';s.onload=res;s.onerror=()=>{gramP=null;rej()};document.head.appendChild(s)})} return gramP }
+function loadGram(){ if(window.GRAM)return Promise.resolve(); if(!gramP){gramP=new Promise((res,rej)=>{const s=document.createElement('script');s.src='grammatik/grammatik.js?v=15';s.onload=res;s.onerror=()=>{gramP=null;rej()};document.head.appendChild(s)})} return gramP }
 function openGram(arg,m){
   m=m||'g'; const name=m==='v'?'Der Wortschatz':'Die Grammatik';
   if(window.GRAM){GRAM.view(arg,m);return}
@@ -2820,5 +2820,5 @@ if(tabs&&!tabs.querySelector('[data-t="play"]')){const a=document.createElement(
 })();
 </script>
 <!-- ===== /Spiele ===== -->
-<script src="konto.js?v=6"></script>
+<script src="konto.js?v=7"></script>
 </body></html>
