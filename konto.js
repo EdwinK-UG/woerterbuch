@@ -422,7 +422,13 @@ function bestMap(rows) {
   const b = {}; for (const r of rows) { const k = (r.user_id || r.uid || '') + '|' + (r.chapter != null ? r.chapter : r.ch) + '|' + (r.exercise || r.ex), s = r.score / r.total; if (!(k in b) || s > b[k]) b[k] = s; }
   return b;
 }
-const doneTask = (best, uid, t, need) => (t.items || []).filter(it => Object.keys(best).some(k => k.startsWith(uid + '|' + it.ch + '|') && (!it.ex || k.endsWith('|' + it.ex)) && best[k] * 100 >= need)).length;
+function doneTask(best, uid, task, need) {
+  return (task.items || []).filter(item => {
+    const ids = item.ex ? [item.ex] : item.required || window.GRAM?.requiredExercises(item.ch) || [];
+    return Array.isArray(ids) && ids.length > 0 &&
+      ids.every(id => best[uid + '|' + item.ch + '|' + id] * 100 >= need);
+  }).length;
+}
 function kpis(list) { return `<div class="kd-kpis">${list.map(k => `<div class="kd-kpi"><span class="ic">${icn(k[0])}</span><b>${esc(k[1])}</b><span>${esc(k[2])}</span>${k[3] ? `<small>${esc(k[3])}</small>` : ''}</div>`).join('')}</div>`; }
 function hero(o, inner) {
   const col = o && /^#[0-9a-f]{6}$/i.test(o.theme || '') ? o.theme : null;
@@ -654,7 +660,8 @@ const delInvite = code => act(async () => { await q('/rest/v1/invites?code=eq.' 
 const moveMember = (u, c) => act(async () => { await PATCH('/rest/v1/org_members?org_id=eq.' + D.org.id + '&user_id=eq.' + u, { class_id: c || null }); const m = D.members.find(x => x.user_id === u); if (m) m.class_id = c || null; }, T('Moved', 'Verschoben'));
 const removeMember = u => { if (!confirm(T('Remove this person from your school?', 'Diese Person aus der Schule entfernen?'))) return; act(async () => { await q('/rest/v1/org_members?org_id=eq.' + D.org.id + '&user_id=eq.' + u, { method: 'DELETE' }); window.closeSheet && closeSheet(); refresh(); }, T('Removed', 'Entfernt')); };
 const addTask = c => act(async () => {
-  const title = $('kt_t_' + c).value.trim(), sel = [...$('kt_ch_' + c).selectedOptions].map(o => ({ ch: +o.value, ex: null })), d = $('kt_d_' + c).value;
+  const title = $('kt_t_' + c).value.trim(), sel = [...$('kt_ch_' + c).selectedOptions].map(o => ({ ch: +o.value, ex: null, required: GRAM.requiredExercises(+o.value) })), d = $('kt_d_' + c).value;
+  if (sel.some(item => !item.required.length)) throw new Error(T('Choose a chapter with graded exercises.', 'Bitte ein Kapitel mit bewerteten Übungen wählen.'));
   if (!title || !sel.length) throw new Error(T('Please enter a title and choose at least one chapter.', 'Bitte Titel und mindestens ein Kapitel wählen.'));
   await q('/rest/v1/assignments', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: { class_id: c, title, items: sel, due_at: d ? new Date(d + 'T23:59:00').toISOString() : null, pass_mark: num('kt_p_' + c) } });
   refresh();
@@ -847,7 +854,7 @@ async function sendRequest() {
 /* ---------- home for visitors who are not signed in: Deutschklinik ---------- */
 const LVDESC = { A1: ['First words, first conversations', 'Erste Wörter, erste Gespräche'], A2: ['Everyday life with confidence', 'Sicher im Alltag'], B1: ['Work, travel and your opinion', 'Beruf, Reisen und die eigene Meinung'],
   B2: ['Discuss, argue, understand the news', 'Diskutieren, argumentieren, Nachrichten verstehen'], C1: ['Precise, professional, almost native', 'Präzise, professionell, fast muttersprachlich'] };
-async function viewWelcome() {
+function viewWelcome() {
   const w = SITE.welcome || {}, h = w.headline || T('Welcome to Deutschklinik', 'Willkommen in der Deutschklinik'),
     msg = w.message || T('Your German, diagnosed and treated. Choose your level, follow a clear course from A1 to C1 and practise with real examples, pictures and games – until German feels natural.', 'Dein Deutsch – untersucht und behandelt. Wähle dein Niveau, folge einem klaren Kurs von A1 bis C1 und übe mit echten Beispielen, Bildern und Spielen – bis Deutsch sich natürlich anfühlt.');
   const free = ['dict', 'games'].filter(f => mode(f) === 'everyone');
@@ -867,9 +874,7 @@ async function viewWelcome() {
       : `<a href="#/play">${icn('gamepad-2')}<b>${T('Games', 'Spiele')}</b><small>${T('quizzes alone or live with your class', 'Quiz allein oder live mit der Klasse')}</small></a>`).join('')}</div>` : ''}
     <div class="kd-card kd-schools"><div><h3>${icn('school')} ${T('For schools and teachers', 'Für Schulen und Lehrkräfte')}</h3><p class="m">${T('Your own branded page, classes with invitation links, assignments with deadlines, your own pass mark and a dashboard of every learner, grouped by level.', 'Eine eigene Seite mit Ihrer Marke, Klassen mit Einladungslinks, Aufgaben mit Abgabetermin, eine eigene Bestehensgrenze und eine Übersicht über alle Lernenden nach Niveau.')}</p></div>
       <button class="btn primary" onclick="KONTO.signupAs('school')">${T('Register your school', 'Schule registrieren')}</button><button class="btn" onclick="KONTO.signupAs('teacher')">${T('I am a teacher', 'Ich bin Lehrkraft')}</button></div>`, 'kd');
-  draw(null);
-  await ensureGram();
-  if (window.GRAM && GRAM.chapters) { const c = {}; GRAM.chapters().forEach(x => { if (!LV.includes(x.level)) return; c[x.level] = c[x.level] || { v: 0, g: 0 }; c[x.level][x.vocab ? 'v' : 'g']++; }); if (location.hash.slice(2).split('/')[0] === 'start' && !me()) draw(c); }
+  draw(COURSE_COUNTS);
 }
 function lookup(w) {
   w = String(w || '').trim(); location.hash = '#/';
