@@ -8,7 +8,7 @@ SCRIPTS = Path(__file__).resolve().parent
 DATA_ROOT = Path(os.environ.get("VOCAB_DATA_DIR", REPOSITORY / ".local" / "vocabulary-data")).resolve()
 RAW_DATA = DATA_ROOT / "raw"
 WIKTIONARY = DATA_ROOT / "wikt"
-SITE_CHAPTERS = Path(os.environ.get("VOCAB_OUTPUT_DIR", REPOSITORY / "grammatik")).resolve()
+SITE_CHAPTERS = Path(os.environ.get("VOCAB_OUTPUT_DIR", REPOSITORY / ".local" / "lessons")).resolve()
 
 
 def write_chapter(number, text):

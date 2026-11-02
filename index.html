@@ -558,7 +558,7 @@ function scriptFile(src){
 function loadGram(){
   if(!gramP)gramP=(async()=>{
     if(typeof LESSON_EXERCISES==='undefined')await scriptFile('grammatik/catalog.js?v=606c7f51c6cd');
-    if(!window.GRAM)await scriptFile('grammatik/grammatik.js?v=a6567201c3b3');
+    if(!window.GRAM)await scriptFile('grammatik/grammatik.js?v=4e5938afb66a');
   })().catch(e=>{gramP=null;throw e});
   return gramP;
 }
@@ -3064,5 +3064,5 @@ if(tabs&&!tabs.querySelector('[data-t="play"]')){const a=document.createElement(
 })();
 </script>
 <!-- ===== /Spiele ===== -->
-<script src="konto.js?v=279f857ab822"></script>
+<script src="konto.js?v=cf33df717c07"></script>
 </body></html>

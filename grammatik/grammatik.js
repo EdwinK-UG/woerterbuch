@@ -5,7 +5,6 @@
    Attempts are kept in this browser and, for signed-in users, saved to Supabase (table grammar_results). */
 (function () {
 'use strict';
-const VER = '10';
 let PASS = 0.7;                         // share of correct answers needed to pass an exercise (a teacher/school can change it)
 const $ = id => document.getElementById(id);
 const H = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
@@ -116,7 +115,7 @@ const TOTAL = GROUPS.reduce((s, g) => s + (g.ref || g.vocab ? 0 : g.ch.length), 
 const LVS = ['A1', 'A2', 'B1', 'B2', 'C1'];
 const myLevel = () => (window.KONTO && KONTO.level && KONTO.level()) || null;
 const chLevel = n => { for (const g of GROUPS) for (const c of g.ch) if (c[0] === n) return c[3]; return null; };
-const lvOpen = l => !LVS.includes(l) || !(window.KONTO && KONTO.canOpen) || KONTO.canOpen(l);
+const lvOpen = l => !!(window.KONTO && KONTO.profile() && (LVS.includes(l) ? KONTO.canOpen(l) : KONTO.profile().role !== 'learner' || KONTO.unlocked().length));
 const allowed = n => lvOpen(chLevel(n));
 const topicNo = n => n > 260 ? n - 260 : n > 240 ? n - 240 : n > 220 ? n - 220 : n - 200;
 const en = () => !!(window.KONTO && KONTO.lang && KONTO.lang() === 'en');
@@ -1081,13 +1080,53 @@ async function progressView(m) {
 }
 
 /* ---------- chapter ---------- */
-function loadChapter(n) {
-  if (CH[n]) return Promise.resolve(CH[n]);
-  return new Promise((res, rej) => {
-    const sc = document.createElement('script'); sc.src = GRAM.base + 'k' + n + '.js?v=' + VER;
-    sc.onload = () => CH[n] ? res(CH[n]) : rej(new Error('leer')); sc.onerror = () => rej(new Error('Netz'));
-    document.head.appendChild(sc);
-  });
+let lessonEpoch = 0;
+const lessonLoads = new Map();
+function clearLessons() {
+  lessonEpoch++;
+  lessonLoads.clear();
+  for (const n of Object.keys(CH)) delete CH[n];
+  cur = null;
+}
+window.addEventListener('acct:in', clearLessons);
+window.addEventListener('acct:out', clearLessons);
+async function loadChapter(n) {
+  const user = acct(), epoch = lessonEpoch;
+  if (!user || !allowed(n)) throw new Error('Enrolment required');
+  // Authorize every opening, including a previously loaded lesson, so a revoked level closes.
+  if (lessonLoads.has(n)) return lessonLoads.get(n);
+  const current = () => epoch === lessonEpoch && acct()?.id === user.id && allowed(n);
+  const loading = (async () => {
+    const token = await ACCT.token();
+    if (!current()) throw new Error('account changed');
+    const response = await fetch(APP_CONFIG.supabaseUrl + '/functions/v1/lessons?chapter=' + encodeURIComponent(n), {
+      headers: { apikey: APP_CONFIG.supabaseKey, Authorization: 'Bearer ' + token }, cache: 'no-store',
+    });
+    if (!current()) throw new Error('account changed');
+    if (!response.ok) {
+      delete CH[n];
+      const error = new Error(response.status === 401 || response.status === 403 ? 'Enrolment required' : 'Lesson unavailable');
+      error.status = response.status; throw error;
+    }
+    const source = await response.text();
+    if (!current()) throw new Error('account changed');
+    if (CH[n]) return CH[n];
+    const url = URL.createObjectURL(new Blob(['if (window.GRAM.lessonEpoch() === ' + epoch + ') {\n' + source + '\n}'], { type: 'text/javascript' }));
+    try {
+      await new Promise((resolve, reject) => {
+        const script = document.createElement('script'); script.src = url;
+        script.onload = () => { script.remove(); resolve(); };
+        script.onerror = () => { script.remove(); reject(new Error('Lesson unavailable')); };
+        // The script itself checks its captured epoch before registering any content.
+        document.head.appendChild(script);
+      });
+    } finally { URL.revokeObjectURL(url); }
+    if (!current()) { delete CH[n]; throw new Error('account changed'); }
+    if (!CH[n]) throw new Error('Empty lesson');
+    return CH[n];
+  })();
+  lessonLoads.set(n, loading);
+  try { return await loading; } finally { if (lessonLoads.get(n) === loading) lessonLoads.delete(n); }
 }
 function jump(anchor) {
   const el = anchor && $(anchor); if (!el) return;
@@ -1099,8 +1138,14 @@ async function chapter(n, anchor) {
   const back = `<div class="row" style="margin-bottom:.6rem"><a class="btn sm" href="#/${isV(n) ? 'v' : 'g'}">${icn('arrow-left')} ${isV(n) ? 'Wortschatz' : 'Grammatik'}</a></div>`;
   if (READY[n] && !allowed(n)) { const l = chLevel(n); V().innerHTML = `${back}<div class="empty"><span class="em">${icn('lock')}</span><h1 class="page">${en() ? 'Level' : 'Niveau'} ${H(l)} ${en() ? 'is locked' : 'ist gesperrt'}</h1><p class="sub">${window.KONTO && KONTO.org() ? (en() ? 'Your teacher unlocks new levels for you.' : 'Neue Niveaus schaltet deine Lehrkraft für dich frei.') : (en() ? `Enroll in ${l} to open this ${isV(n) ? 'topic' : 'chapter'}.` : `Schreib dich für ${l} ein, um dieses ${isV(n) ? 'Thema' : 'Kapitel'} zu öffnen.`)}</p><p>${lockBtn(l)}</p></div>`; icons(); return; }
   if (!READY[n]) { V().innerHTML = `${back}<div class="empty"><span class="em">${icn('hourglass')}</span><h1 class="page">${isV(n) ? 'Dieses Thema' : 'Kapitel ' + n} kommt bald</h1><p class="sub">Daran wird gerade gearbeitet.</p></div>`; icons(); return; }
-  if (!CH[n]) { V().innerHTML = `<div class="loading"><div class="spin"></div>${isV(n) ? 'Thema' : 'Kapitel'} wird geladen …</div>`;
-    try { await loadChapter(n); } catch (e) { V().innerHTML = `<div class="empty"><span class="em">⚠️</span>Das Kapitel konnte nicht geladen werden. Bitte prüfe die Internetverbindung.</div>`; return; } }
+  V().innerHTML = `<div class="loading"><div class="spin"></div>${en() ? 'Loading lesson …' : 'Kapitel wird geladen …'}</div>`;
+  try { await loadChapter(n); } catch (e) {
+    if (!onCh(n)) return;
+    V().innerHTML = `${back}<div class="empty"><span class="em">⚠️</span>${e.status === 401 || e.status === 403
+      ? (en() ? 'Sign in and enrol in this level to open the lesson.' : 'Bitte anmelden und für dieses Niveau einschreiben.')
+      : (en() ? 'The lesson could not be loaded. Please check your connection and try again.' : 'Das Kapitel konnte nicht geladen werden. Bitte prüfe die Verbindung und versuche es erneut.')}</div>`;
+    return;
+  }
   if (!onCh(n)) return;
   if (cur !== CH[n] || !V().querySelector('.gr-ch')) render(CH[n]);
   jump(anchor);
@@ -1735,7 +1780,7 @@ const VKIT = {
     return out;
   }
 };
-window.GRAM = { kit: VKIT, view, leave, base, quiz, list: chapterList, practice, add(c) { CH[c.n] = c; }, allowed, chLevel,
+window.GRAM = { kit: VKIT, view, leave, base, quiz, list: chapterList, practice, lessonEpoch: () => lessonEpoch, add(c) { CH[c.n] = c; }, allowed, chLevel,
   chapters: () => GROUPS.flatMap(g => g.ch.filter(c => READY[c[0]]).map(c => ({ n: c[0], title: c[1], kick: c[2], level: c[3], vocab: !!g.vocab, group: g.t, no: c[0] > 200 ? topicNo(c[0]) : c[0] })))
     .sort((a, b) => (a.vocab === b.vocab ? 0 : a.vocab ? -1 : 1) || a.n - b.n),
   requiredExercises: n => (LESSON_EXERCISES[n] || []).filter(row => !(row[2] & 2)).map(row => row[0]),

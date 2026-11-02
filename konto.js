@@ -93,7 +93,8 @@ function unlockedSet() {
 }
 // a learner opens exactly the levels they are enrolled in (until they unenroll); teachers, schools and the owner open everything
 function canOpen(l) {
-  if (!LV.includes(l) || !me()) return true;
+  if (!LV.includes(l)) return true;
+  if (!me()) return false;
   return !!P && P.user_id === me().id && (isStaff() || unlockedSet().includes(l));
 }
 const lvState = l => (canOpen(l) ? 'open' : P && P.org_id && P.level === l ? 'pending' : 'locked');

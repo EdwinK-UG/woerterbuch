@@ -4,7 +4,7 @@ Run the scripts from the directory containing your authored topic inputs. The fi
 
 Set `VOCAB_DATA_DIR` to a local directory containing `raw/` and `wikt/`. The default is `.local/vocabulary-data` under the repository. The expected raw files are `deu_sentences.tsv`, `eng_sentences.tsv` and `deu-eng_links.tsv`. Record the original source URLs, download dates, versions and attribution with those local files.
 
-`VOCAB_OUTPUT_DIR` chooses the destination chapter directory. Its default is this repository's `grammatik/`. The scripts use Python's standard library.
+`VOCAB_OUTPUT_DIR` chooses the destination chapter directory. Its default is this repository's private `.local/lessons/`. The scripts use Python's standard library. Keep generated lesson bodies out of the public repository.
 
 From the authored-input directory, substitute the full path to the checked-out script directory in these commands.
 

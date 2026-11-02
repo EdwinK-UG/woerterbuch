@@ -10,7 +10,6 @@ const DATA = 'wb-data', PICS = 'wb-pics-1', PIC_HOST = 'woerterbuch-bilder.edwin
 
 const SCOPE = self.registration.scope;
 const SHELL = 'wb-shell-' + new URL(SCOPE).pathname + '-' + SHELL_RELEASE;
-const LESSONS = 'wb-lessons-' + new URL(SCOPE).pathname;
 self.addEventListener('install', event => event.waitUntil((async()=>{
   const cache=await caches.open(SHELL);
   await cache.addAll(SHELL_ASSETS.map(file=>new URL(file,SCOPE).href));
@@ -20,6 +19,7 @@ self.addEventListener('activate', event => event.waitUntil((async()=>{
   const prefix='wb-shell-'+new URL(SCOPE).pathname+'-';
   const releases=(await caches.keys()).filter(name=>name.startsWith(prefix));
   for(const name of releases.slice(0,-2))if(name!==SHELL)await caches.delete(name);
+  for(const name of await caches.keys())if(name.startsWith('wb-lessons-'))await caches.delete(name);
   await self.clients.claim();
 })()));
 
@@ -54,6 +54,8 @@ self.addEventListener('fetch', e => {
 
   if (u.host === PIC_HOST && u.pathname === '/pic') { e.respondWith(picture(e, u)); return; }
   if (u.origin !== self.location.origin || !u.pathname.startsWith(new URL(SCOPE).pathname)) return;
+  // Retire public lesson URLs and remove their legacy offline copies on activation.
+  if (/\/grammatik\/k\d+\.js$/.test(u.pathname)) { e.respondWith(Promise.resolve(new Response('Lesson access requires enrolment.', {status:410,headers:{'Cache-Control':'no-store'}}))); return; }
 
   if (/\/(core|defs|data)\.bin$/.test(u.pathname)) {
     e.respondWith(caches.open(DATA).then(async c => {
@@ -72,11 +74,10 @@ self.addEventListener('fetch', e => {
 
   if (/\/(?:konto\.js|js\/[^/]+\.js|grammatik\/[^/]+\.js|icon-[^/]+\.png|favicon\.ico)$/.test(u.pathname)) {
     e.respondWith((async()=>{
-      const lessons=u.pathname.includes('/grammatik/k');
-      const cache=await caches.open(lessons?LESSONS:SHELL),hit=await cache.match(req);
+      const cache=await caches.open(SHELL),hit=await cache.match(req);
       if(hit)return hit;
       const response=await fetch(req);
-      if(response.ok){await cache.put(req,response.clone());if(lessons){const keys=await cache.keys();for(const key of keys.slice(0,-200))await cache.delete(key)}}
+      if(response.ok)await cache.put(req,response.clone());
       return response;
     })());return;
   }
