@@ -1113,7 +1113,7 @@ function render(c) {
   if (c.speak && c.speak.gen) c.speak.items = c.speak.gen(); const info = chInfo(c.n), pr = chapterProgress(c);
   const blocks = c.understand.map(block).join('');
   V().innerHTML = `<div class="row" style="margin-bottom:.6rem"><a class="btn sm" href="#/g">${icn('arrow-left')} Grammatik</a></div>
-  <article class="gr-ch">
+  <article lang="de" class="gr-ch">
    <div class="gr-hero"><div>
      <p class="gr-eyebrow">${c.n > 100 ? 'Nachschlagen und trainieren' : `Kapitel ${c.n} · ${H(c.group)}`} · <span class="gr-lv ${c.level}">${c.level}</span></p>
      <h1>${H(c.title)}</h1><p class="gr-kick">${H(c.kicker)}</p><p class="gr-intro">${rich(c.intro)}</p>
@@ -1269,7 +1269,7 @@ function renderVocab(c) {
   if (c.speak && c.speak.gen) c.speak.items = c.speak.gen();
   const pr = chapterProgress(c), main = c.exercises.filter(x => !x.more), more = c.exercises.filter(x => x.more);
   V().innerHTML = `<div class="row" style="margin-bottom:.6rem"><a class="btn sm" href="#/v">${icn('arrow-left')} Wortschatz</a></div>
-  <article class="gr-ch vk">
+  <article lang="de" class="gr-ch vk">
    <div class="gr-hero"><div>
      <div class="vk-chh"><span class="vk-chn">${topicNo(c.n)}</span><div><p class="gr-eyebrow">Wortschatz ${H(c.level)} · Thema ${topicNo(c.n)} · <span class="gr-lv ${c.level}">${c.level}</span></p><h1>${H(c.title)}</h1></div></div>
      <p class="gr-kick">${H(c.kicker)}</p><p class="gr-intro">${rich(c.intro)}</p>
@@ -1588,6 +1588,7 @@ function burst(el, big) {
 /* free writing: LanguageTool (free grammar checker) finds wrong forms; simple rules look for this chapter's typical mistakes.
    Not graded, because no automatic check can be sure about a free sentence. */
 async function freeCheck(x, ue) {
+  if(!confirm(en()?'Send the sentences in this exercise to LanguageTool for a grammar check? Avoid personal information.':'Die Sätze dieser Übung zur Grammatikprüfung an LanguageTool senden? Bitte keine persönlichen Angaben verwenden.'))return;
   const out = ue.querySelector('.gr-res'), btn = ue.querySelector('[data-act="check"]');
   const items = [...ue.querySelectorAll('.gr-it')], texts = items.map(el => el.querySelector('textarea').value.trim());
   if (texts.every(t => !t)) { if (typeof toast === 'function') toast('Schreib zuerst einen Satz.'); return; }

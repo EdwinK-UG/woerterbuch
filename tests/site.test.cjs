@@ -56,6 +56,22 @@ test('welcome skips dictionary and grammar and a slow search preserves the typed
     assert.deepEqual(s.errors,[]);
   }finally{await s.close()}
 });
+test('the sign-in dialog has labels, traps focus and restores focus on Escape',async()=>{
+  const s=await site('#/start');try{
+    const opener=s.document.querySelector('#acct');opener.focus();opener.click();
+    const sheet=s.document.querySelector('#sheet');
+    assert.equal(sheet.getAttribute('role'),'dialog');
+    assert.ok(s.document.querySelector('label[for="ac_em"]'));
+    assert.ok(s.document.querySelector('label[for="ac_pw"]'));
+    const buttons=sheet.querySelectorAll('button');buttons[buttons.length-1].focus();
+    s.document.dispatchEvent(new s.window.KeyboardEvent('keydown',{key:'Tab',bubbles:true,cancelable:true}));
+    assert.equal(s.document.activeElement,sheet.querySelector('button'));
+    s.document.dispatchEvent(new s.window.KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+    assert.equal(s.document.querySelector('#modal').getAttribute('aria-hidden'),'true');
+    assert.equal(s.document.activeElement,opener);
+    assert.equal(s.document.documentElement.lang,'en');
+  }finally{await s.close()}
+});
 test('failed definitions settle, show retry and recover on the next click',async()=>{
   let n=0;const s=await site('#/w/Haus',{definitions:()=>new Response(++n===1?'':defs,{status:n===1?503:200})});
   try{
@@ -63,6 +79,10 @@ test('failed definitions settle, show retry and recover on the next click',async
     s.document.querySelector('#view .empty button').click();
     await until(()=>s.document.querySelector('.entry'));
     assert.equal(n,2);assert.ok(s.document.querySelector('.def').textContent.includes('Haus'));
+    assert.equal(s.document.querySelector('.entry h1').textContent.replace(/·/g,''),'Haus');
+    assert.match(s.document.title,/Haus/);
+    assert.equal(s.document.querySelectorAll('.def > ol > li.ds').length,3);
+    assert.ok(s.document.querySelector('.more-senses summary'));
     assert.deepEqual(s.errors,[]);
   }finally{await s.close()}
 });

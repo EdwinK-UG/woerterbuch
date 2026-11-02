@@ -1,8 +1,10 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><link rel="icon" href="favicon.ico?v=2" sizes="any"><link rel="icon" type="image/png" sizes="32x32" href="icon-32.png?v=2"><link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=2"><link rel="apple-touch-icon" href="icon-180.png?v=2"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <!doctype html>
-<html lang="de">
+<html lang="en">
 <head>
 <meta charset="utf-8">
+<link rel="icon" href="favicon.ico?v=2" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="icon-32.png?v=2">
+<link rel="apple-touch-icon" href="icon-180.png?v=2">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Deutschklinik</title>
 <meta name="description" content="German learner dictionary with categories, revision lists, word maps and Anki-style flashcards.">
@@ -49,7 +51,17 @@ nav.tabs a{font-size:.84rem;font-weight:600;color:var(--mut);text-decoration:non
 nav.tabs a.on{color:var(--fg);background:var(--ac-salt)}
 nav.tabs a:hover{color:var(--fg)}
 .iconbtn{border:1px solid var(--line);background:var(--card);color:var(--mut);width:38px;height:38px;border-radius:.6rem;display:grid;place-items:center;font-size:1rem}
-main{padding:1.4rem 0 5rem}
+main{padding:1.4rem 0 3rem}
+img{max-width:100%}
+[hidden]{display:none!important}
+:focus-visible{outline:3px solid var(--ac);outline-offset:3px}
+.entry .top .hw{margin:0}
+.site-footer{font-size:.85rem;color:var(--mut);padding-bottom:1.5rem}
+.sheet{position:relative}
+.sheet-close{position:absolute;right:.8rem;top:.8rem}
+.sheet h3{padding-right:2rem}
+.more-senses{margin-top:.8rem}
+.more-senses>summary{cursor:pointer;color:var(--ac);font-weight:600}
 h1.page{font-family:Fraunces,serif;font-weight:600;font-size:1.7rem;letter-spacing:-.02em;margin:.2rem 0 1rem}
 .sub{color:var(--mut);font-size:.92rem;margin:-.6rem 0 1.3rem}
 /* search */
@@ -363,7 +375,7 @@ kbd{font:600 .66rem Inter,system-ui,sans-serif;padding:.1rem .35rem;border-radiu
 <body>
 <header><div class="wrap bar">
   <a class="brand" href="#/"><img src="icon-64.png?v=2" width="30" height="30" alt="" class="logo"><span>Deutsch<b>klinik</b></span></a>
-  <nav class="tabs" id="tabs">
+  <nav class="tabs" id="tabs" aria-label="Main navigation">
     <a href="#/" data-t="home" title="Suche"><i data-lucide="search" class="lic"></i><span>Suche</span></a>
     <a href="#/cats" data-t="cats" title="Themen"><i data-lucide="layout-grid" class="lic"></i><span>Themen</span></a>
     <a href="#/lists" data-t="lists" title="Listen"><i data-lucide="list" class="lic"></i><span>Listen</span></a>
@@ -371,14 +383,16 @@ kbd{font:600 .66rem Inter,system-ui,sans-serif;padding:.1rem .35rem;border-radiu
     <a href="#/v" data-t="wort" title="Wortschatz"><i data-lucide="book-a" class="lic"></i><span>Wortschatz</span></a>
     <a href="#/g" data-t="gram" title="Grammatik"><i data-lucide="book-open-text" class="lic"></i><span>Grammatik</span></a>
   </nav>
-  <button class="iconbtn" id="theme" title="Tag / Nacht">◐</button>
+  <button class="iconbtn" id="theme" aria-label="Light or dark theme" title="Tag / Nacht">◐</button>
 </div></header>
-<main><div class="wrap" id="view">
+<main id="main"><div class="wrap" id="view">
   <div class="loading"><div class="spin"></div>Wörterbuch wird geladen …</div>
 </div></main>
-<div id="toast"></div>
-<div class="modal" id="modal"><div class="sheet" id="sheet"></div></div>
+<footer class="site-footer wrap"><a href="#/privacy">Privacy · Datenschutz</a></footer>
+<div id="toast" role="status" aria-live="polite"></div>
+<div class="modal" id="modal" aria-hidden="true"><div class="sheet" id="sheet" role="dialog" aria-modal="true" tabindex="-1"></div></div>
 
+<script src="js/pages.js?v=1"></script>
 <script src="js/course-counts.js?v=1"></script>
 <script src="js/study-sync.js?v=1"></script>
 <script src="js/game-messages.js?v=1"></script>
@@ -401,6 +415,7 @@ let FOLD=[];
 /* ---------- load packed data ---------- */
 let FULL=false, NMAIN=0, corePromise=null, definitionsPromise=null, coreLength=0;
 let searchText='';
+const ui=(english,german)=>window.KONTO?.T(english,german)||english;
 async function fetchBin(url,progress){
   const r=await fetch(url); if(!r.ok)throw new Error('Wörterbuch-Daten: '+r.status);
   const total=+r.headers.get('content-length')||0, lo=progress&&document.querySelector('#view .loading:not([data-g])');
@@ -490,7 +505,10 @@ function route(){
   if(!window.KONTO)return;
   const request=++routeGeneration;
   const h=location.hash.slice(2)||'';
-  const [p,arg]=[h.split('/')[0],decodeURIComponent(h.split('/').slice(1).join('/')||'')];
+  let arg;
+  const p=h.split('/')[0];
+  try{arg=decodeURIComponent(h.split('/').slice(1).join('/')||'')}catch{V().textContent=ui('This link is invalid.','Dieser Link ist ungültig.');return}
+  updatePageMetadata();
   // features the visitor may not use (yet): show the lock page instead (the owner decides in Settings)
   const gf=window.KONTO&&KONTO.featureOf&&KONTO.featureOf(p);
   if(gf&&!KONTO.can(gf)){document.querySelectorAll('#tabs a').forEach(a=>a.classList.toggle('on',a.dataset.t===({dict:'home',lists:'lists',cards:'decks',vocab:'wort',grammar:'gram',games:'play'}[gf]||'')));
@@ -509,7 +527,8 @@ function route(){
   }
   document.querySelectorAll('#tabs a').forEach(a=>a.classList.remove('on'));
   const setOn=t=>{const el=document.querySelector(`#tabs a[data-t="${t}"]`);if(el)el.classList.add('on')};
-  if(p===''){setOn('home');viewHome()}
+  if(p==='privacy'){privacyPage()}
+  else if(p===''){setOn('home');viewHome()}
   else if(p==='w'){setOn('home');viewWord(arg)}
   else if(p==='cats'){setOn('cats');viewCats()}
   else if(p==='cat'){setOn('cats');viewCat(arg)}
@@ -538,7 +557,7 @@ function scriptFile(src){
 function loadGram(){
   if(!gramP)gramP=(async()=>{
     if(typeof LESSON_EXERCISES==='undefined')await scriptFile('grammatik/catalog.js?v=1');
-    if(!window.GRAM)await scriptFile('grammatik/grammatik.js?v=18');
+    if(!window.GRAM)await scriptFile('grammatik/grammatik.js?v=19');
   })().catch(e=>{gramP=null;throw e});
   return gramP;
 }
@@ -556,32 +575,35 @@ const jsArg=value=>esc(JSON.stringify(String(value)));
 /* ---------- HOME / SEARCH ---------- */
 function viewHome(){
   V().innerHTML=`
-   <div class="hero"><h1>Was möchtest du<br><em>heute</em> nachschlagen?</h1>
-     <p>Bedeutungen, Beispiele, Aussprache und Wortkarten – für über 32.000 deutsche Wörter.</p></div>
+   <div class="hero"><h1>${ui('Which German word<br>will you learn <em>today</em>?','Was möchtest du<br><em>heute</em> nachschlagen?')}</h1>
+     <p>${ui('Meanings, examples, pronunciation and word maps for over 32,000 German words.','Bedeutungen, Beispiele, Aussprache und Wortkarten für über 32.000 deutsche Wörter.')}</p></div>
    <div class="searchbox">
-     <input id="q" placeholder="Wort suchen …" autocomplete="off" spellcheck="false">
+     <input id="q" role="combobox" aria-autocomplete="list" aria-controls="sug" aria-expanded="false" aria-label="${ui('Search for a German word','Deutsches Wort suchen')}" placeholder="${ui('Search for a word …','Wort suchen …')}" autocomplete="off" spellcheck="false">
      <span class="mag">${ic('search')}</span>
-     <ul id="sug" style="display:none"></ul>
+     <ul id="sug" role="listbox" aria-label="${ui('Search results','Suchergebnisse')}" style="display:none"></ul>
    </div>
    <div id="hres"></div>`;
   const q=document.getElementById('q'), sug=document.getElementById('sug');
   let sel=-1,cur=[];
   const render=()=>{
     cur=search(q.value,40);
+    q.setAttribute('aria-expanded',!!q.value.trim()&&!!cur.length);
+    q.removeAttribute('aria-activedescendant');
     const qv=q.value.trim();
     if(qv.length>=3&&!cur.length&&/^[A-Za-zÄÖÜäöüß][A-Za-zÄÖÜäöüß -]+$/.test(qv)){
       sug.innerHTML=`<li class="sugai" data-create="1">${ic('sparkles')}<span><b>„${esc(qv)}“</b> ist nicht im Wörterbuch.<br><em>Eintrag mit KI erstellen</em> – mit echten Beispielsätzen</span></li>`;
       sug.style.display='block'; return }
     if(!qv||!cur.length){sug.style.display='none';return}
-    sug.innerHTML=cur.map((e,k)=>`<li data-k="${k}" class="${k===sel?'on':''}">
+    sug.innerHTML=cur.map((e,k)=>`<li id="suggestion-${k}" role="option" aria-selected="${k===sel}" data-k="${k}" class="${k===sel?'on':''}">
       <span class="gdot" style="background:${gcol(e.ar)}"></span>
       <span class="hw">${esc(e.w)}</span><small>${e.ar?e.ar+' · ':''}${POSL[e.ps]||''}</small></li>`).join('');
     sug.style.display='block';
   };
   q.addEventListener('input',()=>{searchText=q.value;sel=-1;render()});
   q.addEventListener('keydown',ev=>{
-    if(ev.key==='ArrowDown'){sel=Math.min(sel+1,cur.length-1);render();ev.preventDefault()}
-    else if(ev.key==='ArrowUp'){sel=Math.max(sel-1,0);render();ev.preventDefault()}
+    if(ev.key==='ArrowDown'){sel=Math.min(sel+1,cur.length-1);render();q.setAttribute('aria-activedescendant','suggestion-'+sel);ev.preventDefault()}
+    else if(ev.key==='ArrowUp'){sel=Math.max(sel-1,0);render();q.setAttribute('aria-activedescendant','suggestion-'+sel);ev.preventDefault()}
+    else if(ev.key==='Escape'){sug.style.display='none';q.setAttribute('aria-expanded','false');return}
     else if(ev.key==='Enter'){const e=cur[sel<0?0:sel];if(e)go('w/'+e.w); else if(q.value.trim().length>=3)createAI(q.value.trim())}
   });
   sug.addEventListener('click',ev=>{const li=ev.target.closest('li');if(!li)return; if(li.dataset.create)createAI(q.value.trim()); else go('w/'+cur[+li.dataset.k].w)});
@@ -593,17 +615,17 @@ function viewHome(){
   document.getElementById('hres').innerHTML=`
     ${recent.length?`<div class="chips"><span class="chipl">Zuletzt</span>${recent.map(w=>`<a class="chip" href="#/w/${encodeURIComponent(w)}">${esc(w)}</a>`).join('')}</div>`:''}
     ${wd?`<a class="wotd" href="#/w/${encodeURIComponent(wd.w)}">
-      <div class="wotd-l"><span class="eyebrow">${ic('sparkles')} Wort des Tages</span>
+      <div class="wotd-l"><span class="eyebrow">${ic('sparkles')} ${ui('Word of the day','Wort des Tages')}</span>
         <div class="wotd-w">${wd.ar?`<span class="art ${wd.ar}">${wd.ar}</span>`:''}<span class="wotd-hw">${sylHTML(wd.sy)}</span></div>
         <p class="wotd-d" id="wotdd">${FULL?esc(gloss(wd)):''}</p>
-        <span class="wotd-go">Eintrag öffnen ${ic('arrow-right')}</span></div>
+        <span class="wotd-go">${ui('Open entry','Eintrag öffnen')} ${ic('arrow-right')}</span></div>
       <button class="wotd-say" title="Aussprache anhören" onclick="event.preventDefault();event.stopPropagation();say(${wd.i},this)">${ic('volume-2')}</button></a>`:''}
-    <div class="sec"><h2>Themen entdecken</h2><a href="#/cats">Alle ${CATS.length} Themen ${ic('arrow-right')}</a></div>
+    <div class="sec"><h2>${ui('Explore topics','Themen entdecken')}</h2><a href="#/cats">${ui('All '+CATS.length+' topics','Alle '+CATS.length+' Themen')} ${ic('arrow-right')}</a></div>
     <div class="cgrid">${CATS.slice(0,12).map(cardCat).join('')}</div>
     <div class="stats">
-      <div><b>${nMain.toLocaleString('de')}</b><span>Stichwörter</span></div>
-      <div><b>${(E.length-nMain-E.filter(e=>e.ps==='Info').length).toLocaleString('de')}</b><span>abgeleitete Wörter</span></div>
-      <div><b>${E.filter(e=>e.ps==='Info').length}</b><span>Infokästen</span></div>
+      <div><b>${nMain.toLocaleString('de')}</b><span>${ui('headwords','Stichwörter')}</span></div>
+      <div><b>${(E.length-nMain-E.filter(e=>e.ps==='Info').length).toLocaleString('de')}</b><span>${ui('derived words','abgeleitete Wörter')}</span></div>
+      <div><b>${E.filter(e=>e.ps==='Info').length}</b><span>${ui('reference notes','Infokästen')}</span></div>
       <div><b>${CATS.length}</b><span>Themen</span></div></div>
     <p><button class="btn" onclick="downloadDictionary(this)">${KONTO.T('Save the dictionary for offline use (5.65 MiB)','Wörterbuch offline speichern (5,65 MiB)')}</button></p>
     <p class="src">Grundlage: Langenscheidt Großwörterbuch Deutsch als Fremdsprache</p>`;
@@ -673,13 +695,15 @@ function fmtDef(e,compact){
   if(star||head.replace(/<[^>]+>/g,'').trim())html+=`<div class="dgram">${star?'<span class="core" title="Grundwortschatz">★</span>':''}${head}</div>`;
   const total=senses.filter(x=>/^<span class="sn">/.test(x)).length;
   const items=(card?senses.slice(0,3):senses).map(sx=>{
-    const m=sx.match(/^<span class="sn">(\d+)<\/span>/); const num=m?m[1]:'';
-    const o=part(m?sx.slice(m[0].length):sx); allDer=allDer.concat(o.der);
+    const m=sx.match(/^<span class="sn">(\d+)<\/span>/),num=m?m[1]:'';
+    const o=part(m?sx.slice(m[0].length):sx);allDer=allDer.concat(o.der);
     if(!o.def.replace(/<[^>]+>/g,'').trim()&&!o.ex.length&&!o.comp.length&&!o.note.length)return '';
     const exs=card&&o.ex.length?`<ul class="dx"><li>${o.ex[0]}</li></ul>`:'';
     return `<li class="ds">${num?`<span class="sn">${num}</span>`:''}<div class="db"><div class="dd">${o.def.trim()}</div>${card?exs:compact?'':sub(o)}</div></li>`;
-  }).join('');
-  html+=`<ol class="dl${k>=0?'':' one'}">${items}</ol>`;
+  }).filter(Boolean);
+  const fold=!compact&&items.length>6;
+  html+=`<ol class="dl${k>=0?'':' one'}">${(fold?items.slice(0,3):items).join('')}</ol>`;
+  if(fold)html+=`<details class="more-senses"><summary>${ui('Show the other '+(items.length-3)+' meanings','Weitere '+(items.length-3)+' Bedeutungen zeigen')}</summary><ol class="dl">${items.slice(3).join('')}</ol></details>`;
   if(card)return html+(total>3?`<a class="fmore" href="#/w/${encodeURIComponent(e.w)}">+ ${total-3} weitere Bedeutungen im Eintrag</a>`:'');
   if(!compact&&idioms.replace(/<[^>]+>/g,'').trim()){
     const ip=part(idioms);
@@ -694,9 +718,9 @@ function fmtDef(e,compact){
 function entryHTML(e){
   const art=e.ar?`<span class="art ${e.ar}">${e.ar}</span>`:'';
   const pos=e.ps?`<span class="pos">${POSL[e.ps]||e.ps}</span>`:'';
-  return `<div class="entry">
+  return `<div class="entry" lang="de">
     <div class="top">
-      <div class="hw">${sylHTML(e.sy)}</div>${art}${pos}
+      <h1 class="hw">${sylHTML(e.sy)}</h1>${art}${pos}
       <button class="iconbtn say" title="Aussprache anhören" aria-label="Aussprache anhören" onclick="say(${e.i},this)">🔊</button>
       ${e.ai?`<span class="aibadge" title="Mit KI erstellt – nicht aus dem Langenscheidt">${ic('sparkles')} KI-Eintrag</span>`:`<span class="pg">S. ${e.pg}</span>`}
     </div>
@@ -704,8 +728,8 @@ function entryHTML(e){
     <div class="def">${fmtDef(e)}</div>
     ${e.ai?`<p class="ainotice">${ic('info')} Dieser Eintrag wurde mit KI erstellt, weil das Wort im Langenscheidt fehlt. Die Beispielsätze sind echte Sätze aus Zeitungen und Wikipedia (Leipzig Corpora Collection).</p>`:''}
     <div class="acts">
-      <button class="btn primary" onclick="quickCard(${e.i})">⚡ Als Karte lernen</button>
-      <button class="btn" onclick="openAdd(${e.i})">＋ Zur Liste</button>
+      <button class="btn primary" onclick="quickCard(${e.i})">${ui('⚡ Study as a card','⚡ Als Karte lernen')}</button>
+      <button class="btn" onclick="openAdd(${e.i})">${ui('＋ Add to list','＋ Zur Liste')}</button>
       ${e.cat?`<a class="btn" href="#/cat/${e.cat}">${CATMAP.get(e.cat).emoji} ${CATMAP.get(e.cat).label}</a>`:''}
     </div>
     ${wordMap(e)}
@@ -1184,9 +1208,9 @@ function rowWord(e){
 /* ---------- LISTS (revision playlists) ---------- */
 function viewLists(){
   const ids=Object.keys(lists);
-  V().innerHTML=`<h1 class="page">Revisionslisten</h1>
-    <p class="sub">Sammle Wörter und verwandle sie in Karteikarten.</p>
-    <div class="row" style="margin-bottom:1rem"><button class="btn primary" onclick="newList()">＋ Neue Liste</button></div>
+  V().innerHTML=`<h1 class="page">${ui('Revision lists','Revisionslisten')}</h1>
+    <p class="sub">${ui('Collect words and turn them into flashcards.','Sammle Wörter und verwandle sie in Karteikarten.')}</p>
+    <div class="row" style="margin-bottom:1rem"><button class="btn primary" onclick="newList()">${ui('＋ New list','＋ Neue Liste')}</button></div>
     ${ids.length?ids.map(id=>{const l=lists[id];return `<a class="panelcard" href="#/list/${encodeURIComponent(id)}">
        <span class="ic">${ic('list')}</span><div><div class="big">${esc(l.name)}</div>
        <div class="meta">${l.words.length} Wörter</div></div></a>`}).join(''):
@@ -1195,15 +1219,15 @@ function viewLists(){
 function viewList(id){
   const l=lists[id]; if(!l){go('lists');return}
   const items=l.words.map(w=>E[WIDX.get(w)]).filter(Boolean);
-  V().innerHTML=`<div class="row" style="margin-bottom:.4rem"><a class="btn sm" href="#/lists">← Listen</a></div>
+  V().innerHTML=`<div class="row" style="margin-bottom:.4rem"><a class="btn sm" href="#/lists">${ui('← Lists','← Listen')}</a></div>
     <h1 class="page">${esc(l.name)}</h1>
     <div class="toolbar"><div class="row wrap">
-      <button class="btn sm" onclick="pickAll(true)">Alle wählen</button>
-      <button class="btn sm" onclick="pickAll(false)">Keine</button>
+      <button class="btn sm" onclick="pickAll(true)">${ui('Select all','Alle wählen')}</button>
+      <button class="btn sm" onclick="pickAll(false)">${ui('Clear selection','Keine')}</button>
       <span class="spacer"></span>
-      <button class="btn primary sm" onclick="makeCards(${jsArg(id)})">⚡ Karten erstellen</button>
-      <button class="btn sm" onclick="renameList(${jsArg(id)})">Umbenennen</button>
-      <button class="btn sm" onclick="delList(${jsArg(id)})">Löschen</button>
+      <button class="btn primary sm" onclick="makeCards(${jsArg(id)})">${ui('⚡ Create cards','⚡ Karten erstellen')}</button>
+      <button class="btn sm" onclick="renameList(${jsArg(id)})">${ui('Rename','Umbenennen')}</button>
+      <button class="btn sm" onclick="delList(${jsArg(id)})">${ui('Delete','Löschen')}</button>
     </div></div>
     ${items.length?`<div class="wlist" id="picklist">${items.map(e=>`
       <label class="wrow" onclick="event.stopPropagation()">
@@ -1217,11 +1241,11 @@ function viewList(id){
 }
 function pickAll(v){document.querySelectorAll('.pick').forEach(c=>c.checked=v)}
 function newList(){
-  openSheet(`<h3>Neue Liste</h3><p>Gib der Revisionsliste einen Namen.</p>
+  openSheet(`<h3>${ui('New list','Neue Liste')}</h3><p>${ui('Give your revision list a name.','Gib der Revisionsliste einen Namen.')}</p>
     <input class="input" id="nl" placeholder="z. B. Prüfung Kapitel 3" style="width:100%">
     <div class="row" style="margin-top:1rem;justify-content:flex-end">
-      <button class="btn" onclick="closeSheet()">Abbrechen</button>
-      <button class="btn primary" onclick="createList()">Erstellen</button></div>`);
+      <button class="btn" onclick="closeSheet()">${ui('Cancel','Abbrechen')}</button>
+      <button class="btn primary" onclick="createList()">${ui('Create','Erstellen')}</button></div>`);
   setTimeout(()=>document.getElementById('nl').focus(),30);
 }
 function createList(){
@@ -1229,9 +1253,9 @@ function createList(){
   const id=uid(); lists[id]={name:n,words:[],created:now()}; saveLists(); closeSheet(); go('list/'+id);
 }
 function renameList(id){
-  openSheet(`<h3>Umbenennen</h3><input class="input" id="nl" style="width:100%" value="${esc(lists[id].name)}">
-   <div class="row" style="margin-top:1rem;justify-content:flex-end"><button class="btn" onclick="closeSheet()">Abbrechen</button>
-   <button class="btn primary" onclick="(function(){lists[${jsArg(id)}].name=document.getElementById('nl').value.trim()||lists[${jsArg(id)}].name;saveLists();closeSheet();route()})()">Speichern</button></div>`);
+  openSheet(`<h3>${ui('Rename','Umbenennen')}</h3><input class="input" id="nl" style="width:100%" value="${esc(lists[id].name)}">
+   <div class="row" style="margin-top:1rem;justify-content:flex-end"><button class="btn" onclick="closeSheet()">${ui('Cancel','Abbrechen')}</button>
+   <button class="btn primary" onclick="(function(){lists[${jsArg(id)}].name=document.getElementById('nl').value.trim()||lists[${jsArg(id)}].name;saveLists();closeSheet();route()})()">${ui('Save','Speichern')}</button></div>`);
 }
 function delList(id){ if(confirm('Liste löschen?')){delete lists[id];saveLists();go('lists')} }
 function rmFromList(id,w){ w=decodeURIComponent(w); lists[id].words=lists[id].words.filter(x=>x!==w); saveLists(); route() }
@@ -1254,7 +1278,7 @@ function openAdd(i){
    <div class="listpick">${ids.length?ids.map(id=>`<div class="lp" onclick="addTo(${jsArg(id)},${i})">
       <span>📑</span><span>${esc(lists[id].name)}</span><span class="spacer"></span><span class="muted">${lists[id].words.length}</span></div>`).join(''):'<p class="muted">Noch keine Listen.</p>'}</div>
    <input class="input" id="nlq" placeholder="Neue Liste …" style="width:100%">
-   <div class="row" style="margin-top:.8rem;justify-content:flex-end"><button class="btn" onclick="closeSheet()">Schließen</button>
+   <div class="row" style="margin-top:.8rem;justify-content:flex-end"><button class="btn" onclick="closeSheet()">${ui('Close','Schließen')}</button>
    <button class="btn primary" onclick="addNew(${i})">＋ Neue Liste & hinzufügen</button></div>`);
 }
 function addTo(id,i){
@@ -1325,7 +1349,7 @@ function dueQueue(deck,newLimit=20){
 /* ---------- DECKS ---------- */
 function viewDecks(){
   const ids=Object.keys(decks);
-  V().innerHTML=`<h1 class="page">Karteikarten</h1>
+  V().innerHTML=`<h1 class="page">${ui('Flashcards','Karteikarten')}</h1>
     <p class="sub">Anki-ähnliche Stapel mit SM-2 Wiederholung. Vorderseite: Wort ohne Artikel. Rückseite: Artikel + Bedeutung.</p>
     ${ids.length?ids.map(id=>{const d=decks[id];const q=dueQueue(d);
       return `<a class="panelcard" href="#/study/${encodeURIComponent(id)}"><span class="ic">${ic('layers')}</span>
@@ -1398,8 +1422,42 @@ document.addEventListener('keydown',e=>{
 /* ---------- misc ui ---------- */
 function go(h){location.hash='#/'+h}
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._);t._=setTimeout(()=>t.classList.remove('show'),1900)}
-function openSheet(html){const m=document.getElementById('modal');document.getElementById('sheet').innerHTML=html;m.classList.add('show')}
-function closeSheet(){document.getElementById('modal').classList.remove('show')}
+let sheetOpener=null;
+function openSheet(html){
+  const modal=document.getElementById('modal'),sheet=document.getElementById('sheet');
+  if(!modal.classList.contains('show'))sheetOpener=document.activeElement;
+  sheet.innerHTML=html;
+  const title=sheet.querySelector('h3,h2,h1');
+  if(title){title.id='dialog-title';sheet.setAttribute('aria-labelledby',title.id)}
+  else{sheet.removeAttribute('aria-labelledby');sheet.setAttribute('aria-label',ui('Dialog','Dialog'))}
+  const close=document.createElement('button');
+  close.className='iconbtn sheet-close';close.type='button';close.textContent='×';
+  close.setAttribute('aria-label',ui('Close dialog','Dialog schließen'));close.onclick=closeSheet;
+  sheet.prepend(close);modal.classList.add('show');modal.setAttribute('aria-hidden','false');
+  for(const el of document.querySelectorAll('header,main,.site-footer'))el.inert=true;
+  (sheet.querySelector('input:not([type=hidden]),select,textarea,button:not(.sheet-close)')||sheet).focus();
+}
+function closeSheet(){
+  const modal=document.getElementById('modal');
+  if(!modal.classList.contains('show'))return;
+  modal.classList.remove('show');modal.setAttribute('aria-hidden','true');
+  for(const el of document.querySelectorAll('header,main,.site-footer'))el.inert=false;
+  if(sheetOpener?.isConnected)sheetOpener.focus();
+  sheetOpener=null;
+}
+document.addEventListener('keydown',event=>{
+  const modal=document.getElementById('modal');
+  if(!modal.classList.contains('show'))return;
+  if(event.key==='Escape'){event.preventDefault();closeSheet();return}
+  if(event.key!=='Tab')return;
+  const sheet=document.getElementById('sheet');
+  const focusable=[...sheet.querySelectorAll('a[href],button,input,select,textarea,[tabindex="0"]')]
+    .filter(el=>!el.disabled&&!el.closest('[hidden]'));
+  const first=focusable[0],last=focusable[focusable.length-1];
+  if(!first){event.preventDefault();sheet.focus();return}
+  if(event.shiftKey&&(document.activeElement===first||!sheet.contains(document.activeElement))){event.preventDefault();last.focus()}
+  else if(!event.shiftKey&&(document.activeElement===last||!sheet.contains(document.activeElement))){event.preventDefault();first.focus()}
+});
 document.getElementById('modal').addEventListener('click',e=>{if(e.target.id==='modal')closeSheet()});
 /* theme toggle */
 const root=document.documentElement;
@@ -1645,7 +1703,7 @@ function sheet(mode){
       <div id="acct_prof"></div>
       <p>${tr('Your lists and cards belong only to this account and load on every device where you sign in.','Deine Listen und Karten gehören nur zu diesem Konto und werden auf jedem Gerät geladen, auf dem du dich anmeldest.')}</p>
       <div class="row"><button class="acct-link" onclick="ACCT.sheet('newpw')">${tr('Change password','Passwort ändern')}</button><span class="spacer"></span>
-      <button class="btn" onclick="closeSheet()">${tr('Close','Schließen')}</button><button class="btn primary" onclick="ACCT.signOut()">${tr('Sign out','Abmelden')}</button></div>`);
+      <button class="btn" onclick="ACCT.exportData()">${tr('Download my data','Meine Daten herunterladen')}</button><button class="btn" onclick="closeSheet()">${tr('Close','Schließen')}</button><button class="btn primary" onclick="ACCT.signOut()">${tr('Sign out','Abmelden')}</button></div>`);
     if(window.KONTO)KONTO.fillMe();
     return;
   }
@@ -1655,8 +1713,8 @@ function sheet(mode){
     up:tr('Free. Your course, lists and cards are saved in your account. Nobody else can see them.','Kostenlos. Dein Kurs, deine Listen und Karten werden in deinem Konto gespeichert. Niemand sonst kann sie sehen.'),
     reset:tr('Enter your e-mail address. We send you a link to set a new password.','Gib deine E-Mail-Adresse ein. Wir schicken dir einen Link, mit dem du ein neues Passwort festlegst.'),
     newpw:tr('Choose a new password for your account.','Lege ein neues Passwort für dein Konto fest.')}[mode];
-  const emailIn=mode==='newpw'?'':`<input class="input" id="ac_em" type="email" autocomplete="email" placeholder="${tr('E-mail','E-Mail')}" required value="${esc(lastEmail).replace(/"/g,'&quot;')}">`;
-  const pwIn=mode==='reset'?'':`<input class="input" id="ac_pw" type="password" minlength="6" required autocomplete="${mode==='in'?'current-password':'new-password'}" placeholder="${mode==='in'?tr('Password','Passwort'):tr('Password (at least 6 characters)','Passwort (mind. 6 Zeichen)')}">`;
+  const emailIn=mode==='newpw'?'':`<label for="ac_em">${tr('E-mail','E-Mail')}</label><input class="input" id="ac_em" type="email" autocomplete="email" placeholder="${tr('E-mail','E-Mail')}" required value="${esc(lastEmail)}">`;
+  const pwIn=mode==='reset'?'':`<label for="ac_pw">${tr('Password','Passwort')}</label><input class="input" id="ac_pw" type="password" minlength="6" required autocomplete="${mode==='in'?'current-password':'new-password'}" placeholder="${mode==='in'?tr('Password','Passwort'):tr('Password (at least 6 characters)','Passwort (mind. 6 Zeichen)')}">`;
   openSheet(`<h3>${T[0]}</h3><p>${intro}</p>${tabs}
     <form class="acct-f" onsubmit="event.preventDefault();ACCT.submit('${mode}')">${emailIn}${pwIn}
     <div class="acct-msg" id="ac_msg"></div>
@@ -1757,13 +1815,27 @@ async function practiceSummary(users){
     cursor=next;
   }
 }
+async function exportData(){
+  const id=session?.user.id;if(!id)return;
+  try{
+    const [profile,attempts]=await Promise.all([
+      api('/rest/v1/profiles?select=*&user_id=eq.'+id,{token:await token()}),
+      resultRows('&user_id=eq.'+id)
+    ]);
+    if(session?.user.id!==id)return;
+    const data={exported_at:new Date().toISOString(),profile:profile[0],...snapshot(),practice:attempts,
+      pending_practice:LS.get('gd_gram',{att:[]}).att.filter(a=>a.uid===id&&!a.sent)};
+    const link=document.createElement('a'),url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));
+    link.href=url;link.download='deutschklinik-data.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+  }catch(e){toast(de(e))}
+}
 // Upload a logo to the current account's public Storage folder.
 async function upload(bucket,path,blob){
   const r=await fetch(SB_URL+'/storage/v1/object/'+bucket+'/'+path,{method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+await token(),'Content-Type':blob.type,'x-upsert':'true'},body:blob});
   if(!r.ok){let m='HTTP '+r.status;try{const j=await r.json();m=j.message||j.error||m}catch(e){}throw new Error(m)}
   return SB_URL+'/storage/v1/object/public/'+bucket+'/'+path;
 }
-Object.assign(window.ACCT,{sheet,submit,signOut,upload,resultRows,practiceSummary,resolveSave:async choice=>{await push(choice);if(session)sheet('me')}});
+Object.assign(window.ACCT,{sheet,submit,signOut,upload,resultRows,practiceSummary,exportData,resolveSave:async choice=>{await push(choice);if(session)sheet('me')}});
 })();
 </script>
 <!-- ===== sign-up invitation (signed-out visitors only) ===== -->
@@ -1820,10 +1892,7 @@ setInterval(()=>{ if(document.visibilityState==='visible'&&Date.now()-lastAct<20
 <!-- ===== Spiele ===== -->
 <style>
 /* ===== Spiele ===== */
-@media(min-width:1181px){nav.tabs a{padding:.45rem .5rem;gap:.3rem}}
-@media(min-width:641px) and (max-width:1180px){nav.tabs a .lic{display:none} nav.tabs a{padding:.45rem .55rem}}
-@media(min-width:641px) and (max-width:880px){nav.tabs a .lic{display:inline-flex} nav.tabs a span{display:none} nav.tabs a{padding:.5rem .6rem}}
-@media(max-width:640px){nav.tabs{grid-template-columns:repeat(7,minmax(0,1fr));padding-left:.2rem;padding-right:.2rem;gap:.05rem} nav.tabs a{font-size:.6rem;letter-spacing:-.02em;min-width:0} nav.tabs a span{max-width:100%;overflow:hidden;text-overflow:ellipsis} body.ingame nav.tabs{display:none} body.ingame main{padding-bottom:1rem}}
+@media(max-width:640px){body.ingame nav.tabs{display:none}body.ingame main{padding-bottom:1rem}}
 .ghub h1{margin-bottom:.2rem}
 .ghero{border-radius:1.4rem;padding:1.4rem 1.4rem 1.2rem;margin:.4rem 0 1.1rem;color:#fff;position:relative;overflow:hidden;
   background:radial-gradient(120% 140% at 0% 0%,#5b4bdb 0%,#3a2f9e 40%,#1d6f8a 100%)}
@@ -2974,5 +3043,5 @@ if(tabs&&!tabs.querySelector('[data-t="play"]')){const a=document.createElement(
 })();
 </script>
 <!-- ===== /Spiele ===== -->
-<script src="konto.js?v=10"></script>
+<script src="konto.js?v=11"></script>
 </body></html>

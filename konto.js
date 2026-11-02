@@ -173,10 +173,12 @@ function gateCheck() {
 const NAV = { start: ['Home', 'Start'], home: ['Search', 'Suche'], cats: ['Topics', 'Themen'], lists: ['Lists', 'Listen'], decks: ['Cards', 'Karten'], wort: ['Vocabulary', 'Wortschatz'], gram: ['Grammar', 'Grammatik'], play: ['Games', 'Spiele'] };
 function applyNav() {
   const tabs = $('tabs'); if (!tabs) return;
+  tabs.setAttribute('aria-label',T('Main navigation','Hauptnavigation'));
   let st = tabs.querySelector('a[data-t="start"]');
   if (!st) { st = document.createElement('a'); st.href = '#/start'; st.dataset.t = 'start'; st.innerHTML = icn('house') + '<span></span>'; tabs.prepend(st); }
   const en = lang() === 'en';
   document.documentElement.dataset.ui = en ? 'en' : 'de';
+  document.documentElement.lang = en ? 'en' : 'de';
   tabs.querySelectorAll('a[data-t]').forEach(a => {
     const t = NAV[a.dataset.t]; if (!t) return; const s = a.querySelector('span'); if (s) s.textContent = t[en ? 0 : 1];
     const f = TAB_F[a.dataset.t], off = f && mode(f) === 'off' && !isFounder(), lk = f && !off && !can(f);
@@ -200,6 +202,7 @@ function applyBrand() {
     else { root.style.removeProperty('--ac'); root.style.removeProperty('--org'); }
     document.title = ORG.name + ' · Deutschklinik';
   } else { if (el) el.remove(); root.style.removeProperty('--ac'); root.style.removeProperty('--org'); document.title = 'Deutschklinik'; }
+  if(window.updatePageMetadata)updatePageMetadata();
   icons();
 }
 function apply() {
@@ -858,11 +861,11 @@ const LVDESC = { A1: ['First words, first conversations', 'Erste Wörter, erste 
   B2: ['Discuss, argue, understand the news', 'Diskutieren, argumentieren, Nachrichten verstehen'], C1: ['Precise, professional, almost native', 'Präzise, professionell, fast muttersprachlich'] };
 function viewWelcome() {
   const w = SITE.welcome || {}, h = w.headline || T('Welcome to Deutschklinik', 'Willkommen in der Deutschklinik'),
-    msg = w.message || T('Your German, diagnosed and treated. Choose your level, follow a clear course from A1 to C1 and practise with real examples, pictures and games – until German feels natural.', 'Dein Deutsch – untersucht und behandelt. Wähle dein Niveau, folge einem klaren Kurs von A1 bis C1 und übe mit echten Beispielen, Bildern und Spielen – bis Deutsch sich natürlich anfühlt.');
+    msg = w.message || T('Build your German with vocabulary, grammar, real examples, pictures and games. Choose an available level and practise at your own pace.', 'Lerne Deutsch mit Wortschatz, Grammatik, echten Beispielen, Bildern und Spielen. Wähle ein verfügbares Niveau und übe in deinem Tempo.');
   const free = ['dict', 'games'].filter(f => mode(f) === 'everyone');
   const draw = counts => page('', `<section class="kd-hero kd-land cv-waves"><div><p class="kd-eye">Deutschklinik</p><h1>${esc(h)}</h1><p class="kd-hi">${esc(msg)}</p>
       <div class="row"><button class="btn kd-cta" onclick="ACCT.sheet('up')">${icn('sparkles')} ${T('Start learning – it’s free', 'Kostenlos loslegen')}</button><button class="btn kd-ghost" onclick="ACCT.sheet('in')">${T('Sign in', 'Anmelden')}</button></div>
-      ${mode('dict') === 'everyone' ? `<form class="kd-look" onsubmit="event.preventDefault();KONTO.lookup(this.q.value)"><input name="q" class="input" placeholder="${T('Look up a German word …', 'Ein deutsches Wort nachschlagen …')}" autocomplete="off" lang="de"><button class="btn">${icn('search')}</button></form>` : ''}</div>
+      ${mode('dict') === 'everyone' ? `<form class="kd-look" onsubmit="event.preventDefault();KONTO.lookup(this.q.value)"><input name="q" class="input" aria-label="${T('Look up a German word','Deutsches Wort nachschlagen')}" placeholder="${T('Look up a German word …', 'Ein deutsches Wort nachschlagen …')}" autocomplete="off" lang="de"><button class="btn" aria-label="${T('Search','Suchen')}">${icn('search')}</button></form>` : ''}</div>
       <div class="kd-land-art" aria-hidden="true"><span>Hallo!</span><span>Guten Tag</span><span>Wie geht’s?</span><span>Tschüss!</span><span>Danke</span></div></section>
     <h2 class="kd-h">${icn('route')} ${T('How it works', 'So funktioniert es')}</h2>
     <div class="kd-steps"><div><b>1</b><h3>${T('Choose your level', 'Wähle dein Niveau')}</h3><p>${T('From A1 (first words) to C1 (advanced). Not sure? Start at A1 – you can move up any time.', 'Von A1 (erste Wörter) bis C1 (fortgeschritten). Unsicher? Starte bei A1 – du kannst jederzeit aufsteigen.')}</p></div>
@@ -920,7 +923,21 @@ st.textContent = `#orgbrand{display:flex;align-items:center;gap:.4rem;font-weigh
 #orgbrand img{height:28px;width:auto;max-width:64px;border-radius:5px;object-fit:contain}
 @media(max-width:1360px){#orgbrand span{display:none}}
 .sheet{max-height:calc(100vh - 2rem);overflow-y:auto}
-@media(max-width:640px){nav.tabs{grid-template-columns:none!important;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr)}nav.tabs a{font-size:.56rem}}
+@media(max-width:640px){
+  nav.tabs{grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-flow:row;grid-auto-columns:auto;gap:.1rem;padding:.35rem .5rem calc(.35rem + env(safe-area-inset-bottom))}
+  nav.tabs a{font-size:.72rem;letter-spacing:normal;min-height:46px;padding:.3rem .1rem}
+  nav.tabs a span{display:block;overflow:visible;text-overflow:clip}
+  main{padding-bottom:1rem}.site-footer{padding-bottom:calc(8rem + env(safe-area-inset-bottom))}
+  #toast{bottom:calc(7.5rem + env(safe-area-inset-bottom))}
+  .grades{bottom:calc(7.5rem + env(safe-area-inset-bottom))}
+}
+@media(min-width:641px) and (max-width:1180px){
+  header .bar{height:auto;min-height:58px;flex-wrap:wrap;gap:.5rem;padding-top:.5rem;padding-bottom:.5rem}
+  #theme{margin-left:auto}
+  nav.tabs{order:3;flex-basis:100%;margin:0;overflow:visible;justify-content:space-between}
+  nav.tabs a{flex:1;justify-content:center;padding:.4rem .2rem;font-size:.75rem}
+  nav.tabs a span{display:inline}nav.tabs a .lic{display:none}
+}
 nav.tabs a{position:relative}nav.tabs a.ks-lk{opacity:.62}.ks-lki{position:absolute;top:3px;right:3px;opacity:.9}
 header .brand{flex-shrink:0}@media(min-width:1100px){header .wrap{max-width:1220px}}
 .kd-gate{max-width:560px;margin:2.5rem auto;text-align:center;display:grid;justify-items:center;gap:.5rem;padding:2rem 1.2rem;border:1px solid var(--line);border-radius:1.2rem;background:var(--card)}
