@@ -1,1 +1,6 @@
 node_modules/
+.local/
+__pycache__/
+*.pyc
+.env*
+.dev.vars*
