@@ -4,7 +4,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Wörterbuch</title>
+<title>Deutschklinik</title>
 <meta name="description" content="German learner dictionary with categories, revision lists, word maps and Anki-style flashcards.">
 <link rel="preload" href="core.bin?v=3846fea8f4" as="fetch" crossorigin="anonymous">
 <link rel="preconnect" href="https://woerterbuch-bilder.edwin1kitaka.workers.dev">
@@ -363,7 +363,7 @@ kbd{font:600 .66rem Inter,system-ui,sans-serif;padding:.1rem .35rem;border-radiu
 </head>
 <body>
 <header><div class="wrap bar">
-  <a class="brand" href="#/"><img src="icon-64.png?v=2" width="30" height="30" alt="" class="logo"><span>Wörter<b>buch</b></span></a>
+  <a class="brand" href="#/"><img src="icon-64.png?v=2" width="30" height="30" alt="" class="logo"><span>Deutsch<b>klinik</b></span></a>
   <nav class="tabs" id="tabs">
     <a href="#/" data-t="home" title="Suche"><i data-lucide="search" class="lic"></i><span>Suche</span></a>
     <a href="#/cats" data-t="cats" title="Themen"><i data-lucide="layout-grid" class="lic"></i><span>Themen</span></a>
@@ -468,7 +468,11 @@ const gcol=a=>a==='der'?'var(--der)':a==='die'?'var(--die)':a==='das'?'var(--das
 function route(){
   const h=location.hash.slice(2)||'';
   const [p,arg]=[h.split('/')[0],decodeURIComponent(h.split('/').slice(1).join('/')||'')];
-  if(!FULL&&!['','cats','g','v','lists','decks','klasse','admin','aufgaben'].includes(p)){        // definitions are still arriving
+  // features the visitor may not use (yet): show the lock page instead (the owner decides in Settings)
+  const gf=window.KONTO&&KONTO.featureOf&&KONTO.featureOf(p);
+  if(gf&&!KONTO.can(gf)){document.querySelectorAll('#tabs a').forEach(a=>a.classList.toggle('on',a.dataset.t===({dict:'home',lists:'lists',cards:'decks',vocab:'wort',grammar:'gram',games:'play'}[gf]||'')));
+    if(window.PLAY)PLAY.leave(); if(window.GRAM)GRAM.leave(); KONTO.gate(gf); window.scrollTo(0,0); return}
+  if(!FULL&&!['','cats','g','v','lists','decks','klasse','admin','aufgaben','start','kurs','settings','schule'].includes(p)){        // definitions are still arriving
     if(!V().querySelector('.loading[data-full]'))V().innerHTML='<div class="loading" data-full="1"><div class="spin"></div>Einträge werden geladen …</div>';
     FULLP.then(()=>{ if(location.hash.slice(2)===h)route() }); return }
   document.querySelectorAll('#tabs a').forEach(a=>a.classList.remove('on'));
@@ -484,7 +488,7 @@ function route(){
   else if(p==='play'&&window.PLAY){setOn('play');PLAY.view(arg)}
   else if(p==='g'){setOn('gram');openGram(arg,'g')}
   else if(p==='v'){setOn('wort');openGram(arg,'v')}
-  else if(['klasse','admin','aufgaben'].includes(p)){if(window.KONTO)KONTO.view(p,arg);else viewHome()}
+  else if(['klasse','admin','aufgaben','start','kurs','settings','schule'].includes(p)){if(window.KONTO)KONTO.view(p,arg);else viewHome()}
   else viewHome();
   if(p!=='play'&&window.PLAY)PLAY.leave();
   if(p!=='g'&&p!=='v'&&window.GRAM)GRAM.leave();
@@ -493,7 +497,7 @@ function route(){
 window.addEventListener('hashchange',route);
 /* grammar: its code and chapters load only when the tab is opened, so the dictionary is not slowed down */
 let gramP=null;
-function loadGram(){ if(window.GRAM)return Promise.resolve(); if(!gramP){gramP=new Promise((res,rej)=>{const s=document.createElement('script');s.src='grammatik/grammatik.js?v=12';s.onload=res;s.onerror=()=>{gramP=null;rej()};document.head.appendChild(s)})} return gramP }
+function loadGram(){ if(window.GRAM)return Promise.resolve(); if(!gramP){gramP=new Promise((res,rej)=>{const s=document.createElement('script');s.src='grammatik/grammatik.js?v=14';s.onload=res;s.onerror=()=>{gramP=null;rej()};document.head.appendChild(s)})} return gramP }
 function openGram(arg,m){
   m=m||'g'; const name=m==='v'?'Der Wortschatz':'Die Grammatik';
   if(window.GRAM){GRAM.view(arg,m);return}
@@ -1358,6 +1362,7 @@ load().catch(err=>{if(!isGram())V().innerHTML='<div class="empty"><span class="e
 @media(max-width:345px){#acct.signin span{display:none}#acct.signin{padding:0;width:var(--ib,40px)}}
 .acct-f{display:flex;flex-direction:column;gap:.55rem;margin:.4rem 0 0}
 .acct-f .input{width:100%}
+.acct-sent{text-align:center;display:grid;gap:.5rem;justify-items:center;padding:.6rem 0}.acct-sent .ic{font-size:2rem}.acct-sent p{margin:0}
 .acct-tabs{display:flex;gap:.3rem;margin:0 0 .8rem}
 .acct-tabs button{flex:1;border:1px solid var(--line);background:var(--panel);color:var(--mut);font-weight:600;font-size:.85rem;padding:.45rem;border-radius:.55rem}
 .acct-tabs button.on{background:var(--ac-salt);color:var(--ac);border-color:var(--ac)}
@@ -1375,6 +1380,7 @@ load().catch(err=>{if(!isGram())V().innerHTML='<div class="empty"><span class="e
 const SB_URL='https://vnnhyhicppkexdibuqyu.supabase.co';
 const SB_KEY='sb_publishable_sNNNyEu6D9_Sjy0O0MaS5Q_VyReD7Tj'; // publishable key: safe to be public, data is protected by row level security
 const SITE=location.origin+location.pathname;
+const tr=(en,de)=>window.KONTO&&KONTO.lang&&KONTO.lang()==='en'?en:de;   // menus/account in English or German
 const SKEY='gd_session';
 let session=LS.get(SKEY,null);
 let timer=null, pushing=false, dirty=false, failed=false;
@@ -1406,15 +1412,16 @@ async function token(){
 }
 function de(e){
   const m=String(e&&e.message||e), c=String(e&&e.code||''), s=m+' '+c;
-  if(/invalid login|invalid_credentials/i.test(s))return 'E-Mail oder Passwort ist falsch.';
-  if(/not confirmed|email_not_confirmed/i.test(s))return 'Bitte bestätige zuerst deine E-Mail-Adresse (Link im Postfach).';
-  if(/already registered|user_already_exists/i.test(s))return 'Für diese E-Mail gibt es schon ein Konto. Bitte melde dich an.';
-  if(/password should|weak_password/i.test(s))return 'Das Passwort muss mindestens 6 Zeichen haben.';
-  if(/same_password|should be different/i.test(s))return 'Das neue Passwort muss sich vom alten unterscheiden.';
-  if(/rate limit|over_.*rate_limit/i.test(s)||e.status===429)return 'Zu viele Versuche. Bitte warte etwas und versuche es dann erneut.';
-  if(/invalid.*email|email_address_invalid/i.test(s))return 'Diese E-Mail-Adresse ist ungültig.';
-  if(/PGRST205|PGRST202|42P01/.test(c))return 'Die Datenbank ist noch nicht eingerichtet.';
-  if(/failed to fetch|networkerror|load failed/i.test(m))return 'Keine Verbindung zum Server.';
+  if(/invalid login|invalid_credentials/i.test(s))return tr('Wrong e-mail or password.','E-Mail oder Passwort ist falsch.');
+  if(/not confirmed|email_not_confirmed/i.test(s))return tr('Please confirm your e-mail address first (link in your inbox).','Bitte bestätige zuerst deine E-Mail-Adresse (Link im Postfach).');
+  if(/already registered|user_already_exists/i.test(s))return tr('There is already an account for this e-mail. Please sign in.','Für diese E-Mail gibt es schon ein Konto. Bitte melde dich an.');
+  if(/password should|weak_password/i.test(s))return tr('The password needs at least 6 characters.','Das Passwort muss mindestens 6 Zeichen haben.');
+  if(/same_password|should be different/i.test(s))return tr('The new password must be different from the old one.','Das neue Passwort muss sich vom alten unterscheiden.');
+  if(/rate limit|over_.*rate_limit/i.test(s)||e.status===429)return tr('Too many tries. Please wait a little and try again.','Zu viele Versuche. Bitte warte etwas und versuche es dann erneut.');
+  if(/invalid.*email|email_address_invalid/i.test(s))return tr('This e-mail address is not valid.','Diese E-Mail-Adresse ist ungültig.');
+  if(/PGRST205|PGRST202|42P01/.test(c))return tr('The database is not set up yet.','Die Datenbank ist noch nicht eingerichtet.');
+  if(/failed to fetch|networkerror|load failed/i.test(m))return tr('No connection to the server.','Keine Verbindung zum Server.');
+  if(/error sending|confirmation email|smtp/i.test(s))return tr('The confirmation e-mail could not be sent. Please try again later.','Die Bestätigungs-E-Mail konnte nicht gesendet werden. Bitte später erneut versuchen.');
   return m;
 }
 
@@ -1513,29 +1520,29 @@ function sheet(mode){
   const em=$('ac_em');if(em&&em.value)lastEmail=em.value;
   if(mode==='me'){
     const n=Object.keys(lists).length, k=Object.keys(decks).length;
-    openSheet(`<h3>Dein Konto</h3>
+    openSheet(`<h3>${tr('Your account','Dein Konto')}</h3>
       <div class="acct-who"><div class="av">${esc((session.user.email||'?')[0].toUpperCase())}</div>
-      <div><div class="em">${esc(session.user.email||'')}</div><div class="muted" style="font-size:.82rem">${n} ${n===1?'Liste':'Listen'} · ${k} ${k===1?'Stapel':'Stapel'} · ${dirty?'wird gespeichert …':'gespeichert ✓'}</div></div></div>
+      <div><div class="em">${esc(session.user.email||'')}</div><div class="muted" style="font-size:.82rem">${n} ${tr(n===1?'list':'lists',n===1?'Liste':'Listen')} · ${k} ${tr(k===1?'deck':'decks','Stapel')} · ${dirty?tr('saving …','wird gespeichert …'):tr('saved ✓','gespeichert ✓')}</div></div></div>
       <div id="acct_prof"></div>
-      <p>Deine Listen und Karten gehören nur zu diesem Konto und werden auf jedem Gerät geladen, auf dem du dich anmeldest.</p>
-      <div class="row"><button class="acct-link" onclick="ACCT.sheet('newpw')">Passwort ändern</button><span class="spacer"></span>
-      <button class="btn" onclick="closeSheet()">Schließen</button><button class="btn primary" onclick="ACCT.signOut()">Abmelden</button></div>`);
+      <p>${tr('Your lists and cards belong only to this account and load on every device where you sign in.','Deine Listen und Karten gehören nur zu diesem Konto und werden auf jedem Gerät geladen, auf dem du dich anmeldest.')}</p>
+      <div class="row"><button class="acct-link" onclick="ACCT.sheet('newpw')">${tr('Change password','Passwort ändern')}</button><span class="spacer"></span>
+      <button class="btn" onclick="closeSheet()">${tr('Close','Schließen')}</button><button class="btn primary" onclick="ACCT.signOut()">${tr('Sign out','Abmelden')}</button></div>`);
     if(window.KONTO)KONTO.fillMe();
     return;
   }
-  const T={in:['Anmelden','Anmelden'],up:['Konto erstellen','Registrieren'],reset:['Passwort vergessen','Link senden'],newpw:['Neues Passwort','Speichern']}[mode];
-  const tabs=(mode==='in'||mode==='up')?`<div class="acct-tabs"><button type="button" class="${mode==='in'?'on':''}" onclick="ACCT.sheet('in')">Anmelden</button><button type="button" class="${mode==='up'?'on':''}" onclick="ACCT.sheet('up')">Registrieren</button></div>`:'';
-  const intro={in:'Melde dich an, um deine Listen und Karten auf jedem Gerät zu haben.',
-    up:'Mit einem Konto werden deine Listen und Karten gespeichert. Niemand sonst kann sie sehen.',
-    reset:'Gib deine E-Mail-Adresse ein. Wir schicken dir einen Link, mit dem du ein neues Passwort festlegst.',
-    newpw:'Lege ein neues Passwort für dein Konto fest.'}[mode];
-  const emailIn=mode==='newpw'?'':`<input class="input" id="ac_em" type="email" autocomplete="email" placeholder="E-Mail" required value="${esc(lastEmail).replace(/"/g,'&quot;')}">`;
-  const pwIn=mode==='reset'?'':`<input class="input" id="ac_pw" type="password" minlength="6" required autocomplete="${mode==='in'?'current-password':'new-password'}" placeholder="${mode==='in'?'Passwort':'Passwort (mind. 6 Zeichen)'}">`;
+  const T={in:[tr('Sign in','Anmelden'),tr('Sign in','Anmelden')],up:[tr('Create account','Konto erstellen'),tr('Sign up','Registrieren')],reset:[tr('Forgot password','Passwort vergessen'),tr('Send link','Link senden')],newpw:[tr('New password','Neues Passwort'),tr('Save','Speichern')]}[mode];
+  const tabs=(mode==='in'||mode==='up')?`<div class="acct-tabs"><button type="button" class="${mode==='in'?'on':''}" onclick="ACCT.sheet('in')">${tr('Sign in','Anmelden')}</button><button type="button" class="${mode==='up'?'on':''}" onclick="ACCT.sheet('up')">${tr('Sign up','Registrieren')}</button></div>`:'';
+  const intro={in:tr('Sign in to get your course, lists and cards on every device.','Melde dich an, um deinen Kurs, deine Listen und Karten auf jedem Gerät zu haben.'),
+    up:tr('Free. Your course, lists and cards are saved in your account. Nobody else can see them.','Kostenlos. Dein Kurs, deine Listen und Karten werden in deinem Konto gespeichert. Niemand sonst kann sie sehen.'),
+    reset:tr('Enter your e-mail address. We send you a link to set a new password.','Gib deine E-Mail-Adresse ein. Wir schicken dir einen Link, mit dem du ein neues Passwort festlegst.'),
+    newpw:tr('Choose a new password for your account.','Lege ein neues Passwort für dein Konto fest.')}[mode];
+  const emailIn=mode==='newpw'?'':`<input class="input" id="ac_em" type="email" autocomplete="email" placeholder="${tr('E-mail','E-Mail')}" required value="${esc(lastEmail).replace(/"/g,'&quot;')}">`;
+  const pwIn=mode==='reset'?'':`<input class="input" id="ac_pw" type="password" minlength="6" required autocomplete="${mode==='in'?'current-password':'new-password'}" placeholder="${mode==='in'?tr('Password','Passwort'):tr('Password (at least 6 characters)','Passwort (mind. 6 Zeichen)')}">`;
   openSheet(`<h3>${T[0]}</h3><p>${intro}</p>${tabs}
     <form class="acct-f" onsubmit="event.preventDefault();ACCT.submit('${mode}')">${emailIn}${pwIn}
     <div class="acct-msg" id="ac_msg"></div>
-    <div class="row">${mode==='in'?`<button type="button" class="acct-link" onclick="ACCT.sheet('reset')">Passwort vergessen?</button>`:''}${mode==='reset'?`<button type="button" class="acct-link" onclick="ACCT.sheet('in')">Zurück zur Anmeldung</button>`:''}
-    <span class="spacer"></span><button type="button" class="btn" onclick="closeSheet()">Abbrechen</button><button class="btn primary" id="ac_go" type="submit">${T[1]}</button></div></form>`);
+    <div class="row">${mode==='in'?`<button type="button" class="acct-link" onclick="ACCT.sheet('reset')">${tr('Forgot password?','Passwort vergessen?')}</button>`:''}${mode==='reset'?`<button type="button" class="acct-link" onclick="ACCT.sheet('in')">${tr('Back to sign in','Zurück zur Anmeldung')}</button>`:''}
+    <span class="spacer"></span><button type="button" class="btn" onclick="closeSheet()">${tr('Cancel','Abbrechen')}</button><button class="btn primary" id="ac_go" type="submit">${T[1]}</button></div></form>`);
   setTimeout(()=>{const f=$(mode==='newpw'||lastEmail?'ac_pw':'ac_em')||$('ac_em');if(f)f.focus()},60);
   if(mode==='up'&&window.KONTO)KONTO.signupFields();
 }
@@ -1546,19 +1553,20 @@ async function submit(mode){
   try{
     if(mode==='in'){
       const s=await api('/auth/v1/token?grant_type=password',{method:'POST',body:{email:em.trim(),password:pw}});
-      keep(s);closeSheet();toast('Angemeldet als '+s.user.email);await afterLogin(true);
+      keep(s);closeSheet();toast(tr('Signed in as ','Angemeldet als ')+s.user.email);await afterLogin(true);
     }else if(mode==='up'){
-      if(window.KONTO)KONTO.rememberSignup(em.trim());
-      const r=await api('/auth/v1/signup?redirect_to='+encodeURIComponent(SITE),{method:'POST',body:{email:em.trim(),password:pw}});
-      if(r&&r.access_token){keep(r);closeSheet();toast('Konto erstellt');welcomeMail(r.access_token);await afterLogin(true)}
-      else if(r&&Array.isArray(r.identities)&&r.identities.length===0)msg('Für diese E-Mail gibt es schon ein Konto. Bitte melde dich an.');
-      else msg('Fast geschafft! Wir haben eine E-Mail an '+em.trim()+' geschickt. Klicke auf den Link darin, um dein Konto zu bestätigen.',true);
+      const bad=window.KONTO&&KONTO.signupCheck&&KONTO.signupCheck(); if(bad){msg(bad);return}
+      const data=window.KONTO&&KONTO.signupData?KONTO.signupData(em.trim()):{};
+      const r=await api('/auth/v1/signup?redirect_to='+encodeURIComponent(SITE),{method:'POST',body:{email:em.trim(),password:pw,data}});
+      if(r&&r.access_token){keep(r);closeSheet();toast(tr('Account created','Konto erstellt'));welcomeMail(r.access_token);await afterLogin(true);location.hash='#/start'}
+      else if(r&&Array.isArray(r.identities)&&r.identities.length===0)msg(tr('There is already an account for this e-mail. Please sign in.','Für diese E-Mail gibt es schon ein Konto. Bitte melde dich an.'));
+      else{const f=document.querySelector('.acct-f');if(f)f.innerHTML=`<div class="acct-sent"><div class="ic">✉️</div><b>${tr('Check your inbox','Schau in dein Postfach')}</b><p>${tr('We sent an e-mail to','Wir haben eine E-Mail geschickt an')} <b>${esc(em.trim())}</b>. ${tr('Click the link in it to confirm your account – then you are signed in and your course opens.','Klicke auf den Link darin, um dein Konto zu bestätigen – dann bist du angemeldet und dein Kurs öffnet sich.')}</p><p class="muted" style="font-size:.8rem">${tr('Nothing there after a few minutes? Look in the spam folder.','Nach ein paar Minuten nichts da? Schau im Spam-Ordner nach.')}</p><button type="button" class="btn primary" onclick="closeSheet()">OK</button></div>`}
     }else if(mode==='reset'){
       await api('/auth/v1/recover?redirect_to='+encodeURIComponent(SITE),{method:'POST',body:{email:em.trim()}});
-      msg('Falls es ein Konto mit dieser Adresse gibt, ist ein Link unterwegs. Schau in dein Postfach.',true);
+      msg(tr('If there is an account with this address, a link is on its way. Check your inbox.','Falls es ein Konto mit dieser Adresse gibt, ist ein Link unterwegs. Schau in dein Postfach.'),true);
     }else if(mode==='newpw'){
       await api('/auth/v1/user',{method:'PUT',token:await token(),body:{password:pw}});
-      closeSheet();toast('Passwort geändert');
+      closeSheet();toast(tr('Password changed','Passwort geändert'));
     }
   }catch(e){msg(de(e))}
   finally{if(go)go.disabled=false}
@@ -1579,8 +1587,9 @@ if(hp.get('access_token')||hp.get('error')||hp.get('error_code')){
     const type=hp.get('type');
     api('/auth/v1/user',{token:hp.get('access_token')}).then(u=>{
       keep({access_token:hp.get('access_token'),refresh_token:hp.get('refresh_token'),expires_at:hp.get('expires_at'),expires_in:hp.get('expires_in')},u);
-      toast(type==='recovery'?'Bitte neues Passwort festlegen':'E-Mail bestätigt – du bist angemeldet');
-      return afterLogin(true).then(()=>{if(type==='recovery')sheet('newpw')});
+      toast(type==='recovery'?tr('Please choose a new password','Bitte neues Passwort festlegen'):tr('E-mail confirmed – you are signed in','E-Mail bestätigt – du bist angemeldet'));
+      if(type==='signup')welcomeMail(hp.get('access_token'));
+      return afterLogin(true).then(()=>{if(type==='recovery')sheet('newpw');else location.hash='#/start'});
     }).catch(e=>toast(de(e)));
   }else{
     const d=hp.get('error_code')==='otp_expired'?'Der Link ist abgelaufen oder wurde schon benutzt. Bitte fordere einen neuen an.':(hp.get('error_description')||'Anmeldung fehlgeschlagen').replace(/\+/g,' ');
@@ -1601,7 +1610,13 @@ document.addEventListener('visibilitychange',async()=>{
 });
 window.addEventListener('beforeunload',e=>{if(session&&(dirty||timer)){push();e.preventDefault();e.returnValue=''}});
 
-Object.assign(window.ACCT,{sheet,submit,signOut});
+// upload a file to Supabase storage (school logos); returns its public address
+async function upload(bucket,path,blob){
+  const r=await fetch(SB_URL+'/storage/v1/object/'+bucket+'/'+path,{method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+await token(),'Content-Type':blob.type,'x-upsert':'true'},body:blob});
+  if(!r.ok){let m='HTTP '+r.status;try{const j=await r.json();m=j.message||j.error||m}catch(e){}throw new Error(m)}
+  return SB_URL+'/storage/v1/object/public/'+bucket+'/'+path;
+}
+Object.assign(window.ACCT,{sheet,submit,signOut,upload});
 })();
 </script>
 <!-- ===== sign-up invitation (signed-out visitors only) ===== -->
@@ -1624,19 +1639,20 @@ let shown=false, views=0, active=0, lastAct=Date.now();
 function show(reason){
   if(shown||signedIn()||snoozed()||document.getElementById('modal').classList.contains('show'))return;
   shown=true;
+  const T=(en,de)=>window.KONTO&&KONTO.lang&&KONTO.lang()==='de'?de:en;
   const hook=reason==='save'
-    ?'Deine erste Liste ist angelegt – sichere sie dir!'
-    :'Du bist auf Wortjagd? Dann lohnt sich ein Konto.';
+    ?T('Your first list is ready – keep it safe!','Deine erste Liste ist angelegt – sichere sie dir!')
+    :T('Hunting for words? Then an account is worth it.','Du bist auf Wortjagd? Dann lohnt sich ein Konto.');
   openSheet(`<div class="promo"><h3>✨ ${hook}</h3>
-    <p>Mit einem kostenlosen Konto wird aus dem Nachschlagen echtes Lernen:</p>
+    <p>${T('With a free Deutschklinik account, looking things up turns into real learning:','Mit einem kostenlosen Deutschklinik-Konto wird aus dem Nachschlagen echtes Lernen:')}</p>
     <ul>
-      <li><span class="ic">📚</span><span><b>Eigene Wortlisten</b> – sammle jedes Wort, das du nachschlägst, mit einem Klick.</span></li>
-      <li><span class="ic">⚡</span><span><b>Karteikarten wie bei Anki</b> – das System zeigt dir jedes Wort genau dann wieder, wenn du es sonst vergessen würdest.</span></li>
-      <li><span class="ic">📱</span><span><b>Dein Fortschritt reist mit</b> – auf Handy, Tablet und Laptop, nichts geht verloren.</span></li>
+      <li><span class="ic">🎓</span><span><b>${T('Your own course','Dein eigener Kurs')}</b> – ${T('choose your level from A1 to C1 and follow vocabulary and grammar step by step.','wähle dein Niveau von A1 bis C1 und lerne Wortschatz und Grammatik Schritt für Schritt.')}</span></li>
+      <li><span class="ic">⚡</span><span><b>${T('Flashcards that remember for you','Lernkarten, die für dich mitdenken')}</b> – ${T('every word comes back just before you would forget it.','jedes Wort kommt genau dann wieder, wenn du es sonst vergessen würdest.')}</span></li>
+      <li><span class="ic">📱</span><span><b>${T('Your progress travels with you','Dein Fortschritt reist mit')}</b> – ${T('on phone, tablet and laptop.','auf Handy, Tablet und Laptop.')}</span></li>
     </ul>
-    <div class="row"><button class="btn primary" onclick="ACCT.sheet('up')">Kostenlos registrieren</button>
-      <button class="btn" onclick="PROMO.later()">Später</button></div>
-    <p class="small">Dauert 20 Sekunden · nur E-Mail und Passwort · <a href="#" onclick="event.preventDefault();ACCT.sheet('in')">Ich habe schon ein Konto</a></p></div>`);
+    <div class="row"><button class="btn primary" onclick="ACCT.sheet('up')">${T('Sign up free','Kostenlos registrieren')}</button>
+      <button class="btn" onclick="PROMO.later()">${T('Later','Später')}</button></div>
+    <p class="small">${T('Takes 20 seconds · just e-mail and password','Dauert 20 Sekunden · nur E-Mail und Passwort')} · <a href="#" onclick="event.preventDefault();ACCT.sheet('in')">${T('I already have an account','Ich habe schon ein Konto')}</a></p></div>`);
   snooze(3);   // closing the window in any way also counts as "later"
 }
 window.PROMO={later(){snooze(3);closeSheet()},show};
@@ -2804,5 +2820,5 @@ if(tabs&&!tabs.querySelector('[data-t="play"]')){const a=document.createElement(
 })();
 </script>
 <!-- ===== /Spiele ===== -->
-<script src="konto.js?v=2"></script>
+<script src="konto.js?v=6"></script>
 </body></html>
