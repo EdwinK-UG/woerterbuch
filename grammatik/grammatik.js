@@ -5,10 +5,9 @@
    Attempts are kept in this browser and, for signed-in users, saved to Supabase (table grammar_results). */
 (function () {
 'use strict';
-const VER = '10';
 let PASS = 0.7;                         // share of correct answers needed to pass an exercise (a teacher/school can change it)
 const $ = id => document.getElementById(id);
-const H = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const H = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 const icn = n => (typeof ic === 'function' ? ic(n) : '');
 const icons = () => { if (typeof drawIcons === 'function') drawIcons(); };
 const CASE = { n: 'Nominativ', d: 'Dativ', a: 'Akkusativ' };
@@ -116,7 +115,7 @@ const TOTAL = GROUPS.reduce((s, g) => s + (g.ref || g.vocab ? 0 : g.ch.length), 
 const LVS = ['A1', 'A2', 'B1', 'B2', 'C1'];
 const myLevel = () => (window.KONTO && KONTO.level && KONTO.level()) || null;
 const chLevel = n => { for (const g of GROUPS) for (const c of g.ch) if (c[0] === n) return c[3]; return null; };
-const lvOpen = l => !LVS.includes(l) || !(window.KONTO && KONTO.canOpen) || KONTO.canOpen(l);
+const lvOpen = l => !!(window.KONTO && KONTO.profile() && (LVS.includes(l) ? KONTO.canOpen(l) : KONTO.profile().role !== 'learner' || KONTO.unlocked().length));
 const allowed = n => lvOpen(chLevel(n));
 const topicNo = n => n > 260 ? n - 260 : n > 240 ? n - 240 : n > 220 ? n - 220 : n - 200;
 const en = () => !!(window.KONTO && KONTO.lang && KONTO.lang() === 'en');
@@ -812,8 +811,16 @@ function findWord(w) {
   return null;
 }
 function closePop() { const p = $('grpop'); if (p) p.remove(); }
-function pop(el) {
+async function pop(el) {
   closePop();
+  if(typeof ensureDefinitions==='function'&&!FULL){
+    const wait=document.createElement('div');wait.id='grpop';wait.className='gr-pop';wait.textContent='Wörterbuch wird geladen …';document.body.append(wait);
+    try{await ensureDefinitions()}catch{
+      if(document.getElementById('grpop')===wait){wait.textContent='Wörterbuch konnte nicht geladen werden. ';const retry=document.createElement('button');retry.className='btn sm';retry.textContent='Erneut versuchen';retry.onclick=()=>pop(el);wait.append(retry)}return;
+    }
+    if(!document.contains(el)||document.getElementById('grpop')!==wait)return;
+    wait.remove();
+  }
   const w = el.textContent, i = findWord(w), r = el.getBoundingClientRect(), d = document.createElement('div');
   d.id = 'grpop'; d.className = 'gr-pop';
   if (typeof E === 'undefined' || !E.length) d.innerHTML = `<p style="margin:0">Das Wörterbuch lädt noch …</p>`;
@@ -833,45 +840,110 @@ function pop(el) {
 
 /* ---------- results: local + Supabase ---------- */
 const LKEY = 'gd_gram';
-function store() { try { return JSON.parse(localStorage.getItem(LKEY) || 'null') || { att: [] }; } catch (e) { return { att: [] }; } }
-function save(s) { try { localStorage.setItem(LKEY, JSON.stringify(s)); } catch (e) {} }
+let unsavedState=null;
+function store() {
+  if(unsavedState)return structuredClone(unsavedState);
+  try { return JSON.parse(localStorage.getItem(LKEY) || 'null') || {att:[]}; }
+  catch { return {att:[]}; }
+}
+let bestCache = null;
+function save(state) {
+  bestCache = null;
+  try { localStorage.setItem(LKEY, JSON.stringify(state)); unsavedState=null; }
+  catch { unsavedState=structuredClone(state); if (window.toast) toast('Gerätespeicher voll. Bitte diese Seite geöffnet lassen und die Ergebnisse synchronisieren.'); }
+}
 const acct = () => window.ACCT && ACCT.user && ACCT.user();
-let remote = null, noTable = false;            // results from the database (all devices)
+let remote = null, remoteUser = null, noTable = false, syncError = false;
+const attemptKey = a => a.aid || [a.ch,a.ex,a.at].join('|');
 function attempts() {
-  const me = acct(), loc = store().att.filter(a => !a.uid || (me && a.uid === me.id) || (!me && !a.uid));
-  if (!remote) return loc;
-  const seen = new Set(remote.map(a => a.at));
-  return remote.concat(loc.filter(a => !seen.has(a.at)));
+  const user = acct();
+  const local = store().att.filter(a => !a.uid || a.uid === user?.id);
+  const rows = user && remoteUser === user.id && remote || [];
+  const keys = new Set(rows.map(attemptKey));
+  const old = new Set(rows.map(a => [a.ch,a.ex,a.at].join('|')));
+  return rows.concat(local.filter(a => !keys.has(attemptKey(a)) && (a.aid || !old.has([a.ch,a.ex,a.at].join('|')))));
 }
 function best(ch, ex) {
-  let b = null; for (const a of attempts()) if (a.ch === ch && a.ex === ex) { if (!b || a.score / a.total > b.score / b.total) b = a; }
-  return b;
+  if (!bestCache) {
+    bestCache = new Map();
+    for (const attempt of attempts()) {
+      const key = attempt.ch + '/' + attempt.ex, previous = bestCache.get(key);
+      if (!previous || attempt.score / attempt.total > previous.score / previous.total) bestCache.set(key, attempt);
+    }
+  }
+  return bestCache.get(ch + '/' + ex);
 }
-function record(a) {
-  const s = store(), me = acct(); a.uid = me ? me.id : null; a.sent = false; s.att.push(a); if (s.att.length > 2000) s.att = s.att.slice(-2000); save(s); sync();
+function record(attempt) {
+  const state = store(), user = acct();
+  Object.assign(attempt,{aid:crypto.randomUUID(),uid:user?.id||null,sent:false});
+  state.att.push(attempt);
+  // Retain pending uploads even when the completed device history is full.
+  const completed = state.att.filter(a => a.sent).slice(-2000);
+  state.att = completed.concat(state.att.filter(a => !a.sent));
+  save(state); sync(); paintSyncStatus();
 }
-let syncing = false;
-async function sync() {
-  const me = acct(); if (!me || noTable || syncing || !ACCT.api) return;
-  const s = store();
-  // attempts made while signed out are given to the account that signs in on this device
-  const todo = s.att.filter(a => !a.sent && (!a.uid || a.uid === me.id)); if (!todo.length) return;
-  syncing = true;
-  try {
-    await ACCT.api('/rest/v1/grammar_results', { method: 'POST', token: await ACCT.token(), headers: { Prefer: 'return=minimal' },
-      body: todo.map(a => ({ chapter: a.ch, exercise: a.ex, score: a.score, total: a.total, passed: a.passed, answers: a.ans || null, created_at: new Date(a.at).toISOString() })) });
-    const s2 = store(); s2.att.forEach(a => { if (todo.some(t => t.at === a.at)) { a.sent = true; a.uid = me.id; } }); save(s2);
-    if (remote) remote = remote.concat(todo.map(a => Object.assign({}, a, { uid: me.id })));
-  } catch (e) { if (e && (e.status === 404 || e.code === 'PGRST205' || e.code === '42P01')) noTable = true; }
-  syncing = false;
+let syncing = null, retrySync = null;
+function syncStatus() {
+  const user = acct();
+  const pending = store().att.filter(a => !a.sent && (!a.uid || a.uid === user?.id)).length;
+  return pending ? (syncError ? 'Noch nicht synchronisiert. Ergebnisse bleiben auf diesem Gerät. ' : 'Ergebnisse werden synchronisiert … ') :
+    syncError ? 'Ergebnisse konnten nicht aktualisiert werden. ' : '';
+}
+function paintSyncStatus() {
+  const holder = V().querySelector('.gr-ch,.gr-top,#grpv');
+  if (!holder) return;
+  let notice = V().querySelector('.gr-sync');
+  const text = syncStatus();
+  if (!text || !acct()) { notice?.remove(); return; }
+  if (!notice) { notice = document.createElement('p'); notice.className = 'gr-note gr-sync'; notice.style.display = 'block'; notice.setAttribute('role','status'); holder.prepend(notice); }
+  notice.textContent = text;
+  if (syncError) { const retry=document.createElement('button');retry.className='btn sm';retry.textContent='Erneut versuchen';retry.onclick=()=>{pull().then(()=>sync())};notice.append(retry); }
+}
+function sync() {
+  if (syncing) return syncing;
+  const user = acct();
+  if (!user || !ACCT.api) return Promise.resolve();
+  clearTimeout(retrySync);
+  const state = store(), pending = state.att.filter(a => !a.sent && (!a.uid || a.uid === user.id));
+  if (!pending.length) return Promise.resolve();
+  for (const a of pending) { a.aid ||= crypto.randomUUID(); a.uid = user.id; }
+  save(state);
+  const batch = pending.slice(0,100);
+  syncing = (async()=>{
+    const token = await ACCT.token();
+    if (acct()?.id !== user.id) return;
+    await ACCT.api('/rest/v1/grammar_results?on_conflict=user_id,attempt_id', {
+      method:'POST',token,headers:{Prefer:'resolution=ignore-duplicates,return=minimal'},
+      body:batch.map(a=>({user_id:user.id,attempt_id:a.aid,chapter:a.ch,exercise:a.ex,score:a.score,total:a.total,
+        passed:a.passed,answers:a.ans||null,created_at:new Date(a.at).toISOString()}))
+    });
+    const ids=new Set(batch.map(a=>a.aid)), updated=store();
+    for (const a of updated.att) if (a.uid===user.id && ids.has(a.aid)) a.sent=true;
+    save(updated);
+    if (acct()?.id === user.id) { syncError=false; await pull(); }
+  })().catch(()=>{if (acct()?.id === user.id) syncError=true})
+    .finally(()=>{
+      syncing=null;paintSyncStatus();
+      if (acct()?.id === user.id) retrySync=setTimeout(sync,syncError?15000:300);
+    });
+  return syncing;
 }
 async function pull() {
-  const me = acct(); if (!me || noTable || !ACCT.api) { remote = null; return; }
+  const user = acct();
+  if (!user || !ACCT.api) { remote=null;remoteUser=null;bestCache=null;return; }
   try {
-    const rows = await ACCT.api('/rest/v1/grammar_results?select=chapter,exercise,score,total,passed,created_at&user_id=eq.' + me.id + '&order=created_at.asc&limit=5000', { token: await ACCT.token() });
-    remote = rows.map(r => ({ ch: r.chapter, ex: r.exercise, score: r.score, total: r.total, passed: r.passed, at: Date.parse(r.created_at), uid: me.id }));
-  } catch (e) { if (e && (e.status === 404 || e.code === 'PGRST205' || e.code === '42P01')) noTable = true; remote = null; }
+    const rows=await ACCT.resultRows('&user_id=eq.'+user.id);
+    if (acct()?.id !== user.id) return;
+    remote=rows.map(r=>({aid:r.attempt_id,ch:r.chapter,ex:r.exercise,score:r.score,total:r.total,passed:r.passed,at:Date.parse(r.created_at),uid:user.id}));
+    remoteUser=user.id;noTable=false;syncError=false;bestCache=null;
+  } catch (e) { if (acct()?.id !== user.id) return; syncError=true;noTable=!!(e.status===404||e.code==='42P01'||e.code==='PGRST205'); }
+  paintSyncStatus();
 }
+window.addEventListener('acct:in',()=>{remote=null;remoteUser=null;bestCache=null;noTable=false;pull().then(sync)});
+window.addEventListener('acct:out',()=>{remote=null;remoteUser=null;bestCache=null;noTable=false;syncError=false;clearTimeout(retrySync)});
+window.addEventListener('storage',event=>{if (event.key===LKEY) {bestCache=null;paintSyncStatus()}});
+window.addEventListener('online',()=>pull().then(sync));
+window.addEventListener('beforeunload',event=>{if(unsavedState){event.preventDefault();event.returnValue=''}});
 function chapterProgress(c) {
   const g = c.exercises.filter(x => x.graded !== false); let passed = 0;
   for (const x of g) { const b = best(c.n, x.id); if (b && b.score / b.total >= PASS) passed++; }
@@ -913,7 +985,7 @@ function overview(m) {
   <section class="gr-top"><div><p class="gr-eyebrow">${T.eye}</p><h1>${T.h}</h1><p>${T.p}</p>
     <div class="gr-stats"><span class="gr-stat"><b>${all}</b>${T.unit}</span><span class="gr-stat"><b>${ready}</b>schon fertig</span><a class="gr-stat" href="#/${m}/fortschritt" style="text-decoration:none"><b>${passedEx}</b>Übungen bestanden →</a></div></div>
     <div class="gr-topart">${T.art}</div></section>
-  ${m === 'v' ? `<a class="gr-feat" href="#/v/201"><span class="th" id="vkfeat"></span><span><span class="gr-lv A1">A1</span> <span class="gr-eyebrow" style="display:inline">Hier anfangen</span><b>Thema 1: Person</b><p>52 Themen von A1 bis C1 – mit Wortliste, Bildern, Aussprache und Übungen. Wählen Sie Wörter aus und machen Sie daraus mit einem Klick Lernkarten.</p></span></a>`
+  ${m === 'v' ? `<a class="gr-feat" href="#/v/201"><span class="th" id="vkfeat"></span><span><span class="gr-lv A1">A1</span> <span class="gr-eyebrow" style="display:inline">Hier anfangen</span><b>Thema 1: Person</b><p>Themen für A1, A2, B1 und C1 – mit Wortliste, Bildern, Aussprache und Übungen. Wählen Sie Wörter aus und machen Sie daraus mit einem Klick Lernkarten.</p></span></a>`
     : `<a class="gr-feat" href="#/g/1"><span class="th" id="grfeat"></span><span><span class="gr-lv A1">A1</span> <span class="gr-eyebrow" style="display:inline">Hier anfangen</span><b>Kapitel 1: Personalpronomen</b><p>Alle 85 Kapitel von A1 bis B1 – mit Erklärungen, Beispielen, Übungen, Sprechtraining und Spiel. Dazu Verblisten mit Trainer.</p></span></a>`}
   <div class="gr-filter">${['', ...lv].map(l => `<button class="gr-chip${F.lv === l ? ' on' : ''}" data-lv="${l}">${l && !lvOpen(l) ? icn('lock') : ''}${l || 'Alle'}</button>`).join('')}
     <input id="grq" placeholder="${m === 'v' ? 'Thema suchen, z. B. Familie' : 'Thema suchen, z. B. Perfekt'}" value="${H(F.q)}" autocomplete="off"></div>
@@ -925,8 +997,13 @@ function overview(m) {
   icons();
 }
 // what a chapter contains – shown when its row is opened
+function chapterSummary(n) {
+  const info = chInfo(n), rows = LESSON_EXERCISES[n];
+  return info && rows ? {n, title:info.c[1],level:info.c[3],vocab:!!info.g.vocab,
+    exercises:rows.map(([id,title,flags])=>({id,title,more:!!(flags&1),graded:!(flags&2)}))} : null;
+}
 function contents(n) {
-  const c = CH[n]; if (!c) return `<p class="gr-clw">Inhalt wird geladen …</p>`;
+  const c = chapterSummary(n); if (!c) return `<p class="gr-clw">Inhalt wird geladen …</p>`;
   const h = hashOf(n), parts = c.vocab ? [['grs-l', 'Wortliste', 'list'], ['grs-t', 'Tipps', 'lightbulb']] : [['grs-v', 'Verstehen', 'lightbulb'], ['grs-b', 'Beispiele', 'quote']];
   const ex = c.exercises.map(x => { const b = best(n, x.id), ok = b && b.score / b.total >= PASS;
     return `<a href="${h}/ue-${x.id}"><span class="k">${exLabel(c, x)}</span><span class="t">${H(x.title)}</span>${x.graded === false ? '<span class="pc">ohne Note</span>' : ok ? `<span class="ok">${icn('circle-check')}</span>` : b ? `<span class="pc">${pct(b.score, b.total)} %</span>` : ''}</a>`; }).join('');
@@ -945,12 +1022,12 @@ function list() {
         <small>${g.ch.length} ${g.vocab ? 'Themen' : 'Kapitel'} · ${KONTO.lvState(glv) === 'pending' ? (en() ? 'waiting for your teacher' : 'wartet auf Freischaltung') : (en() ? 'locked' : 'gesperrt')}</small>${lockBtn(glv)}</div></div>`;
       continue;
     }
-    const done = g.ch.filter(c => CH[c[0]] && (p => p.total && p.passed === p.total)(chapterProgress(CH[c[0]]))).length;
+    const done = g.ch.filter(c => READY[c[0]] && (p => p.total && p.passed === p.total)(chapterProgress(chapterSummary(c[0])))).length;
     const lvls = [...new Set(g.ch.map(c => c[3]))].filter(l => l !== 'Liste');
     html += `<details class="gr-acc" data-k="${H(gk)}" style="--h:${g.h}"${open ? ' open' : ''}><summary><span class="badge">${icn(g.ic)}</span><span class="gr-gt">${H(g.t)}</span>
       <span class="gr-gl">${lvls.map(l => `<span class="gr-lv ${l}">${l}</span>`).join('')}</span><small>${g.soon ? 'kommt bald' : `${g.ch.length} ${g.vocab ? 'Themen' : 'Kapitel'}${done ? ` · ${done} geschafft` : ''}`}</small><span class="chev">${icn('chevron-down')}</span></summary>
       <div class="gr-rows">${g.soon ? `<p class="gr-clw">Die Themen für ${g.lv} sind in Arbeit.</p>` : cs.map(c => {
-        const n = c[0], ok = READY[n], pr = CH[n] ? chapterProgress(CH[n]) : null, all = pr && pr.total && pr.passed === pr.total, ck = 'c:' + n, copen = ok && st[ck] === 1;
+        const n = c[0], ok = READY[n], pr = ok ? chapterProgress(chapterSummary(n)) : null, all = pr && pr.total && pr.passed === pr.total, ck = 'c:' + n, copen = ok && st[ck] === 1;
         const body = `<span class="gr-num">${numLabel(n)}</span><span class="gr-ct"><b>${H(c[1])}</b><small>${H(c[2])}</small></span>${pr && pr.passed ? `<span class="gr-pp">${pr.passed}/${pr.total}</span>` : ''}${all ? `<span class="gr-done" title="Alle Übungen bestanden">${icn('circle-check')}</span>` : ''}<span class="gr-lv ${c[3]}">${c[3]}</span>`;
         if (!ok) return `<div class="gr-row soon"><div class="gr-card soon" title="Kommt bald">${body}</div></div>`;
         if (!allowed(n)) return `<div class="gr-row soon"><div class="gr-card soon" title="Ab Niveau ${c[3]}">${body}<span class="gr-pp">${icn('lock')} ${c[3]}</span></div></div>`;
@@ -971,7 +1048,7 @@ function tocAll(open) {
 function rowOpen(r, open) {
   const n = +r.dataset.n, box = r.querySelector('.gr-clbox'), b = r.querySelector('.gr-exp');
   r.classList.toggle('open', open); b.setAttribute('aria-expanded', open); box.hidden = !open;
-  if (open) { box.innerHTML = contents(n); if (!CH[n]) loadChapter(n).then(() => { if (!box.hidden) { box.innerHTML = contents(n); icons(); } }).catch(() => {}); }
+  if (open) { box.innerHTML = contents(n); icons(); }
 }
 
 /* ---------- progress page ---------- */
@@ -979,12 +1056,11 @@ async function progressView(m) {
   V().innerHTML = `<div class="row" style="margin-bottom:.6rem"><a class="btn sm" href="#/${m}">${icn('arrow-left')} ${m === 'v' ? 'Wortschatz' : 'Grammatik'}</a></div>
     <h1 class="page">Mein Fortschritt · ${m === 'v' ? 'Wortschatz' : 'Grammatik'}</h1><div id="grpv"><div class="loading"><div class="spin"></div>Ergebnisse werden geladen …</div></div>`;
   icons();
-  await Promise.all(readyOf(m).map(n => loadChapter(n).catch(() => {})));
   await pull(); if (!location.hash.startsWith('#/' + m + '/fortschritt')) return;
   const me = acct(), at = attempts(), L = myLevel();
   let rows = L ? `<tr><td colspan="5" class="sub">Für deine Note zählen die ${m === 'v' ? 'Themen' : 'Kapitel'} auf deinem Niveau ${H(L)} (dazu die Aufgaben deiner Lehrkraft).</td></tr>` : '';
   for (const n of readyOf(m).filter(n => !L || chLevel(n) === L || !LVS.includes(chLevel(n)))) {
-    const c = CH[n]; if (!c) continue;
+    const c = chapterSummary(n); if (!c) continue;
     rows += `<tr class="gr-ph"><td colspan="5"><a href="${hashOf(n)}"><b>${n > 200 ? 'Thema ' + topicNo(n) : n > 100 ? 'Nachschlagen' : 'Kapitel ' + n}</b> · ${H(c.title)}</a> <span class="gr-lv ${c.level}">${c.level}</span></td></tr>`;
     for (const x of c.exercises.filter(x => x.graded !== false)) {
       const mine = at.filter(a => a.ch === n && a.ex === x.id), b = best(n, x.id), last = mine[mine.length - 1];
@@ -1004,13 +1080,53 @@ async function progressView(m) {
 }
 
 /* ---------- chapter ---------- */
-function loadChapter(n) {
-  if (CH[n]) return Promise.resolve(CH[n]);
-  return new Promise((res, rej) => {
-    const sc = document.createElement('script'); sc.src = GRAM.base + 'k' + n + '.js?v=' + VER;
-    sc.onload = () => CH[n] ? res(CH[n]) : rej(new Error('leer')); sc.onerror = () => rej(new Error('Netz'));
-    document.head.appendChild(sc);
-  });
+let lessonEpoch = 0;
+const lessonLoads = new Map();
+function clearLessons() {
+  lessonEpoch++;
+  lessonLoads.clear();
+  for (const n of Object.keys(CH)) delete CH[n];
+  cur = null;
+}
+window.addEventListener('acct:in', clearLessons);
+window.addEventListener('acct:out', clearLessons);
+async function loadChapter(n) {
+  const user = acct(), epoch = lessonEpoch;
+  if (!user || !allowed(n)) throw new Error('Enrolment required');
+  // Authorize every opening, including a previously loaded lesson, so a revoked level closes.
+  if (lessonLoads.has(n)) return lessonLoads.get(n);
+  const current = () => epoch === lessonEpoch && acct()?.id === user.id && allowed(n);
+  const loading = (async () => {
+    const token = await ACCT.token();
+    if (!current()) throw new Error('account changed');
+    const response = await fetch(APP_CONFIG.supabaseUrl + '/functions/v1/lessons?chapter=' + encodeURIComponent(n), {
+      headers: { apikey: APP_CONFIG.supabaseKey, Authorization: 'Bearer ' + token }, cache: 'no-store',
+    });
+    if (!current()) throw new Error('account changed');
+    if (!response.ok) {
+      delete CH[n];
+      const error = new Error(response.status === 401 || response.status === 403 ? 'Enrolment required' : 'Lesson unavailable');
+      error.status = response.status; throw error;
+    }
+    const source = await response.text();
+    if (!current()) throw new Error('account changed');
+    if (CH[n]) return CH[n];
+    const url = URL.createObjectURL(new Blob(['if (window.GRAM.lessonEpoch() === ' + epoch + ') {\n' + source + '\n}'], { type: 'text/javascript' }));
+    try {
+      await new Promise((resolve, reject) => {
+        const script = document.createElement('script'); script.src = url;
+        script.onload = () => { script.remove(); resolve(); };
+        script.onerror = () => { script.remove(); reject(new Error('Lesson unavailable')); };
+        // The script itself checks its captured epoch before registering any content.
+        document.head.appendChild(script);
+      });
+    } finally { URL.revokeObjectURL(url); }
+    if (!current()) { delete CH[n]; throw new Error('account changed'); }
+    if (!CH[n]) throw new Error('Empty lesson');
+    return CH[n];
+  })();
+  lessonLoads.set(n, loading);
+  try { return await loading; } finally { if (lessonLoads.get(n) === loading) lessonLoads.delete(n); }
 }
 function jump(anchor) {
   const el = anchor && $(anchor); if (!el) return;
@@ -1022,8 +1138,14 @@ async function chapter(n, anchor) {
   const back = `<div class="row" style="margin-bottom:.6rem"><a class="btn sm" href="#/${isV(n) ? 'v' : 'g'}">${icn('arrow-left')} ${isV(n) ? 'Wortschatz' : 'Grammatik'}</a></div>`;
   if (READY[n] && !allowed(n)) { const l = chLevel(n); V().innerHTML = `${back}<div class="empty"><span class="em">${icn('lock')}</span><h1 class="page">${en() ? 'Level' : 'Niveau'} ${H(l)} ${en() ? 'is locked' : 'ist gesperrt'}</h1><p class="sub">${window.KONTO && KONTO.org() ? (en() ? 'Your teacher unlocks new levels for you.' : 'Neue Niveaus schaltet deine Lehrkraft für dich frei.') : (en() ? `Enroll in ${l} to open this ${isV(n) ? 'topic' : 'chapter'}.` : `Schreib dich für ${l} ein, um dieses ${isV(n) ? 'Thema' : 'Kapitel'} zu öffnen.`)}</p><p>${lockBtn(l)}</p></div>`; icons(); return; }
   if (!READY[n]) { V().innerHTML = `${back}<div class="empty"><span class="em">${icn('hourglass')}</span><h1 class="page">${isV(n) ? 'Dieses Thema' : 'Kapitel ' + n} kommt bald</h1><p class="sub">Daran wird gerade gearbeitet.</p></div>`; icons(); return; }
-  if (!CH[n]) { V().innerHTML = `<div class="loading"><div class="spin"></div>${isV(n) ? 'Thema' : 'Kapitel'} wird geladen …</div>`;
-    try { await loadChapter(n); } catch (e) { V().innerHTML = `<div class="empty"><span class="em">⚠️</span>Das Kapitel konnte nicht geladen werden. Bitte prüfe die Internetverbindung.</div>`; return; } }
+  V().innerHTML = `<div class="loading"><div class="spin"></div>${en() ? 'Loading lesson …' : 'Kapitel wird geladen …'}</div>`;
+  try { await loadChapter(n); } catch (e) {
+    if (!onCh(n)) return;
+    V().innerHTML = `${back}<div class="empty"><span class="em">⚠️</span>${e.status === 401 || e.status === 403
+      ? (en() ? 'Sign in and enrol in this level to open the lesson.' : 'Bitte anmelden und für dieses Niveau einschreiben.')
+      : (en() ? 'The lesson could not be loaded. Please check your connection and try again.' : 'Das Kapitel konnte nicht geladen werden. Bitte prüfe die Verbindung und versuche es erneut.')}</div>`;
+    return;
+  }
   if (!onCh(n)) return;
   if (cur !== CH[n] || !V().querySelector('.gr-ch')) render(CH[n]);
   jump(anchor);
@@ -1036,7 +1158,7 @@ function render(c) {
   if (c.speak && c.speak.gen) c.speak.items = c.speak.gen(); const info = chInfo(c.n), pr = chapterProgress(c);
   const blocks = c.understand.map(block).join('');
   V().innerHTML = `<div class="row" style="margin-bottom:.6rem"><a class="btn sm" href="#/g">${icn('arrow-left')} Grammatik</a></div>
-  <article class="gr-ch">
+  <article lang="de" class="gr-ch">
    <div class="gr-hero"><div>
      <p class="gr-eyebrow">${c.n > 100 ? 'Nachschlagen und trainieren' : `Kapitel ${c.n} · ${H(c.group)}`} · <span class="gr-lv ${c.level}">${c.level}</span></p>
      <h1>${H(c.title)}</h1><p class="gr-kick">${H(c.kicker)}</p><p class="gr-intro">${rich(c.intro)}</p>
@@ -1151,7 +1273,11 @@ function selPaint() {
   const b = $('vksel'); if (b) { b.innerHTML = selBar(cur); b.classList.toggle('on', vselOn); }
   icons();
 }
-function deckFrom(c, words, label) {
+async function deckFrom(c, words, label) {
+  if(typeof requireFeature==='function'&&!requireFeature('cards'))return;
+  const user=acct()?.id, hash=location.hash;
+  try{if(typeof ensureCore==='function')await ensureCore()}catch{if(typeof toast==='function')toast('Wörterbuch konnte nicht geladen werden. Bitte erneut versuchen.');return}
+  if(user!==acct()?.id||hash!==location.hash)return;
   if (typeof decks === 'undefined' || typeof newCard !== 'function' || typeof WIDX === 'undefined') { if (typeof toast === 'function') toast('Lernkarten sind gerade nicht verfügbar.'); return; }
   const name = `Wortschatz ${c.level} · ${c.title}${label ? ' · ' + label : ''}`;
   const ws = words.map(w => WIDX.has(w) ? E[WIDX.get(w)].w : WIDX.has(w + '¹') ? w + '¹' : null).filter(Boolean);
@@ -1188,7 +1314,7 @@ function renderVocab(c) {
   if (c.speak && c.speak.gen) c.speak.items = c.speak.gen();
   const pr = chapterProgress(c), main = c.exercises.filter(x => !x.more), more = c.exercises.filter(x => x.more);
   V().innerHTML = `<div class="row" style="margin-bottom:.6rem"><a class="btn sm" href="#/v">${icn('arrow-left')} Wortschatz</a></div>
-  <article class="gr-ch vk">
+  <article lang="de" class="gr-ch vk">
    <div class="gr-hero"><div>
      <div class="vk-chh"><span class="vk-chn">${topicNo(c.n)}</span><div><p class="gr-eyebrow">Wortschatz ${H(c.level)} · Thema ${topicNo(c.n)} · <span class="gr-lv ${c.level}">${c.level}</span></p><h1>${H(c.title)}</h1></div></div>
      <p class="gr-kick">${H(c.kicker)}</p><p class="gr-intro">${rich(c.intro)}</p>
@@ -1235,7 +1361,7 @@ function vocabSheet(c, w) {
   openSheet(`<div class="vk-sh">
     <div class="vk-shh"><span class="vk-shp">${c.pic ? c.pic(x.w) : ''}</span><div class="vk-sht">
       <div class="vk-shw ${x.ar && !x.pf ? x.ar : x.pf ? 'die' : 'x'}">${x.ar ? `<span class="vk-ar">${H(x.ar)}</span> ` : ''}<b>${H(vdisp(x))}</b>
-        <button class="gr-say" title="Aussprache anhören" onclick="GRAM.voc.play(${c.n},'${H(x.w)}',this)">${icn('volume-2')}</button></div>
+        <button class="gr-say" title="Aussprache anhören" onclick="GRAM.voc.play(${c.n},${H(JSON.stringify(x.w))},this)">${icn('volume-2')}</button></div>
       <div class="vk-meta">${H(VPOS[x.ps] || '')}${x.ipa ? ` · <span class="ipa">${H(x.ipa)}</span>` : ''}</div>
       ${forms ? `<div class="vk-fm">${forms}</div>` : ''}</div></div>
     <div class="vk-tr"><span class="lab">EN</span><span>${x.en.map((e, i) => i === 0 ? `<b>${H(e)}</b>` : H(e)).join('<i>·</i>')}</span></div>
@@ -1246,7 +1372,7 @@ function vocabSheet(c, w) {
       <div class="en">${H(e[1])} <a class="vk-tl" href="https://tatoeba.org/de/sentences/show/${e[2]}" target="_blank" rel="noopener" title="Satz bei Tatoeba">Tatoeba</a></div></div>`).join('')}</div>
     <div class="vk-shf"><button class="btn sm" onclick="GRAM.voc.open(${c.n},'${H(prev.w)}')">${icn('arrow-left')} ${H(prev.w)}</button>
       <button class="btn sm" onclick="GRAM.voc.open(${c.n},'${H(next.w)}')">${H(next.w)} ${icn('arrow-right')}</button><span class="spacer"></span>
-      ${big ? `<a class="btn sm" href="#/w/${encodeURIComponent(big)}" onclick="closeSheet()">${icn('book-open')} Großes Wörterbuch</a>` : ''}
+      ${`<a class="btn sm" href="#/w/${encodeURIComponent(big||x.w)}" onclick="closeSheet()">${icn('book-open')} Großes Wörterbuch</a>`}
       <button class="btn sm primary" onclick="closeSheet()">Fertig</button></div>
     ${x.af ? `<p class="vk-cred">Aussprache: <a href="https://commons.wikimedia.org/wiki/File:${encodeURIComponent(x.af)}" target="_blank" rel="noopener">${H(x.af)}</a> (Wikimedia Commons) · Formen: <a href="https://de.wiktionary.org/wiki/${encodeURIComponent(x.w)}" target="_blank" rel="noopener">Wiktionary</a></p>` : ''}
   </div>`);
@@ -1507,6 +1633,7 @@ function burst(el, big) {
 /* free writing: LanguageTool (free grammar checker) finds wrong forms; simple rules look for this chapter's typical mistakes.
    Not graded, because no automatic check can be sure about a free sentence. */
 async function freeCheck(x, ue) {
+  if(!confirm(en()?'Send the sentences in this exercise to LanguageTool for a grammar check? Avoid personal information.':'Die Sätze dieser Übung zur Grammatikprüfung an LanguageTool senden? Bitte keine persönlichen Angaben verwenden.'))return;
   const out = ue.querySelector('.gr-res'), btn = ue.querySelector('[data-act="check"]');
   const items = [...ue.querySelectorAll('.gr-it')], texts = items.map(el => el.querySelector('textarea').value.trim());
   if (texts.every(t => !t)) { if (typeof toast === 'function') toast('Schreib zuerst einen Satz.'); return; }
@@ -1547,8 +1674,8 @@ function view(arg, m) {
   const [a0, anchor] = String(arg || '').split('/');
   if (!a0) { cur = null; overview(m);
     const feat = m === 'v' ? [201, 'vkfeat'] : [1, 'grfeat'];
-    loadChapter(feat[0]).then(c => { const t = $(feat[1]); if (t && typeof c.art === 'function') t.innerHTML = c.art(K); }).catch(() => {});
-    Promise.all(readyOf(m).map(n => loadChapter(n).catch(() => {}))).then(() => pull()).then(() => { if (location.hash === '#/' + m || location.hash === '#/' + m + '/') list(); }); return; }
+    const preview = $(feat[1]); if (preview) preview.innerHTML = icn(m === 'v' ? 'book-a' : 'book-open-text');
+    pull().then(() => { if (location.hash === '#/' + m || location.hash === '#/' + m + '/') list(); }); return; }
   if (a0 === 'fortschritt') { cur = null; progressView(m); return; }
   const n = parseInt(a0, 10);
   if (isV(n) !== (m === 'v')) { location.replace(hashOf(n) + (anchor ? '/' + anchor : '')); return; }
@@ -1595,6 +1722,7 @@ function toQuestions(x, it) {
   return null;
 }
 async function quiz(n, count) {
+  if (!READY[n] || !allowed(n)) return [];
   const c = await loadChapter(n), pool = [];
   for (const x of c.exercises) { if (x.type === 'free' || x.quiz === false) continue; for (const it of (x.gen ? x.gen() : x.items)) { const q = toQuestions(x, it); if (q && q.o !== undefined ? q.c >= 0 || q.t === 'order' : q) pool.push(q); } }
   // a fair mix: shuffle, but spread the exercise types
@@ -1602,7 +1730,7 @@ async function quiz(n, count) {
 }
 // chapters for games and assignments: the learner's levels – or all of them while no level is unlocked yet (games are open to everyone)
 const chapterList = () => { const all = GROUPS.flatMap(g => g.ch.filter(c => READY[c[0]]).map(c => ({ n: c[0], title: c[1], group: g.t, level: c[3] }))), mine = all.filter(c => allowed(c.n));
-  return mine.some(c => LVS.includes(c.level)) ? mine : all; };
+  return mine; };
 // open the Spiele setup with this chapter already chosen as the question source
 function practice(kind) {
   if (!cur) return; const k = 'gd_gset_' + kind;
@@ -1652,9 +1780,10 @@ const VKIT = {
     return out;
   }
 };
-window.GRAM = { kit: VKIT, view, leave, base, quiz, list: chapterList, practice, add(c) { CH[c.n] = c; }, allowed, chLevel,
+window.GRAM = { kit: VKIT, view, leave, base, quiz, list: chapterList, practice, lessonEpoch: () => lessonEpoch, add(c) { CH[c.n] = c; }, allowed, chLevel,
   chapters: () => GROUPS.flatMap(g => g.ch.filter(c => READY[c[0]]).map(c => ({ n: c[0], title: c[1], kick: c[2], level: c[3], vocab: !!g.vocab, group: g.t, no: c[0] > 200 ? topicNo(c[0]) : c[0] })))
     .sort((a, b) => (a.vocab === b.vocab ? 0 : a.vocab ? -1 : 1) || a.n - b.n),
+  requiredExercises: n => (LESSON_EXERCISES[n] || []).filter(row => !(row[2] & 2)).map(row => row[0]),
   async results() { await pull(); return attempts(); },
   setPass(p) { PASS = p > 1 ? p / 100 : p; if (cur) render(cur); }, pass: () => PASS, refresh() { if (window.KONTO && KONTO.can && !KONTO.can(mode === 'v' ? 'vocab' : 'grammar')) return; if (mode && location.hash.match(/^#\/[gv](\/|$)/)) view(decodeURIComponent(location.hash.split('/').slice(2).join('/')), mode); },
   voc: { open: (n, w) => CH[n] && vocabSheet(CH[n], w), play: (n, w, b) => { const x = CH[n] && CH[n].words.find(v => v.w === w); if (x) vplay(x, b); }, say: t => talk(t) }, _test: { findWord, norm, attempts, best, store, PASS, CH,

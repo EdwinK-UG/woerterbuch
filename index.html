@@ -1,12 +1,13 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><link rel="icon" href="favicon.ico?v=2" sizes="any"><link rel="icon" type="image/png" sizes="32x32" href="icon-32.png?v=2"><link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=2"><link rel="apple-touch-icon" href="icon-180.png?v=2"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <!doctype html>
-<html lang="de">
+<html lang="en">
 <head>
 <meta charset="utf-8">
+<link rel="icon" href="favicon.ico?v=2" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="icon-32.png?v=2">
+<link rel="apple-touch-icon" href="icon-180.png?v=2">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Deutschklinik</title>
 <meta name="description" content="German learner dictionary with categories, revision lists, word maps and Anki-style flashcards.">
-<link rel="preload" href="core.bin?v=3846fea8f4" as="fetch" crossorigin="anonymous">
 <link rel="preconnect" href="https://woerterbuch-bilder.edwin1kitaka.workers.dev">
 <link rel="preconnect" href="https://upload.wikimedia.org">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -50,7 +51,17 @@ nav.tabs a{font-size:.84rem;font-weight:600;color:var(--mut);text-decoration:non
 nav.tabs a.on{color:var(--fg);background:var(--ac-salt)}
 nav.tabs a:hover{color:var(--fg)}
 .iconbtn{border:1px solid var(--line);background:var(--card);color:var(--mut);width:38px;height:38px;border-radius:.6rem;display:grid;place-items:center;font-size:1rem}
-main{padding:1.4rem 0 5rem}
+main{padding:1.4rem 0 3rem}
+img{max-width:100%}
+[hidden]{display:none!important}
+:focus-visible{outline:3px solid var(--ac);outline-offset:3px}
+.entry .top .hw{margin:0}
+.site-footer{font-size:.85rem;color:var(--mut);padding-bottom:1.5rem}
+.sheet{position:relative}
+.sheet-close{position:absolute;right:.8rem;top:.8rem}
+.sheet h3{padding-right:2rem}
+.more-senses{margin-top:.8rem}
+.more-senses>summary{cursor:pointer;color:var(--ac);font-weight:600}
 h1.page{font-family:Fraunces,serif;font-weight:600;font-size:1.7rem;letter-spacing:-.02em;margin:.2rem 0 1rem}
 .sub{color:var(--mut);font-size:.92rem;margin:-.6rem 0 1.3rem}
 /* search */
@@ -364,7 +375,7 @@ kbd{font:600 .66rem Inter,system-ui,sans-serif;padding:.1rem .35rem;border-radiu
 <body>
 <header><div class="wrap bar">
   <a class="brand" href="#/"><img src="icon-64.png?v=2" width="30" height="30" alt="" class="logo"><span>Deutsch<b>klinik</b></span></a>
-  <nav class="tabs" id="tabs">
+  <nav class="tabs" id="tabs" aria-label="Main navigation">
     <a href="#/" data-t="home" title="Suche"><i data-lucide="search" class="lic"></i><span>Suche</span></a>
     <a href="#/cats" data-t="cats" title="Themen"><i data-lucide="layout-grid" class="lic"></i><span>Themen</span></a>
     <a href="#/lists" data-t="lists" title="Listen"><i data-lucide="list" class="lic"></i><span>Listen</span></a>
@@ -372,15 +383,23 @@ kbd{font:600 .66rem Inter,system-ui,sans-serif;padding:.1rem .35rem;border-radiu
     <a href="#/v" data-t="wort" title="Wortschatz"><i data-lucide="book-a" class="lic"></i><span>Wortschatz</span></a>
     <a href="#/g" data-t="gram" title="Grammatik"><i data-lucide="book-open-text" class="lic"></i><span>Grammatik</span></a>
   </nav>
-  <button class="iconbtn" id="theme" title="Tag / Nacht">◐</button>
+  <button class="iconbtn" id="theme" aria-label="Light or dark theme" title="Tag / Nacht">◐</button>
 </div></header>
-<main><div class="wrap" id="view">
+<main id="main"><div class="wrap" id="view">
   <div class="loading"><div class="spin"></div>Wörterbuch wird geladen …</div>
 </div></main>
-<div id="toast"></div>
-<div class="modal" id="modal"><div class="sheet" id="sheet"></div></div>
+<footer class="site-footer wrap"><a href="#/privacy">Privacy · Datenschutz</a></footer>
+<div id="toast" role="status" aria-live="polite"></div>
+<div class="modal" id="modal" aria-hidden="true"><div class="sheet" id="sheet" role="dialog" aria-modal="true" tabindex="-1"></div></div>
 
-<script id="data" type="application/octet-stream" data-src="core.bin?v=3846fea8f4" data-defs="defs.bin?v=db398139f0"></script>
+<script src="config.js?v=bce20ec90cdd"></script>
+<script src="js/pages.js?v=2f0835f195f5"></script>
+<script src="js/course-counts.js?v=a500004e0728"></script>
+<script src="js/study-sync.js?v=9de759f82df1"></script>
+<script src="js/game-i18n.js?v=9cb89f5a1bfd"></script>
+<script src="js/game-messages.js?v=f0e0633452ab"></script>
+<script src="js/render-safety.js?v=cbceea56a80a"></script>
+<script id="data" type="application/octet-stream" data-src="core.bin?v=4c9f34b8d0dd" data-defs="defs.bin?v=5e525dc56850"></script>
 <script>
 "use strict";
 /* ---------- storage helpers (safe) ---------- */
@@ -396,10 +415,9 @@ function saveLists(){LS.set('gd_lists',lists)} function saveDecks(){LS.set('gd_d
 const fold=s=>s.toLowerCase().replace(/ä/g,'a').replace(/ö/g,'o').replace(/ü/g,'u').replace(/ß/g,'ss').replace(/[^a-z0-9]/g,'');
 let FOLD=[];
 /* ---------- load packed data ---------- */
-/* The website loads the dictionary in two parts: core.bin (~0.5 MB: headwords for search, topics, home page)
-   first, then defs.bin (definitions, word families, word maps) in the background. Pages that show definitions
-   wait for the second part (FULLP). The single-file copy has everything inside the page. */
-let FULL=false, NMAIN=0, fullRes; const FULLP=new Promise(r=>fullRes=r);
+let FULL=false, NMAIN=0, corePromise=null, definitionsPromise=null, coreLength=0;
+let searchText='';
+const ui=(english,german)=>window.KONTO?.T(english,german)||english;
 async function fetchBin(url,progress){
   const r=await fetch(url); if(!r.ok)throw new Error('Wörterbuch-Daten: '+r.status);
   const total=+r.headers.get('content-length')||0, lo=progress&&document.querySelector('#view .loading:not([data-g])');
@@ -418,38 +436,57 @@ async function unpack(bin){
     :new TextDecoder().decode(bin);    // in case a server already unpacked it
   return JSON.parse(txt);
 }
-function setFull(){ FULL=true; fullRes() }
-async function load(){
+function ensureCore(){
+  if(!corePromise)corePromise=loadCore().catch(e=>{corePromise=null;throw e});
+  return corePromise;
+}
+async function loadCore(){
   const el=document.getElementById('data'), b64=el.textContent.trim();
-  const aip=fetchAIEntries();          // AI entries load in parallel with the dictionary
-  let j, defsP=null;
-  if(b64){ j=await unpack(Uint8Array.from(atob(b64),c=>c.charCodeAt(0))) }   // single-file copy: data inside the page
-  else{ j=await fetchBin(el.dataset.src,true); defsP=fetchBin(el.dataset.defs) }   // one after the other: on a slow line the small file is not slowed down
+  const j=b64 ? await unpack(Uint8Array.from(atob(b64),c=>c.charCodeAt(0))) : await fetchBin(el.dataset.src,true);
   CATS=j.c; CATS.forEach(c=>CATMAP.set(c.id,c));
-  if(defsP){
+  if(!b64){
     NMAIN=j.n;
     E=j.e.map((a,i)=>({i,w:a[0],sy:a[1],ar:a[2],ps:a[3],df:'',rel:[],cat:a[4],pg:a[5],wm:null,st:a[6]&1,dl:a[7]}));
   } else {
     E=j.e.map((a,i)=>({i,w:a[0],sy:a[1],ar:a[2],ps:a[3],df:a[4],rel:a[5],cat:a[6],pg:a[7],wm:a[8]||null,st:/^\s*<span class="core"/.test(a[4])?1:0,dl:a[4].length}));
     NMAIN=E.filter(e=>e.ps!=='Info'&&!/abgeleitet von/.test(e.df)).length;
   }
-  const NB=E.length;                   // AI entries are added after these and bring their own definitions
+  coreLength=E.length;                   // AI entries are added after these and bring their own definitions
   E.forEach(e=>{if(!WIDX.has(e.w))WIDX.set(e.w,e.i)});
   // older spellings and words without homograph number still open the right entry (saved lists, flashcards)
   for(const [o,n] of Object.entries(j.a||{})){if(!WIDX.has(o)&&WIDX.has(n))WIDX.set(o,WIDX.get(n))}
   E.forEach(e=>{const p=e.w.replace(/[¹²³⁴⁵⁶⁷⁸⁹]/g,'');if(!WIDX.has(p))WIDX.set(p,e.i)});
   FOLD=E.map(e=>fold(e.w));
-  if(defsP){
-    defsP.then(d=>{ for(let i=0;i<NB&&i<d.length;i++){const x=d[i],e=E[i]; e.df=x[0]; e.rel=x[1]||[]; e.wm=x[2]||null} setFull() })
-      .catch(()=>{ const v=V(); if(v&&v.querySelector('.loading[data-full]'))v.innerHTML='<div class="empty"><span class="em">⚠️</span>Die Wörterbuch-Daten konnten nicht geladen werden. Bitte prüfe die Internetverbindung und lade die Seite neu.</div>' });
-  } else setFull();
-  // AI entries arrive on their own; only pages that may need one are drawn again
-  aip.then(list=>{ if(!list)return; addAIEntries(list);
-    const h=location.hash, w=h.startsWith('#/w/')?decodeURIComponent(h.slice(4)):null;
-    if(FULL&&((w&&WIDX.get(w)!=null&&E[WIDX.get(w)].ai)||/^#\/(study|list)\//.test(h)))route() });
-  if(!isGram())route();
-  if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
+  FULL=!!b64;
+  fetchAIEntries().then(list=>{
+    if(!Array.isArray(list)||!addAIEntries(list))return;
+    const h=location.hash,w=h.startsWith('#/w/')?decodeURIComponent(h.slice(4)):null;
+    if((w&&E[WIDX.get(w)]?.ai)||/^#\/list\//.test(h))route();
+  });
 }
+function ensureDefinitions(){
+  if(!definitionsPromise)definitionsPromise=(async()=>{
+    await ensureCore();if(FULL)return;
+    const rows=await fetchBin(document.getElementById('data').dataset.defs);
+    if(!Array.isArray(rows)||rows.length!==coreLength)throw new Error('Dictionary version mismatch');
+    rows.forEach(([df,rel,wm],i)=>Object.assign(E[i],{df,rel:rel||[],wm:wm||null}));
+    FULL=true;
+  })().catch(e=>{definitionsPromise=null;throw e});
+  return definitionsPromise;
+}
+async function downloadDictionary(button){
+  button.disabled=true;
+  try{
+    if(!('caches' in window)||!('serviceWorker' in navigator))throw new Error();
+    const registration=await navigator.serviceWorker.getRegistration();
+    if(!registration)throw new Error();
+    await navigator.serviceWorker.ready;
+    const data=document.getElementById('data').dataset,cache=await caches.open('wb-data');
+    for(const url of [data.src,data.defs])if(!await cache.match(url))await cache.add(url);
+    button.textContent=KONTO.T('Dictionary saved on this device','Wörterbuch auf diesem Gerät gespeichert');
+  }catch{button.disabled=false;toast(KONTO.T('Download failed. Please try again online.','Download fehlgeschlagen. Bitte online erneut versuchen.'))}
+}
+function openLookup(word){searchText=String(word||'').trim();if(location.hash==='#/')route();else go('')}
 /* ---------- search ---------- */
 function search(qr,limit=60){
   const f=fold(qr); if(!f)return [];
@@ -465,19 +502,35 @@ function search(qr,limit=60){
 const POSL={n:'Substantiv',v:'Verb',adj:'Adjektiv',adv:'Adverb',prp:'Präp.',kon:'Konj.',pro:'Pron.',num:'Num.',ptk:'Partikel'};
 const gcol=a=>a==='der'?'var(--der)':a==='die'?'var(--die)':a==='das'?'var(--das)':'var(--faint)';
 /* ---------- router ---------- */
+let routeGeneration=0;
 function route(){
+  if(!window.KONTO)return;
+  const request=++routeGeneration;
   const h=location.hash.slice(2)||'';
-  const [p,arg]=[h.split('/')[0],decodeURIComponent(h.split('/').slice(1).join('/')||'')];
+  let arg;
+  const p=h.split('/')[0];
+  try{arg=decodeURIComponent(h.split('/').slice(1).join('/')||'')}catch{V().textContent=ui('This link is invalid.','Dieser Link ist ungültig.');return}
+  updatePageMetadata();
   // features the visitor may not use (yet): show the lock page instead (the owner decides in Settings)
   const gf=window.KONTO&&KONTO.featureOf&&KONTO.featureOf(p);
   if(gf&&!KONTO.can(gf)){document.querySelectorAll('#tabs a').forEach(a=>a.classList.toggle('on',a.dataset.t===({dict:'home',lists:'lists',cards:'decks',vocab:'wort',grammar:'gram',games:'play'}[gf]||'')));
     if(window.PLAY)PLAY.leave(); if(window.GRAM)GRAM.leave(); KONTO.gate(gf); window.scrollTo(0,0); return}
-  if(!FULL&&!['','cats','g','v','lists','decks','klasse','admin','aufgaben','start','kurs','settings','schule'].includes(p)){        // definitions are still arriving
-    if(!V().querySelector('.loading[data-full]'))V().innerHTML='<div class="loading" data-full="1"><div class="spin"></div>Einträge werden geladen …</div>';
-    FULLP.then(()=>{ if(location.hash.slice(2)===h)route() }); return }
+  const gameSetup=p==='play'&&/^(gram|host|solo|memory|blitz)(\/|$)/.test(arg);
+  const needCore=['','cats','cat','w','list','study'].includes(p)||gameSetup;
+  const needDefinitions=['w','study'].includes(p);
+  if((needCore&&!coreLength)||(needDefinitions&&!FULL)){
+    V().innerHTML='<div class="loading"><div class="spin"></div>'+KONTO.T('Loading dictionary …','Wörterbuch wird geladen …')+'</div>';
+    (needDefinitions?ensureDefinitions():ensureCore()).then(()=>{
+      if(request===routeGeneration&&location.hash.slice(2)===h)route();
+    }).catch(()=>{
+      if(request===routeGeneration&&location.hash.slice(2)===h)V().innerHTML='<div class="empty">'+KONTO.T('The dictionary download failed.','Der Wörterbuch-Download ist fehlgeschlagen.')+
+        ' <button class="btn" onclick="route()">'+KONTO.T('Retry','Erneut versuchen')+'</button></div>';
+    });return;
+  }
   document.querySelectorAll('#tabs a').forEach(a=>a.classList.remove('on'));
   const setOn=t=>{const el=document.querySelector(`#tabs a[data-t="${t}"]`);if(el)el.classList.add('on')};
-  if(p===''){setOn('home');viewHome()}
+  if(p==='privacy'){privacyPage()}
+  else if(p===''){setOn('home');viewHome()}
   else if(p==='w'){setOn('home');viewWord(arg)}
   else if(p==='cats'){setOn('cats');viewCats()}
   else if(p==='cat'){setOn('cats');viewCat(arg)}
@@ -497,7 +550,19 @@ function route(){
 window.addEventListener('hashchange',route);
 /* grammar: its code and chapters load only when the tab is opened, so the dictionary is not slowed down */
 let gramP=null;
-function loadGram(){ if(window.GRAM)return Promise.resolve(); if(!gramP){gramP=new Promise((res,rej)=>{const s=document.createElement('script');s.src='grammatik/grammatik.js?v=15';s.onload=res;s.onerror=()=>{gramP=null;rej()};document.head.appendChild(s)})} return gramP }
+function scriptFile(src){
+  return new Promise((resolve,reject)=>{
+    const script=document.createElement('script');script.src=src;script.onload=resolve;
+    script.onerror=()=>{script.remove();reject(new Error('Could not load '+src))};document.head.appendChild(script);
+  });
+}
+function loadGram(){
+  if(!gramP)gramP=(async()=>{
+    if(typeof LESSON_EXERCISES==='undefined')await scriptFile('grammatik/catalog.js?v=606c7f51c6cd');
+    if(!window.GRAM)await scriptFile('grammatik/grammatik.js?v=4e5938afb66a');
+  })().catch(e=>{gramP=null;throw e});
+  return gramP;
+}
 function openGram(arg,m){
   m=m||'g'; const name=m==='v'?'Der Wortschatz':'Die Grammatik';
   if(window.GRAM){GRAM.view(arg,m);return}
@@ -507,36 +572,40 @@ function openGram(arg,m){
 }
 const isGram=()=>/^#\/[gv](\/|$)/.test(location.hash);
 const V=()=>document.getElementById('view');
-const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+const jsArg=value=>esc(JSON.stringify(String(value)));
 /* ---------- HOME / SEARCH ---------- */
 function viewHome(){
   V().innerHTML=`
-   <div class="hero"><h1>Was möchtest du<br><em>heute</em> nachschlagen?</h1>
-     <p>Bedeutungen, Beispiele, Aussprache und Wortkarten – für über 32.000 deutsche Wörter.</p></div>
+   <div class="hero"><h1>${ui('Which German word<br>will you learn <em>today</em>?','Was möchtest du<br><em>heute</em> nachschlagen?')}</h1>
+     <p>${ui('Meanings, examples, pronunciation and word maps for over 32,000 German words.','Bedeutungen, Beispiele, Aussprache und Wortkarten für über 32.000 deutsche Wörter.')}</p></div>
    <div class="searchbox">
-     <input id="q" placeholder="Wort suchen …" autocomplete="off" spellcheck="false">
+     <input id="q" role="combobox" aria-autocomplete="list" aria-controls="sug" aria-expanded="false" aria-label="${ui('Search for a German word','Deutsches Wort suchen')}" placeholder="${ui('Search for a word …','Wort suchen …')}" autocomplete="off" spellcheck="false">
      <span class="mag">${ic('search')}</span>
-     <ul id="sug" style="display:none"></ul>
+     <ul id="sug" role="listbox" aria-label="${ui('Search results','Suchergebnisse')}" style="display:none"></ul>
    </div>
    <div id="hres"></div>`;
   const q=document.getElementById('q'), sug=document.getElementById('sug');
   let sel=-1,cur=[];
   const render=()=>{
     cur=search(q.value,40);
+    q.setAttribute('aria-expanded',!!q.value.trim()&&!!cur.length);
+    q.removeAttribute('aria-activedescendant');
     const qv=q.value.trim();
     if(qv.length>=3&&!cur.length&&/^[A-Za-zÄÖÜäöüß][A-Za-zÄÖÜäöüß -]+$/.test(qv)){
       sug.innerHTML=`<li class="sugai" data-create="1">${ic('sparkles')}<span><b>„${esc(qv)}“</b> ist nicht im Wörterbuch.<br><em>Eintrag mit KI erstellen</em> – mit echten Beispielsätzen</span></li>`;
       sug.style.display='block'; return }
     if(!qv||!cur.length){sug.style.display='none';return}
-    sug.innerHTML=cur.map((e,k)=>`<li data-k="${k}" class="${k===sel?'on':''}">
+    sug.innerHTML=cur.map((e,k)=>`<li id="suggestion-${k}" role="option" aria-selected="${k===sel}" data-k="${k}" class="${k===sel?'on':''}">
       <span class="gdot" style="background:${gcol(e.ar)}"></span>
       <span class="hw">${esc(e.w)}</span><small>${e.ar?e.ar+' · ':''}${POSL[e.ps]||''}</small></li>`).join('');
     sug.style.display='block';
   };
-  q.addEventListener('input',()=>{sel=-1;render()});
+  q.addEventListener('input',()=>{searchText=q.value;sel=-1;render()});
   q.addEventListener('keydown',ev=>{
-    if(ev.key==='ArrowDown'){sel=Math.min(sel+1,cur.length-1);render();ev.preventDefault()}
-    else if(ev.key==='ArrowUp'){sel=Math.max(sel-1,0);render();ev.preventDefault()}
+    if(ev.key==='ArrowDown'){sel=Math.min(sel+1,cur.length-1);render();q.setAttribute('aria-activedescendant','suggestion-'+sel);ev.preventDefault()}
+    else if(ev.key==='ArrowUp'){sel=Math.max(sel-1,0);render();q.setAttribute('aria-activedescendant','suggestion-'+sel);ev.preventDefault()}
+    else if(ev.key==='Escape'){sug.style.display='none';q.setAttribute('aria-expanded','false');return}
     else if(ev.key==='Enter'){const e=cur[sel<0?0:sel];if(e)go('w/'+e.w); else if(q.value.trim().length>=3)createAI(q.value.trim())}
   });
   sug.addEventListener('click',ev=>{const li=ev.target.closest('li');if(!li)return; if(li.dataset.create)createAI(q.value.trim()); else go('w/'+cur[+li.dataset.k].w)});
@@ -548,20 +617,21 @@ function viewHome(){
   document.getElementById('hres').innerHTML=`
     ${recent.length?`<div class="chips"><span class="chipl">Zuletzt</span>${recent.map(w=>`<a class="chip" href="#/w/${encodeURIComponent(w)}">${esc(w)}</a>`).join('')}</div>`:''}
     ${wd?`<a class="wotd" href="#/w/${encodeURIComponent(wd.w)}">
-      <div class="wotd-l"><span class="eyebrow">${ic('sparkles')} Wort des Tages</span>
+      <div class="wotd-l"><span class="eyebrow">${ic('sparkles')} ${ui('Word of the day','Wort des Tages')}</span>
         <div class="wotd-w">${wd.ar?`<span class="art ${wd.ar}">${wd.ar}</span>`:''}<span class="wotd-hw">${sylHTML(wd.sy)}</span></div>
-        <p class="wotd-d" id="wotdd">${FULL?esc(gloss(wd)):'…'}</p>
-        <span class="wotd-go">Eintrag öffnen ${ic('arrow-right')}</span></div>
+        <p class="wotd-d" id="wotdd">${FULL?esc(gloss(wd)):''}</p>
+        <span class="wotd-go">${ui('Open entry','Eintrag öffnen')} ${ic('arrow-right')}</span></div>
       <button class="wotd-say" title="Aussprache anhören" onclick="event.preventDefault();event.stopPropagation();say(${wd.i},this)">${ic('volume-2')}</button></a>`:''}
-    <div class="sec"><h2>Themen entdecken</h2><a href="#/cats">Alle ${CATS.length} Themen ${ic('arrow-right')}</a></div>
+    <div class="sec"><h2>${ui('Explore topics','Themen entdecken')}</h2><a href="#/cats">${ui('All '+CATS.length+' topics','Alle '+CATS.length+' Themen')} ${ic('arrow-right')}</a></div>
     <div class="cgrid">${CATS.slice(0,12).map(cardCat).join('')}</div>
     <div class="stats">
-      <div><b>${nMain.toLocaleString('de')}</b><span>Stichwörter</span></div>
-      <div><b>${(E.length-nMain-E.filter(e=>e.ps==='Info').length).toLocaleString('de')}</b><span>abgeleitete Wörter</span></div>
-      <div><b>${E.filter(e=>e.ps==='Info').length}</b><span>Infokästen</span></div>
+      <div><b>${nMain.toLocaleString('de')}</b><span>${ui('headwords','Stichwörter')}</span></div>
+      <div><b>${(E.length-nMain-E.filter(e=>e.ps==='Info').length).toLocaleString('de')}</b><span>${ui('derived words','abgeleitete Wörter')}</span></div>
+      <div><b>${E.filter(e=>e.ps==='Info').length}</b><span>${ui('reference notes','Infokästen')}</span></div>
       <div><b>${CATS.length}</b><span>Themen</span></div></div>
+    <p><button class="btn" onclick="downloadDictionary(this)">${KONTO.T('Save the dictionary for offline use (5.65 MiB)','Wörterbuch offline speichern (5,65 MiB)')}</button></p>
     <p class="src">Grundlage: Langenscheidt Großwörterbuch Deutsch als Fremdsprache</p>`;
-  if(!FULL&&wd)FULLP.then(()=>{const d=document.getElementById('wotdd'); if(d)d.textContent=gloss(wd)});
+  if(searchText){q.value=searchText;render()}
 }
 /* word of the day: a core-vocabulary word, the same for everyone on a given day */
 function wordOfDay(){
@@ -595,7 +665,7 @@ window.addEventListener('load',drawIcons);
 /* ---------- ENTRY LAYOUT: grammar line, numbered senses with examples, compounds, idioms, derived words ---------- */
 function fmtDef(e,compact){
   const card=compact==='card';
-  let h=e.df, star=/^\s*<span class="core"/.test(h);
+  let h=definitionHTML(e.df), star=/^\s*<span class="core"/.test(h);
   h=h.replace(/^\s*<span class="core"[^>]*>★<\/span>\s*/,'').replace(/^\s*<b>[^<]*<\/b>\s*/,'');
   if(/abgeleitet von/.test(h)||e.ps==='Info')return (star?'<span class="core">★</span> ':'')+h;
   // idioms: "■ ID ..." at the end
@@ -627,13 +697,15 @@ function fmtDef(e,compact){
   if(star||head.replace(/<[^>]+>/g,'').trim())html+=`<div class="dgram">${star?'<span class="core" title="Grundwortschatz">★</span>':''}${head}</div>`;
   const total=senses.filter(x=>/^<span class="sn">/.test(x)).length;
   const items=(card?senses.slice(0,3):senses).map(sx=>{
-    const m=sx.match(/^<span class="sn">(\d+)<\/span>/); const num=m?m[1]:'';
-    const o=part(m?sx.slice(m[0].length):sx); allDer=allDer.concat(o.der);
+    const m=sx.match(/^<span class="sn">(\d+)<\/span>/),num=m?m[1]:'';
+    const o=part(m?sx.slice(m[0].length):sx);allDer=allDer.concat(o.der);
     if(!o.def.replace(/<[^>]+>/g,'').trim()&&!o.ex.length&&!o.comp.length&&!o.note.length)return '';
     const exs=card&&o.ex.length?`<ul class="dx"><li>${o.ex[0]}</li></ul>`:'';
     return `<li class="ds">${num?`<span class="sn">${num}</span>`:''}<div class="db"><div class="dd">${o.def.trim()}</div>${card?exs:compact?'':sub(o)}</div></li>`;
-  }).join('');
-  html+=`<ol class="dl${k>=0?'':' one'}">${items}</ol>`;
+  }).filter(Boolean);
+  const fold=!compact&&items.length>6;
+  html+=`<ol class="dl${k>=0?'':' one'}">${(fold?items.slice(0,3):items).join('')}</ol>`;
+  if(fold)html+=`<details class="more-senses"><summary>${ui('Show the other '+(items.length-3)+' meanings','Weitere '+(items.length-3)+' Bedeutungen zeigen')}</summary><ol class="dl">${items.slice(3).join('')}</ol></details>`;
   if(card)return html+(total>3?`<a class="fmore" href="#/w/${encodeURIComponent(e.w)}">+ ${total-3} weitere Bedeutungen im Eintrag</a>`:'');
   if(!compact&&idioms.replace(/<[^>]+>/g,'').trim()){
     const ip=part(idioms);
@@ -648,9 +720,9 @@ function fmtDef(e,compact){
 function entryHTML(e){
   const art=e.ar?`<span class="art ${e.ar}">${e.ar}</span>`:'';
   const pos=e.ps?`<span class="pos">${POSL[e.ps]||e.ps}</span>`:'';
-  return `<div class="entry">
+  return `<div class="entry" lang="de">
     <div class="top">
-      <div class="hw">${sylHTML(e.sy)}</div>${art}${pos}
+      <h1 class="hw">${sylHTML(e.sy)}</h1>${art}${pos}
       <button class="iconbtn say" title="Aussprache anhören" aria-label="Aussprache anhören" onclick="say(${e.i},this)">🔊</button>
       ${e.ai?`<span class="aibadge" title="Mit KI erstellt – nicht aus dem Langenscheidt">${ic('sparkles')} KI-Eintrag</span>`:`<span class="pg">S. ${e.pg}</span>`}
     </div>
@@ -658,8 +730,8 @@ function entryHTML(e){
     <div class="def">${fmtDef(e)}</div>
     ${e.ai?`<p class="ainotice">${ic('info')} Dieser Eintrag wurde mit KI erstellt, weil das Wort im Langenscheidt fehlt. Die Beispielsätze sind echte Sätze aus Zeitungen und Wikipedia (Leipzig Corpora Collection).</p>`:''}
     <div class="acts">
-      <button class="btn primary" onclick="quickCard(${e.i})">⚡ Als Karte lernen</button>
-      <button class="btn" onclick="openAdd(${e.i})">＋ Zur Liste</button>
+      <button class="btn primary" onclick="quickCard(${e.i})">${ui('⚡ Study as a card','⚡ Als Karte lernen')}</button>
+      <button class="btn" onclick="openAdd(${e.i})">${ui('＋ Add to list','＋ Zur Liste')}</button>
       ${e.cat?`<a class="btn" href="#/cat/${e.cat}">${CATMAP.get(e.cat).emoji} ${CATMAP.get(e.cat).label}</a>`:''}
     </div>
     ${wordMap(e)}
@@ -672,7 +744,7 @@ function viewWord(w){
   const i=WIDX.get(w);
   if(i==null){V().innerHTML=`<div class="aimiss"><span class="em">${ic('search-x')}</span><h1 class="page">„${esc(w)}“ ist nicht im Wörterbuch</h1>
     <p class="sub">Die KI kann einen Eintrag mit einfacher Erklärung und echten Beispielsätzen aus Zeitungen und Wikipedia erstellen. Danach finden ihn alle.</p>
-    <div class="row"><button class="btn primary" onclick="createAI(${JSON.stringify(w).replace(/"/g,'&quot;')})">${ic('sparkles')} Eintrag mit KI erstellen</button><a class="btn" href="#/" onclick="home(event)">← Suche</a></div></div>`;return}
+    <div class="row"><button class="btn primary" onclick="createAI(${jsArg(w)})">${ic('sparkles')} Eintrag mit KI erstellen</button><a class="btn" href="#/" onclick="home(event)">← Suche</a></div></div>`;return}
   const e=E[i];
   V().innerHTML=`<div class="row" style="margin-bottom:.8rem"><a class="btn sm" href="#/">← Suche</a></div>`+entryHTML(e);
   loadImg(e);
@@ -815,7 +887,7 @@ async function wikiEn(t){             // lead picture of the English article wit
     ?[{src:p.thumbnail.source,url:'https://en.wikipedia.org/wiki/'+encodeURIComponent(p.title),cap:'Wikipedia · '+p.title}]:[];
 }
 async function stock(q){              // stock photos through our worker (Pexels, when a key is set up there)
-  const j=await jget(AIURL_BASE+'/photos?v=2&q='+encodeURIComponent(q),8000); return Array.isArray(j)?j:[];
+  const j=await jget(APP_CONFIG.workerUrl+'/photos?v=2&q='+encodeURIComponent(q),8000); return Array.isArray(j)?j:[];
 }
 
 /* what kind of word is it? decides which source is tried first */
@@ -860,11 +932,11 @@ async function findImgs(e){
   return out;
 }
 function showImg(e,box,list,k){
-  if(!list.length){box.innerHTML=`<div class="aicta"><button class="imgai" onclick="aiBack(${e.i})">${ic('sparkles')} Bild mit KI erzeugen</button></div>`;box.classList.add('on');return}
+  if(!list.length){box.innerHTML=`<div class="aicta"><p>${ui('No picture is available right now.','Im Moment ist kein Bild verfügbar.')}</p><button class="imgai" ${APP_CONFIG.readOnly?'disabled':''} onclick="freeShow(E[${e.i}],document.getElementById('wimg'),true)">${ic('sparkles')} ${ui('Generate an AI picture','KI-Bild erzeugen')}</button></div>`;box.classList.add('on');return}
   k=((k%list.length)+list.length)%list.length; const d=list[k];
-  box.innerHTML=`<figure><img src="${d.src}" alt="${esc(plainW(e.w))}" loading="lazy" referrerpolicy="no-referrer">
+  box.innerHTML=`<figure><img src="${esc(safeLink(d.src))}" alt="${esc(plainW(e.w))}" loading="lazy" referrerpolicy="no-referrer">
     <figcaption><span class="capb"><button class="imgnext" title="Anderes Bild">↻ anderes Bild</button><button class="imgai" title="KI-Bild zeigen" onclick="aiBack(${e.i})">${ic('sparkles')} KI</button></span>
-    <a href="${d.url||d.src}" target="_blank" rel="noopener">${esc(d.cap)}</a></figcaption></figure>`;
+    <a href="${esc(safeLink(d.url||d.src))}" target="_blank" rel="noopener">${esc(d.cap)}</a></figcaption></figure>`;
   box.classList.add('on');
   box.querySelector('img').onerror=()=>{list.splice(k,1);showImg(e,box,list,k)};
   box.querySelector('.imgnext').onclick=()=>{const n=k+1; LSI.set(plainW(e.w),list[n%list.length]); showImg(e,box,list,n)};
@@ -876,7 +948,7 @@ async function loadImg(e){
   if(saved){showImg(e,box,[saved],0)}
   let list=IMGC.get(w);
   if(!list){const c=LSI.get('list|'+w); if(c&&Date.now()-c.t<7*864e5&&c.l.length)list=c.l}
-  if(!list){list=await findImgs(e); if(list.length)LSI.set('list|'+w,{t:Date.now(),l:list.slice(0,8)})}
+  if(!list){let timeout;try{list=await Promise.race([findImgs(e).catch(()=>[]),new Promise(resolve=>{timeout=setTimeout(()=>resolve([]),12000)})])}finally{clearTimeout(timeout)} if(list.length)LSI.set('list|'+w,{t:Date.now(),l:list.slice(0,8)})}
   IMGC.set(w,list);
   if(!document.body.contains(box))return;
   if(saved){const k=list.findIndex(x=>x.src===saved.src); if(k<0)list.unshift(saved); showImg(e,box,list,Math.max(0,k)); return}
@@ -924,35 +996,47 @@ function ownSeed(w){ return prefs&&prefs.img&&prefs.img[w]||null }
 function setOwnSeed(w,seed){ prefs=prefs||{}; prefs.img=Object.assign({},prefs.img,{[w]:seed}); savePrefs() }
 async function freeShow(e,box,fresh){
   const w=plainW(e.w);
-  // new pictures are only made on "neu erzeugen" (or once, if a word has never had one)
+  // Read cached pictures publicly. Generation is tied to a confirmed account.
   const seed=fresh?String(1+Math.floor(Math.random()*999998)):(ownSeed(w)?String(ownSeed(w)):'latest');
   const cap=`<figcaption><span class="capb"><button class="imgnext" onclick="this.disabled=true;freeShow(E[${e.i}],document.getElementById('wimg'),true)">${ic('refresh-cw')} neu erzeugen</button>
     <button class="imgai" onclick="(b=>{b.dataset.photo='1';loadImg(E[${e.i}])})(document.getElementById('wimg'))">Foto</button></span>
     <a href="#" onclick="event.preventDefault();AI.open()">${ic('sparkles')} KI-Bild</a></figcaption>`;
   box.classList.add('on');
-  box.innerHTML=`<figure><div class="aiload"><span class="spin"></span><span>Bild wird erzeugt …</span></div>${cap}</figure>`;
+  box.innerHTML=`<figure><div class="aiload"><span class="spin"></span><span>${ui('Loading picture …','Bild wird geladen …')}</span></div>${cap}</figure>`;
   // a picture that already exists comes straight from storage as a small file, without waiting for anything else
   if(!fresh&&!box.dataset.nopic){
-    const ok=await new Promise(res=>{const im=new Image(); im.alt='KI-Bild: '+w; im.decoding='async';
-      im.onload=()=>{if(document.body.contains(box)){const l=box.querySelector('.aiload'); if(l)l.replaceWith(im)} res(true)};
-      im.onerror=()=>res(false); im.src=picURL(e,seed)});
+    const ok=await new Promise(resolve=>{
+      const im=new Image();im.alt='KI-Bild: '+w;im.decoding='async';
+      let settled=false;
+      const done=success=>{if(settled)return;settled=true;clearTimeout(timeout);if(success&&document.body.contains(box)){const loading=box.querySelector('.aiload');if(loading)loading.replaceWith(im)}resolve(success)};
+      const timeout=setTimeout(()=>{done(false);im.src=''},4000);
+      im.onload=()=>done(true);im.onerror=()=>done(false);im.src=picURL(e,seed);
+    });
     if(ok)return;
   }
+  if(!window.ACCT?.user()||APP_CONFIG.readOnly){
+    if(fresh&&!APP_CONFIG.readOnly){ACCT.sheet('in');toast(ui('Sign in to generate a picture.','Bitte anmelden, um ein Bild zu erzeugen.'))}
+    box.dataset.photo='1';loadImg(e);return;
+  }
+  const actor=ACCT.user().id;
   const en=e.ps==='n'&&!fresh?await Promise.race([enCached(w),new Promise(r=>setTimeout(()=>r(null),2500))]):await Promise.race([enCached(w),new Promise(r=>setTimeout(()=>r(null),2500))]);
   // our own Cloudflare picture service: a text model turns the meaning into a scene, FLUX draws it, stored per word
   const def=gloss(e).replace(/[⟨⟩]/g,'').slice(0,300), ex=(examples({df:e.df.split(/<span class="sn">2<\/span>/)[0]},1)[0]||'').slice(0,180);
-  const qs=new URLSearchParams({w, pos:POSL[e.ps]||e.ps||'', en:en||'', def, ex, seed}); if(fresh)qs.set('set','1');
-  const url=AIURL_BASE+'/img?'+qs.toString();
+  const qs=new URLSearchParams({w, pos:POSL[e.ps]||e.ps||'', en:en||'', def, ex, seed});
+  if(!document.body.contains(box)||ACCT.user()?.id!==actor)return;
+  const loading=box.querySelector('.aiload span:last-child');if(loading)loading.textContent=ui('Generating picture …','Bild wird erzeugt …');
+  const url=APP_CONFIG.workerUrl+'/img?'+qs.toString();
   const fallback=()=>{ if(!document.body.contains(box))return; box.dataset.photo='1'; loadImg(e) };
   if(Date.now()<AIWAIT.until){fallback();return}           // daily allowance used up: photos until it resets
   let src=AIBLOB.get(url);
   if(!src){
     const c=new AbortController(), t=setTimeout(()=>c.abort(),45000);
     try{
-      const r=await fetch(url,{signal:c.signal});
+      const r=await fetch(url,{signal:c.signal,headers:{Authorization:'Bearer '+await ACCT.token()}});
+      if(ACCT.user()?.id!==actor)return;
       if(!r.ok||!/^image\//.test(r.headers.get('content-type')||'')){ if(r.status===429)AIWAIT.until=Date.now()+30*60e3; throw new Error('ai '+r.status) }
       src=URL.createObjectURL(await r.blob()); if(seed!=='latest')AIBLOB.set(url,src);
-      if(fresh)setOwnSeed(w,+seed);
+      setOwnSeed(w,+r.headers.get('X-Seed')||+seed||1);
     }catch(err){ clearTimeout(t); fallback(); return }
     clearTimeout(t);
   }
@@ -960,8 +1044,8 @@ async function freeShow(e,box,fresh){
   const img=new Image(); img.alt='KI-Bild: '+w; img.src=src;
   const l=box.querySelector('.aiload'); if(l)l.replaceWith(img);
 }
-const AIURL_BASE='https://woerterbuch-bilder.edwin1kitaka.workers.dev', AIBLOB=new Map(), AIWAIT={until:0};
-function picURL(e,seed){ return AIURL_BASE+'/pic?'+new URLSearchParams({w:plainW(e.w),pos:POSL[e.ps]||e.ps||'',seed:seed||'latest'}) }
+const AIBLOB=new Map(), AIWAIT={until:0};
+function picURL(e,seed){ return APP_CONFIG.workerUrl+'/pic?'+new URLSearchParams({w:plainW(e.w),pos:POSL[e.ps]||e.ps||'',seed:seed||'latest'}) }
 // warm the browser cache: the picture of a word starts loading when the pointer reaches its link
 (function(){const done=new Set();
   const warm=ev=>{const a=ev.target.closest&&ev.target.closest('a[href^="#/w/"]'); if(!a||!AI.free())return;
@@ -976,7 +1060,7 @@ function aiBack(i){ const box=document.getElementById('wimg'); if(!box)return;
 const AIPOS={Substantiv:'n',Verb:'v',Adjektiv:'adj',Adverb:'adv','Präposition':'prp',Konjunktion:'kon',Pronomen:'pro',Partikel:'ptk'};
 async function fetchAIEntries(){
   try{const c=new AbortController(); setTimeout(()=>c.abort(),8000);
-    const r=await fetch(AIURL_BASE+'/entries',{signal:c.signal}); return r.ok?await r.json():[]}catch(e){return []}
+    const r=await fetch(APP_CONFIG.workerUrl+'/entries',{signal:c.signal}); return r.ok?await r.json():[]}catch(e){return []}
 }
 function aiToDf(x){
   const head=`<b>${esc(x.w)}</b> ${x.ar?`<i class="g">${esc(x.ar)};</i> `:''}${x.forms?esc(x.forms)+' ':''}${x.en?`<i class="g">engl. ${esc(x.en)}</i>`:''}`;
@@ -985,21 +1069,26 @@ function aiToDf(x){
 function addAIEntries(list){
   let added=0;
   for(const x of list||[]){
-    if(!x||!x.w||!Array.isArray(x.senses)||WIDX.has(x.w))continue;   // the book's own entry always wins
-    const e={i:E.length,w:x.w,sy:x.w,ar:x.ar||'',ps:AIPOS[x.ps]||x.ps||'',df:aiToDf(x),rel:[],cat:'',pg:'KI',wm:null,ai:true};
-    E.push(e); WIDX.set(e.w,e.i); FOLD.push(fold(e.w)); (x.q||[]).forEach(q=>{if(!WIDX.has(q))WIDX.set(q,e.i)}); added++;
+    if(!x||typeof x.w!=='string'||!x.w||!Array.isArray(x.senses)||!x.senses.every(s=>s&&Array.isArray(s.ex)&&s.ex.every(e=>e&&typeof e.t==='string'))||WIDX.has(x.w))continue;   // the book's own entry always wins
+    const e={i:E.length,w:x.w,sy:x.w,ar:['der','die','das'].includes(x.ar)?x.ar:'',ps:Object.hasOwn(AIPOS,x.ps)?AIPOS[x.ps]:'',df:aiToDf(x),rel:[],cat:'',pg:'KI',wm:null,ai:true};
+    E.push(e); WIDX.set(e.w,e.i); FOLD.push(fold(e.w)); (Array.isArray(x.q)?x.q:[]).forEach(q=>{if(typeof q==='string'&&!WIDX.has(q))WIDX.set(q,e.i)}); added++;
   }
   return added;
 }
 function home(ev){ if(ev)ev.preventDefault(); if(location.hash==='#/'||location.hash==='')route(); else go('') }
 async function createAI(w){
   w=w.trim(); if(!w)return;
+  if(!window.ACCT?.user()){ACCT.sheet('in');toast(ui('Sign in to suggest an entry.','Bitte anmelden, um einen Eintrag vorzuschlagen.'));return}
+  try{assertWritable()}catch(e){toast(e.message);return}
+  const user=ACCT.user().id,requestHash=location.hash;
   const steps=['Echte Beispielsätze werden in Zeitungen und Wikipedia gesucht …','Die Bedeutung wird einfach erklärt …','Der Eintrag wird gespeichert …'];
   V().innerHTML=`<div class="aimake"><span class="spin"></span><h1 class="page">„${esc(w)}“</h1><p class="sub" id="aistep">${steps[0]}</p>
     <p class="muted" style="font-size:.85rem">Das dauert meist 10–30 Sekunden.</p></div>`;
   let k=0; const tick=setInterval(()=>{k=Math.min(k+1,steps.length-1); const el=document.getElementById('aistep'); if(el)el.textContent=steps[k]},6000);
   try{
-    const r=await fetch(AIURL_BASE+'/entry?w='+encodeURIComponent(w),{method:'POST'}); const d=await r.json(); clearInterval(tick);
+    const r=await fetch(APP_CONFIG.workerUrl+'/entry?w='+encodeURIComponent(w),{method:'POST',headers:{Authorization:'Bearer '+await ACCT.token()}}); const d=await r.json(); clearInterval(tick);
+    if(ACCT.user()?.id!==user||location.hash!==requestHash)return;
+    if(r.status===202&&d.pending){V().innerHTML=`<div class="aimiss"><h1 class="page">${ui('Submitted for review','Zur Prüfung eingereicht')}</h1><p>${ui('Your suggested entry will become public after editorial review.','Dein vorgeschlagener Eintrag wird nach redaktioneller Prüfung veröffentlicht.')}</p><a class="btn" href="#/">${ui('Back to search','Zur Suche')}</a></div>`;return}
     if(!r.ok||!d.entry){
       V().innerHTML=`<div class="aimiss"><span class="em">${ic('circle-help')}</span><h1 class="page">Kein Eintrag erstellt</h1>
         <p class="sub">${esc(d.error||'Bitte später noch einmal versuchen.')}</p><a class="btn" href="#/" onclick="home(event)">← Suche</a></div>`; return }
@@ -1007,7 +1096,7 @@ async function createAI(w){
     if(WIDX.has(x.w)&&!E[WIDX.get(x.w)].ai){toast('Gefunden als „'+x.w+'“'); go('w/'+encodeURIComponent(x.w)); return}
     addAIEntries([x]); if(!WIDX.has(w))WIDX.set(w,WIDX.get(x.w));
     go('w/'+encodeURIComponent(x.w));
-  }catch(err){ clearInterval(tick); V().innerHTML=`<div class="aimiss"><h1 class="page">Keine Verbindung</h1><p class="sub">Der Eintrag konnte gerade nicht erstellt werden.</p><a class="btn" href="#/" onclick="home(event)">← Suche</a></div>` }
+  }catch(err){ clearInterval(tick); if(location.hash!==requestHash)return; V().innerHTML=`<div class="aimiss"><h1 class="page">Keine Verbindung</h1><p class="sub">Der Eintrag konnte gerade nicht erstellt werden.</p><a class="btn" href="#/" onclick="home(event)">← Suche</a></div>` }
 }
 /* ---------- WORD MAP: synonyms, opposites, word family and words close in meaning ---------- */
 const WMG=[{k:'s',label:'Synonyme (≈)',col:'var(--das)',max:5},{k:'g',label:'Gegenteil (↔)',col:'var(--die)',max:3},
@@ -1126,7 +1215,7 @@ function viewCat(id){
     <h1 class="page cathead" style="--h:${catHue(c.id)}"><span class="badge big">${ic(CICON[c.id]||'tag')}</span>${c.label}</h1>
     <div class="row" style="margin-bottom:.9rem">
       <span class="muted">${words.length} Wörter</span><span class="spacer"></span>
-      <button class="btn" onclick="listFromWords([${words.map(e=>e.i).join(',')}],'${c.label}')">＋ Als Revisionsliste speichern</button>
+      <button class="btn" onclick="listFromWords([${words.map(e=>e.i).join(',')}],${jsArg(c.label)})">＋ Als Revisionsliste speichern</button>
     </div>
     <div class="wlist">${words.map(rowWord).join('')}</div>`;
 }
@@ -1138,10 +1227,10 @@ function rowWord(e){
 /* ---------- LISTS (revision playlists) ---------- */
 function viewLists(){
   const ids=Object.keys(lists);
-  V().innerHTML=`<h1 class="page">Revisionslisten</h1>
-    <p class="sub">Sammle Wörter und verwandle sie in Karteikarten.</p>
-    <div class="row" style="margin-bottom:1rem"><button class="btn primary" onclick="newList()">＋ Neue Liste</button></div>
-    ${ids.length?ids.map(id=>{const l=lists[id];return `<a class="panelcard" href="#/list/${id}">
+  V().innerHTML=`<h1 class="page">${ui('Revision lists','Revisionslisten')}</h1>
+    <p class="sub">${ui('Collect words and turn them into flashcards.','Sammle Wörter und verwandle sie in Karteikarten.')}</p>
+    <div class="row" style="margin-bottom:1rem"><button class="btn primary" onclick="newList()">${ui('＋ New list','＋ Neue Liste')}</button></div>
+    ${ids.length?ids.map(id=>{const l=lists[id];return `<a class="panelcard" href="#/list/${encodeURIComponent(id)}">
        <span class="ic">${ic('list')}</span><div><div class="big">${esc(l.name)}</div>
        <div class="meta">${l.words.length} Wörter</div></div></a>`}).join(''):
       `<div class="empty"><span class="em">${ic('list-plus')}</span>Noch keine Listen. Lege eine an oder füge Wörter über ein Stichwort hinzu.</div>`}`;
@@ -1149,15 +1238,15 @@ function viewLists(){
 function viewList(id){
   const l=lists[id]; if(!l){go('lists');return}
   const items=l.words.map(w=>E[WIDX.get(w)]).filter(Boolean);
-  V().innerHTML=`<div class="row" style="margin-bottom:.4rem"><a class="btn sm" href="#/lists">← Listen</a></div>
+  V().innerHTML=`<div class="row" style="margin-bottom:.4rem"><a class="btn sm" href="#/lists">${ui('← Lists','← Listen')}</a></div>
     <h1 class="page">${esc(l.name)}</h1>
     <div class="toolbar"><div class="row wrap">
-      <button class="btn sm" onclick="pickAll(true)">Alle wählen</button>
-      <button class="btn sm" onclick="pickAll(false)">Keine</button>
+      <button class="btn sm" onclick="pickAll(true)">${ui('Select all','Alle wählen')}</button>
+      <button class="btn sm" onclick="pickAll(false)">${ui('Clear selection','Keine')}</button>
       <span class="spacer"></span>
-      <button class="btn primary sm" onclick="makeCards('${id}')">⚡ Karten erstellen</button>
-      <button class="btn sm" onclick="renameList('${id}')">Umbenennen</button>
-      <button class="btn sm" onclick="delList('${id}')">Löschen</button>
+      <button class="btn primary sm" onclick="makeCards(${jsArg(id)})">${ui('⚡ Create cards','⚡ Karten erstellen')}</button>
+      <button class="btn sm" onclick="renameList(${jsArg(id)})">${ui('Rename','Umbenennen')}</button>
+      <button class="btn sm" onclick="delList(${jsArg(id)})">${ui('Delete','Löschen')}</button>
     </div></div>
     ${items.length?`<div class="wlist" id="picklist">${items.map(e=>`
       <label class="wrow" onclick="event.stopPropagation()">
@@ -1165,17 +1254,17 @@ function viewList(id){
         <span class="gdot" style="background:${gcol(e.ar)}"></span>
         <a class="hw" href="#/w/${encodeURIComponent(e.w)}">${esc(e.w)}</a>
         <span class="spacer"></span>
-        <button class="btn sm" onclick="rmFromList('${id}','${encodeURIComponent(e.w)}')">✕</button>
+        <button class="btn sm" onclick="rmFromList(${jsArg(id)},${jsArg(encodeURIComponent(e.w))})">✕</button>
       </label>`).join('')}</div>`:
       `<div class="empty"><span class="em">🔍</span>Diese Liste ist leer. Öffne ein Stichwort und tippe „Zur Liste".</div>`}`;
 }
 function pickAll(v){document.querySelectorAll('.pick').forEach(c=>c.checked=v)}
 function newList(){
-  openSheet(`<h3>Neue Liste</h3><p>Gib der Revisionsliste einen Namen.</p>
+  openSheet(`<h3>${ui('New list','Neue Liste')}</h3><p>${ui('Give your revision list a name.','Gib der Revisionsliste einen Namen.')}</p>
     <input class="input" id="nl" placeholder="z. B. Prüfung Kapitel 3" style="width:100%">
     <div class="row" style="margin-top:1rem;justify-content:flex-end">
-      <button class="btn" onclick="closeSheet()">Abbrechen</button>
-      <button class="btn primary" onclick="createList()">Erstellen</button></div>`);
+      <button class="btn" onclick="closeSheet()">${ui('Cancel','Abbrechen')}</button>
+      <button class="btn primary" onclick="createList()">${ui('Create','Erstellen')}</button></div>`);
   setTimeout(()=>document.getElementById('nl').focus(),30);
 }
 function createList(){
@@ -1183,30 +1272,44 @@ function createList(){
   const id=uid(); lists[id]={name:n,words:[],created:now()}; saveLists(); closeSheet(); go('list/'+id);
 }
 function renameList(id){
-  openSheet(`<h3>Umbenennen</h3><input class="input" id="nl" style="width:100%" value="${esc(lists[id].name)}">
-   <div class="row" style="margin-top:1rem;justify-content:flex-end"><button class="btn" onclick="closeSheet()">Abbrechen</button>
-   <button class="btn primary" onclick="(function(){lists['${id}'].name=document.getElementById('nl').value.trim()||lists['${id}'].name;saveLists();closeSheet();route()})()">Speichern</button></div>`);
+  openSheet(`<h3>${ui('Rename','Umbenennen')}</h3><input class="input" id="nl" style="width:100%" value="${esc(lists[id].name)}">
+   <div class="row" style="margin-top:1rem;justify-content:flex-end"><button class="btn" onclick="closeSheet()">${ui('Cancel','Abbrechen')}</button>
+   <button class="btn primary" onclick="(function(){lists[${jsArg(id)}].name=document.getElementById('nl').value.trim()||lists[${jsArg(id)}].name;saveLists();closeSheet();route()})()">${ui('Save','Speichern')}</button></div>`);
 }
 function delList(id){ if(confirm('Liste löschen?')){delete lists[id];saveLists();go('lists')} }
 function rmFromList(id,w){ w=decodeURIComponent(w); lists[id].words=lists[id].words.filter(x=>x!==w); saveLists(); route() }
 function listFromWords(ixs,name){
+  if(!requireFeature('lists'))return;
+
   const id=uid(); lists[id]={name:name,words:ixs.map(i=>E[i].w),created:now()}; saveLists();
   toast('Liste „'+name+'" gespeichert'); go('list/'+id);
 }
+function requireFeature(f){
+  if(window.KONTO?.can(f))return true;
+  closeSheet();go(f==='lists'?'lists':'decks');return false;
+}
 /* add word to list (modal) */
 function openAdd(i){
+  if(!requireFeature('lists'))return;
+
   const e=E[i], ids=Object.keys(lists);
   openSheet(`<h3>„${esc(e.w)}" hinzufügen</h3><p>Wähle eine Liste oder erstelle eine neue.</p>
-   <div class="listpick">${ids.length?ids.map(id=>`<div class="lp" onclick="addTo('${id}',${i})">
+   <div class="listpick">${ids.length?ids.map(id=>`<div class="lp" onclick="addTo(${jsArg(id)},${i})">
       <span>📑</span><span>${esc(lists[id].name)}</span><span class="spacer"></span><span class="muted">${lists[id].words.length}</span></div>`).join(''):'<p class="muted">Noch keine Listen.</p>'}</div>
    <input class="input" id="nlq" placeholder="Neue Liste …" style="width:100%">
-   <div class="row" style="margin-top:.8rem;justify-content:flex-end"><button class="btn" onclick="closeSheet()">Schließen</button>
+   <div class="row" style="margin-top:.8rem;justify-content:flex-end"><button class="btn" onclick="closeSheet()">${ui('Close','Schließen')}</button>
    <button class="btn primary" onclick="addNew(${i})">＋ Neue Liste & hinzufügen</button></div>`);
 }
-function addTo(id,i){const w=E[i].w; if(!lists[id].words.includes(w))lists[id].words.push(w); saveLists(); closeSheet(); toast('Zu „'+lists[id].name+'" hinzugefügt')}
-function addNew(i){const n=(document.getElementById('nlq').value||'').trim();if(!n){toast('Name eingeben');return}const id=uid();lists[id]={name:n,words:[E[i].w],created:now()};saveLists();closeSheet();toast('Liste „'+n+'" erstellt')}
+function addTo(id,i){
+  if(!requireFeature('lists'))return;
+const w=E[i].w; if(!lists[id].words.includes(w))lists[id].words.push(w); saveLists(); closeSheet(); toast('Zu „'+lists[id].name+'" hinzugefügt')}
+function addNew(i){
+  if(!requireFeature('lists'))return;
+const n=(document.getElementById('nlq').value||'').trim();if(!n){toast('Name eingeben');return}const id=uid();lists[id]={name:n,words:[E[i].w],created:now()};saveLists();closeSheet();toast('Liste „'+n+'" erstellt')}
 /* make cards from selected list items -> deck */
 function makeCards(id){
+  if(!requireFeature('cards'))return;
+
   const picks=[...document.querySelectorAll('.pick:checked')].map(c=>+c.value);
   if(!picks.length){toast('Keine Wörter gewählt');return}
   const name=lists[id].name;
@@ -1217,6 +1320,8 @@ function makeCards(id){
 }
 /* quick single-card deck */
 function quickCard(i){
+  if(!requireFeature('cards'))return;
+
   const w=E[i].w;
   let did=Object.keys(decks).find(d=>decks[d].name==='Schnell-Lernen');
   if(!did){did=uid();decks[did]={name:'Schnell-Lernen',cards:{},created:now()}}
@@ -1263,16 +1368,16 @@ function dueQueue(deck,newLimit=20){
 /* ---------- DECKS ---------- */
 function viewDecks(){
   const ids=Object.keys(decks);
-  V().innerHTML=`<h1 class="page">Karteikarten</h1>
+  V().innerHTML=`<h1 class="page">${ui('Flashcards','Karteikarten')}</h1>
     <p class="sub">Anki-ähnliche Stapel mit SM-2 Wiederholung. Vorderseite: Wort ohne Artikel. Rückseite: Artikel + Bedeutung.</p>
     ${ids.length?ids.map(id=>{const d=decks[id];const q=dueQueue(d);
-      return `<a class="panelcard" href="#/study/${id}"><span class="ic">${ic('layers')}</span>
+      return `<a class="panelcard" href="#/study/${encodeURIComponent(id)}"><span class="ic">${ic('layers')}</span>
         <div><div class="big">${esc(d.name)}</div>
         <div class="meta">${Object.keys(d.cards).length} Karten ·
           <span style="color:var(--neu)">${q.nw.length} neu</span> ·
           <span style="color:var(--die)">${q.lr.length} lernen</span> ·
           <span style="color:var(--das)">${q.rv.length} fällig</span></div></div>
-        <span class="spacer"></span><span class="btn sm" onclick="event.preventDefault();event.stopPropagation();delDeck('${id}')">✕</span></a>`}).join(''):
+        <span class="spacer"></span><span class="btn sm" onclick="event.preventDefault();event.stopPropagation();delDeck(${jsArg(id)})">✕</span></a>`}).join(''):
       `<div class="empty"><span class="em">${ic('layers')}</span>Noch keine Stapel. Erstelle Karten aus einer Liste oder über „Als Karte lernen" bei einem Wort.</div>`}`;
 }
 function delDeck(id){if(confirm('Stapel löschen?')){delete decks[id];saveDecks();route()}}
@@ -1336,8 +1441,42 @@ document.addEventListener('keydown',e=>{
 /* ---------- misc ui ---------- */
 function go(h){location.hash='#/'+h}
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._);t._=setTimeout(()=>t.classList.remove('show'),1900)}
-function openSheet(html){const m=document.getElementById('modal');document.getElementById('sheet').innerHTML=html;m.classList.add('show')}
-function closeSheet(){document.getElementById('modal').classList.remove('show')}
+let sheetOpener=null;
+function openSheet(html){
+  const modal=document.getElementById('modal'),sheet=document.getElementById('sheet');
+  if(!modal.classList.contains('show'))sheetOpener=document.activeElement;
+  sheet.innerHTML=html;
+  const title=sheet.querySelector('h3,h2,h1');
+  if(title){title.id='dialog-title';sheet.setAttribute('aria-labelledby',title.id)}
+  else{sheet.removeAttribute('aria-labelledby');sheet.setAttribute('aria-label',ui('Dialog','Dialog'))}
+  const close=document.createElement('button');
+  close.className='iconbtn sheet-close';close.type='button';close.textContent='×';
+  close.setAttribute('aria-label',ui('Close dialog','Dialog schließen'));close.onclick=closeSheet;
+  sheet.prepend(close);modal.classList.add('show');modal.setAttribute('aria-hidden','false');
+  for(const el of document.querySelectorAll('header,main,.site-footer'))el.inert=true;
+  (sheet.querySelector('input:not([type=hidden]),select,textarea,button:not(.sheet-close)')||sheet).focus();
+}
+function closeSheet(){
+  const modal=document.getElementById('modal');
+  if(!modal.classList.contains('show'))return;
+  modal.classList.remove('show');modal.setAttribute('aria-hidden','true');
+  for(const el of document.querySelectorAll('header,main,.site-footer'))el.inert=false;
+  if(sheetOpener?.isConnected)sheetOpener.focus();
+  sheetOpener=null;
+}
+document.addEventListener('keydown',event=>{
+  const modal=document.getElementById('modal');
+  if(!modal.classList.contains('show'))return;
+  if(event.key==='Escape'){event.preventDefault();closeSheet();return}
+  if(event.key!=='Tab')return;
+  const sheet=document.getElementById('sheet');
+  const focusable=[...sheet.querySelectorAll('a[href],button,input,select,textarea,[tabindex="0"]')]
+    .filter(el=>!el.disabled&&!el.closest('[hidden]'));
+  const first=focusable[0],last=focusable[focusable.length-1];
+  if(!first){event.preventDefault();sheet.focus();return}
+  if(event.shiftKey&&(document.activeElement===first||!sheet.contains(document.activeElement))){event.preventDefault();last.focus()}
+  else if(!event.shiftKey&&(document.activeElement===last||!sheet.contains(document.activeElement))){event.preventDefault();first.focus()}
+});
 document.getElementById('modal').addEventListener('click',e=>{if(e.target.id==='modal')closeSheet()});
 /* theme toggle */
 const root=document.documentElement;
@@ -1351,8 +1490,11 @@ document.getElementById('theme').onclick=()=>{
 };
 /* expose for inline handlers */
 Object.assign(window,{go,openAdd,addTo,addNew,quickCard,makeCards,newList,createList,renameList,delList,rmFromList,pickAll,listFromWords,closeSheet,reveal,ans,delDeck});
-if(isGram())route();   // grammar does not need the dictionary download to start
-load().catch(err=>{if(!isGram())V().innerHTML='<div class="empty"><span class="em">⚠️</span>Laden fehlgeschlagen: '+esc(String(err))+'</div>'});
+document.addEventListener('DOMContentLoaded',async()=>{
+  await CONFIG_READY;
+  if(window.KONTO)route();else V().innerHTML='<p>Deutschklinik could not load. <button class="btn" onclick="location.reload()">Retry</button></p>';
+  if('serviceWorker' in navigator && window.isSecureContext)navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).catch(()=>{});
+});
 </script>
 <!-- ===== Konten (Supabase) – add-on, changes no existing feature ===== -->
 <style>
@@ -1377,22 +1519,22 @@ load().catch(err=>{if(!isGram())V().innerHTML='<div class="empty"><span class="e
 <script>
 "use strict";
 (function(){
-const SB_URL='https://vnnhyhicppkexdibuqyu.supabase.co';
-const SB_KEY='sb_publishable_sNNNyEu6D9_Sjy0O0MaS5Q_VyReD7Tj'; // publishable key: safe to be public, data is protected by row level security
 const SITE=location.origin+location.pathname;
 const tr=(en,de)=>window.KONTO&&KONTO.lang&&KONTO.lang()==='en'?en:de;   // menus/account in English or German
 const SKEY='gd_session';
 let session=LS.get(SKEY,null);
-let timer=null, pushing=false, dirty=false, failed=false;
+let timer=null, pushing=null, dirty=false, failed=false, baseData=null, generation=0, conflicts=[];
 const cacheKey=()=>'gd_cache_'+session.user.id;
 const $=id=>document.getElementById(id);
 const isEmpty=o=>!o||!Object.keys(o).length;
 
 /* ---------- Supabase REST ---------- */
 async function api(path,{method='GET',body,token,headers={}}={}){
-  const h=Object.assign({apikey:SB_KEY,'Content-Type':'application/json'},headers);
+  await CONFIG_READY;
+  if(method!=='GET')assertWritable();
+  const h=Object.assign({apikey:APP_CONFIG.supabaseKey,'Content-Type':'application/json'},headers);
   if(token)h.Authorization='Bearer '+token;
-  const r=await fetch(SB_URL+path,{method,headers:h,body:body===undefined?undefined:JSON.stringify(body)});
+  const r=await fetch(APP_CONFIG.supabaseUrl+path,{method,headers:h,body:body===undefined?undefined:JSON.stringify(body)});
   const t=await r.text(); let j=null; try{j=t?JSON.parse(t):null}catch(e){}
   if(!r.ok){const e=new Error((j&&(j.msg||j.message||j.error_description||j.error))||('HTTP '+r.status));e.status=r.status;e.code=j&&(j.error_code||j.code);throw e}
   return j;
@@ -1404,11 +1546,17 @@ function keep(s,user){
     user:{id:u.id,email:u.email}};
   LS.set(SKEY,session);
 }
+let refreshing=null;
 async function token(){
   if(!session)throw new Error('Nicht angemeldet');
   if(session.expires_at-60>Date.now()/1000)return session.access_token;
-  try{const s=await api('/auth/v1/token?grant_type=refresh_token',{method:'POST',body:{refresh_token:session.refresh_token}});keep(s);return session.access_token}
-  catch(e){if(e.status>=400&&e.status<500)endSession('Sitzung abgelaufen – bitte neu anmelden');throw e}
+  const original=session;
+  if(refreshing?.session===original)return refreshing.promise;
+  const promise=api('/auth/v1/token?grant_type=refresh_token',{method:'POST',body:{refresh_token:original.refresh_token}})
+    .then(s=>{if(session!==original)throw new Error('Session changed');keep(s);return session.access_token})
+    .catch(e=>{if(session===original&&e.status>=400&&e.status<500&&e.status!==429)endSession('Sitzung abgelaufen – bitte neu anmelden');throw e})
+    .finally(()=>{if(refreshing?.session===original)refreshing=null});
+  refreshing={session:original,promise};return promise;
 }
 function de(e){
   const m=String(e&&e.message||e), c=String(e&&e.code||''), s=m+' '+c;
@@ -1426,39 +1574,63 @@ function de(e){
 }
 
 /* ---------- account data ---------- */
-let NOPREFS=false;
-function writeCache(){if(session)LS.set(cacheKey(),{lists,decks,prefs,dirty})}
-function rerender(){if(E.length&&!location.hash.startsWith('#/study'))route()}
+const studyData = row => ({lists:row?.lists||{}, decks:row?.decks||{}, prefs:row?.prefs||{}});
+const snapshot = () => structuredClone({lists,decks,prefs});
+function useData(data){lists=data.lists;decks=data.decks;prefs=data.prefs}
+function writeCache(){
+  if(!session)return false;
+  try{localStorage.setItem(cacheKey(),JSON.stringify({lists,decks,prefs,dirty,base:baseData}));return true}
+  catch{toast(tr('Device storage is full. Keep this page open until your work syncs.','Gerätespeicher voll. Bitte bis zum Abgleich auf dieser Seite bleiben.'));return false}
+}
+function rerender(){if(!location.hash.startsWith('#/study')&&window.KONTO)route()}
 async function pull(){
-  let rows;
-  try{ if(NOPREFS)throw 0; rows=await api('/rest/v1/user_data?select=lists,decks,prefs&user_id=eq.'+session.user.id,{token:await token()}) }
-  catch(err){ if(err&&err.status!==400&&err!==0)throw err; NOPREFS=true; rows=await api('/rest/v1/user_data?select=lists,decks&user_id=eq.'+session.user.id,{token:await token()}) }
-  return rows&&rows[0]||null;
+  const id=session.user.id, auth=await token();
+  const rows=await api('/rest/v1/user_data?select=revision,lists,decks,prefs&user_id=eq.'+id,{token:auth});
+  return rows[0]||null;
 }
-async function push(){
-  if(!session)return;
-  if(pushing){dirty=true;return}
-  clearTimeout(timer);timer=null;
-  pushing=true;dirty=false;
-  const who=session.user.id;
-  try{
-    await api('/rest/v1/user_data?on_conflict=user_id',{method:'POST',token:await token(),
-      headers:{Prefer:'resolution=merge-duplicates,return=minimal'},
-      body:Object.assign({user_id:who,lists,decks,updated_at:new Date().toISOString()},NOPREFS?{}:{prefs})}).catch(async err=>{ if(err&&err.status===400&&!NOPREFS){NOPREFS=true; return api('/rest/v1/user_data?on_conflict=user_id',{method:'POST',token:await token(),headers:{Prefer:'resolution=merge-duplicates,return=minimal'},body:{user_id:who,lists,decks,updated_at:new Date().toISOString()}})} throw err });
-    failed=false;
-  }catch(e){
-    dirty=true;
-    if(!failed)toast('Nicht gespeichert: '+de(e));
-    failed=true;
-  }finally{
-    pushing=false;
-    if(session&&session.user.id===who){
-      writeCache();
-      if(dirty&&!timer)timer=setTimeout(push,failed?15000:300);
-    }
+async function flush(choice,gen){
+  const id=session.user.id, sent=snapshot(), base=baseData||studyData();
+  // A competing writer may win between the read and conditional write.
+  for(let attempt=0;attempt<3;attempt++){
+    const row=await pull();
+    if(gen!==generation)return;
+    const merged=mergeStudyData(base,sent,studyData(row),choice);
+    if(merged.conflicts.length&&!choice){conflicts=merged.conflicts;toast(tr('Conflicting edits. Open your account to choose which to keep.','Änderungskonflikt. Bitte im Konto die gewünschten Änderungen wählen.'));return}
+    let saved;
+    try{
+      const where=row?'&user_id=eq.'+id+'&revision=eq.'+row.revision:'';
+      saved=await api('/rest/v1/user_data?select=revision'+where,{method:row?'PATCH':'POST',token:await token(),
+        headers:{Prefer:'return=representation'},body:row?merged.value:{user_id:id,...merged.value}});
+    }catch(e){if(e.code==='23505')continue;throw e}
+    if(gen!==generation)return;
+    if(!saved?.length)continue;
+    const current=snapshot();
+    baseData=structuredClone(merged.value);
+    useData(mergeStudyData(sent,current,merged.value,'local').value);
+    dirty=JSON.stringify(current)!==JSON.stringify(sent);
+    failed=false;conflicts=[];writeCache();return;
   }
+  throw new Error(tr('Another device is saving. We will retry.','Ein anderes Gerät speichert. Der Abgleich wird wiederholt.'));
 }
-function schedule(){dirty=true;writeCache();clearTimeout(timer);timer=setTimeout(push,600)}
+function push(choice){
+  if(!session||(!dirty&&!pushing))return Promise.resolve();
+  if(pushing)return pushing;
+  if(conflicts.length&&!choice)return Promise.resolve();
+  const gen=generation;
+  clearTimeout(timer);timer=null;
+  pushing=flush(choice,gen).catch(e=>{
+    if(gen!==generation)return;
+    if(!failed)toast(tr('Saved on this device. Sync failed: ','Auf diesem Gerät gespeichert. Abgleich fehlgeschlagen: ')+de(e));
+    failed=true;
+  }).finally(()=>{
+    if(gen!==generation)return;
+    pushing=null;writeCache();
+    if(dirty&&!conflicts.length)scheduleRetry(failed?15000:300);
+  });
+  return pushing;
+}
+function scheduleRetry(ms){clearTimeout(timer);timer=setTimeout(()=>push(),ms)}
+function schedule(){dirty=true;writeCache();scheduleRetry(600)}
 
 /* keep the original guest behaviour, save to the account when signed in */
 const guestLists=saveLists, guestDecks=saveDecks, guestPrefs=savePrefs;
@@ -1467,29 +1639,53 @@ saveLists=function(){session?schedule():guestLists()};
 saveDecks=function(){session?schedule():guestDecks()};
 
 async function afterLogin(fresh){
-  setBtn();
-  try{window.dispatchEvent(new CustomEvent('acct:in',{detail:{fresh}}))}catch(e){}
-  const c=LS.get(cacheKey(),null);
-  if(c){lists=c.lists||{};decks=c.decks||{};prefs=c.prefs||{};dirty=!!c.dirty}else{lists={};decks={};prefs={};dirty=false}
-  rerender();
+  const gen=++generation, c=LS.get(cacheKey(),null);
+  clearTimeout(timer);timer=null;pushing=null;conflicts=[];failed=false;
+  useData(studyData(c));baseData=c?.base||null;dirty=!!c?.dirty;
+  const initial=snapshot();
+  setBtn();rerender();
+  welcomeMail(session.access_token);
+  window.dispatchEvent(new CustomEvent('acct:in',{detail:{fresh}}));
   let row;
-  try{
-    if(dirty&&c){await push();return}
-    row=await pull();
-  }catch(e){toast(de(e));return}
-  let L=row?row.lists||{}:{}, D=row?row.decks||{}:{}, save=!row;
-  const gp=LS.get('gd_prefs',{});
-  let P=Object.assign({},row&&row.prefs||{}); P.img=Object.assign({},gp.img||{},P.img||{}); if(!row||!row.prefs&&gp.img)save=true;
-  const gl=LS.get('gd_lists',{}), gd=LS.get('gd_decks',{});
-  if(fresh&&(!isEmpty(gl)||!isEmpty(gd))&&confirm('Auf diesem Gerät gibt es Listen oder Karten ohne Konto. Sollen sie in dein Konto übernommen werden?')){
-    L=Object.assign({},L,gl);D=Object.assign({},D,gd);
-    LS.set('gd_lists',{});LS.set('gd_decks',{});save=true;
+  try{row=await pull()}
+  catch(e){
+    if(gen!==generation)return;
+    failed=true;toast(tr('Account sync unavailable: ','Kontoabgleich nicht verfügbar: ')+de(e));
+    // Permit read-only access to older schemas. Keep every edit in the private
+    // device cache until the versioned write protocol is installed.
+    if(!c && (e.status===400||e.code==='42703')){
+      try{const old=await api('/rest/v1/user_data?select=*&user_id=eq.'+session.user.id,{token:await token()});
+        if(gen===generation&&!dirty){baseData=studyData(old[0]);useData(structuredClone(baseData));writeCache();rerender()}}catch{}
+    }
+    if(dirty)scheduleRetry(15000);
+    return;
   }
-  lists=L;decks=D;prefs=P;dirty=false;writeCache();rerender();
-  if(save)await push();
+  if(gen!==generation)return;
+  const remote=studyData(row);
+  if(!dirty){
+    useData(structuredClone(remote));
+    // Recover old clients' per-account quizzes that were never uploaded.
+    for(const [k,v] of Object.entries(c?.prefs?.quizzes||{})){
+      if(!c.base&&!Object.hasOwn(prefs.quizzes||{},k)){prefs.quizzes={...prefs.quizzes,[k]:v};dirty=true}
+    }
+    const guestImages=LS.get('gd_prefs',{}).img;
+    if(guestImages&&!prefs.img){prefs.img=guestImages;dirty=true}
+    baseData=remote;
+  }else if(!baseData){
+    // Without an acknowledged baseline, retain both sides or ask on conflict.
+    baseData=c?.dirty?studyData():initial;
+  }
+  const gl=LS.get('gd_lists',{}),gd=LS.get('gd_decks',{});
+  if(fresh&&(!isEmpty(gl)||!isEmpty(gd))&&confirm(tr('Import the guest lists and cards on this device?','Listen und Karten ohne Konto auf diesem Gerät übernehmen?'))){
+    lists={...lists,...gl};decks={...decks,...gd};dirty=true;
+    if(writeCache()){LS.set('gd_lists',{});LS.set('gd_decks',{})}
+  }
+  writeCache();rerender();
+  if(dirty)await push();
 }
 function endSession(msg){
-  if(session)try{localStorage.removeItem(cacheKey())}catch(e){}
+  if(session){if(dirty)writeCache();else localStorage.removeItem(cacheKey())}
+  generation++;pushing=null;baseData=null;conflicts=[];
   session=null;clearTimeout(timer);timer=null;dirty=false;failed=false;
   try{localStorage.removeItem(SKEY)}catch(e){}
   lists=LS.get('gd_lists',{});decks=LS.get('gd_decks',{});prefs=LS.get('gd_prefs',{});
@@ -1498,7 +1694,8 @@ function endSession(msg){
   if(msg)toast(msg);
 }
 async function signOut(){
-  if(dirty||timer){await push();if(dirty&&!confirm('Einige Änderungen konnten noch nicht gespeichert werden. Trotzdem abmelden?'))return}
+  if(dirty||pushing){await push();if(!session)return;if(dirty&&(!writeCache()||!confirm(tr('Your changes are only on this device. Sign out and resume the save next time?', 'Die Änderungen sind nur auf diesem Gerät. Abmelden und beim nächsten Anmelden synchronisieren?'))))return}
+  if(!session)return;
   const t=session.access_token;
   api('/auth/v1/logout',{method:'POST',token:t}).catch(()=>{});
   endSession('Abgemeldet');
@@ -1514,7 +1711,7 @@ function setBtn(){
 }
 let lastEmail='';
 // welcome e-mail for brand-new accounts (sent by our Cloudflare worker; it checks the account is new)
-function welcomeMail(tok){fetch('https://woerterbuch-bilder.edwin1kitaka.workers.dev/welcome',{method:'POST',headers:{Authorization:'Bearer '+tok}}).catch(()=>{})}
+function welcomeMail(tok){if(APP_CONFIG.readOnly)return;fetch(APP_CONFIG.workerUrl+'/welcome',{method:'POST',headers:{Authorization:'Bearer '+tok}}).catch(()=>{})}
 function msg(t,ok){const m=$('ac_msg');if(m){m.textContent=t||'';m.classList.toggle('ok',!!ok)}}
 function sheet(mode){
   const em=$('ac_em');if(em&&em.value)lastEmail=em.value;
@@ -1522,11 +1719,12 @@ function sheet(mode){
     const n=Object.keys(lists).length, k=Object.keys(decks).length;
     openSheet(`<h3>${tr('Your account','Dein Konto')}</h3>
       <div class="acct-who"><div class="av">${esc((session.user.email||'?')[0].toUpperCase())}</div>
-      <div><div class="em">${esc(session.user.email||'')}</div><div class="muted" style="font-size:.82rem">${n} ${tr(n===1?'list':'lists',n===1?'Liste':'Listen')} · ${k} ${tr(k===1?'deck':'decks','Stapel')} · ${dirty?tr('saving …','wird gespeichert …'):tr('saved ✓','gespeichert ✓')}</div></div></div>
+      <div><div class="em">${esc(session.user.email||'')}</div><div class="muted" style="font-size:.82rem">${n} ${tr(n===1?'list':'lists',n===1?'Liste':'Listen')} · ${k} ${tr(k===1?'deck':'decks','Stapel')} · ${failed||conflicts.length?tr('on this device · sync pending','auf diesem Gerät · Abgleich ausstehend'):dirty?tr('saving …','wird gespeichert …'):tr('saved ✓','gespeichert ✓')}</div></div></div>
+      ${conflicts.length ? `<p>${tr('Both devices changed the same items. Choose which conflicting edits to keep.', 'Beide Geräte haben dieselben Einträge geändert. Welche Änderungen möchtest du behalten?')}<br>${esc(conflicts.slice(0,5).join(', '))}</p><button class="btn" onclick="ACCT.resolveSave('local')">${tr('Keep this device’s edits','Änderungen dieses Geräts behalten')}</button> <button class="btn" onclick="ACCT.resolveSave('server')">${tr('Keep saved edits','Gespeicherte Änderungen behalten')}</button>` : ''}
       <div id="acct_prof"></div>
       <p>${tr('Your lists and cards belong only to this account and load on every device where you sign in.','Deine Listen und Karten gehören nur zu diesem Konto und werden auf jedem Gerät geladen, auf dem du dich anmeldest.')}</p>
       <div class="row"><button class="acct-link" onclick="ACCT.sheet('newpw')">${tr('Change password','Passwort ändern')}</button><span class="spacer"></span>
-      <button class="btn" onclick="closeSheet()">${tr('Close','Schließen')}</button><button class="btn primary" onclick="ACCT.signOut()">${tr('Sign out','Abmelden')}</button></div>`);
+      <button class="btn" onclick="ACCT.exportData()">${tr('Download my data','Meine Daten herunterladen')}</button><button class="btn" onclick="closeSheet()">${tr('Close','Schließen')}</button><button class="btn primary" onclick="ACCT.signOut()">${tr('Sign out','Abmelden')}</button></div>`);
     if(window.KONTO)KONTO.fillMe();
     return;
   }
@@ -1536,8 +1734,8 @@ function sheet(mode){
     up:tr('Free. Your course, lists and cards are saved in your account. Nobody else can see them.','Kostenlos. Dein Kurs, deine Listen und Karten werden in deinem Konto gespeichert. Niemand sonst kann sie sehen.'),
     reset:tr('Enter your e-mail address. We send you a link to set a new password.','Gib deine E-Mail-Adresse ein. Wir schicken dir einen Link, mit dem du ein neues Passwort festlegst.'),
     newpw:tr('Choose a new password for your account.','Lege ein neues Passwort für dein Konto fest.')}[mode];
-  const emailIn=mode==='newpw'?'':`<input class="input" id="ac_em" type="email" autocomplete="email" placeholder="${tr('E-mail','E-Mail')}" required value="${esc(lastEmail).replace(/"/g,'&quot;')}">`;
-  const pwIn=mode==='reset'?'':`<input class="input" id="ac_pw" type="password" minlength="6" required autocomplete="${mode==='in'?'current-password':'new-password'}" placeholder="${mode==='in'?tr('Password','Passwort'):tr('Password (at least 6 characters)','Passwort (mind. 6 Zeichen)')}">`;
+  const emailIn=mode==='newpw'?'':`<label for="ac_em">${tr('E-mail','E-Mail')}</label><input class="input" id="ac_em" type="email" autocomplete="email" placeholder="${tr('E-mail','E-Mail')}" required value="${esc(lastEmail)}">`;
+  const pwIn=mode==='reset'?'':`<label for="ac_pw">${tr('Password','Passwort')}</label><input class="input" id="ac_pw" type="password" minlength="6" required autocomplete="${mode==='in'?'current-password':'new-password'}" placeholder="${mode==='in'?tr('Password','Passwort'):tr('Password (at least 6 characters)','Passwort (mind. 6 Zeichen)')}">`;
   openSheet(`<h3>${T[0]}</h3><p>${intro}</p>${tabs}
     <form class="acct-f" onsubmit="event.preventDefault();ACCT.submit('${mode}')">${emailIn}${pwIn}
     <div class="acct-msg" id="ac_msg"></div>
@@ -1604,19 +1802,62 @@ document.addEventListener('visibilitychange',async()=>{
   if(!session)return;
   if(document.visibilityState==='hidden'){if(dirty||timer)push();return}
   if(dirty||pushing||timer)return;
-  try{const row=await pull();if(!row||!session||dirty||timer)return;
-    if(JSON.stringify([row.lists,row.decks,row.prefs||prefs])!==JSON.stringify([lists,decks,prefs])){lists=row.lists||{};decks=row.decks||{};if(row.prefs)prefs=row.prefs;writeCache();rerender()}
+  const gen=generation;
+  try{const row=await pull();if(gen!==generation||dirty||pushing||timer)return;
+    baseData=studyData(row);useData(structuredClone(baseData));failed=false;writeCache();rerender();
   }catch(e){}
 });
 window.addEventListener('beforeunload',e=>{if(session&&(dirty||timer)){push();e.preventDefault();e.returnValue=''}});
 
-// upload a file to Supabase storage (school logos); returns its public address
-async function upload(bucket,path,blob){
-  const r=await fetch(SB_URL+'/storage/v1/object/'+bucket+'/'+path,{method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+await token(),'Content-Type':blob.type,'x-upsert':'true'},body:blob});
-  if(!r.ok){let m='HTTP '+r.status;try{const j=await r.json();m=j.message||j.error||m}catch(e){}throw new Error(m)}
-  return SB_URL+'/storage/v1/object/public/'+bucket+'/'+path;
+// Stable keys avoid skipping results when new attempts arrive during paging.
+async function resultRows(filter=''){
+  const id=session?.user.id,rows=[];
+  let after=0;
+  for(;;){
+    const page=await api('/rest/v1/grammar_results?select=*&order=id.asc&limit=1000&id=gt.'+after+filter,{token:await token()});
+    if(session?.user.id!==id)throw new Error('Session changed');
+    if(!page.length)return rows;
+    const next=page[page.length-1].id;
+    if(!Number.isSafeInteger(next)||next<=after)throw new Error('Invalid result cursor');
+    after=next;rows.push(...page);
+  }
 }
-Object.assign(window.ACCT,{sheet,submit,signOut,upload});
+async function practiceSummary(users){
+  const id=session?.user.id,rows=[];
+  let cursor={};
+  for(;;){
+    const page=await api('/rest/v1/rpc/practice_summary',{method:'POST',token:await token(),body:{p_users:users,...cursor}});
+    if(session?.user.id!==id)throw new Error('Session changed');
+    if(!page.length)return rows;
+    rows.push(...page.map(r=>({...r,score:Number(r.best_score),total:1,created_at:r.last_at})));
+    const last=page[page.length-1];
+    const next={p_after_user:last.user_id,p_after_chapter:last.chapter,p_after_exercise:last.exercise};
+    if(JSON.stringify(next)===JSON.stringify(cursor))throw new Error('Invalid summary cursor');
+    cursor=next;
+  }
+}
+async function exportData(){
+  const id=session?.user.id;if(!id)return;
+  try{
+    const [profile,attempts]=await Promise.all([
+      api('/rest/v1/profiles?select=*&user_id=eq.'+id,{token:await token()}),
+      resultRows('&user_id=eq.'+id)
+    ]);
+    if(session?.user.id!==id)return;
+    const data={exported_at:new Date().toISOString(),profile:profile[0],...snapshot(),practice:attempts,
+      pending_practice:LS.get('gd_gram',{att:[]}).att.filter(a=>a.uid===id&&!a.sent)};
+    const link=document.createElement('a'),url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));
+    link.href=url;link.download='deutschklinik-data.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+  }catch(e){toast(de(e))}
+}
+// Upload a logo to the current account's public Storage folder.
+async function upload(bucket,path,blob){
+  await CONFIG_READY;assertWritable();
+  const r=await fetch(APP_CONFIG.supabaseUrl+'/storage/v1/object/'+bucket+'/'+path,{method:'POST',headers:{apikey:APP_CONFIG.supabaseKey,Authorization:'Bearer '+await token(),'Content-Type':blob.type,'x-upsert':'true'},body:blob});
+  if(!r.ok){let m='HTTP '+r.status;try{const j=await r.json();m=j.message||j.error||m}catch(e){}throw new Error(m)}
+  return APP_CONFIG.supabaseUrl+'/storage/v1/object/public/'+bucket+'/'+path;
+}
+Object.assign(window.ACCT,{sheet,submit,signOut,upload,resultRows,practiceSummary,exportData,resolveSave:async choice=>{await push(choice);if(session)sheet('me')}});
 })();
 </script>
 <!-- ===== sign-up invitation (signed-out visitors only) ===== -->
@@ -1667,16 +1908,10 @@ window.addEventListener('hashchange',()=>{ if(location.hash.startsWith('#/w/')&&
 setInterval(()=>{ if(document.visibilityState==='visible'&&Date.now()-lastAct<20000){active+=5; if(active>=60)show('use')} },5000);
 })();
 </script>
-</body>
-</html>
-
 <!-- ===== Spiele ===== -->
 <style>
 /* ===== Spiele ===== */
-@media(min-width:1181px){nav.tabs a{padding:.45rem .5rem;gap:.3rem}}
-@media(min-width:641px) and (max-width:1180px){nav.tabs a .lic{display:none} nav.tabs a{padding:.45rem .55rem}}
-@media(min-width:641px) and (max-width:880px){nav.tabs a .lic{display:inline-flex} nav.tabs a span{display:none} nav.tabs a{padding:.5rem .6rem}}
-@media(max-width:640px){nav.tabs{grid-template-columns:repeat(7,minmax(0,1fr));padding-left:.2rem;padding-right:.2rem;gap:.05rem} nav.tabs a{font-size:.6rem;letter-spacing:-.02em;min-width:0} nav.tabs a span{max-width:100%;overflow:hidden;text-overflow:ellipsis} body.ingame nav.tabs{display:none} body.ingame main{padding-bottom:1rem}}
+@media(max-width:640px){body.ingame nav.tabs{display:none}body.ingame main{padding-bottom:1rem}}
 .ghub h1{margin-bottom:.2rem}
 .ghero{border-radius:1.4rem;padding:1.4rem 1.4rem 1.2rem;margin:.4rem 0 1.1rem;color:#fff;position:relative;overflow:hidden;
   background:radial-gradient(120% 140% at 0% 0%,#5b4bdb 0%,#3a2f9e 40%,#1d6f8a 100%)}
@@ -1909,14 +2144,15 @@ setInterval(()=>{ if(document.visibilityState==='visible'&&Date.now()-lastAct<20
 "use strict";
 /* ===== SPIELE: quiz games alone or live with a group (Supabase Realtime), memory, Artikel-Blitz, own quizzes ===== */
 (function(){
-const SB_URL='https://vnnhyhicppkexdibuqyu.supabase.co', SB_KEY='sb_publishable_sNNNyEu6D9_Sjy0O0MaS5Q_VyReD7Tj';
+const gt = german => ui(GAME_EN[german] ?? german, german);
+let gameUiLanguage = null;
 const $=id=>document.getElementById(id);
 const rnd=n=>Math.floor(Math.random()*n);
 const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=rnd(i+1);[a[i],a[j]]=[a[j],a[i]]}return a};
 const sample=(a,n)=>shuffle(a).slice(0,n);
 const H=s=>esc(String(s==null?'':s));
 const A=s=>H(s).replace(/"/g,'&quot;');
-const fmt=n=>Math.round(n).toLocaleString('de-DE');
+const fmt=n=>Math.round(n).toLocaleString(window.KONTO?.lang() === 'de' ? 'de-DE' : 'en-GB');
 const LET='A-Za-zÄÖÜäöüß';
 const reEsc=s=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
 const wordRe=(s,tail)=>new RegExp(`(?<![${LET}])${reEsc(s)}${tail?`[${LET}]*`:''}(?![${LET}])`,'gi');
@@ -1984,22 +2220,22 @@ function choice(t,p,right,wrong,extra){const o=shuffle([right,...wrong]);return 
 const GEN={
   mc(e,pool){ const w=plainW(e.w), g=qGloss(e);
     if(Math.random()<.5){const d=distract(e,3,x=>short(qGloss(x)),pool);return d&&choice('mc',`Was bedeutet „${w}"?`,short(g),d,{sub:POSL[e.ps]||''})}
-    const d=distract(e,3,x=>plainW(x.w),pool);return d&&choice('mc',g,w,d,{sub:'Welches Wort passt?'}) },
+    const d=distract(e,3,x=>plainW(x.w),pool);return d&&choice('mc',g,w,d,{sub:gt("Welches Wort passt?")}) },
   gap(e,pool){ const w=plainW(e.w);
     const ex=examples(e,5).filter(s=>s.length<=120&&!/[|\/…]/.test(s)&&(s.match(wordRe(w))||[]).length===1); if(!ex.length)return null;
     const s=ex[rnd(ex.length)].replace(wordRe(w),'_____'); const d=distract(e,3,x=>plainW(x.w),pool);
-    return d&&choice('gap',s,w,d,{sub:'Welches Wort fehlt?'}) },
+    return d&&choice('gap',s,w,d,{sub:gt("Welches Wort fehlt?")}) },
   tf(e,pool){ const w=plainW(e.w), truth=Math.random()<.5; let g=qGloss(e);
     if(!truth){const d=distract(e,1,qGloss,pool);if(!d)return null;g=d[0]}
-    return {t:'tf',p:`„${w}" bedeutet: ${g}`,o:['Wahr','Falsch'],c:truth?0:1,sub:'Stimmt das?'} },
+    return {t:'tf',p:`„${w}" bedeutet: ${g}`,o:[gt("Wahr"),gt("Falsch")],c:truth?0:1,sub:gt("Stimmt das?")} },
   art(e){ if(e.ps!=='n'||!['der','die','das'].includes(e.ar))return null;
-    return {t:'art',p:plainW(e.w),sub:'Welcher Artikel?',o:['der','die','das'],c:['der','die','das'].indexOf(e.ar)} },
+    return {t:'art',p:plainW(e.w),sub:gt("Welcher Artikel?"),o:['der','die','das'],c:['der','die','das'].indexOf(e.ar)} },
   type(e){ const w=plainW(e.w); if(w.length>14)return null;
-    return {t:'type',p:qGloss(e),sub:`${POSL[e.ps]||'Wort'} · ${w.length} Buchstaben · beginnt mit „${w[0]}"`,ans:[w]} },
+    return {t:'type',p:qGloss(e),sub:`${POSL[e.ps]||gt("Wort")} · ${w.length} Buchstaben · beginnt mit „${w[0]}"`,ans:[w]} },
   order(e){ const ex=examples(e,5).map(s=>s.replace(/\s+/g,' ').trim()).filter(s=>!/[|\/…„“"()]/.test(s));
     for(const s of shuffle(ex)){ const toks=s.split(' '); if(toks.length<4||toks.length>9)continue;
       let sh=toks; for(let k=0;k<10&&sh.join(' ')===s;k++)sh=shuffle(toks); if(sh.join(' ')===s)continue;
-      return {t:'order',p:'Bring die Wörter in die richtige Reihenfolge.',sub:`Satz mit „${plainW(e.w)}"`,o:sh,sol:toks} }
+      return {t:'order',p:gt("Bring die Wörter in die richtige Reihenfolge."),sub:`Satz mit „${plainW(e.w)}"`,o:sh,sol:toks} }
     return null }
 };
 // lead picture of the German Wikipedia article with exactly this title (follows redirects, skips ambiguous words)
@@ -2027,7 +2263,7 @@ async function buildQs(s){
     const res=await Promise.all(cands.map(i=>withTimeout(wikiExact(plainW(E[i].w)),5000,[]).then(l=>({i,l}))));
     for(const {i,l} of res){ if(imgQs.length>=want)break; if(!l||!l.length)continue;
       const e=E[i], d=distract(e,3,x=>plainW(x.w),pool); if(!d)continue;
-      imgQs.push(choice('img','Was ist auf dem Bild?',plainW(e.w),d,{img:l[0].src,wi:i})); used.add(i) }
+      imgQs.push(choice('img',gt("Was ist auf dem Bild?"),plainW(e.w),d,{img:l[0].src,wi:i})); used.add(i) }
   }
   const gens=types.length?types:['mc'];
   let guard=0;
@@ -2139,10 +2375,10 @@ const TEAMS=[['Mond','moon'],['Sonne','sun'],['Wolke','cloud'],['Stern','star']]
 function stage(title,opts={}){
   document.body.classList.add('ingame');
   V().innerHTML=`<div class="gm" id="gm"><div class="gmbar">
-      <button class="gmb" title="Spiel verlassen" onclick="PLAY.quit()">${ic('x')}</button>
+      <button class="gmb" title="${gt("Spiel verlassen")}" onclick="PLAY.quit()">${ic('x')}</button>
       <span class="gmt">${H(title)}</span><span class="sp"></span><span id="gmscore"></span>
-      <button class="gmb" id="gmsnd" title="Ton an/aus" onclick="PLAY.snd()">${ic(AU.on?'volume-2':'volume-x')}</button>
-      ${opts.fs?`<button class="gmb" title="Vollbild" onclick="PLAY.fs()">${ic('maximize')}</button>`:''}
+      <button class="gmb" id="gmsnd" title="${gt("Ton an/aus")}" onclick="PLAY.snd()">${ic(AU.on?'volume-2':'volume-x')}</button>
+      ${opts.fs?`<button class="gmb" title="${gt("Vollbild")}" onclick="PLAY.fs()">${ic('maximize')}</button>`:''}
     </div><div class="gmin" id="gmin"></div></div>`;
   drawIcons();
 }
@@ -2162,12 +2398,12 @@ function confetti(){
 }
 function tile(i,text,q,extra=''){
   let cls='o'+(i%4+1);
-  if(q.t==='art')cls=text; if(q.t==='tf')cls=i===0?'tfw':'tff';
+  if(q.t==='art'&&['der','die','das'].includes(text))cls=text; if(q.t==='tf')cls=i===0?'tfw':'tff';
   return `<button class="gt ${cls}" data-i="${i}" ${extra}><span class="gti">${ic(OIC[i%4])}</span><span class="gtt">${H(text)}</span></button>`;
 }
 function qHead(q,n,total){
-  const [lab,icn]=TYPES[q.t]||['Frage','help-circle'];
-  return `<div class="gqtop"><span>${n+1} / ${total}</span><span class="gqty">${ic(icn)} ${lab}</span>${q.dbl?'<span class="dbl">✕2 Punkte</span>':''}</div>`;
+  const [lab,icn]=TYPES[q.t]||[gt("Frage"),'help-circle'];
+  return `<div class="gqtop"><span>${n+1} / ${total}</span><span class="gqty">${ic(icn)} ${gt(lab)}</span>${q.dbl?`<span class="dbl">✕2 ${gt('Punkte')}</span>`:''}</div>`;
 }
 function qCard(q){
   return `<div class="gq">${q.img?`<img class="gqimg" src="${A(q.img)}" alt="" referrerpolicy="no-referrer">`:''}
@@ -2177,8 +2413,8 @@ const isChoice=q=>['mc','gap','tf','art','img','poll'].includes(q.t);
 // the answer area a player touches (solo and on the phone)
 function qInput(q){
   if(isChoice(q))return `<div class="gts n${q.o.length} ${q.t} ${q.o.some(o=>String(o).length>32)?'long':''}">${q.o.map((o,i)=>tile(i,o,q)).join('')}</div>`;
-  if(q.t==='type')return `<form class="gtype" id="gtype"><input id="gtypei" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Antwort eingeben …" enterkeyhint="done"><button class="gbtn">OK</button></form>`;
-  if(q.t==='order')return `<div class="gord"><div class="gordans" id="gordans"></div><div class="gchips" id="gordpool">${q.o.map((t,i)=>`<button class="gchip" data-i="${i}">${H(t)}</button>`).join('')}</div><button class="gbtn" id="gorddone" disabled>Fertig</button></div>`;
+  if(q.t==='type')return `<form class="gtype" id="gtype"><input id="gtypei" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="${gt("Antwort eingeben …")}" enterkeyhint="done"><button class="gbtn">OK</button></form>`;
+  if(q.t==='order')return `<div class="gord"><div class="gordans" id="gordans"></div><div class="gchips" id="gordpool">${q.o.map((t,i)=>`<button class="gchip" data-i="${i}">${H(t)}</button>`).join('')}</div><button class="gbtn" id="gorddone" disabled>${gt("Fertig")}</button></div>`;
   if(q.t==='slider'){const mid=Math.round(((q.min+q.max)/2)/(q.step||1))*(q.step||1);
     return `<div class="gsl"><output id="gslv">${mid}${q.unit?' '+H(q.unit):''}</output><input type="range" id="gsl" min="${q.min}" max="${q.max}" step="${q.step||1}" value="${mid}"><button class="gbtn" id="gsldone">OK</button></div>`}
   return '';
@@ -2211,8 +2447,8 @@ function markTiles(q,v){
     if(q.t!=='poll'&&i===q.c){b.classList.add('right');b.classList.remove('dim')} else if(!b.classList.contains('picked'))b.classList.add('dim')});
 }
 function readyScreen(q,n,total,hist,ms,cb){
-  const [lab,icn]=TYPES[q.t]||['Frage','help-circle'];
-  gin(center(`<div class="gready"><div class="gnum">${n+1}</div></div><div class="gtyp">${ic(icn)} ${lab}${q.dbl?' · doppelte Punkte!':''}</div>
+  const [lab,icn]=TYPES[q.t]||[gt("Frage"),'help-circle'];
+  gin(center(`<div class="gready"><div class="gnum">${n+1}</div></div><div class="gtyp">${ic(icn)} ${gt(lab)}${q.dbl?gt(" · doppelte Punkte!"):''}</div>
     <div class="gdots">${Array.from({length:total},(_,k)=>`<i class="${k<n?(hist[k]&&hist[k].ok?'ok':(hist[k]&&hist[k].ok===null?'':'bad')):k===n?'cur':''}"></i>`).join('')}</div>`));
   later(cb,ms);
 }
@@ -2220,15 +2456,15 @@ function readyScreen(q,n,total,hist,ms,cb){
 /* ---------- SOLO ---------- */
 const setupKey=s=>[s.src,s.id||'',s.lvl||'',s.n,(s.types||[]).slice().sort().join('+'),s.speed||1].join('|');
 async function soloStart(s){
-  stage('Allein spielen'); gin(spinner(s.types&&s.types.includes('img')?'Fragen und Bilder werden vorbereitet …':'Fragen werden vorbereitet …'));
+  stage(gt("Allein spielen")); gin(spinner(s.types&&s.types.includes('img')?gt("Fragen und Bilder werden vorbereitet …"):gt("Fragen werden vorbereitet …")));
   const qs=await buildQs(s);
   if(!G||G.mode!=='solo-wait')return;      // left in the meantime
-  if(!qs.length){gin(center(`<h2>Keine Fragen</h2><p>Mit dieser Auswahl lassen sich keine Fragen bilden. Nimm mehr Wörter oder andere Fragetypen.</p><a class="gbtn" href="#/play/solo">Zurück</a>`));return}
+  if(!qs.length){gin(center(`<h2>${gt("Keine Fragen")}</h2><p>${gt("Mit dieser Auswahl lassen sich keine Fragen bilden. Nimm mehr Wörter oder andere Fragetypen.")}</p><a class="gbtn" href="#/play/solo">${gt("Zurück")}</a>`));return}
   const best=LS.get('gd_gbest',{})[setupKey(s)]||null;
   G={mode:'solo',kind:'solo',s,qs,n:0,score:0,streak:0,ok:0,hist:[],best,cum:[]};
   soloNext();
 }
-function soloScore(){setScore(`<span class="gscore">${fmt(G.score)}${G.best?`<small>Rekord ${fmt(G.best.score)}</small>`:''}</span>`)}
+function soloScore(){setScore(`<span class="gscore">${fmt(G.score)}${G.best?`<small>${gt("Rekord")} ${fmt(G.best.score)}</small>`:''}</span>`)}
 function soloNext(){
   if(G.n>=G.qs.length)return soloEnd();
   soloScore(); const q=G.qs[G.n];
@@ -2241,14 +2477,14 @@ function soloAnswer(q,v,t){
   if(r.ok){G.streak++; r.pts+=streakBonus(G.streak); G.ok++; AU.sfx('ok')} else if(r.ok===false){G.streak=0; AU.sfx('bad')} else AU.sfx('send');
   G.score+=r.pts; G.hist.push({ok:r.ok,v}); G.cum.push(G.score); soloScore(); markTiles(q,v);
   const e=q.wi!=null?E[q.wi]:null, right=rightText(q);
-  let ghost=''; if(G.best&&G.best.cum&&G.best.cum[G.n]!=null){const d=G.score-G.best.cum[G.n]; ghost=`<div class="gghost">${d>=0?'▲':'▼'} ${fmt(Math.abs(d))} ${d>=0?'vor':'hinter'} deinem Rekord</div>`}
+  let ghost=''; if(G.best&&G.best.cum&&G.best.cum[G.n]!=null){const d=G.score-G.best.cum[G.n]; ghost=`<div class="gghost">${d>=0?'▲':'▼'} ${fmt(Math.abs(d))} ${d>=0?gt("vor"):gt("hinter")} ${gt("deinem Rekord")}</div>`}
   const last=G.n+1>=G.qs.length;
   $('gafter').innerHTML=`<div class="gres ${r.ok?'ok':r.ok===null?'poll':'bad'}">
-    <h3>${r.ok?'Richtig!':r.ok===null?'Danke für deine Stimme':v==null?'Zeit abgelaufen':'Leider falsch'}</h3>
-    ${r.ok?`<div class="pts">+${fmt(r.pts)}</div>`:''}${G.streak>=2?`<div class="gstreak">🔥 ${G.streak} richtig in Folge</div>`:''}
-    ${!r.ok&&right?`<div class="ans">Richtig ist: <b>${H(right)}</b></div>`:''}
+    <h3>${r.ok?gt("Richtig!"):r.ok===null?gt("Danke für deine Stimme"):v==null?gt("Zeit abgelaufen"):gt("Leider falsch")}</h3>
+    ${r.ok?`<div class="pts">+${fmt(r.pts)}</div>`:''}${G.streak>=2?`<div class="gstreak">🔥 ${G.streak} ${gt("richtig in Folge")}</div>`:''}
+    ${!r.ok&&right?`<div class="ans">${gt("Richtig ist:")} <b>${H(right)}</b></div>`:''}
     ${e?`<div class="ans"><a href="#/w/${encodeURIComponent(e.w)}" target="_blank" rel="noopener">„${H(plainW(e.w))}" im Wörterbuch ansehen ↗</a></div>`:''}${ghost}
-    <div class="row"><button class="gbtn" id="gnext">${last?'Ergebnis':'Weiter'} ${ic('arrow-right')}</button></div></div>`;
+    <div class="row"><button class="gbtn" id="gnext">${last?gt("Ergebnis"):gt("Weiter")} ${ic('arrow-right')}</button></div></div>`;
   drawIcons();
   G.n++;
   const nx=$('gnext'); nx.onclick=()=>{clearTimers();soloNext()}; nx.focus({preventScroll:true});
@@ -2260,19 +2496,21 @@ function soloEnd(){
   if(rec){all[key]={score:G.score,cum:G.cum,at:Date.now()}; LS.set('gd_gbest',all)}
   const miss=G.qs.map((q,k)=>({q,h:G.hist[k]})).filter(x=>x.h&&x.h.ok===false&&x.q.wi!=null);
   AU.sfx('fanfare'); if(rec||G.ok===G.qs.length)confetti();
-  gin(center(`<div class="gend"><h2>${rec&&prev?'Neuer Rekord!':G.ok===G.qs.length?'Perfekt!':'Geschafft!'}</h2><div class="gbig">${fmt(G.score)}<small>Punkte</small></div></div>
-    <div class="gstats"><div><b>${G.ok} / ${G.qs.filter(q=>q.t!=='poll').length}</b><span>richtig</span></div><div><b>${prev?fmt(Math.max(prev.score,G.score)):fmt(G.score)}</b><span>Rekord</span></div></div>
-    ${miss.length?`<div class="gmiss"><h4>Diese Wörter üben</h4>${miss.map(x=>`<a href="#/w/${encodeURIComponent(E[x.q.wi].w)}"><b>${H(plainW(E[x.q.wi].w))}</b> – ${H(qGloss(E[x.q.wi])||'')}</a>`).join('')}</div>
-      <button class="gbtn ghost" onclick="PLAY.saveMiss()">${ic('list-plus')} In Liste „Aus Spielen" speichern</button>`:''}
-    <div class="row" style="justify-content:center;gap:.5rem"><button class="gbtn" onclick="PLAY.again()">${ic('rotate-ccw')} Nochmal</button><a class="gbtn ghost" href="#/play">Andere Spiele</a></div>`));
+  gin(center(`<div class="gend"><h2>${rec&&prev?gt("Neuer Rekord!"):G.ok===G.qs.length?gt("Perfekt!"):gt("Geschafft!")}</h2><div class="gbig">${fmt(G.score)}<small>${gt("Punkte")}</small></div></div>
+    <div class="gstats"><div><b>${G.ok} / ${G.qs.filter(q=>q.t!=='poll').length}</b><span>${gt("richtig")}</span></div><div><b>${prev?fmt(Math.max(prev.score,G.score)):fmt(G.score)}</b><span>${gt("Rekord")}</span></div></div>
+    ${miss.length?`<div class="gmiss"><h4>${gt("Diese Wörter üben")}</h4>${miss.map(x=>`<a href="#/w/${encodeURIComponent(E[x.q.wi].w)}"><b>${H(plainW(E[x.q.wi].w))}</b> – ${H(qGloss(E[x.q.wi])||'')}</a>`).join('')}</div>
+      <button class="gbtn ghost" onclick="PLAY.saveMiss()">${ic('list-plus')} ${gt("In Liste „Aus Spielen\" speichern")}</button>`:''}
+    <div class="row" style="justify-content:center;gap:.5rem"><button class="gbtn" onclick="PLAY.again()">${ic('rotate-ccw')} ${gt("Nochmal")}</button><a class="gbtn ghost" href="#/play">${gt("Andere Spiele")}</a></div>`));
   G.miss=miss.map(x=>E[x.q.wi].w); G.mode='solo-end';
 }
 function saveMiss(){
+  if(!requireFeature('lists'))return;
+
   if(!G||!G.miss||!G.miss.length)return;
   let id=Object.keys(lists).find(k=>lists[k].name==='Aus Spielen');
   if(!id){id=uid();lists[id]={name:'Aus Spielen',words:[],created:now()}}
   const l=lists[id]; let n=0; G.miss.forEach(w=>{if(!l.words.includes(w)){l.words.push(w);n++}}); saveLists();
-  toast(n?`${n} ${n===1?'Wort':'Wörter'} in „Aus Spielen" gespeichert`:'Schon alle in der Liste');
+  toast(n?`${n} ${n===1?gt("Wort"):gt("Wörter")} in „Aus Spielen" gespeichert`:gt("Schon alle in der Liste"));
 }
 
 /* ---------- LIVE: connection (Supabase Realtime broadcast, no database needed) ---------- */
@@ -2283,10 +2521,11 @@ function loadSB(){ if(window.supabase&&window.supabase.createClient)return Promi
   return SBP }
 let CLIENT=null;
 async function openCh(pin,handlers){
+  await CONFIG_READY;assertWritable();
   await loadSB();
-  CLIENT=CLIENT||window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
+  CLIENT=CLIENT||window.supabase.createClient(APP_CONFIG.supabaseUrl,APP_CONFIG.supabaseKey,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
   const ch=CLIENT.channel('wbq-'+pin,{config:{broadcast:{self:false,ack:false}}});
-  for(const ev in handlers)ch.on('broadcast',{event:ev},m=>{try{handlers[ev](m.payload||{})}catch(e){console.error(e)}});
+  for(const ev in handlers)ch.on('broadcast',{event:ev},m=>{if(validGameMessage(ev,m.payload))handlers[ev](m.payload)});
   await new Promise((ok,no)=>{const t=setTimeout(()=>no(new Error('timeout')),12000);
     ch.subscribe(st=>{if(st==='SUBSCRIBED'){clearTimeout(t);ok()}else if(st==='CHANNEL_ERROR'||st==='TIMED_OUT'){clearTimeout(t);no(new Error(st))}})});
   return ch;
@@ -2297,14 +2536,14 @@ const joinURL=pin=>location.origin+location.pathname+'#/play/join/'+pin;
 
 /* ---------- LIVE: host (big screen) ---------- */
 async function hostStart(s){
-  stage('Live-Quiz',{fs:true}); gin(spinner('Spiel wird vorbereitet …'));
+  stage('Live-Quiz',{fs:true}); gin(spinner(gt("Spiel wird vorbereitet …")));
   const qs=await buildQs(s);
   if(!G||G.mode!=='host-wait')return;
-  if(!qs.length){gin(center(`<h2>Keine Fragen</h2><p>Mit dieser Auswahl lassen sich keine Fragen bilden.</p><a class="gbtn" href="#/play/host">Zurück</a>`));return}
+  if(!qs.length){gin(center(`<h2>${gt("Keine Fragen")}</h2><p>${gt("Mit dieser Auswahl lassen sich keine Fragen bilden.")}</p><a class="gbtn" href="#/play/host">${gt("Zurück")}</a>`));return}
   const pin=String(100000+rnd(900000));
   G={mode:'host',kind:'host',s,qs,pin,n:-1,phase:'lobby',players:new Map(),kicked:new Set(),teams:+s.teams||0,ans:new Map(),title:s.title||'Live-Quiz'};
   try{ G.ch=await openCh(pin,{join:hJoin,ans:hAns,leave:hLeave}) }
-  catch(e){ gin(center(`<h2>Keine Verbindung</h2><p>Der Spielserver ist gerade nicht erreichbar. Prüfe die Internetverbindung und versuche es noch einmal.</p><a class="gbtn" href="#/play/host">Zurück</a>`)); return }
+  catch(e){ gin(center(`<h2>${gt("Keine Verbindung")}</h2><p>${gt("Der Spielserver ist gerade nicht erreichbar. Prüfe die Internetverbindung und versuche es noch einmal.")}</p><a class="gbtn" href="#/play/host">${gt("Zurück")}</a>`)); return }
   G.hb=setInterval(()=>send('hb',{phase:G.phase,n:G.n}),4000);
   hostLobby(); AU.play('lobby');
 }
@@ -2313,7 +2552,7 @@ function hJoin(p){
   if(!G||G.mode!=='host'||!p.pid||G.kicked.has(p.pid))return;
   let pl=G.players.get(p.pid);
   if(!pl){ if(G.players.size>=80)return;
-    let base=String(p.name||'Gast').replace(/\s+/g,' ').trim().slice(0,18)||'Gast', nm=base, k=2;
+    let base=String(p.name||gt("Gast")).replace(/\s+/g,' ').trim().slice(0,18)||gt("Gast"), nm=base, k=2;
     const names=new Set([...G.players.values()].map(x=>x.name.toLowerCase())); while(names.has(nm.toLowerCase()))nm=base+' '+k++;
     pl={pid:p.pid,name:nm,av:AVS.includes(p.av)?p.av:AVS[rnd(AVS.length)],score:0,streak:0,ok:0,team:G.teams?teamFor():0,res:[],rank:0};
     G.players.set(p.pid,pl); AU.sfx('join');
@@ -2326,20 +2565,21 @@ function kick(pid){ if(!G||G.mode!=='host')return; G.players.delete(pid); G.kick
 function hostLobby(){
   G.phase='lobby';
   const url=joinURL(G.pin), short=location.host+location.pathname.replace(/\/$/,'');
-  gin(`<div class="glob"><div class="gpin"><div class="lbl">Spiel-PIN</div><div class="pin">${G.pin.slice(0,3)} ${G.pin.slice(3)}</div>
-      <div class="how">Auf dem Handy <b>${H(short)}</b> öffnen → <b>Spiele</b> → <b>Mitspielen</b>, oder den Code scannen.</div></div>
+  gin(`<div class="glob"><div class="gpin"><div class="lbl">${gt("Spiel-PIN")}</div><div class="pin">${G.pin.slice(0,3)} ${G.pin.slice(3)}</div>
+      <div class="how">${gt("Auf dem Handy")} <b>${H(short)}</b> ${gt("öffnen →")} <b>${gt("Spiele")}</b> → <b>${gt("Mitspielen")}</b>${gt(", oder den Code scannen.")}</div></div>
       <div class="gqr" id="gqr" title="${A(url)}"></div></div>
     ${G.teams?`<div class="gteams" style="justify-content:center;margin-bottom:.4rem">${TEAMS.slice(0,G.teams).map((t,k)=>`<span class="gpl" style="cursor:default"><span class="tm t${k+1}">${ic(t[1])}</span> Team ${t[0]}</span>`).join('')}</div>`:''}
     <div class="gplrs" id="gplrs"></div>
-    <div class="globbot"><span><span class="n" id="gpn">0</span> Spieler</span>
-      <span class="muted" style="opacity:.8;font-size:.85rem">${G.qs.length} Fragen · Spieler antippen zum Entfernen</span>
+    <div class="globbot"><span><span class="n" id="gpn">0</span> ${gt("Spieler")}</span>
+      <span class="muted" style="opacity:.8;font-size:.85rem">${G.qs.length} ${gt("Fragen · Spieler antippen zum Entfernen")}</span>
       <button class="gbtn" id="gstart" onclick="PLAY.hostGo()" disabled>${ic('play')} Start</button></div>`);
   lobbyPlayers(); qr($('gqr'),url);
 }
 function lobbyPlayers(){
   const b=$('gplrs'); if(!b)return; const ps=[...G.players.values()];
-  b.innerHTML=ps.length?ps.map(p=>`<button class="gpl" onclick="PLAY.kick('${A(p.pid)}')" title="Entfernen"><span class="av">${p.av}</span>${H(p.name)}${p.team?`<span class="tm t${p.team}">${TEAMS[p.team-1][0]}</span>`:''}</button>`).join('')
-    :`<div class="gwait">Warte auf Spieler …</div>`;
+  b.innerHTML=ps.length?ps.map(p=>`<button class="gpl" data-player="${A(p.pid)}" title="Entfernen"><span class="av">${p.av}</span>${H(p.name)}${p.team?`<span class="tm t${p.team}">${TEAMS[p.team-1][0]}</span>`:''}</button>`).join('')
+    :`<div class="gwait">${gt("Warte auf Spieler …")}</div>`;
+  b.onclick=ev=>{const player=ev.target.closest('button[data-player]');if(player)kick(player.dataset.player)};
   $('gpn').textContent=ps.length; $('gstart').disabled=!ps.length;
 }
 let QRP=null;
@@ -2352,8 +2592,8 @@ function hostNext(){
   if(G.n>=G.qs.length)return hostPodium();
   const q=G.qs[G.n]; G.phase='ready'; AU.play('calm');
   send('ready',{n:G.n,total:G.qs.length,t:q.t,dbl:q.dbl||0});
-  const [lab,icn]=TYPES[q.t]||['Frage','help-circle'];
-  gin(center(`<div class="gtyp">${ic(icn)} ${lab}${q.dbl?' · doppelte Punkte!':''}</div><h2>Frage ${G.n+1} von ${G.qs.length}</h2><div class="gready"><div class="gnum" id="gcd">3</div></div>`));
+  const [lab,icn]=TYPES[q.t]||[gt("Frage"),'help-circle'];
+  gin(center(`<div class="gtyp">${ic(icn)} ${gt(lab)}${q.dbl?gt(" · doppelte Punkte!"):''}</div><h2>${gt("Frage ")}${G.n+1} ${gt("von")} ${G.qs.length}</h2><div class="gready"><div class="gnum" id="gcd">3</div></div>`));
   AU.sfx('beep'); later(()=>{const c=$('gcd');if(c){c.textContent='2';c.style.animation='none';void c.offsetWidth;c.style.animation=''}AU.sfx('beep')},1000);
   later(()=>{const c=$('gcd');if(c){c.textContent='1';c.style.animation='none';void c.offsetWidth;c.style.animation=''}AU.sfx('beep')},2000);
   later(hostQ,3000);
@@ -2364,9 +2604,9 @@ function hostQ(){
   AU.sfx('go'); AU.play('think');
   const body=isChoice(q)?`<div class="gts n${q.o.length} ${q.t}">${q.o.map((o,i)=>tile(i,o,q,'disabled')).join('')}</div>`
     :q.t==='order'?`<div class="gchips">${q.o.map(t=>`<span class="gchip" style="cursor:default">${H(t)}</span>`).join('')}</div>`
-    :`<div class="ghint">${q.t==='type'?'Tippt die Antwort auf eurem Gerät ein.':`Wählt einen Wert zwischen ${q.min} und ${q.max}${q.unit?' '+H(q.unit):''}.`}</div>`;
-  gin(`${qHead(q,G.n,G.qs.length)}<div class="gcount"><div class="gbig" id="gsec">${q.dur}<small>Sekunden</small></div>
-      <button class="gbtn ghost" onclick="PLAY.hostEnd()">Überspringen</button><div class="gbig" id="gacnt" style="text-align:right">0<small>Antworten</small></div></div>
+    :`<div class="ghint">${q.t==='type'?gt("Tippt die Antwort auf eurem Gerät ein."):`${gt("Wählt einen Wert zwischen")} ${q.min} ${gt("und")} ${q.max}${q.unit?' '+H(q.unit):''}.`}</div>`;
+  gin(`${qHead(q,G.n,G.qs.length)}<div class="gcount"><div class="gbig" id="gsec">${q.dur}<small>${gt("Sekunden")}</small></div>
+      <button class="gbtn ghost" onclick="PLAY.hostEnd()">${gt("Überspringen")}</button><div class="gbig" id="gacnt" style="text-align:right">0<small>${gt("Antworten")}</small></div></div>
     <div class="gtimer"><i style="animation-duration:${q.dur}s"></i></div>${qCard(q)}${body}`);
   const t0=Date.now();
   G.sec=setInterval(()=>{const left=Math.max(0,Math.ceil(q.dur-(Date.now()-t0)/1000)); const s=$('gsec'); if(s)s.firstChild.nodeValue=left; if(left<=5&&left>0)AU.sfx('tick')},1000);
@@ -2398,10 +2638,10 @@ function hostEnd(){
   const last=G.n+1>=G.qs.length, mx=dist?Math.max(1,...dist):1;
   const body=dist?`<div class="gts n${q.o.length} ${q.t}">${q.o.map((o,i)=>`<button class="gt ${q.t==='art'?o:q.t==='tf'?(i?'tff':'tfw'):'o'+(i%4+1)} ${q.t!=='poll'&&i!==q.c?'dim':q.t!=='poll'?'right':''}" disabled>
         <span class="gti">${ic(OIC[i%4])}</span><span class="gtt">${H(o)}</span><span class="gtc">${dist[i]}</span></button>`).join('')}</div>`
-    :`<div class="gres ok"><h3>${H(rightText(q))}</h3><div class="ans">${nOk} von ${G.players.size} richtig</div></div>`;
+    :`<div class="gres ok"><h3>${H(rightText(q))}</h3><div class="ans">${nOk} ${gt("von")} ${G.players.size} ${gt("richtig")}</div></div>`;
   gin(`${qHead(q,G.n,G.qs.length)}${qCard(q)}${body}
-    <div class="globbot"><span>${q.t==='poll'?`${nAns} Stimmen`:`<b>${nOk}</b> von ${G.players.size} richtig`}</span>
-    <button class="gbtn" id="gnext" onclick="PLAY.hostScores()">${last?'Siegerehrung':'Rangliste'} ${ic('arrow-right')}</button></div>`);
+    <div class="globbot"><span>${q.t==='poll'?`${nAns} ${gt("Stimmen")}`:`<b>${nOk}</b> ${gt("von")} ${G.players.size} ${gt("richtig")}`}</span>
+    <button class="gbtn" id="gnext" onclick="PLAY.hostScores()">${last?gt("Siegerehrung"):gt("Rangliste")} ${ic('arrow-right')}</button></div>`);
   if(dist)document.querySelectorAll('#gmin .gtc').forEach((c,i)=>c.style.opacity=.6+.4*dist[i]/mx);
 }
 function hostScores(){
@@ -2410,11 +2650,11 @@ function hostScores(){
   G.phase='scores'; AU.play('calm');
   const ps=ranking().slice(0,5);
   const teamRows=G.teams?teamScores().map((t,k)=>`<div class="r" style="animation-delay:${k*.08}s"><span class="rk">${k+1}</span><span class="tm t${t.k}" style="border-radius:.5rem;padding:.2rem .4rem;color:#fff">${ic(t.icon)}</span><span class="nm">${H(t.name)} <small style="opacity:.6">(${t.n})</small></span><span class="sc">${fmt(t.score)}</span></div>`).join(''):'';
-  gin(`<div class="gcenter" style="justify-content:flex-start;gap:1rem"><h2>${G.teams?'Teamwertung':'Rangliste'}</h2>
+  gin(`<div class="gcenter" style="justify-content:flex-start;gap:1rem"><h2>${G.teams?gt("Teamwertung"):gt("Rangliste")}</h2>
     <div class="gsb">${G.teams?teamRows:ps.map((p,k)=>`<div class="r" style="animation-delay:${k*.08}s"><span class="rk">${k+1}</span><span class="av">${p.av}</span><span class="nm">${H(p.name)}</span>
       ${p.prev>p.rank?`<span class="mv">▲ ${p.prev-p.rank}</span>`:''}${p.streak>=3?`<span title="Serie">🔥${p.streak}</span>`:''}<span class="sc">${fmt(p.score)}</span></div>`).join('')}</div>
-    ${G.teams?`<div class="gsb" style="opacity:.9"><div style="font-weight:700;margin-top:.4rem">Beste Einzelspieler</div>${ps.slice(0,3).map((p,k)=>`<div class="r"><span class="rk">${k+1}</span><span class="av">${p.av}</span><span class="nm">${H(p.name)}</span><span class="sc">${fmt(p.score)}</span></div>`).join('')}</div>`:''}
-    </div><div class="globbot"><span>Frage ${G.n+1} von ${G.qs.length}</span><button class="gbtn" id="gnext" onclick="PLAY.hostNext()">Nächste Frage ${ic('arrow-right')}</button></div>`);
+    ${G.teams?`<div class="gsb" style="opacity:.9"><div style="font-weight:700;margin-top:.4rem">${gt("Beste Einzelspieler")}</div>${ps.slice(0,3).map((p,k)=>`<div class="r"><span class="rk">${k+1}</span><span class="av">${p.av}</span><span class="nm">${H(p.name)}</span><span class="sc">${fmt(p.score)}</span></div>`).join('')}</div>`:''}
+    </div><div class="globbot"><span>${gt("Frage ")}${G.n+1} ${gt("von")} ${G.qs.length}</span><button class="gbtn" id="gnext" onclick="PLAY.hostNext()">${gt("Nächste Frage")} ${ic('arrow-right')}</button></div>`);
   send('scores',{n:G.n});
 }
 function hostPodium(){
@@ -2424,10 +2664,10 @@ function hostPodium(){
   send('end',{res,teams:ts,top:ps.slice(0,3).map(p=>({name:p.name,av:p.av,score:p.score}))});
   const top=ts?ts.slice(0,3).map(t=>({name:t.name,av:`<span class="tm t${t.k}" style="display:inline-grid;place-items:center;width:3rem;height:3rem;border-radius:1rem">${ic(t.icon)}</span>`,score:t.score}))
     :ps.slice(0,3).map(p=>({name:H(p.name),av:p.av,score:p.score}));
-  const slot=(k)=>top[k]?`<div class="p p${k+1}" id="gp${k+1}"><div class="av">${top[k].av}</div><div class="nm">${ts?H(top[k].name):top[k].name}</div><div class="sc">${fmt(top[k].score)} Punkte</div><div class="blk">${k+1}</div></div>`:'';
-  gin(`<div class="gcenter" style="justify-content:flex-end"><h2>${ts?'Siegerteams':'Siegerehrung'}</h2><div class="gpod">${slot(1)}${slot(0)}${slot(2)}</div></div>
-    <div class="globbot"><button class="gbtn ghost" onclick="PLAY.report()">${ic('table')} Ergebnisbericht</button>
-      <button class="gbtn" onclick="PLAY.rematch()">${ic('rotate-ccw')} Neue Runde</button></div>`);
+  const slot=(k)=>top[k]?`<div class="p p${k+1}" id="gp${k+1}"><div class="av">${top[k].av}</div><div class="nm">${ts?H(top[k].name):top[k].name}</div><div class="sc">${fmt(top[k].score)} ${gt("Punkte")}</div><div class="blk">${k+1}</div></div>`:'';
+  gin(`<div class="gcenter" style="justify-content:flex-end"><h2>${ts?gt("Siegerteams"):gt("Siegerehrung")}</h2><div class="gpod">${slot(1)}${slot(0)}${slot(2)}</div></div>
+    <div class="globbot"><button class="gbtn ghost" onclick="PLAY.report()">${ic('table')} ${gt("Ergebnisbericht")}</button>
+      <button class="gbtn" onclick="PLAY.rematch()">${ic('rotate-ccw')} ${gt("Neue Runde")}</button></div>`);
   AU.sfx('roll');
   later(()=>{const e=$('gp3');if(e){e.classList.add('on');AU.sfx('place')}},1300);
   later(()=>{const e=$('gp2');if(e){e.classList.add('on');AU.sfx('place')}},2400);
@@ -2437,23 +2677,23 @@ function report(){
   if(!G||G.mode!=='host')return;
   const ps=ranking();
   const qrows=G.qs.map((q,k)=>{const s=q.stat||{ok:0,of:G.players.size}; const pc=s.of?Math.round(100*s.ok/s.of):0;
-    return `<tr><td>${k+1}</td><td>${H(TYPES[q.t][0])}</td><td style="white-space:normal;min-width:180px">${H(q.p.length>70?q.p.slice(0,68)+'…':q.p)}</td><td>${H(rightText(q))}</td><td>${q.t==='poll'?'–':pc+' %'}</td><td>${q.t==='poll'?'':`<div class="bar"><i style="width:${pc}%"></i></div>`}</td></tr>`}).join('');
+    return `<tr><td>${k+1}</td><td>${H(gt(TYPES[q.t][0]))}</td><td style="white-space:normal;min-width:180px">${H(q.p.length>70?q.p.slice(0,68)+'…':q.p)}</td><td>${H(rightText(q))}</td><td>${q.t==='poll'?'–':pc+' %'}</td><td>${q.t==='poll'?'':`<div class="bar"><i style="width:${pc}%"></i></div>`}</td></tr>`}).join('');
   const prow=ps.map(p=>`<tr><td>${p.rank}</td><td>${p.av} ${H(p.name)}</td>${G.teams?`<td>${TEAMS[p.team-1][0]}</td>`:''}<td><b>${fmt(p.score)}</b></td><td>${p.ok}</td>
     ${G.qs.map((q,k)=>{const r=p.res[k];return `<td class="${r&&r.ok?'ok':r&&r.ok===false?'bad':''}">${!r||r.v==null?'·':r.ok?'✓':r.ok===false?'✗':'○'}</td>`}).join('')}</tr>`).join('');
-  gin(`<div class="gcenter" style="justify-content:flex-start;align-items:stretch"><h2>Ergebnisbericht</h2>
-    <div class="grep"><table><tr><th>#</th><th>Typ</th><th>Frage</th><th>Lösung</th><th>Richtig</th><th></th></tr>${qrows}</table></div>
-    <div class="grep"><table><tr><th>Platz</th><th>Name</th>${G.teams?'<th>Team</th>':''}<th>Punkte</th><th>✓</th>${G.qs.map((_,k)=>`<th>${k+1}</th>`).join('')}</tr>${prow}</table></div></div>
-    <div class="globbot"><button class="gbtn ghost" onclick="PLAY.csv()">${ic('download')} Als CSV speichern</button><button class="gbtn" onclick="PLAY.rematch()">${ic('rotate-ccw')} Neue Runde</button></div>`);
+  gin(`<div class="gcenter" style="justify-content:flex-start;align-items:stretch"><h2>${gt("Ergebnisbericht")}</h2>
+    <div class="grep"><table><tr><th>#</th><th>${gt("Typ")}</th><th>${gt("Frage")}</th><th>${gt("Lösung")}</th><th>${gt("Richtig")}</th><th></th></tr>${qrows}</table></div>
+    <div class="grep"><table><tr><th>${gt("Platz")}</th><th>Name</th>${G.teams?'<th>Team</th>':''}<th>${gt("Punkte")}</th><th>✓</th>${G.qs.map((_,k)=>`<th>${k+1}</th>`).join('')}</tr>${prow}</table></div></div>
+    <div class="globbot"><button class="gbtn ghost" onclick="PLAY.csv()">${ic('download')} ${gt("Als CSV speichern")}</button><button class="gbtn" onclick="PLAY.rematch()">${ic('rotate-ccw')} ${gt("Neue Runde")}</button></div>`);
 }
 function csv(){
   const ps=ranking(), q=s=>'"'+String(s).replace(/"/g,'""')+'"';
-  const rows=[['Platz','Name',...(G.teams?['Team']:[]),'Punkte','Richtig',...G.qs.map((_,k)=>'Frage '+(k+1))].map(q).join(';')];
-  ps.forEach(p=>rows.push([p.rank,p.name,...(G.teams?[TEAMS[p.team-1][0]]:[]),p.score,p.ok,...G.qs.map((_,k)=>{const r=p.res[k];return !r||r.v==null?'':r.ok?'richtig':r.ok===false?'falsch':'abgestimmt'})].map(q).join(';')));
+  const rows=[[gt("Platz"),'Name',...(G.teams?['Team']:[]),gt("Punkte"),gt("Richtig"),...G.qs.map((_,k)=>gt("Frage ")+(k+1))].map(q).join(';')];
+  ps.forEach(p=>rows.push([p.rank,/^[\s]*[=+@-]/.test(p.name)?"'"+p.name:p.name,...(G.teams?[TEAMS[p.team-1][0]]:[]),p.score,p.ok,...G.qs.map((_,k)=>{const r=p.res[k];return !r||r.v==null?'':r.ok?gt("richtig"):r.ok===false?gt("falsch"):'abgestimmt'})].map(q).join(';')));
   const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob(['﻿'+rows.join('\n')],{type:'text/csv'})); a.download='quiz-ergebnisse.csv'; a.click();
 }
 async function rematch(){
   if(!G||G.mode!=='host')return; clearTimers();
-  gin(spinner('Neue Fragen werden vorbereitet …'));
+  gin(spinner(gt("Neue Fragen werden vorbereitet …")));
   const qs=await buildQs(G.s); if(!G||G.mode!=='host')return;
   G.qs=qs; G.n=-1; G.players.forEach(p=>{p.score=0;p.streak=0;p.ok=0;p.res=[];p.rank=0});
   send('lobby',{again:1}); hostLobby(); AU.play('lobby');
@@ -2461,23 +2701,23 @@ async function rematch(){
 
 /* ---------- LIVE: player (phone) ---------- */
 function joinForm(pin,err){
-  stage('Mitspielen'); AU.stop();
+  stage(gt("Mitspielen")); AU.stop();
   const saved=LS.get('gd_gname',null)||{name:NAMES[rnd(NAMES.length)],av:AVS[rnd(AVS.length)]};
   let av=saved.av;
-  gin(center(`<div class="gme" id="gav">${av}</div><h2>Mitspielen</h2>
+  gin(center(`<div class="gme" id="gav">${av}</div><h2>${gt("Mitspielen")}</h2>
     <form class="gjoin" id="gjf">${err?`<div class="gerr">${H(err)}</div>`:''}
-      <input class="pin" id="gpin" inputmode="numeric" pattern="[0-9 ]*" maxlength="7" placeholder="Spiel-PIN" value="${A(pin||'')}" autocomplete="off">
-      <input id="gname" maxlength="18" placeholder="Dein Name" value="${A(saved.name)}" autocomplete="nickname">
+      <input class="pin" id="gpin" inputmode="numeric" pattern="[0-9 ]*" maxlength="7" placeholder="${gt("Spiel-PIN")}" value="${A(pin||'')}" autocomplete="off">
+      <input id="gname" maxlength="18" placeholder="${gt("Dein Name")}" value="${A(saved.name)}" autocomplete="nickname">
       <div class="gavs">${AVS.slice(0,16).map(a=>`<button type="button" data-a="${a}" class="${a===av?'on':''}">${a}</button>`).join('')}</div>
-      <button class="gbtn" style="justify-content:center">${ic('log-in')} Los geht's</button>
-      <button type="button" class="gbtn ghost" style="justify-content:center" id="gnm">${ic('dice-5')} Zufälliger Name</button></form>`));
+      <button class="gbtn" style="justify-content:center">${ic('log-in')} ${gt("Los geht's")}</button>
+      <button type="button" class="gbtn ghost" style="justify-content:center" id="gnm">${ic('dice-5')} ${gt("Zufälliger Name")}</button></form>`));
   const f=$('gjf');
   f.querySelectorAll('.gavs button').forEach(b=>b.onclick=()=>{av=b.dataset.a;f.querySelectorAll('.gavs button').forEach(x=>x.classList.toggle('on',x===b));$('gav').textContent=av;AU.sfx('join')});
   $('gnm').onclick=()=>{$('gname').value=NAMES[rnd(NAMES.length)]};
   if(!pin)setTimeout(()=>$('gpin').focus(),60);
   f.onsubmit=ev=>{ev.preventDefault(); AU.wake();
     const p=$('gpin').value.replace(/\D/g,''), n=$('gname').value.trim();
-    if(p.length!==6){joinForm(p,'Die PIN hat 6 Ziffern.');return}
+    if(p.length!==6){joinForm(p,gt("Die PIN hat 6 Ziffern."));return}
     if(!n){$('gname').focus();return}
     LS.set('gd_gname',{name:n,av}); playerJoin(p,n,av)};
 }
@@ -2485,62 +2725,62 @@ async function playerJoin(pin,name,av){
   const prev=LS.get('gd_gjoin',null);
   const pid=prev&&prev.pin===pin&&Date.now()-prev.at<3*3600e3?prev.pid:uid()+uid();
   G={mode:'player',pin,pid,name,av,joined:false,last:Date.now(),score:0,q:null};
-  stage('Spiel '+pin.slice(0,3)+' '+pin.slice(3)); gin(spinner('Verbinde mit dem Spiel …'));
+  stage(gt("Spiel ")+pin.slice(0,3)+' '+pin.slice(3)); gin(spinner(gt("Verbinde mit dem Spiel …")));
   try{ G.ch=await openCh(pin,{welcome:pWelcome,kick:pKick,ready:pReady,q:pQ,count:pCount,reveal:pReveal,scores:()=>{},end:pEnd,hb:pHb,lobby:pLobby,bye:pBye}) }
-  catch(e){ if(G&&G.mode==='player')joinForm(pin,'Keine Verbindung zum Spielserver. Bitte noch einmal versuchen.'); return }
+  catch(e){ if(G&&G.mode==='player')joinForm(pin,gt("Keine Verbindung zum Spielserver. Bitte noch einmal versuchen.")); return }
   let tries=0;
-  const tryJoin=()=>{ if(!G||G.mode!=='player'||G.joined)return; if(tries++>=5){closeCh();joinForm(pin,'Kein laufendes Spiel mit dieser PIN gefunden.');return}
+  const tryJoin=()=>{ if(!G||G.mode!=='player'||G.joined)return; if(tries++>=5){closeCh();joinForm(pin,gt("Kein laufendes Spiel mit dieser PIN gefunden."));return}
     send('join',{pid,name,av}); later(tryJoin,2200) };
   tryJoin();
   G.watch=setInterval(()=>{ if(!G||G.mode!=='player'||!G.joined)return; const off=Date.now()-G.last>15000, m=$('gm');
-    let b=m&&m.querySelector('.goff'); if(off&&!b&&m){b=document.createElement('div');b.className='goff';b.textContent='Verbindung unterbrochen …';m.appendChild(b)} else if(!off&&b)b.remove() },3000);
+    let b=m&&m.querySelector('.goff'); if(off&&!b&&m){b=document.createElement('div');b.className='goff';b.textContent=gt("Verbindung unterbrochen …");m.appendChild(b)} else if(!off&&b)b.remove() },3000);
 }
 const mine=p=>p&&p.pid===G.pid;
 const alive=()=>{if(G)G.last=Date.now()};
 function pWelcome(p){ if(!G||G.mode!=='player'||!mine(p))return; alive();
   const first=!G.joined; G.joined=true; G.name=p.name; G.team=p.team; G.title=p.title;
   LS.set('gd_gjoin',{pin:G.pin,pid:G.pid,at:Date.now()});
-  if(first){AU.sfx('join'); if(p.phase==='lobby'||p.phase==='end')pWait(); else gin(center(`<div class="gme">${G.av}</div><h2>Du bist dabei!</h2><p>Bei der nächsten Frage geht es los.</p>`))}
+  if(first){AU.sfx('join'); if(p.phase==='lobby'||p.phase==='end')pWait(); else gin(center(`<div class="gme">${G.av}</div><h2>${gt("Du bist dabei!")}</h2><p>${gt("Bei der nächsten Frage geht es los.")}</p>`))}
 }
 function pWait(){
-  gin(center(`<div class="gme">${G.av}</div><h2>Du bist dabei, ${H(G.name)}!</h2><p>Siehst du deinen Namen auf dem großen Bildschirm?</p>
-    ${G.team?`<div class="gpl" style="cursor:default"><span class="tm t${G.team}">${ic(TEAMS[G.team-1][1])}</span> Team ${TEAMS[G.team-1][0]}</div>`:''}<p style="opacity:.7">Warte, bis die Spielleitung startet …</p>`));
+  gin(center(`<div class="gme">${G.av}</div><h2>${gt("Du bist dabei,")} ${H(G.name)}!</h2><p>${gt("Siehst du deinen Namen auf dem großen Bildschirm?")}</p>
+    ${G.team?`<div class="gpl" style="cursor:default"><span class="tm t${G.team}">${ic(TEAMS[G.team-1][1])}</span> Team ${TEAMS[G.team-1][0]}</div>`:''}<p style="opacity:.7">${gt("Warte, bis die Spielleitung startet …")}</p>`));
 }
 function pLobby(){ if(!G||G.mode!=='player'||!G.joined)return; alive(); G.score=0; pWait() }
 function pKick(p){ if(!G||G.mode!=='player'||!mine(p))return; closeCh(); LS.set('gd_gjoin',null); G.mode='player-out';
-  gin(center(`<h2>Du wurdest aus dem Spiel entfernt</h2><a class="gbtn" href="#/play">Zu den Spielen</a>`)) }
-function pBye(){ if(!G||G.mode!=='player')return; closeCh(); G.mode='player-out'; gin(center(`<h2>Die Spielleitung hat das Spiel beendet</h2><a class="gbtn" href="#/play">Zu den Spielen</a>`)) }
+  gin(center(`<h2>${gt("Du wurdest aus dem Spiel entfernt")}</h2><a class="gbtn" href="#/play">${gt("Zu den Spielen")}</a>`)) }
+function pBye(){ if(!G||G.mode!=='player')return; closeCh(); G.mode='player-out'; gin(center(`<h2>${gt("Die Spielleitung hat das Spiel beendet")}</h2><a class="gbtn" href="#/play">${gt("Zu den Spielen")}</a>`)) }
 function pHb(p){ if(!G||G.mode!=='player')return; alive() }
 function pReady(p){ if(!G||G.mode!=='player'||!G.joined)return; alive(); clearTimers();
-  const [lab,icn]=TYPES[p.t]||['Frage','help-circle'];
-  gin(center(`<div class="gready"><div class="gnum">${p.n+1}</div></div><div class="gtyp">${ic(icn)} ${lab}${p.dbl?' · doppelte Punkte!':''}</div><p>Schau nach vorne – gleich geht's los!</p>`));
+  const [lab,icn]=TYPES[p.t]||[gt("Frage"),'help-circle'];
+  gin(center(`<div class="gready"><div class="gnum">${p.n+1}</div></div><div class="gtyp">${ic(icn)} ${gt(lab)}${p.dbl?gt(" · doppelte Punkte!"):''}</div><p>${gt("Schau nach vorne – gleich geht's los!")}</p>`));
 }
 function pQ(q){ if(!G||G.mode!=='player'||!G.joined)return; alive(); clearTimers(); G.q=q; G.sent=false;
   askQ(q,q.n,q.total,(v)=>{ if(G.sent)return; G.sent=true;
     if(v!=null){send('ans',{pid:G.pid,n:q.n,v}); AU.sfx('send')}
-    later(()=>{ if(G&&G.q===q&&G.mode==='player')gin(center(`<div class="gspin"></div><h2>${v==null?'Zeit abgelaufen':'Antwort ist raus!'}</h2><p id="gpc">Warte auf die anderen …</p>`)) },v==null?0:500);
+    later(()=>{ if(G&&G.q===q&&G.mode==='player')gin(center(`<div class="gspin"></div><h2>${v==null?gt("Zeit abgelaufen"):gt("Antwort ist raus!")}</h2><p id="gpc">${gt("Warte auf die anderen …")}</p>`)) },v==null?0:500);
   });
 }
-function pCount(p){ alive(); const c=$('gpc'); if(c&&p)c.textContent=`${p.a} von ${p.of} haben geantwortet …`}
+function pCount(p){ alive(); const c=$('gpc'); if(c&&p)c.textContent=`${p.a} ${gt("von")} ${p.of} ${gt("haben geantwortet …")}`}
 function pReveal(p){ if(!G||G.mode!=='player'||!G.joined)return; alive(); clearTimers();
-  const r=p.res&&p.res[G.pid]; if(!r){gin(center(`<h2>Gleich bist du dabei</h2><p>Ab der nächsten Frage zählen deine Punkte.</p>`));return}
+  const r=p.res&&p.res[G.pid]; if(!r){gin(center(`<h2>${gt("Gleich bist du dabei")}</h2><p>${gt("Ab der nächsten Frage zählen deine Punkte.")}</p>`));return}
   G.score=r.score; setScore(`<span class="gscore">${fmt(r.score)}</span>`);
   if(r.ok)AU.sfx('ok'); else if(r.ok===false)AU.sfx('bad');
   gin(center(`<div class="gres ${r.ok?'ok':r.ok===null?'poll':'bad'}" style="width:100%;max-width:420px">
-    <h3>${r.ok?'Richtig!':r.ok===null?'Stimme gezählt':r.answered?'Leider falsch':'Zeit abgelaufen'}</h3>
-    ${r.ok?`<div class="pts">+${fmt(r.pts)}</div>`:''}${r.streak>=2?`<div class="gstreak">🔥 ${r.streak} richtig in Folge</div>`:''}
-    ${r.ok===false&&p.right?`<div class="ans">Richtig ist: <b>${H(p.right)}</b></div>`:''}</div>
-    <h2>Platz ${r.rank} <span style="opacity:.6;font-size:1rem">von ${r.of}</span></h2>
-    <p>${r.ahead?`${fmt(r.ahead.gap)} Punkte hinter ${H(r.ahead.name)}`:'Du führst! 🏆'}</p>`));
+    <h3>${r.ok?gt("Richtig!"):r.ok===null?gt("Stimme gezählt"):r.answered?gt("Leider falsch"):gt("Zeit abgelaufen")}</h3>
+    ${r.ok?`<div class="pts">+${fmt(r.pts)}</div>`:''}${r.streak>=2?`<div class="gstreak">🔥 ${r.streak} ${gt("richtig in Folge")}</div>`:''}
+    ${r.ok===false&&p.right?`<div class="ans">${gt("Richtig ist:")} <b>${H(p.right)}</b></div>`:''}</div>
+    <h2>${gt("Platz")} ${r.rank} <span style="opacity:.6;font-size:1rem">${gt("von")} ${r.of}</span></h2>
+    <p>${r.ahead?`${fmt(r.ahead.gap)} ${gt("Punkte hinter")} ${H(r.ahead.name)}`:gt("Du führst! 🏆")}</p>`));
 }
 function pEnd(p){ if(!G||G.mode!=='player'||!G.joined)return; alive(); clearTimers();
   const r=p.res&&p.res[G.pid];
   if(!r){pWait();return}
   const medal=['🥇','🥈','🥉'][r.rank-1]||'🎉';
   const tr=p.teams&&r.team?p.teams.findIndex(t=>t.k===r.team)+1:0;
-  gin(center(`<div class="gme">${medal}</div><h2>Platz ${r.rank} von ${r.of}</h2><div class="gbig">${fmt(r.score)}<small>Punkte</small></div>
-    <div class="gstats"><div><b>${r.ok}</b><span>richtig</span></div>${tr?`<div><b>${tr}.</b><span>Team ${TEAMS[r.team-1][0]}</span></div>`:''}</div>
-    <p style="opacity:.75">Bleib hier – vielleicht startet gleich eine neue Runde.</p>`));
+  gin(center(`<div class="gme">${medal}</div><h2>${gt("Platz")} ${r.rank} ${gt("von")} ${r.of}</h2><div class="gbig">${fmt(r.score)}<small>${gt("Punkte")}</small></div>
+    <div class="gstats"><div><b>${r.ok}</b><span>${gt("richtig")}</span></div>${tr?`<div><b>${tr}.</b><span>Team ${TEAMS[r.team-1][0]}</span></div>`:''}</div>
+    <p style="opacity:.75">${gt("Bleib hier – vielleicht startet gleich eine neue Runde.")}</p>`));
   AU.sfx(r.rank<=3?'fanfare':'place'); if(r.rank<=3)confetti();
 }
 
@@ -2549,14 +2789,14 @@ function memoryStart(s){
   const pool=poolFor(s).filter(i=>{const g=qGloss(E[i]);return g&&g.length<=75&&!g.includes('___')});
   const pairs=Math.min(s.pairs||6,pool.length);
   stage('Memory');
-  if(pairs<3){gin(center(`<h2>Zu wenige Wörter</h2><p>Für Memory brauchst du mindestens 3 Wörter mit kurzer Bedeutung.</p><a class="gbtn" href="#/play/memory">Zurück</a>`));return}
+  if(pairs<3){gin(center(`<h2>${gt("Zu wenige Wörter")}</h2><p>${gt("Für Memory brauchst du mindestens 3 Wörter mit kurzer Bedeutung.")}</p><a class="gbtn" href="#/play/memory">${gt("Zurück")}</a>`));return}
   const pick=sample(pool,pairs), cards=shuffle(pick.flatMap((i,k)=>[{k,w:1,t:plainW(E[i].w),i},{k,w:0,t:qGloss(E[i]),i}]));
   G={mode:'memory',kind:'memory',s,cards,open:[],done:0,moves:0,t0:Date.now(),pairs,lock:false};
   gin(`<div class="gmem" id="gmem">${cards.map((c,j)=>`<button class="gcd" data-j="${j}"><div class="in"><div class="fa">${ic('sparkles')}</div><div class="ba ${c.w?'w':''}">${H(c.t)}</div></div></button>`).join('')}</div>`);
   G.clock=setInterval(memScore,1000); memScore(); AU.play('calm');
   document.querySelectorAll('#gmem .gcd').forEach(b=>b.onclick=()=>memFlip(+b.dataset.j,b));
 }
-function memScore(){ if(!G||G.mode!=='memory')return; setScore(`<span class="gscore">${G.done}/${G.pairs}<small>${G.moves} Züge · ${Math.round((Date.now()-G.t0)/1000)} s</small></span>`) }
+function memScore(){ if(!G||G.mode!=='memory')return; setScore(`<span class="gscore">${G.done}/${G.pairs}<small>${G.moves} ${gt("Züge ·")} ${Math.round((Date.now()-G.t0)/1000)} s</small></span>`) }
 function memFlip(j,b){
   if(G.lock||b.classList.contains('up')||b.classList.contains('done'))return;
   b.classList.add('up'); AU.sfx('flip'); G.open.push([j,b]);
@@ -2574,20 +2814,20 @@ function memEnd(){
   const stars=G.moves<=G.pairs*1.5?3:G.moves<=G.pairs*2.2?2:1, rec=!prev||sec<prev.sec;
   if(rec){best[key]={sec,moves:G.moves};LS.set('gd_gbest',best)}
   AU.sfx('fanfare'); confetti();
-  gin(center(`<h2>Alle Paare gefunden!</h2><div class="gbig" style="font-size:3rem">${'⭐'.repeat(stars)}</div>
-    <div class="gstats"><div><b>${G.moves}</b><span>Züge</span></div><div><b>${sec} s</b><span>Zeit</span></div><div><b>${prev?Math.min(prev.sec,sec):sec} s</b><span>Bestzeit</span></div></div>
-    <div class="gmiss"><h4>Deine Wörter</h4>${[...new Set(G.cards.map(c=>c.i))].map(i=>`<a href="#/w/${encodeURIComponent(E[i].w)}"><b>${H(plainW(E[i].w))}</b> – ${H(qGloss(E[i]))}</a>`).join('')}</div>
-    <div class="row" style="justify-content:center;gap:.5rem"><button class="gbtn" onclick="PLAY.again()">${ic('rotate-ccw')} Nochmal</button><a class="gbtn ghost" href="#/play">Andere Spiele</a></div>`));
+  gin(center(`<h2>${gt("Alle Paare gefunden!")}</h2><div class="gbig" style="font-size:3rem">${'⭐'.repeat(stars)}</div>
+    <div class="gstats"><div><b>${G.moves}</b><span>${gt("Züge")}</span></div><div><b>${sec} s</b><span>${gt("Zeit")}</span></div><div><b>${prev?Math.min(prev.sec,sec):sec} s</b><span>${gt("Bestzeit")}</span></div></div>
+    <div class="gmiss"><h4>${gt("Deine Wörter")}</h4>${[...new Set(G.cards.map(c=>c.i))].map(i=>`<a href="#/w/${encodeURIComponent(E[i].w)}"><b>${H(plainW(E[i].w))}</b> – ${H(qGloss(E[i]))}</a>`).join('')}</div>
+    <div class="row" style="justify-content:center;gap:.5rem"><button class="gbtn" onclick="PLAY.again()">${ic('rotate-ccw')} ${gt("Nochmal")}</button><a class="gbtn ghost" href="#/play">${gt("Andere Spiele")}</a></div>`));
   G.mode='memory-end';
 }
 
 /* ---------- ARTIKEL-BLITZ: as many der/die/das as possible in 60 seconds ---------- */
 function blitzStart(s){
   const pool=poolFor(Object.assign({},s)).filter(i=>E[i].ps==='n'&&['der','die','das'].includes(E[i].ar));
-  stage('Artikel-Blitz');
-  if(pool.length<5){gin(center(`<h2>Zu wenige Nomen</h2><p>Wähle eine Auswahl mit mehr Nomen.</p><a class="gbtn" href="#/play/blitz">Zurück</a>`));return}
+  stage(gt("Artikel-Blitz"));
+  if(pool.length<5){gin(center(`<h2>${gt("Zu wenige Nomen")}</h2><p>${gt("Wähle eine Auswahl mit mehr Nomen.")}</p><a class="gbtn" href="#/play/blitz">${gt("Zurück")}</a>`));return}
   G={mode:'blitz',kind:'blitz',s,pool,score:0,streak:0,mult:1,ok:0,bad:0,miss:[],cur:null,end:0,dur:60,last:-1};
-  gin(center(`<h2>Artikel-Blitz</h2><p>60 Sekunden: Tippe für jedes Wort den richtigen Artikel.<br>Fünf richtige hintereinander erhöhen deinen Multiplikator.</p>
+  gin(center(`<h2>${gt("Artikel-Blitz")}</h2><p>${gt("60 Sekunden: Tippe für jedes Wort den richtigen Artikel.")}<br>${gt("Fünf richtige hintereinander erhöhen deinen Multiplikator.")}</p>
     <button class="gbtn" id="gbgo">${ic('zap')} Start</button>`));
   $('gbgo').onclick=()=>{AU.wake(); blitzCount(3)};
 }
@@ -2619,11 +2859,11 @@ function blitzEnd(){
   if(rec){best[key]={score:G.score};LS.set('gd_gbest',best)}
   AU.sfx('fanfare'); if(rec&&G.score>0)confetti();
   G.miss=[...new Set(G.miss)];
-  gin(center(`<h2>${rec&&prev?'Neuer Rekord!':'Zeit um!'}</h2><div class="gbig">${G.score}<small>Punkte</small></div>
-    <div class="gstats"><div><b>${G.ok}</b><span>richtig</span></div><div><b>${G.bad}</b><span>falsch</span></div><div><b>${prev?Math.max(prev.score,G.score):G.score}</b><span>Rekord</span></div></div>
-    ${G.miss.length?`<div class="gmiss"><h4>Diese Artikel merken</h4>${G.miss.map(i=>`<a href="#/w/${encodeURIComponent(E[i].w)}"><b>${E[i].ar} ${H(plainW(E[i].w))}</b></a>`).join('')}</div>
-      <button class="gbtn ghost" onclick="PLAY.saveMiss()">${ic('list-plus')} In Liste „Aus Spielen" speichern</button>`:''}
-    <div class="row" style="justify-content:center;gap:.5rem"><button class="gbtn" onclick="PLAY.again()">${ic('rotate-ccw')} Nochmal</button><a class="gbtn ghost" href="#/play">Andere Spiele</a></div>`));
+  gin(center(`<h2>${rec&&prev?gt("Neuer Rekord!"):gt("Zeit um!")}</h2><div class="gbig">${G.score}<small>${gt("Punkte")}</small></div>
+    <div class="gstats"><div><b>${G.ok}</b><span>${gt("richtig")}</span></div><div><b>${G.bad}</b><span>${gt("falsch")}</span></div><div><b>${prev?Math.max(prev.score,G.score):G.score}</b><span>${gt("Rekord")}</span></div></div>
+    ${G.miss.length?`<div class="gmiss"><h4>${gt("Diese Artikel merken")}</h4>${G.miss.map(i=>`<a href="#/w/${encodeURIComponent(E[i].w)}"><b>${E[i].ar} ${H(plainW(E[i].w))}</b></a>`).join('')}</div>
+      <button class="gbtn ghost" onclick="PLAY.saveMiss()">${ic('list-plus')} ${gt("In Liste „Aus Spielen\" speichern")}</button>`:''}
+    <div class="row" style="justify-content:center;gap:.5rem"><button class="gbtn" onclick="PLAY.again()">${ic('rotate-ccw')} ${gt("Nochmal")}</button><a class="gbtn ghost" href="#/play">${gt("Andere Spiele")}</a></div>`));
   G.miss=G.miss.map(i=>E[i].w); G.mode='blitz-end';
 }
 
@@ -2633,14 +2873,14 @@ const ETYPES={mc:'Quiz (Auswahl)',tf:'Wahr oder falsch',type:'Antwort tippen',or
 function viewQuizzes(){
   document.body.classList.remove('ingame');
   const ids=Object.keys(QZ()).sort((a,b)=>(QZ()[b].at||0)-(QZ()[a].at||0));
-  V().innerHTML=`<div class="row" style="margin-bottom:.4rem"><a class="btn sm" href="#/play">${ic('arrow-left')} Spiele</a></div>
-    <h1 class="page">Eigene Quizze</h1><p class="sub">Schreibe eigene Fragen und spiele sie allein oder live mit deiner Gruppe. Mit Konto werden sie auf allen Geräten gespeichert.</p>
-    <div class="row" style="margin-bottom:1rem"><button class="btn primary" onclick="PLAY.newQuiz()">＋ Neues Quiz</button></div>
-    ${ids.length?ids.map(id=>{const q=QZ()[id];return `<div class="panelcard" style="cursor:default"><span class="ic">${ic('file-question')}</span><div style="flex:1"><div class="big">${H(q.title||'Ohne Titel')}</div>
-      <div class="meta">${q.qs.length} ${q.qs.length===1?'Frage':'Fragen'}</div></div>
-      <div class="row" style="gap:.35rem;flex-wrap:wrap;justify-content:flex-end"><a class="btn sm" href="#/play/edit/${id}">${ic('pencil')} Bearbeiten</a>
-      <button class="btn sm" onclick="PLAY.playQuiz('${id}','solo')">${ic('user')} Allein</button><button class="btn sm primary" onclick="PLAY.playQuiz('${id}','host')">${ic('users')} Live</button></div></div>`}).join('')
-      :`<div class="empty"><span class="em">${ic('file-question')}</span>Noch keine eigenen Quizze.</div>`}`;
+  V().innerHTML=`<div class="row" style="margin-bottom:.4rem"><a class="btn sm" href="#/play">${ic('arrow-left')} ${gt("Spiele")}</a></div>
+    <h1 class="page">${gt("Eigene Quizze")}</h1><p class="sub">${gt("Schreibe eigene Fragen und spiele sie allein oder live mit deiner Gruppe. Mit Konto werden sie auf allen Geräten gespeichert.")}</p>
+    <div class="row" style="margin-bottom:1rem"><button class="btn primary" onclick="PLAY.newQuiz()">${gt("＋ Neues Quiz")}</button></div>
+    ${ids.length?ids.map(id=>{const q=QZ()[id];return `<div class="panelcard" style="cursor:default"><span class="ic">${ic('file-question')}</span><div style="flex:1"><div class="big">${H(q.title||gt("Ohne Titel"))}</div>
+      <div class="meta">${q.qs.length} ${q.qs.length===1?gt("Frage"):gt("Fragen")}</div></div>
+      <div class="row" style="gap:.35rem;flex-wrap:wrap;justify-content:flex-end"><a class="btn sm" href="#/play/edit/${encodeURIComponent(id)}">${ic('pencil')} ${gt("Bearbeiten")}</a>
+      <button class="btn sm" onclick="PLAY.playQuiz(${jsArg(id)},'solo')">${ic('user')} ${gt("Allein")}</button><button class="btn sm primary" onclick="PLAY.playQuiz(${jsArg(id)},'host')">${ic('users')} Live</button></div></div>`}).join('')
+      :`<div class="empty"><span class="em">${ic('file-question')}</span>${gt("Noch keine eigenen Quizze.")}</div>`}`;
   drawIcons();
 }
 function newQuiz(){ const id=uid(); QZ()[id]={title:'',qs:[{t:'mc',p:'',o:['','','',''],c:0,dur:20}],at:Date.now()}; savePrefs(); go('play/edit/'+id) }
@@ -2652,29 +2892,29 @@ function viewEdit(id){
 }
 function drawEdit(){
   const q=EDIT.q;
-  V().innerHTML=`<div class="row" style="margin-bottom:.4rem"><a class="btn sm" href="#/play/quizzes">${ic('arrow-left')} Eigene Quizze</a></div>
-    <div class="gset" style="max-width:780px"><label class="f">Titel</label><input type="text" id="qt" value="${A(q.title)}" placeholder="z. B. Lektion 5 – Wohnen">
+  V().innerHTML=`<div class="row" style="margin-bottom:.4rem"><a class="btn sm" href="#/play/quizzes">${ic('arrow-left')} ${gt("Eigene Quizze")}</a></div>
+    <div class="gset" style="max-width:780px"><label class="f">${gt("Titel")}</label><input type="text" id="qt" value="${A(q.title)}" placeholder="${gt("z. B. Lektion 5 – Wohnen")}">
     <div id="qes">${q.qs.map((x,k)=>qeHTML(x,k)).join('')}</div>
-    <div class="row" style="gap:.4rem;flex-wrap:wrap"><button class="btn" onclick="PLAY.qeAdd()">＋ Frage</button><span class="spacer"></span>
-      <button class="btn" onclick="PLAY.qeDel()" style="color:#e5484d">${ic('trash-2')} Quiz löschen</button><button class="btn primary" onclick="PLAY.qeSave()">${ic('save')} Speichern</button></div></div>`;
+    <div class="row" style="gap:.4rem;flex-wrap:wrap"><button class="btn" onclick="PLAY.qeAdd()">${gt("＋ Frage")}</button><span class="spacer"></span>
+      <button class="btn" onclick="PLAY.qeDel()" style="color:#e5484d">${ic('trash-2')} ${gt("Quiz löschen")}</button><button class="btn primary" onclick="PLAY.qeSave()">${ic('save')} ${gt("Speichern")}</button></div></div>`;
   drawIcons();
 }
 function qeHTML(x,k){
-  const opts=(x.o||[]).map((o,j)=>`<div class="opt">${x.t==='poll'?'':`<input type="radio" name="c${k}" value="${j}" ${x.c===j?'checked':''} title="Richtige Antwort">`}<input type="text" data-k="${k}" data-o="${j}" value="${A(o)}" placeholder="Antwort ${j+1}"></div>`).join('');
+  const opts=(x.o||[]).map((o,j)=>`<div class="opt">${x.t==='poll'?'':`<input type="radio" name="c${k}" value="${j}" ${x.c===j?'checked':''} title="${gt("Richtige Antwort")}">`}<input type="text" data-k="${k}" data-o="${j}" value="${A(o)}" placeholder="${gt("Antwort ")}${j+1}"></div>`).join('');
   let body='';
-  if(x.t==='mc'||x.t==='poll')body=opts+(x.o.length<4?`<button class="btn sm" onclick="PLAY.qeOpt(${k},1)">＋ Antwort</button>`:'')+(x.o.length>2?` <button class="btn sm" onclick="PLAY.qeOpt(${k},-1)">− Antwort</button>`:'');
-  else if(x.t==='tf')body=`<div class="gseg"><button class="${x.c===0?'on':''}" onclick="PLAY.qeSet(${k},'c',0)">Wahr</button><button class="${x.c===1?'on':''}" onclick="PLAY.qeSet(${k},'c',1)">Falsch</button></div>`;
-  else if(x.t==='type')body=`<label class="f">Richtige Antworten (mit Komma trennen)</label><input type="text" data-k="${k}" data-f="ans" value="${A((x.ans||[]).join(', '))}">`;
-  else if(x.t==='order')body=`<label class="f">Teile in der richtigen Reihenfolge (eine Zeile pro Teil)</label><textarea rows="4" data-k="${k}" data-f="items">${H((x.items||[]).join('\n'))}</textarea>`;
-  else if(x.t==='slider')body=`<div class="two"><div><label class="f">Von</label><input type="number" data-k="${k}" data-f="min" value="${x.min??0}"></div><div><label class="f">Bis</label><input type="number" data-k="${k}" data-f="max" value="${x.max??100}"></div>
-    <div><label class="f">Richtig</label><input type="number" data-k="${k}" data-f="c" value="${x.c??50}"></div><div><label class="f">Einheit</label><input type="text" data-k="${k}" data-f="unit" value="${A(x.unit||'')}"></div></div>`;
-  return `<div class="gqe"><div class="hd"><b>Frage ${k+1}</b>
-    <select onchange="PLAY.qeType(${k},this.value)">${Object.entries(ETYPES).map(([t,l])=>`<option value="${t}" ${t===x.t?'selected':''}>${l}</option>`).join('')}</select>
+  if(x.t==='mc'||x.t==='poll')body=opts+(x.o.length<4?`<button class="btn sm" onclick="PLAY.qeOpt(${k},1)">${gt("＋ Antwort")}</button>`:'')+(x.o.length>2?` <button class="btn sm" onclick="PLAY.qeOpt(${k},-1)">${gt("− Antwort")}</button>`:'');
+  else if(x.t==='tf')body=`<div class="gseg"><button class="${x.c===0?'on':''}" onclick="PLAY.qeSet(${k},'c',0)">${gt("Wahr")}</button><button class="${x.c===1?'on':''}" onclick="PLAY.qeSet(${k},'c',1)">${gt("Falsch")}</button></div>`;
+  else if(x.t==='type')body=`<label class="f">${gt("Richtige Antworten (mit Komma trennen)")}</label><input type="text" data-k="${k}" data-f="ans" value="${A((x.ans||[]).join(', '))}">`;
+  else if(x.t==='order')body=`<label class="f">${gt("Teile in der richtigen Reihenfolge (eine Zeile pro Teil)")}</label><textarea rows="4" data-k="${k}" data-f="items">${H((x.items||[]).join('\n'))}</textarea>`;
+  else if(x.t==='slider')body=`<div class="two"><div><label class="f">${gt("Von")}</label><input type="number" data-k="${k}" data-f="min" value="${A(x.min??0)}"></div><div><label class="f">${gt("Bis")}</label><input type="number" data-k="${k}" data-f="max" value="${A(x.max??100)}"></div>
+    <div><label class="f">${gt("Richtig")}</label><input type="number" data-k="${k}" data-f="c" value="${A(x.c??50)}"></div><div><label class="f">${gt("Einheit")}</label><input type="text" data-k="${k}" data-f="unit" value="${A(x.unit||'')}"></div></div>`;
+  return `<div class="gqe"><div class="hd"><b>${gt("Frage ")}${k+1}</b>
+    <select onchange="PLAY.qeType(${k},this.value)">${Object.entries(ETYPES).map(([t,l])=>`<option value="${t}" ${t===x.t?'selected':''}>${gt(l)}</option>`).join('')}</select>
     <select onchange="PLAY.qeSet(${k},'dur',+this.value)">${[5,10,20,30,60,90].map(s=>`<option value="${s}" ${s===(x.dur||20)?'selected':''}>${s} s</option>`).join('')}</select>
-    <button class="btn sm" title="Löschen" onclick="PLAY.qeRm(${k})">${ic('x')}</button></div>
-    <input type="text" data-k="${k}" data-f="p" value="${A(x.p)}" placeholder="Frage eingeben">
+    <button class="btn sm" title="${gt("Löschen")}" onclick="PLAY.qeRm(${k})">${ic('x')}</button></div>
+    <input type="text" data-k="${k}" data-f="p" value="${A(x.p)}" placeholder="${gt("Frage eingeben")}">
     <div style="margin-top:.4rem">${body}</div>
-    <label style="display:inline-flex;gap:.4rem;align-items:center;margin-top:.5rem;font-size:.85rem"><input type="checkbox" ${x.dbl?'checked':''} onchange="PLAY.qeSet(${k},'dbl',this.checked?1:0)"> doppelte Punkte</label></div>`;
+    <label style="display:inline-flex;gap:.4rem;align-items:center;margin-top:.5rem;font-size:.85rem"><input type="checkbox" ${x.dbl?'checked':''} onchange="PLAY.qeSet(${k},'dbl',this.checked?1:0)"> ${gt("doppelte Punkte")}</label></div>`;
 }
 function qeRead(){ // copy the inputs into EDIT
   const q=EDIT.q; const t=$('qt'); if(t)q.title=t.value.trim();
@@ -2693,44 +2933,44 @@ const QE={
   opt(k,d){qeRead();const x=EDIT.q.qs[k];if(d>0&&x.o.length<4)x.o.push('');if(d<0&&x.o.length>2){x.o.pop();if(x.c>=x.o.length)x.c=0}drawEdit()},
   set(k,f,v){qeRead();EDIT.q.qs[k][f]=v;drawEdit()},
   type(k,t){qeRead();const x=EDIT.q.qs[k], p=x.p, dur=x.dur||DUR[t];
-    EDIT.q.qs[k]=t==='mc'||t==='poll'?{t,p,o:(x.o&&x.o.length>=2?x.o:['','','','']).slice(0,4),c:0,dur}:t==='tf'?{t,p,o:['Wahr','Falsch'],c:0,dur}:t==='type'?{t,p,ans:[],dur}
+    EDIT.q.qs[k]=t==='mc'||t==='poll'?{t,p,o:(x.o&&x.o.length>=2?x.o:['','','','']).slice(0,4),c:0,dur}:t==='tf'?{t,p,o:[gt("Wahr"),gt("Falsch")],c:0,dur}:t==='type'?{t,p,ans:[],dur}
       :t==='order'?{t,p,items:[],dur}:{t,p,min:0,max:100,c:50,unit:'',step:1,dur}; drawEdit()},
   save(){qeRead();const q=EDIT.q, bad=[];
     q.qs.forEach((x,k)=>{ if(!x.p.trim())bad.push(k+1); else if((x.t==='mc'||x.t==='poll')&&x.o.filter(o=>o.trim()).length<2)bad.push(k+1);
       else if(x.t==='type'&&!(x.ans||[]).length)bad.push(k+1); else if(x.t==='order'&&(x.items||[]).length<2)bad.push(k+1); else if(x.t==='slider'&&!(x.max>x.min))bad.push(k+1)});
-    if(bad.length){toast('Bitte Frage '+bad.join(', ')+' vervollständigen');return}
+    if(bad.length){toast(gt("Bitte Frage ")+bad.join(', ')+gt(" vervollständigen"));return}
     q.qs.forEach(x=>{if(x.o&&(x.t==='mc'||x.t==='poll')){const keep=x.o.map((o,j)=>[o.trim(),j]).filter(([o])=>o); const ci=keep.findIndex(([,j])=>j===x.c); x.o=keep.map(([o])=>o); x.c=Math.max(0,ci)}
       if(x.t==='slider')x.step=Math.max(1,Math.round((x.max-x.min)/100))});
-    q.title=q.title||'Mein Quiz'; q.at=Date.now(); QZ()[EDIT.id]=q; savePrefs(); toast('Quiz gespeichert'); go('play/quizzes')},
-  del(){ if(!confirm('Dieses Quiz löschen?'))return; delete QZ()[EDIT.id]; savePrefs(); go('play/quizzes') }
+    q.title=q.title||gt("Mein Quiz"); q.at=Date.now(); QZ()[EDIT.id]=q; savePrefs(); toast(gt("Quiz gespeichert")); go('play/quizzes')},
+  del(){ if(!confirm(gt("Dieses Quiz löschen?")))return; delete QZ()[EDIT.id]; savePrefs(); go('play/quizzes') }
 };
 
 /* ---------- HUB and setup ---------- */
 function viewHub(){
   document.body.classList.remove('ingame');
   const card=(cls,href,icon,title,desc,tag)=>`<a class="gcard ${cls}" href="${href}">${tag?`<span class="gtag">${tag}</span>`:''}<span class="gci">${icon}</span><b>${title}</b><span class="d">${desc}</span></a>`;
-  V().innerHTML=`<div class="ghub"><div class="ghero"><span class="gdeco">🎲</span><h1>Spiele</h1><p>Wörter lernen mit Spaß – allein, gegen deinen Rekord oder live mit der ganzen Gruppe.</p></div>
+  V().innerHTML=`<div class="ghub"><div class="ghero"><span class="gdeco">🎲</span><h1>${gt("Spiele")}</h1><p>${gt("Wörter lernen mit Spaß – allein, gegen deinen Rekord oder live mit der ganzen Gruppe.")}</p></div>
     <div class="gcards">
-      ${card('gc1','#/play/host','👥','Live-Quiz mit Gruppe','Du zeigst die Fragen auf einem großen Bildschirm, alle spielen mit ihrem Handy mit – auch in Teams.','Gruppe')}
-      ${card('gc2','#/play/join','📱','Mitspielen','Spiel-PIN eingeben und bei einem Live-Quiz mitmachen.','PIN')}
-      ${card('gc3','#/play/solo','🎯','Allein spielen','Alle Fragetypen mit Zeit, Punkten und Serien – und dein Rekord spielt mit.','Solo')}
-      ${card('gc4','#/play/memory','🃏','Memory','Finde die Paare aus Wort und Bedeutung.','Solo')}
-      ${card('gc5','#/play/blitz','⚡','Artikel-Blitz','der, die oder das? So viele wie möglich in 60 Sekunden.','Solo')}
-      ${card('gc6','#/play/quizzes','✏️','Eigene Quizze','Schreibe eigene Fragen und spiele sie allein oder live.','Editor')}
-      ${card('gc7','#/play/gram','📘','Grammatik-Quiz','Wähle ein Grammatik-Kapitel oder eine Verbliste und übe sie im Quiz – allein oder live mit der Gruppe.','Grammatik')}
+      ${card('gc1','#/play/host','👥',gt("Live-Quiz mit Gruppe"),gt("Du zeigst die Fragen auf einem großen Bildschirm, alle spielen mit ihrem Handy mit – auch in Teams."),gt("Gruppe"))}
+      ${card('gc2','#/play/join','📱',gt("Mitspielen"),gt("Spiel-PIN eingeben und bei einem Live-Quiz mitmachen."),'PIN')}
+      ${card('gc3','#/play/solo','🎯',gt("Allein spielen"),gt("Alle Fragetypen mit Zeit, Punkten und Serien – und dein Rekord spielt mit."),'Solo')}
+      ${card('gc4','#/play/memory','🃏','Memory',gt("Finde die Paare aus Wort und Bedeutung."),'Solo')}
+      ${card('gc5','#/play/blitz','⚡',gt("Artikel-Blitz"),gt("der, die oder das? So viele wie möglich in 60 Sekunden."),'Solo')}
+      ${card('gc6','#/play/quizzes','✏️',gt("Eigene Quizze"),gt("Schreibe eigene Fragen und spiele sie allein oder live."),'Editor')}
+      ${card('gc7','#/play/gram','📘',ui('Grammar quiz','Grammatik-Quiz'),gt("Wähle ein Grammatik-Kapitel oder eine Verbliste und übe sie im Quiz – allein oder live mit der Gruppe."),gt("Grammatik"))}
     </div>
-    <h3 class="gsec">Fragetypen</h3>
-    <div class="gchk" style="pointer-events:none">${Object.values(TYPES).map(([l,i])=>`<label>${ic(i)} ${l}</label>`).join('')}</div></div>`;
+    <h3 class="gsec">${gt("Fragetypen")}</h3>
+    <div class="gchk" style="pointer-events:none">${Object.values(TYPES).map(([l,i])=>`<label>${ic(i)} ${gt(l)}</label>`).join('')}</div></div>`;
   drawIcons();
 }
 const SDEF={src:'all',lvl:1,n:10,types:['mc','gap','tf','art','type'],speed:1,dbl:1,teams:0,pairs:6};
 function srcOptions(cur,kind){
   const o=(v,l)=>`<option value="${A(v)}" ${v===cur?'selected':''}>${H(l)}</option>`;
-  let h=`<optgroup label="Alle Wörter">${o('all:1','Häufige Wörter (leicht)')}${o('all:2','Mehr Wörter (mittel)')}${o('all:3','Großer Wortschatz (schwer)')}</optgroup>`;
-  const ls=Object.keys(lists); if(ls.length)h+=`<optgroup label="Meine Listen">${ls.map(id=>o('list:'+id,`${lists[id].name} (${lists[id].words.length})`)).join('')}</optgroup>`;
-  const ds=Object.keys(decks); if(ds.length)h+=`<optgroup label="Meine Kartenstapel">${ds.map(id=>o('deck:'+id,decks[id].name)).join('')}</optgroup>`;
-  if(kind==='quiz'){const qz=Object.keys(QZ()); if(qz.length)h+=`<optgroup label="Eigene Quizze">${qz.map(id=>o('quiz:'+id,QZ()[id].title||'Mein Quiz')).join('')}</optgroup>`}
-  h+=`<optgroup label="Themen">${CATS.map(c=>o('cat:'+c.id,`${c.emoji} ${c.label}`)).join('')}</optgroup>`;
+  let h=`<optgroup label="${gt("Alle Wörter")}">${o('all:1',gt("Häufige Wörter (leicht)"))}${o('all:2',gt("Mehr Wörter (mittel)"))}${o('all:3',gt("Großer Wortschatz (schwer)"))}</optgroup>`;
+  const ls=Object.keys(lists); if(ls.length)h+=`<optgroup label="${gt("Meine Listen")}">${ls.map(id=>o('list:'+id,`${lists[id].name} (${lists[id].words.length})`)).join('')}</optgroup>`;
+  const ds=Object.keys(decks); if(ds.length)h+=`<optgroup label="${gt("Meine Kartenstapel")}">${ds.map(id=>o('deck:'+id,decks[id].name)).join('')}</optgroup>`;
+  if(kind==='quiz'){const qz=Object.keys(QZ()); if(qz.length)h+=`<optgroup label="${gt("Eigene Quizze")}">${qz.map(id=>o('quiz:'+id,QZ()[id].title||gt("Mein Quiz"))).join('')}</optgroup>`}
+  h+=`<optgroup label="${gt("Themen")}">${CATS.map(c=>o('cat:'+c.id,`${c.emoji} ${c.label}`)).join('')}</optgroup>`;
   return h;
 }
 function viewSetup(kind){   // kind: solo | host | memory | blitz
@@ -2738,40 +2978,45 @@ function viewSetup(kind){   // kind: solo | host | memory | blitz
   const s=Object.assign({},SDEF,LS.get('gd_gset_'+kind,{}));
   if(s.src==='gram'&&!(kind==='solo'||kind==='host')){s.src='all';s.lvl=1}
   const cur=s.src==='all'?'all:'+s.lvl:s.src+':'+s.id;
-  const T={solo:['Allein spielen','Beantworte die Fragen so schnell du kannst. Richtig und schnell gibt die meisten Punkte, Serien bringen Bonus.'],
-    host:['Live-Quiz mit Gruppe','Zeige diese Seite auf einem großen Bildschirm. Die anderen spielen auf ihrem Handy mit der Spiel-PIN mit.'],
-    memory:['Memory','Decke immer zwei Karten auf und finde Wort und Bedeutung, die zusammengehören.'],
-    blitz:['Artikel-Blitz','60 Sekunden, so viele Artikel wie möglich. Auf dem Computer gehen auch die Tasten 1, 2, 3.']}[kind];
+  const T={solo:[gt("Allein spielen"),gt("Beantworte die Fragen so schnell du kannst. Richtig und schnell gibt die meisten Punkte, Serien bringen Bonus.")],
+    host:[gt("Live-Quiz mit Gruppe"),gt("Zeige diese Seite auf einem großen Bildschirm. Die anderen spielen auf ihrem Handy mit der Spiel-PIN mit.")],
+    memory:['Memory',gt("Decke immer zwei Karten auf und finde Wort und Bedeutung, die zusammengehören.")],
+    blitz:[gt("Artikel-Blitz"),gt("60 Sekunden, so viele Artikel wie möglich. Auf dem Computer gehen auch die Tasten 1, 2, 3.")]}[kind];
   const quizzy=kind==='solo'||kind==='host';
   const seg=(f,vals)=>`<div class="gseg" data-f="${f}">${vals.map(([v,l])=>`<button type="button" data-v="${v}" class="${String(s[f])===String(v)?'on':''}">${l}</button>`).join('')}</div>`;
-  V().innerHTML=`<div class="row" style="margin-bottom:.4rem"><a class="btn sm" href="#/play">${ic('arrow-left')} Spiele</a></div>
+  V().innerHTML=`<div class="row" style="margin-bottom:.4rem"><a class="btn sm" href="#/play">${ic('arrow-left')} ${gt("Spiele")}</a></div>
     <h1 class="page">${T[0]}</h1><p class="sub">${T[1]}</p>
     <form class="gset" id="gsetf">
-      <label class="f">Wörter oder Grammatik</label><select id="gsrc">${srcOptions(cur,quizzy?'quiz':'')}</select>
+      <label class="f" for="gsrc">${gt("Wörter oder Grammatik")}</label><select id="gsrc">${srcOptions(cur,quizzy?'quiz':'')}</select>
       <div id="gqopts">${quizzy?`
-      <label class="f">Anzahl Fragen</label>${seg('n',[[5,'5'],[10,'10'],[15,'15'],[20,'20']])}
-      <div id="gtypesw"><label class="f">Fragetypen</label><div class="gchk">${AUTO.map(t=>`<label><input type="checkbox" value="${t}" ${s.types.includes(t)?'checked':''}> ${ic(TYPES[t][1])} ${TYPES[t][0]}</label>`).join('')}</div></div>`:''}</div>
-      ${quizzy?`<label class="f">Tempo</label>${seg('speed',[[1.5,'Entspannt'],[1,'Normal'],[0.7,'Schnell']])}
-      <label class="gchk" style="margin-top:.8rem;display:flex"><label><input type="checkbox" id="gdbl" ${s.dbl?'checked':''}> Letzte Frage zählt doppelt</label></label>`:''}
-      ${kind==='host'?`<label class="f">Spielart</label>${seg('teams',[[0,'Jeder für sich'],[2,'2 Teams'],[3,'3 Teams'],[4,'4 Teams']])}`:''}
-      ${kind==='memory'?`<label class="f">Paare</label>${seg('pairs',[[4,'4'],[6,'6'],[8,'8']])}`:''}
-      <div class="go"><button class="btn primary">${ic('play')} ${kind==='host'?'Spiel erstellen':'Los geht\'s'}</button></div>
+      <label class="f">${gt("Anzahl Fragen")}</label>${seg('n',[[5,'5'],[10,'10'],[15,'15'],[20,'20']])}
+      <div id="gtypesw"><label class="f">${gt("Fragetypen")}</label><div class="gchk">${AUTO.map(t=>`<label><input type="checkbox" value="${t}" ${s.types.includes(t)?'checked':''}> ${ic(TYPES[t][1])} ${gt(TYPES[t][0])}</label>`).join('')}</div></div>`:''}</div>
+      ${quizzy?`<label class="f">${gt("Tempo")}</label>${seg('speed',[[1.5,gt("Entspannt")],[1,'Normal'],[0.7,gt("Schnell")]])}
+      <div class="gchk" style="margin-top:.8rem;display:flex"><label><input type="checkbox" id="gdbl" ${s.dbl?'checked':''}> ${ui('Double points for the last question','Letzte Frage zählt doppelt')}</label></div>`:''}
+      ${kind==='host'?`<label class="f">${gt("Spielart")}</label>${seg('teams',[[0,gt("Jeder für sich")],[2,'2 Teams'],[3,'3 Teams'],[4,'4 Teams']])}`:''}
+      ${kind==='memory'?`<label class="f">${gt("Paare")}</label>${seg('pairs',[[4,'4'],[6,'6'],[8,'8']])}`:''}
+      <div class="go"><button class="btn primary">${ic('play')} ${kind==='host'?gt("Spiel erstellen"):gt("Los geht's")}</button></div>
     </form>`;
   drawIcons();
   const f=$('gsetf');
   f.querySelectorAll('.gseg').forEach(g=>g.querySelectorAll('button').forEach(b=>b.onclick=()=>{g.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));s[g.dataset.f]=+b.dataset.v}));
   const srcSel=$('gsrc'), qo=$('gqopts'); const syncQ=()=>{if(qo)qo.style.display=srcSel.value.startsWith('quiz:')?'none':''; const tw=$('gtypesw'); if(tw)tw.style.display=srcSel.value.startsWith('gram:')?'none':''}; srcSel.onchange=syncQ; syncQ();
   if(quizzy)loadGram().then(()=>{ if(!$('gsrc'))return; const by={}; GRAM.list().forEach(c=>(by[c.group]=by[c.group]||[]).push(c));
-    srcSel.insertAdjacentHTML('beforeend',Object.keys(by).map(g=>`<optgroup label="${/^Wortschatz/.test(g)?'':'Grammatik · '}${H(g)}">${by[g].map(c=>`<option value="gram:${c.n}">${c.n>200?(c.n>240?c.n-240:c.n>220?c.n-220:c.n-200)+'. ':c.n>100?'':c.n+'. '}${H(c.title)}</option>`).join('')}</optgroup>`).join(''));
+    srcSel.insertAdjacentHTML('beforeend',Object.keys(by).map(g=>`<optgroup label="${/^Wortschatz/.test(g)?'':gt("Grammatik · ")}${H(g)}">${by[g].map(c=>`<option value="gram:${c.n}">${c.n>200?(c.n>240?c.n-240:c.n>220?c.n-220:c.n-200)+'. ':c.n>100?'':c.n+'. '}${H(c.title)}</option>`).join('')}</optgroup>`).join(''));
     if(cur.startsWith('gram:'))srcSel.value=cur; syncQ() }).catch(()=>{});
   f.onsubmit=ev=>{ev.preventDefault(); AU.wake();
     const [src,id]=srcSel.value.split(':'); s.src=src; if(src==='all'){s.lvl=+id;delete s.id}else s.id=id;
-    if(quizzy){s.types=[...f.querySelectorAll('.gchk input[type=checkbox][value]:checked')].map(x=>x.value); if(!s.types.length&&src!=='quiz'&&src!=='gram'){toast('Wähle mindestens einen Fragetyp');return} s.dbl=$('gdbl').checked?1:0}
+    if(quizzy){s.types=[...f.querySelectorAll('.gchk input[type=checkbox][value]:checked')].map(x=>x.value); if(!s.types.length&&src!=='quiz'&&src!=='gram'){toast(gt("Wähle mindestens einen Fragetyp"));return} s.dbl=$('gdbl').checked?1:0}
     if(src==='quiz')s.title=(QZ()[id]||{}).title;
-    if(src==='gram')s.title='Grammatik: '+((window.GRAM&&GRAM.list().find(c=>String(c.n)===id))||{}).title;
+    if(src==='gram')s.title=gt("Grammatik: ")+((window.GRAM&&GRAM.list().find(c=>String(c.n)===id))||{}).title;
     LS.set('gd_gset_'+kind,s); start(kind,s)};
 }
-function start(kind,s){
+async function start(kind,s){
+  const hash=location.hash;
+  if(s.src!=='quiz'&&s.src!=='gram'){
+    try{await (kind==='blitz'?ensureCore():ensureDefinitions())}catch{toast(gt("Wörterbuch konnte nicht geladen werden. Bitte erneut starten."));return}
+    if(hash!==location.hash)return;
+  }
   leave(); G={mode:kind+'-wait',kind,s};
   ({solo:soloStart,host:hostStart,memory:memoryStart,blitz:blitzStart})[kind](s);
 }
@@ -2787,12 +3032,12 @@ function leave(){
   if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});
 }
 function quit(){
-  if(G&&G.mode==='host'&&G.phase!=='end'&&G.players&&G.players.size&&!confirm('Spiel für alle beenden?'))return;
-  if(G&&G.mode==='player'&&G.joined&&!confirm('Spiel verlassen?'))return;
+  if(G&&G.mode==='host'&&G.phase!=='end'&&G.players&&G.players.size&&!confirm(gt("Spiel für alle beenden?")))return;
+  if(G&&G.mode==='player'&&G.joined&&!confirm(gt("Spiel verlassen?")))return;
   leave(); go('play');
 }
 function view(arg){
-  if(!E.length){V().innerHTML='<div class="loading"><div class="spin"></div>Wörterbuch wird geladen …</div>';return}
+  gameUiLanguage = window.KONTO?.lang() || 'en';
   const [a,b]=(arg||'').split('/');
   if(G&&!(a==='join'&&G.mode==='player'))leave();
   if(a==='gram'){const st=LS.get('gd_gset_solo',{}); if(st.src!=='gram'){st.src='gram';st.id='1'} LS.set('gd_gset_solo',st); viewSetup('solo')}
@@ -2809,6 +3054,7 @@ document.addEventListener('keydown',ev=>{
 window.addEventListener('beforeunload',()=>{ if(G&&G.mode==='host'&&G.ch)send('bye',{}) });
 
 window.PLAY={view,leave,quit,again,saveMiss,kick,hostGo,hostNext,hostEnd,hostScores,report,csv,rematch,playQuiz,newQuiz,
+  refresh(){ if (!G && gameUiLanguage !== (window.KONTO?.lang() || 'en') && /^#\/play(?:\/|$)/.test(location.hash) && !location.hash.startsWith('#/play/edit/')) view(location.hash.split('/').slice(2).join('/')); },
   snd(){AU.wake();AU.set(!AU.on);const b=$('gmsnd');if(b){b.innerHTML=ic(AU.on?'volume-2':'volume-x');drawIcons()}},
   fs(){const m=$('gm'); if(!m)return; if(document.fullscreenElement)document.exitFullscreen(); else if(m.requestFullscreen)m.requestFullscreen().catch(()=>{})},
   qeAdd:QE.add,qeRm:QE.rm,qeOpt:QE.opt,qeSet:QE.set,qeType:QE.type,qeSave:QE.save,qeDel:QE.del,
@@ -2816,9 +3062,9 @@ window.PLAY={view,leave,quit,again,saveMiss,kick,hostGo,hostNext,hostEnd,hostSco
 
 /* nav tab */
 const tabs=document.getElementById('tabs');
-if(tabs&&!tabs.querySelector('[data-t="play"]')){const a=document.createElement('a');a.href='#/play';a.dataset.t='play';a.title='Spiele';a.innerHTML='<i data-lucide="gamepad-2" class="lic"></i><span>Spiele</span>';tabs.appendChild(a);drawIcons()}
+if(tabs&&!tabs.querySelector('[data-t="play"]')){const a=document.createElement('a');a.href='#/play';a.dataset.t='play';a.title=gt("Spiele");a.innerHTML='<i data-lucide="gamepad-2" class="lic"></i><span>Spiele</span>';tabs.appendChild(a);drawIcons()}
 })();
 </script>
 <!-- ===== /Spiele ===== -->
-<script src="konto.js?v=7"></script>
+<script src="konto.js?v=8f671ee7ab82"></script>
 </body></html>

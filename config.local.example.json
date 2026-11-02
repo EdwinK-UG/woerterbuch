@@ -1,0 +1,6 @@
+{
+  "environment": "staging",
+  "supabaseUrl": "https://YOUR-STAGING-PROJECT.supabase.co",
+  "supabaseKey": "sb_publishable_REPLACE_WITH_STAGING_PUBLIC_KEY",
+  "workerUrl": "https://YOUR-STAGING-WORKER.workers.dev"
+}

@@ -1,3 +1,4 @@
+importScripts('release.js');
 // Offline cache for the Wörterbuch.
 // - core.bin / defs.bin ?v=… (the dictionary): kept after the first visit, so later visits do not download it
 //   again. A new version has a new ?v=, so updates arrive automatically and the old copy is removed.
@@ -5,10 +6,22 @@
 //   "latest" pictures are refreshed in the background at most once a day; numbered ones never change.
 // - the page itself: always asked from the network first (so changes show at once), the saved copy is used
 //   only when the network is slow (over 4 s) or offline.
-const DATA = 'wb-data', PAGE = 'wb-page', PICS = 'wb-pics-1', PIC_HOST = 'woerterbuch-bilder.edwin1kitaka.workers.dev', MAXPICS = 1500;
+const DATA = 'wb-data', PICS = 'wb-pics-1', PIC_HOST = 'woerterbuch-bilder.edwin1kitaka.workers.dev', MAXPICS = 1500;
 
-self.addEventListener('install', () => self.skipWaiting());
-self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
+const SCOPE = self.registration.scope;
+const SHELL = 'wb-shell-' + new URL(SCOPE).pathname + '-' + SHELL_RELEASE;
+self.addEventListener('install', event => event.waitUntil((async()=>{
+  const cache=await caches.open(SHELL);
+  await cache.addAll(SHELL_ASSETS.map(file=>new URL(file,SCOPE).href));
+  await self.skipWaiting();
+})()));
+self.addEventListener('activate', event => event.waitUntil((async()=>{
+  const prefix='wb-shell-'+new URL(SCOPE).pathname+'-';
+  const releases=(await caches.keys()).filter(name=>name.startsWith(prefix));
+  for(const name of releases.slice(0,-2))if(name!==SHELL)await caches.delete(name);
+  for(const name of await caches.keys())if(name.startsWith('wb-lessons-'))await caches.delete(name);
+  await self.clients.claim();
+})()));
 
 const fileOf = url => new URL(url).pathname.split('/').pop();
 
@@ -40,7 +53,9 @@ self.addEventListener('fetch', e => {
   if (req.method !== 'GET') return;
 
   if (u.host === PIC_HOST && u.pathname === '/pic') { e.respondWith(picture(e, u)); return; }
-  if (u.origin !== self.location.origin) return;
+  if (u.origin !== self.location.origin || !u.pathname.startsWith(new URL(SCOPE).pathname)) return;
+  // Retire public lesson URLs and remove their legacy offline copies on activation.
+  if (/\/grammatik\/k\d+\.js$/.test(u.pathname)) { e.respondWith(Promise.resolve(new Response('Lesson access requires enrolment.', {status:410,headers:{'Cache-Control':'no-store'}}))); return; }
 
   if (/\/(core|defs|data)\.bin$/.test(u.pathname)) {
     e.respondWith(caches.open(DATA).then(async c => {
@@ -57,16 +72,26 @@ self.addEventListener('fetch', e => {
     return;
   }
 
+  if (/\/(?:konto\.js|js\/[^/]+\.js|grammatik\/[^/]+\.js|icon-[^/]+\.png|favicon\.ico)$/.test(u.pathname)) {
+    e.respondWith((async()=>{
+      const cache=await caches.open(SHELL),hit=await cache.match(req);
+      if(hit)return hit;
+      const response=await fetch(req);
+      if(response.ok)await cache.put(req,response.clone());
+      return response;
+    })());return;
+  }
+
   if (req.mode === 'navigate') {
     e.respondWith((async () => {
-      const c = await caches.open(PAGE);
-      const net = fetch(req).then(r => { if (r.ok) c.put('page', r.clone()); return r; });
-      const slow = new Promise(res => setTimeout(res, 4000)).then(() => c.match('page'));
+      const c = await caches.open(SHELL);
+      const net = fetch(req).then(r => { if (r.ok) e.waitUntil(c.put(SCOPE, r.clone())); return r; });
+      const slow = new Promise(res => setTimeout(res, 4000)).then(() => c.match(SCOPE));
       try {
         const r = await Promise.race([net, slow]);
         return r || await net;
       } catch (err) {
-        return (await c.match('page')) || Response.error();
+        return (await c.match(SCOPE)) || Response.error();
       }
     })());
   }
