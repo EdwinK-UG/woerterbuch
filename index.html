@@ -391,7 +391,7 @@ kbd{font:600 .66rem Inter,system-ui,sans-serif;padding:.1rem .35rem;border-radiu
     <a href="#/v" data-t="wort" title="Wortschatz"><i data-lucide="book-a" class="lic"></i><span>Wortschatz</span></a>
     <a href="#/g" data-t="gram" title="Grammatik"><i data-lucide="book-open-text" class="lic"></i><span>Grammatik</span></a>
   </nav>
-  <button class="iconbtn" id="theme" aria-label="Light or dark theme" title="Tag / Nacht">◐</button>
+  <div class="header-tools" role="group" aria-label="Appearance and account"><button class="iconbtn" id="theme" aria-label="Switch colour theme" title="Switch colour theme"><i data-lucide="sun" class="lic theme-sun"></i><i data-lucide="moon" class="lic theme-moon"></i></button></div>
 </div></header>
 <main id="main"><div class="wrap" id="view">
   <div class="loading"><div class="spin"></div>Wörterbuch wird geladen …</div>
@@ -408,7 +408,7 @@ kbd{font:600 .66rem Inter,system-ui,sans-serif;padding:.1rem .35rem;border-radiu
 <script src="js/game-messages.js?v=f0e0633452ab"></script>
 <script src="js/render-safety.js?v=cbceea56a80a"></script>
 <script src="js/dictionary-english.js?v=422aef8ffb62" data-curated="content/dictionary-english.json?v=1c4818c1b1d7"></script>
-<script src="js/site-design.js?v=277eaa441017"></script>
+<script src="js/site-design.js?v=0840816ae282"></script>
 <script id="data" type="application/octet-stream" data-src="core.bin?v=4c9f34b8d0dd" data-defs="defs.bin?v=5e525dc56850"></script>
 <script>
 "use strict";
@@ -1508,7 +1508,7 @@ document.addEventListener('keydown',event=>{
 document.getElementById('modal').addEventListener('click',e=>{if(e.target.id==='modal')closeSheet()});
 /* theme toggle */
 const root=document.documentElement;
-function applyTheme(t){if(t)root.setAttribute('data-theme',t);else root.removeAttribute('data-theme')}
+function applyTheme(t){if(t)root.setAttribute('data-theme',t);else root.removeAttribute('data-theme');const dark=t?t==='dark':matchMedia('(prefers-color-scheme:dark)').matches,button=document.getElementById('theme');button.setAttribute('aria-pressed',String(dark));button.setAttribute('aria-label',dark?'Switch to light mode':'Switch to dark mode');button.title=dark?'Switch to light mode':'Switch to dark mode'}
 applyTheme(LS.get('gd_theme',null));
 document.getElementById('theme').onclick=()=>{
   const cur=root.getAttribute('data-theme');
@@ -1732,7 +1732,7 @@ async function signOut(){
 /* ---------- UI ---------- */
 function setBtn(){
   const b=$('acct');if(!b)return;
-  if(session){b.textContent=(session.user.email||'?')[0].toUpperCase();b.classList.add('in');b.title='Konto: '+session.user.email}
+  if(session){b.innerHTML='<span class="account-avatar">'+esc((session.user.email||'?')[0].toUpperCase())+'</span><span class="account-label">'+tr('Account','Konto')+'</span>'+ic('chevron-down');b.classList.add('in');b.title='Konto: '+session.user.email;b.setAttribute('aria-label',tr('Open your account','Konto öffnen'))}
   else{b.innerHTML='<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span>Anmelden</span>';
     b.classList.remove('in');b.title='Anmelden oder kostenloses Konto erstellen'}
   b.classList.toggle('signin',!session)
@@ -3126,5 +3126,5 @@ if(tabs&&!tabs.querySelector('[data-t="play"]')){const a=document.createElement(
 })();
 </script>
 <!-- ===== /Spiele ===== -->
-<script src="konto.js?v=39b381028ef2"></script>
+<script src="konto.js?v=23c21318add5"></script>
 </body></html>
