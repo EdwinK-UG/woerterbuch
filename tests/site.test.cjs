@@ -135,6 +135,9 @@ test("welcome skips dictionary and grammar and a slow search preserves the typed
     await s.close();
   }
 });
+test('editorial word illustrations use a safe absolute asset URL',async()=>{
+ const s=await site('#/start');try{const list=await s.window.eval("findImgs({w:'erwerben',ps:'v'})");assert.equal(list[0].src,'https://site.test/assets/words/erwerben.svg');assert.equal(s.window.safeLink(list[0].src),list[0].src);}finally{await s.close()}
+});
 test('home suggestions open a word directly without a search-page detour',async()=>{
  const s=await site('#/start');try{
  await until(()=>s.document.querySelector('#home-word'));
