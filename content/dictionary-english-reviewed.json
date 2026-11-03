@@ -1,0 +1,29 @@
+{
+  "Apfel": {"s0":"apple"},
+  "Bank¹": {"s0":"bench", "s1":"school desk"},
+  "Bank²": {
+    "s0":"bank; financial institution",
+    "s1":"bank; bank branch",
+    "s2":"the bank; the house (in gambling)",
+    "e2:0":"She broke the bank (she won all the money held by the bank)."
+  },
+  "Katze": {
+    "s0":"cat",
+    "s1":"female cat; queen",
+    "s2":"cat; member of the cat family",
+    "e2:0":"Tigers and lions are cats."
+  },
+  "lernen": {
+    "s0":"to learn (from someone)",
+    "e0:0":"He never learned to be on time.",
+    "e0:1":"I learned how to plant potatoes from my grandfather.",
+    "s1":"to train for a profession; to learn a trade",
+    "e1:0":"I think Paul trained as a painter.",
+    "s2":"to learn; to study",
+    "e2:0":"She is learning Spanish at the adult education centre.",
+    "e2:1":"He is always sitting in his room studying.",
+    "e2:2":"She is learning how to use a computer.",
+    "s3":"to learn from something",
+    "e3:0":"I learned from this experience that I should not rely on luck."
+  }
+}

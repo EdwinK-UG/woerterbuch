@@ -1,0 +1,100 @@
+{
+  "78e2ba976e1524bedaddb581592d0a8e2a04921afa8da266a2f3c16cb84d3d85": [
+    {
+      "key": "s0",
+      "en": "apple"
+    }
+  ],
+  "811be7fa95e424913af7f3f43ac4f7a40c5ec47ed7d4d91fa0bcce1205e43332": [
+    {
+      "key": "s0",
+      "en": "bench"
+    },
+    {
+      "key": "s1",
+      "en": "school desk"
+    }
+  ],
+  "e037d4d210688da2fbaafb5066b4613ad541b25b3de98a44d962ebb8d751282e": [
+    {
+      "key": "s0",
+      "en": "bank; financial institution"
+    },
+    {
+      "key": "s1",
+      "en": "bank; bank branch"
+    },
+    {
+      "key": "s2",
+      "en": "the bank; the house (in gambling)"
+    },
+    {
+      "key": "e2:0",
+      "en": "She broke the bank (she won all the money held by the bank)."
+    }
+  ],
+  "5009e373dd64e6c8725a102acfdf62cf1f724ddc1cd08facde7f8b609dc89286": [
+    {
+      "key": "s0",
+      "en": "cat"
+    },
+    {
+      "key": "s1",
+      "en": "female cat; queen"
+    },
+    {
+      "key": "s2",
+      "en": "cat; member of the cat family"
+    },
+    {
+      "key": "e2:0",
+      "en": "Tigers and lions are cats."
+    }
+  ],
+  "b4069ce1c349f2b8426b2ca90b023872c2f91af95d9e93bddc98f7ab14d62199": [
+    {
+      "key": "s0",
+      "en": "to learn (from someone)"
+    },
+    {
+      "key": "e0:0",
+      "en": "He never learned to be on time."
+    },
+    {
+      "key": "e0:1",
+      "en": "I learned how to plant potatoes from my grandfather."
+    },
+    {
+      "key": "s1",
+      "en": "to train for a profession; to learn a trade"
+    },
+    {
+      "key": "e1:0",
+      "en": "I think Paul trained as a painter."
+    },
+    {
+      "key": "s2",
+      "en": "to learn; to study"
+    },
+    {
+      "key": "e2:0",
+      "en": "She is learning Spanish at the adult education centre."
+    },
+    {
+      "key": "e2:1",
+      "en": "He is always sitting in his room studying."
+    },
+    {
+      "key": "e2:2",
+      "en": "She is learning how to use a computer."
+    },
+    {
+      "key": "s3",
+      "en": "to learn from something"
+    },
+    {
+      "key": "e3:0",
+      "en": "I learned from this experience that I should not rely on luck."
+    }
+  ]
+}

@@ -1,5 +1,6 @@
 import { handleWelcome, welcomeHook, drainMail } from "./welcome.js";
 import { sendCourseInvitation, requestLiveClass } from "./invitations.js";
+import { english } from "./english.js";
 import {
   authenticated,
   reserve,
@@ -74,6 +75,10 @@ async function route(req, env, ctx) {
   if (url.pathname === "/correction") {
     if (!ALLOWED.includes(origin)) return json({ error: "Forbidden" }, 403, h);
     return correction(req, url, env, h);
+  }
+  if (url.pathname === "/english") {
+    if (!ALLOWED.includes(origin)) return json({error:'Forbidden'},403,h);
+    return english(req,url,env,h);
   }
   if (url.pathname === "/photos") {
     if (req.method !== "GET") return json({ error: "GET only" }, 405, h);

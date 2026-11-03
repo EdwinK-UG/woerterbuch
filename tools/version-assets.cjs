@@ -13,6 +13,7 @@ const files = [
   "js/game-messages.js",
   "js/game-i18n.js",
   "js/render-safety.js",
+  "js/dictionary-english.js",
   "js/pages.js",
   "grammatik/catalog.js",
   "grammatik/grammatik.js",
