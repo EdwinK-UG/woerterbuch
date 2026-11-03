@@ -7,6 +7,7 @@ import { spawnSync } from "node:child_process";
 import { webcrypto } from "node:crypto";
 import { gunzipSync } from 'node:zlib';
 import worker from "../src/index.js";
+import {duration} from "../src/invitation-template.js";
 import { drainMail } from "../src/welcome.js";
 import { requestLiveClass, sendCourseInvitation, previewCourseInvitation } from "../src/invitations.js";
 globalThis.crypto ||= webcrypto;
@@ -29,7 +30,10 @@ test('term invitation contains configured dates, course length, timetable and co
     for(const body of [sent[0][4],sent[0][5]]) for(const phrase of ['Spring 2027','4 weeks','2027','Weekly feedback and lesson recordings']) assert.ok(body.includes(phrase));
     assert.ok(sent[0][4].includes('Mon & Wed 18:00 EAT (UTC+3)'));
     assert.equal(sent[0][10],'teacher@example.invalid');
+    assert.ok(sent[0][5].includes('<meta charset="UTF-8">'));
+    assert.equal(duration({starts_on:'2026-11-23',ends_on:'2027-02-01'}),'10 weeks + 1 day');
     assert.equal(sent[0][11].from,'hello@deutschklinik.com');
+    assert.equal(sent[0][11].fromName,'Teacher studio · Deutschklinik');
     assert.ok(sent[0][5].includes('Teacher studio'));
   } finally {globalThis.fetch=oldFetch;rmSync(dir,{recursive:true,force:true});}
 });
