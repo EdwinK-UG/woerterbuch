@@ -73,6 +73,32 @@
     })().finally(() => jobs.delete(jobKey));
     jobs.set(jobKey, job); return job;
   }
+  api.preview = async function(entry, container) {
+    if (!preference()) return;
+    const current = () => container.isConnected && container.dataset.previewWord === entry.w;
+    const status = container.querySelector('.wm-en-status');
+    if (status) status.textContent = tr('English …', 'Englisch …');
+    const items = source(entry.w,entry.df), meaning = items.find(x=>x.kind==='meaning');
+    if (!meaning) {if(status)status.textContent='';return;}
+    const example = items.find(x=>x.key.startsWith('e'+meaning.key.slice(1)+':'));
+    const hash = await fingerprint(entry.w,entry.df);
+    if (!current()) return;
+    try {
+      let result;
+      try {result=await request(entry,hash,0,false);} catch(error) {
+        if (error.status!==404 || APP_CONFIG.readOnly || !current()) throw error;
+        result=await request(entry,hash,0,true);
+      }
+      if (!current()) return;
+      for (const [key,selector] of [[meaning.key,'.wm-en'],[example?.key,'.wmex-en']]) {
+        const item=result.items.find(x=>x.key===key), target=container.querySelector(selector);
+        if(item&&target&&typeof item.en==='string'){target.textContent=item.en;target.hidden=false;}
+      }
+      if(status)status.textContent=result.reviewed?'':tr('Machine translated','Maschinell übersetzt');
+    } catch(error) {
+      if(current()&&status)status.textContent=error.status===429?tr('Daily English limit reached','Englisch-Tageslimit erreicht'):tr('English unavailable right now','Englisch gerade nicht verfügbar');
+    }
+  };
   api.mount = async function (entry) {
     const root = document.querySelector('.entry');
     if (!root || entry.ps === 'Info') return;
