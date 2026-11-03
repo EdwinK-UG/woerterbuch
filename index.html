@@ -542,7 +542,7 @@ function route(){
   else if(p==='play'&&window.PLAY){setOn('play');PLAY.view(arg)}
   else if(p==='g'){setOn('gram');openGram(arg,'g')}
   else if(p==='v'){setOn('wort');openGram(arg,'v')}
-  else if(['klasse','admin','aufgaben','start','kurs','settings','schule'].includes(p)){if(window.KONTO)KONTO.view(p,arg);else viewHome()}
+  else if(KONTO.routes.includes(p)){KONTO.view(p,arg)}
   else viewHome();
   if(p!=='play'&&window.PLAY)PLAY.leave();
   if(p!=='g'&&p!=='v'&&window.GRAM)GRAM.leave();
@@ -3103,5 +3103,5 @@ if(tabs&&!tabs.querySelector('[data-t="play"]')){const a=document.createElement(
 })();
 </script>
 <!-- ===== /Spiele ===== -->
-<script src="konto.js?v=fd3a2b569aa8"></script>
+<script src="konto.js?v=bcef93b9ce14"></script>
 </body></html>
