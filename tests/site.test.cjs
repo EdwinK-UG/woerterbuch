@@ -46,15 +46,19 @@ async function site(hash = "", options = {}) {
       w.TextDecoder = TextDecoder;
       w.TextEncoder = TextEncoder;
       w.crypto.randomUUID = require("node:crypto").randomUUID;
+      Object.defineProperty(w.crypto, 'subtle', {value:require('node:crypto').webcrypto.subtle});
+      w.AbortSignal.timeout = AbortSignal.timeout;
       w.structuredClone = structuredClone;
       w.fetch = async (url, request = {}) => {
         const u = new URL(url, w.location.href);
         calls.push(u.pathname);
         if (u.hostname === "site.test") {
+          if (u.pathname === '/content/dictionary-english.json') return new Response(read('content/dictionary-english.json'));
           if (u.pathname.endsWith("core.bin")) return new Response(core);
           if (u.pathname.endsWith("defs.bin"))
             return options.definitions?.() || new Response(defs);
         }
+        if (u.pathname === '/english') return options.english?.(u, request) || new Response('{}', {status:404});
         if (u.pathname === "/entries") return new Response("[]");
         if (u.pathname === "/entry")
           return (
@@ -142,6 +146,44 @@ test("the homepage live-class link opens the class catalogue without loading the
   } finally {
     await s.close();
   }
+});
+test('English meanings follow their senses, examples stay folded and the German-only choice persists', async () => {
+  const s = await site('#/w/lernen');
+  try {
+    await until(()=>s.document.querySelector('.english-gloss')?.textContent);
+    const meanings = [...s.document.querySelectorAll('.english-gloss')];
+    assert.equal(meanings[0].textContent,'to learn');
+    assert.ok(Object.keys(s.window.localStorage).some(key=>key.startsWith('gd_en_')));
+    assert.ok(meanings.some(line=>line.textContent==='to learn; to study'));
+    const examples = [...s.document.querySelectorAll('.english-example')];
+    assert.ok(examples.every(line=>line.hidden));
+    s.document.querySelector('.english-examples-toggle').click();
+    assert.equal(examples[0].hidden,false);
+    assert.equal(examples[0].textContent,'I've been learning German at the adult education centre for two years.');
+    assert.ok(examples[0].parentElement.textContent.includes('Ich lerne seit zwei Jahren Deutsch'));
+    s.document.querySelector('.english-toggle').click();
+    assert.ok([...meanings,...examples].every(line=>line.hidden));
+    assert.equal(s.window.localStorage.getItem('gd_english'),'off');
+    s.window.route();
+    await until(()=>s.document.querySelector('.english-toggle'));
+    assert.equal(s.document.querySelector('.english-toggle').getAttribute('aria-pressed'),'false');
+    assert.deepEqual(s.errors,[]);
+  } finally {await s.close();}
+});
+test('generated translations render as text and a failed request can be retried', async () => {
+  let failing=true;
+  const s=await site('#/w/Haus',{english:(_url,request)=> {
+    if (!request.method) return new Response('{}',{status:404});
+    return failing ? new Response('{}',{status:503}) : Response.json({version:1,reviewed:false,items:[{key:'s0',en:'house; home <img src=x onerror=bad()>'},{key:'e0:0',en:'The old house is a listed building.'}]});
+  }});
+  try {
+    await until(()=>s.document.querySelector('.english-retry'));
+    failing=false; s.document.querySelector('.english-retry').click();
+    await until(()=>s.document.querySelector('.english-gloss')?.textContent.includes('house; home'));
+    assert.equal(s.document.querySelector('.english-gloss img'),null);
+    assert.match(s.document.querySelector('.english-status').textContent,/Machine translated/);
+    assert.deepEqual(s.errors,[]);
+  } finally {await s.close();}
 });
 test("the sign-in dialog has labels, traps focus and restores focus on Escape", async () => {
   const s = await site("#/start");

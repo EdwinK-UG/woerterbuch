@@ -6,7 +6,7 @@
     "assets": "node tools/build-course-catalog.cjs && node tools/version-assets.cjs",
     "lessons:bundle": "node tools/build-course-catalog.cjs --check --require-private && node tools/build-lesson-bundle.cjs",
     "dictionary:correct": "node tools/correct-dictionary.cjs && node tools/version-assets.cjs",
-    "check": "npm test && npm --prefix worker test && node tools/build-course-catalog.cjs --check && node tools/correct-dictionary.cjs --check && node tools/version-assets.cjs --check"
+    "check": "npm test && npm --prefix worker test && node tools/build-course-catalog.cjs --check && node tools/correct-dictionary.cjs --check && node tools/build-dictionary-fingerprints.cjs --check && node tools/version-assets.cjs --check"
   },
   "devDependencies": {
     "jsdom": "22.1.0",

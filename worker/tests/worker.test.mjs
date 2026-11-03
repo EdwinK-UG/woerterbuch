@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 import { webcrypto } from "node:crypto";
+import { gunzipSync } from 'node:zlib';
 import worker from "../src/index.js";
 import { drainMail } from "../src/welcome.js";
 import { requestLiveClass, sendCourseInvitation } from "../src/invitations.js";
@@ -109,6 +110,40 @@ const db = (file) => {
     },
   };
 };
+test('English translates only fingerprinted public source, caches results and keeps the existing job caps', async () => {
+  const dir=mkdtempSync(join(tmpdir(),'dictionary-english-')), DB=db(join(dir,'fixture.sqlite'));
+  try {
+    DB.exec(migration);
+    const core=JSON.parse(gunzipSync(readFileSync(new URL('../../core.bin',import.meta.url))));
+    const definitions=JSON.parse(gunzipSync(readFileSync(new URL('../../defs.bin',import.meta.url))));
+    const id=core.e.findIndex(row=>row[0]==='Haus'), word='Haus', definition=definitions[id][0];
+    const hash=await DictionaryEnglish.fingerprint(word,definition), cache=new Map(); let calls=0, malformed=false;
+    const env={DB,IMG:{get:async k=>cache.get(k),put:async(k,v)=>cache.set(k,v)},ALLOWED_ORIGINS:'https://client.example.invalid',GENERATION_ENABLED:'true',GLOBAL_DAILY_JOBS:'2',USER_DAILY_JOBS:'2',AI:{run:async(_model,opts)=>{
+      calls++; const data=JSON.parse(opts.messages[1].content);
+      return {response:JSON.stringify({items:malformed ? [] : data.items.map(({key,kind})=>({key,en:kind==='meaning'?'house; home':'The old house is a listed building.'}))})};
+    }}};
+    const call=(source,batch=0,body,origin=env.ALLOWED_ORIGINS)=>worker.fetch(new Request(`https://worker.example.invalid/english?source=${source}&batch=${batch}`,{method:body?'POST':'GET',headers:{Origin:origin,'CF-Connecting-IP':'198.51.100.1'},body:body&&JSON.stringify(body)}),env,{});
+    const body={id,word,definition};
+    assert.equal((await call(hash)).status,404);
+    assert.equal(calls,0);
+    assert.equal((await call(hash,0,{...body,definition:definition+' changed'})).status,400);
+    const forged=await DictionaryEnglish.fingerprint(word,'arbitrary prompt');
+    assert.equal((await call(forged,0,{...body,definition:'arbitrary prompt'})).status,403);
+    assert.equal(calls,0);
+    const result=await call(hash,0,body); assert.equal(result.status,200);
+    assert.equal((await result.json()).items[0].en,'house; home');
+    assert.equal(calls,1);
+    assert.equal((await call(hash)).status,200);
+    assert.equal((await call(hash,0,body)).status,200);
+    assert.equal(calls,1);
+    assert.equal((await call(hash,0,undefined,'https://untrusted.example.invalid')).status,403);
+    malformed=true;
+    assert.equal((await call(hash,1,body)).status,502);
+    assert.equal((await call(hash,1)).status,404);
+    assert.equal((await call(hash,1,body)).status,429);
+    assert.equal(calls,2);
+  } finally {rmSync(dir,{recursive:true,force:true});}
+});
 test("Worker contract: authenticated generation, durable bounds, review, delayed confirmation", async () => {
   const dir = mkdtempSync(join(tmpdir(), "dictionary-worker-")),
     DB = db(join(dir, "fixture.sqlite")),
