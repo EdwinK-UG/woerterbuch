@@ -57,9 +57,11 @@ export async function smtpSend(
   smtpHost = "smtppro.zoho.com",
   smtpPort = 465,
   open = connect,
+  replyTo = "",
 ) {
   if (
     ![to, user].every((x) => /^[^\s@<>]+@[^\s@<>]+$/.test(x)) ||
+    (replyTo && !/^[^\s@<>]+@[^\s@<>]+$/.test(replyTo)) ||
     !/^[a-z0-9.-]+$/i.test(smtpHost) ||
     !Number.isInteger(smtpPort) ||
     smtpPort < 1 ||
@@ -120,6 +122,7 @@ export async function smtpSend(
     const bnd = "b" + crypto.randomUUID().replace(/-/g, "");
     const msg = [
       `From: ${encWord("Deutschklinik")} <${user}>`,
+      ...(replyTo ? [`Reply-To: <${replyTo}>`] : []),
       `To: <${to}>`,
       `Subject: ${encWord(subject)}`,
       `Date: ${new Date().toUTCString().replace("GMT", "+0000")}`,

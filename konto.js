@@ -532,9 +532,9 @@ async function staffOrgs() {
   if (mine.staff.length) { try { (await q('/rest/v1/orgs?select=*&id=in.(' + mine.staff.join(',') + ')') || []).forEach(o => { if (!orgs.some(x => x.id === o.id)) orgs.push(o); }); } catch (e) {} }
   return orgs;
 }
-let D = { org: null, classes: [], members: [], profiles: {}, invites: [], tasks: [], res: [] };
+let D = { org: null, classes: [], members: [], profiles: {}, invites: [], tasks: [], res: [], liveRequests: [] };
 async function loadOrg(org) {
-  D = { org, classes: [], members: [], profiles: {}, invites: [], tasks: [], res: [] };
+  D = { org, classes: [], members: [], profiles: {}, invites: [], tasks: [], res: [], liveRequests: [] };
   D.classes = await q('/rest/v1/classes?select=*&org_id=eq.' + org.id + '&order=created_at') || [];
   D.members = await q('/rest/v1/org_members?select=*&org_id=eq.' + org.id) || [];
   D.invites = await q('/rest/v1/invites?select=*&org_id=eq.' + org.id + '&order=expires_at.desc') || [];
@@ -545,6 +545,7 @@ async function loadOrg(org) {
     D.res = await A().practiceSummary(Object.keys(D.profiles));
   }
   D.tasks = D.classes.length ? await q('/rest/v1/assignments?select=*&class_id=in.(' + D.classes.map(c => c.id).join(',') + ')&order=due_at.asc.nullslast') || [] : [];
+  if (D.classes.length) try { D.liveRequests = await q('/rest/v1/live_class_requests?select=*&class_id=in.(' + D.classes.map(c => c.id).join(',') + ')&order=created_at.desc') || []; } catch (e) { D.liveRequests = []; }
 }
 const sName = id => esc((D.profiles[id] && D.profiles[id].display_name) || T('(no name)', '(ohne Namen)'));
 const curLv = p => (p && LV.includes(p.level) && p.unlocked.includes(p.level) ? p.level : p && p.unlocked.slice(-1)[0] || null);
@@ -617,12 +618,15 @@ async function viewClasses(arg) {
     Object.keys(best).filter(k => k.startsWith(uid + '|')).forEach(k => { const ch = +k.split('|')[1]; if (window.GRAM && GRAM.chLevel(ch) !== L) return; tried++; sum += best[k]; if (best[k] * 100 >= pm) passed++; });
     return { tried, passed, avg: tried ? Math.round(sum / tried * 100) : 0, pm }; };
   const classCard = c => {
-    const ms = D.members.filter(m => m.class_id === c.id && m.member_role === 'student'), ts = D.tasks.filter(t => t.class_id === c.id);
+    const ms = D.members.filter(m => m.class_id === c.id && m.member_role === 'student'), ts = D.tasks.filter(t => t.class_id === c.id), apps = D.liveRequests.filter(r => r.class_id === c.id && r.status === 'pending');
     return `<details class="ks-card ks-cls" open><summary><b>${esc(c.name)}</b> <span class="gr-lv ${c.level}">${c.level}</span> <small>${ms.length} ${T('learners', 'Lernende')} · ${T('pass from', 'bestanden ab')} ${c.pass_mark || org.pass_mark} %</small></summary>
       <div class="ks-row"><span>${T('Pass mark', 'Bestehensgrenze')}</span><input class="input" type="number" min="1" max="100" id="kc_pm_${c.id}" value="${c.pass_mark || ''}" placeholder="${org.pass_mark}" style="width:7rem"> %<button class="btn sm" onclick="KONTO.classPass('${c.id}')">${T('Save', 'Speichern')}</button></div>
-      <div class="ks-row"><span>${T('Invite', 'Einladen')}</span><button class="btn sm primary" onclick="KONTO.invite('student','${c.id}','${c.level}')">${icn('link')} ${T('Invitation link for this class', 'Einladungslink für diese Klasse')}</button></div>
+      <div class="ks-row"><span>${T('Invite', 'Einladen')}</span><button class="btn sm primary" onclick="KONTO.sendClassInvite('${c.id}')">${icn('send')} ${T('Send individual invitation', 'Einzelne Einladung senden')}</button><button class="btn sm" onclick="KONTO.invite('student','${c.id}','${c.level}')">${icn('link')} ${T('Create shareable link', 'Link zum Teilen erstellen')}</button></div>
       <p class="ks-tip">${icn('info')} ${T(`Learners who join with this link get ${c.level} unlocked at once.`, `Wer mit diesem Link beitritt, bekommt ${c.level} sofort freigeschaltet.`)}</p>
+      <div class="ks-row"><span>${T('Live class', 'Live-Unterricht')}</span><span>${c.live_open ? T('Open for applications', 'Für Anmeldungen geöffnet') : T('Private / invite-only', 'Privat / nur mit Einladung')}</span><button class="btn sm" onclick="KONTO.liveClassSheet('${c.id}')">${icn('settings-2')} ${T('Set up', 'Einrichten')}</button></div>
+      ${c.live_open ? `<p class="ks-tip">${T('Starts', 'Start')}: ${dt(c.starts_on)} · ${T('Ends', 'Ende')}: ${dt(c.ends_on)}${c.schedule ? ' · ' + esc(c.schedule) : ''}</p>` : ''}
       <ul class="ks-inv">${D.invites.filter(i => i.class_id === c.id).map(invRow).join('')}</ul>
+      ${apps.length ? `<h4 class="ks-h">${icn('inbox')} ${T('Live class applications', 'Anmeldungen zum Live-Unterricht')}</h4><ul class="ks-inv">${apps.map(r => `<li><b>${sName(r.user_id)}</b><span class="spacer"></span><button class="btn sm" onclick="KONTO.decideLiveRequest('${r.id}',false)">${T('Decline', 'Ablehnen')}</button><button class="btn sm primary" onclick="KONTO.decideLiveRequest('${r.id}',true)">${T('Accept & enrol', 'Annehmen & einschreiben')}</button></li>`).join('')}</ul>` : ''}
       <h4 class="ks-h">${T('Learners · results at level', 'Lernende · Ergebnisse auf Niveau')} ${c.level}</h4>
       ${ms.length ? `<div class="ks-tw"><table class="ks-t"><tr><th>${T('Name', 'Name')}</th><th>${T('Levels', 'Niveaus')}</th><th>${T('Passed', 'Bestanden')}</th><th>Ø</th><th></th></tr>${ms.map(m => { const g = grade(m.user_id, c), p = D.profiles[m.user_id] || { unlocked: [] };
         return `<tr><td>${sName(m.user_id)}</td><td>${p.unlocked.map(x => `<span class="gr-lv ${x}">${x}</span>`).join(' ') || '–'}${wants(p) ? ` <span class="kd-want">${icn('hand')} ${wants(p)}</span>` : ''}</td>
@@ -647,7 +651,7 @@ async function viewClasses(arg) {
     ${D.classes.map(classCard).join('')}
     ${free.length ? `<div class="ks-card"><b>${T('Without a class', 'Ohne Klasse')}</b><ul class="ks-inv">${free.map(m => `<li>${sName(m.user_id)} <select class="input ks-sl" onchange="KONTO.moveMember('${m.user_id}',this.value)"><option value="">${T('Choose class …', 'Klasse wählen …')}</option>${D.classes.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('')}</select></li>`).join('')}</ul></div>` : ''}
     <div class="ks-card ks-form"><b>${T('New class', 'Neue Klasse')}</b><label>${T('Name', 'Name')}<input class="input" id="kc_name" maxlength="60" placeholder="${T('e.g. Evening course B1', 'z. B. Abendkurs B1')}"></label><label>${T('Level', 'Niveau')}<select class="input" id="kc_level">${LV.map(l => `<option>${l}</option>`).join('')}</select></label>
-      <label>${T('Pass mark (optional)', 'Bestehensgrenze (optional)')}<input class="input" id="kc_pass" type="number" min="1" max="100" placeholder="${org.pass_mark}"> %</label><div class="row"><span class="spacer"></span><button class="btn sm primary" onclick="KONTO.addClass()">${T('Create class', 'Klasse anlegen')}</button></div></div>`);
+      <label>${T('Pass mark (optional)', 'Bestehensgrenze (optional)')}<input class="input" id="kc_pass" type="number" min="1" max="100" placeholder="${org.pass_mark}"> %</label><div class="row"><span class="spacer"></span><button class="btn sm primary" onclick="KONTO.addClass()">${T('Create class', 'Klasse anlegen')}</button></div><p class="ks-tip">${T('After creating it, open “Set up” to add dates, meeting time, public live enrolment and the teacher notification address.', 'Nach dem Anlegen unter „Einrichten“ Termine, Unterrichtszeit, öffentliche Live-Anmeldung und Benachrichtigungsadresse ergänzen.')}</p></div>`);
 }
 const refresh = () => refreshView();
 const num = id => { const v = parseInt(($(id) || {}).value, 10); return v >= 1 && v <= 100 ? v : null; };
@@ -658,12 +662,46 @@ const addClass = () => act(async () => {
   await q('/rest/v1/classes', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: { org_id: D.org.id, name, level: $('kc_level').value, pass_mark: num('kc_pass'), teacher_id: me().id } });
   refresh();
 }, T('Class created', 'Klasse angelegt'));
+function liveClassSheet(id) {
+  const c = D.classes.find(x => x.id === id); if (!c) return;
+  openSheet(`<h3>${T('Set up live class', 'Live-Unterricht einrichten')}</h3><p>${T('Public applications are requests, not automatic enrolment. You accept each learner in your dashboard.', 'Öffentliche Anmeldungen sind Anfragen, keine automatische Einschreibung. Sie nehmen jede Person in Ihrer Übersicht an.')}</p>
+    <div class="ks-form"><label>${T('Starts', 'Start')}<input class="input" id="lc_start" type="date" value="${esc(c.starts_on || '')}"></label><label>${T('Ends', 'Ende')}<input class="input" id="lc_end" type="date" value="${esc(c.ends_on || '')}"></label><label>${T('Meeting time / schedule', 'Unterrichtszeit / Plan')}<input class="input" id="lc_schedule" maxlength="240" value="${esc(c.schedule || '')}" placeholder="${T('e.g. Saturdays, 10:00–12:00 EAT', 'z. B. samstags, 10:00–12:00 EAT')}"></label><label>${T('Meeting details for enrolled learners', 'Details für eingeschriebene Lernende')}<textarea class="input" id="lc_meeting" maxlength="400" rows="3" placeholder="${T('e.g. Zoom link sent after enrolment', 'z. B. Zoom-Link nach Einschreibung')}">${esc(c.meeting_details || '')}</textarea></label><label>${T('Teacher notification e-mail', 'Benachrichtigungs-E-Mail der Lehrkraft')}<input class="input" id="lc_notify" type="email" maxlength="120" value="${esc(c.notification_email || me().email || '')}"></label><label><input id="lc_open" type="checkbox" ${c.live_open ? 'checked' : ''}> ${T('Accept public live-class applications', 'Öffentliche Anmeldungen zum Live-Unterricht annehmen')}</label></div>
+    <div class="row" style="margin-top:1rem"><span class="spacer"></span><button class="btn" onclick="closeSheet()">${T('Cancel', 'Abbrechen')}</button><button class="btn primary" onclick="KONTO.saveLiveClass('${id}')">${T('Save', 'Speichern')}</button></div>`);
+}
+const saveLiveClass = id => act(async () => {
+  const val = n => (($('lc_' + n) || {}).value || '').trim();
+  const notification_email = val('notify');
+  if (notification_email && !/^[^\s@<>]+@[^\s@<>]+$/.test(notification_email)) throw new Error(T('Enter a valid teacher e-mail.', 'Bitte eine gültige E-Mail der Lehrkraft eingeben.'));
+  await PATCH('/rest/v1/classes?id=eq.' + id, { starts_on: val('start') || null, ends_on: val('end') || null, schedule: val('schedule') || null, meeting_details: val('meeting') || null, notification_email: notification_email || null, live_open: !!(($('lc_open') || {}).checked) });
+  closeSheet(); refresh();
+}, T('Live class saved', 'Live-Unterricht gespeichert'));
 const classPass = id => act(async () => { await PATCH('/rest/v1/classes?id=eq.' + id, { pass_mark: num('kc_pm_' + id) }); refresh(); }, T('Saved', 'Gespeichert'));
 const invite = (role, cls, lv) => act(async () => {
   await q('/rest/v1/invites', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: { org_id: D.org.id, class_id: cls || null, member_role: role, level: role === 'student' && lv ? lv : null } });
   refresh();
 }, T('Invitation link created', 'Einladungslink erstellt'));
+async function workerPost(path, body) {
+  const r = await fetch(APP_CONFIG.workerUrl + path, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + await A().token() }, body: JSON.stringify(body) });
+  const d = await r.json().catch(() => ({})); if (!r.ok) throw new Error(d.error || 'Email service unavailable'); return d;
+}
+function sendClassInvite(id) {
+  const c = D.classes.find(x => x.id === id); if (!c) return;
+  openSheet(`<h3>${T('Send class invitation', 'Klasseneinladung senden')}</h3><p>${T('This email is sent from hello@deutschklinik.com. Replies go directly to your teacher email.', 'Diese E-Mail wird von hello@deutschklinik.com gesendet. Antworten gehen direkt an Ihre Lehrkraft-E-Mail.')}</p>
+    <div class="ks-form"><label>${T('Learner name', 'Name der lernenden Person')}<input class="input" id="ci_name" maxlength="60" autocomplete="name"></label><label>${T('Learner e-mail', 'E-Mail der lernenden Person')}<input class="input" id="ci_email" type="email" maxlength="120" autocomplete="email"></label><label>${T('Personal note (optional)', 'Persönliche Nachricht (optional)')}<textarea class="input" id="ci_note" maxlength="500" rows="3"></textarea></label></div>
+    <p class="ks-tip">${esc(c.name)} · ${c.level}${c.starts_on ? ' · ' + dt(c.starts_on) : ''}${c.schedule ? ' · ' + esc(c.schedule) : ''}</p><div class="row" style="margin-top:1rem"><span class="spacer"></span><button class="btn" onclick="closeSheet()">${T('Cancel', 'Abbrechen')}</button><button class="btn primary" onclick="KONTO.sendClassInviteNow('${id}')">${icn('send')} ${T('Send invitation', 'Einladung senden')}</button></div>`);
+  icons();
+}
+const sendClassInviteNow = id => act(async () => {
+  const c = D.classes.find(x => x.id === id), name = (($('ci_name') || {}).value || '').trim(), to = (($('ci_email') || {}).value || '').trim(), note = (($('ci_note') || {}).value || '').trim();
+  if (!c || !/^[^\s@<>]+@[^\s@<>]+$/.test(to)) throw new Error(T('Enter the learner’s e-mail address.', 'Bitte die E-Mail-Adresse der lernenden Person eingeben.'));
+  const r = await q('/rest/v1/invites', { method: 'POST', headers: { Prefer: 'return=representation' }, body: { org_id: D.org.id, class_id: c.id, member_role: 'student', level: c.level, uses_left: 1 } });
+  const code = r?.[0]?.code; if (!code) throw new Error(T('Could not create an invitation.', 'Einladung konnte nicht erstellt werden.'));
+  const invite_url = location.origin + location.pathname + '?join=' + code;
+  await workerPost('/course-invitation', { class_id: c.id, to, name, note, invite_url });
+  closeSheet(); refresh();
+}, T('Invitation sent', 'Einladung gesendet'));
 const delInvite = code => act(async () => { await q('/rest/v1/invites?code=eq.' + code, { method: 'DELETE' }); refresh(); });
+const decideLiveRequest = (id, accept) => act(async () => { await rpc('decide_live_class_request', { p_request: id, p_accept: !!accept }); refresh(); }, accept ? T('Learner enrolled', 'Lernende Person eingeschrieben') : T('Application declined', 'Anmeldung abgelehnt'));
 const moveMember = (u, c) => act(async () => { await PATCH('/rest/v1/org_members?org_id=eq.' + D.org.id + '&user_id=eq.' + u, { class_id: c || null }); const m = D.members.find(x => x.user_id === u); if (m) m.class_id = c || null; }, T('Moved', 'Verschoben'));
 const removeMember = u => { if (!confirm(T('Remove this person from your school?', 'Diese Person aus der Schule entfernen?'))) return; act(async () => { await q('/rest/v1/org_members?org_id=eq.' + D.org.id + '&user_id=eq.' + u, { method: 'DELETE' }); window.closeSheet && closeSheet(); refresh(); }, T('Removed', 'Entfernt')); };
 const addTask = c => act(async () => {
@@ -866,7 +904,7 @@ function viewWelcome() {
     msg = w.message || T('Build your German with vocabulary, grammar, real examples, pictures and games. Choose an available level and practise at your own pace.', 'Lerne Deutsch mit Wortschatz, Grammatik, echten Beispielen, Bildern und Spielen. Wähle ein verfügbares Niveau und übe in deinem Tempo.');
   const free = ['dict', 'games'].filter(f => mode(f) === 'everyone');
   const draw = counts => page('', `<section class="kd-hero kd-land cv-waves"><div><p class="kd-eye">Deutschklinik</p><h1>${esc(h)}</h1><p class="kd-hi">${esc(msg)}</p>
-      <div class="row"><button class="btn kd-cta" onclick="ACCT.sheet('up')">${icn('sparkles')} ${T('Start learning – it’s free', 'Kostenlos loslegen')}</button><button class="btn kd-ghost" onclick="ACCT.sheet('in')">${T('Sign in', 'Anmelden')}</button></div>
+      <div class="row"><button class="btn kd-cta" onclick="ACCT.sheet('up')">${icn('sparkles')} ${T('Start learning – it’s free', 'Kostenlos loslegen')}</button><a class="btn kd-ghost" href="#/live-classes">${icn('calendar-clock')} ${T('Live classes from 23 November', 'Live-Kurse ab 23. November')}</a></div>
       ${mode('dict') === 'everyone' ? `<form class="kd-look" onsubmit="event.preventDefault();KONTO.lookup(this.q.value)"><input name="q" class="input" aria-label="${T('Look up a German word','Deutsches Wort nachschlagen')}" placeholder="${T('Look up a German word …', 'Ein deutsches Wort nachschlagen …')}" autocomplete="off" lang="de"><button class="btn" aria-label="${T('Search','Suchen')}">${icn('search')}</button></form>` : ''}</div>
       <div class="kd-land-art" aria-hidden="true"><span>Hallo!</span><span>Guten Tag</span><span>Wie geht’s?</span><span>Tschüss!</span><span>Danke</span></div></section>
     <h2 class="kd-h">${icn('route')} ${T('How it works', 'So funktioniert es')}</h2>
@@ -892,8 +930,20 @@ async function saveSite() {
   catch (e) { toastM(err(e)); }
 }
 
+/* ---------- public live-class enrolment ---------- */
+async function viewLiveClasses() {
+  busy(); let classes = [];
+  try { classes = await rpcAnon('live_class_catalog') || []; } catch (e) { classes = []; }
+  const apply = c => !me() ? `<button class="btn primary" onclick="ACCT.sheet('up')">${T('Create a free learner account', 'Kostenloses Lernkonto erstellen')}</button>`
+    : !P ? `<button class="btn" onclick="KONTO.reload()">${T('Checking account …', 'Konto wird geprüft …')}</button>`
+    : P.role !== 'learner' ? '' : `<button class="btn primary" onclick="KONTO.applyLiveClass('${c.id}')">${T('Apply for this class', 'Für diese Klasse anmelden')}</button>`;
+  page('', `<section class="kd-hero cv-grid"><div><p class="kd-eye">Deutschklinik</p><h1>${T('Live instructor-led German classes', 'Deutsch-Live-Unterricht mit Lehrkraft')}</h1><p class="kd-hi">${T('Starting 23 November. Choose a class and level, create your free learner account, and apply. Your teacher confirms enrolment before your course opens.', 'Beginn am 23. November. Wähle Klasse und Niveau, erstelle dein kostenloses Lernkonto und melde dich an. Deine Lehrkraft bestätigt die Einschreibung, bevor dein Kurs öffnet.')}</p><p class="kd-meta">${icn('mail')} support@deutschklinik.com &nbsp; ${icn('phone')} +256 755 221 543</p></div></section>
+    ${classes.length ? `<div class="kd-grid2">${classes.map(c => `<article class="kd-card"><span class="gr-lv ${esc(c.level)}">${esc(c.level)}</span><h2>${esc(c.name)}</h2><p class="m"><b>${esc(c.teacher || c.organisation)}</b>${c.organisation && c.teacher ? ' · ' + esc(c.organisation) : ''}</p><p>${icn('calendar')} ${T('Starts', 'Start')}: ${dt(c.starts_on)}${c.ends_on ? ' · ' + T('ends', 'Ende') + ': ' + dt(c.ends_on) : ''}</p><p>${icn('clock')} ${esc(c.schedule || T('Schedule to be confirmed', 'Zeitplan wird noch bestätigt'))}</p>${apply(c)}</article>`).join('')}</div>` : `<div class="kd-card kd-empty">${icn('calendar-clock')}<h2>${T('Classes will be published here soon', 'Klassen werden bald hier veröffentlicht')}</h2><p>${T('For the November intake or course questions, contact support@deutschklinik.com or +256 755 221 543.', 'Für den Kurs im November oder Fragen: support@deutschklinik.com oder +256 755 221 543.')}</p></div>`}`, 'kd');
+}
+const applyLiveClass = id => act(async () => { const r = await workerPost('/live-class-request', { class_id: id }); toastM(T(`Application received for ${r.class_name} (${r.level}). Your teacher will confirm your place.`, `Anmeldung für ${r.class_name} (${r.level}) eingegangen. Ihre Lehrkraft bestätigt den Platz.`)); }, '');
+
 /* ---------- routes ---------- */
-const ROUTES = ['start', 'kurs', 'settings', 'schule', 'klasse', 'admin', 'aufgaben'];
+const ROUTES = ['start', 'kurs', 'settings', 'schule', 'klasse', 'admin', 'aufgaben', 'live-classes'];
 async function viewStart(arg) {
   if (!me() || arg === 'besucher') return viewWelcome();
   busy(); await ready();
@@ -905,7 +955,7 @@ async function viewStart(arg) {
 function view(p, arg) {
   CUR = p;
   document.querySelectorAll('#tabs a').forEach(a => a.classList.toggle('on', p === 'start' && a.dataset.t === 'start'));
-  const f = { start: viewStart, kurs: viewCourse, settings: viewSettings, schule: viewOrgPage, klasse: viewClasses, admin: viewAdmin, aufgaben: viewTasks }[p] || viewStart;
+  const f = { start: viewStart, kurs: viewCourse, settings: viewSettings, schule: viewOrgPage, klasse: viewClasses, admin: viewAdmin, aufgaben: viewTasks, 'live-classes': viewLiveClasses }[p] || viewStart;
   return f(arg);
 }
 
@@ -1033,7 +1083,7 @@ document.head.appendChild(st);
 /* ---------- start ---------- */
 window.KONTO = { level, lang, passMark, canOpen, lvState, unlock, lockSheet, unlocked: unlockedSet, profile: () => P, org: () => ORG, view, routes: ROUTES, fillMe, saveLevel, askLevel,
   signupFields, signupCheck, signupData, request, reqFields, sendRequest, join, decide, inviteSheet, makeSiteInvite, delSiteInvite, codeSheet,
-  saveOrg, dropLogo, orgPass, addClass, classPass, invite, delInvite, moveMember, removeMember, addTask, delTask, copy, reload, refresh,
+  saveOrg, dropLogo, orgPass, addClass, classPass, invite, delInvite, moveMember, removeMember, addTask, delTask, copy, reload, refresh, liveClassSheet, saveLiveClass, sendClassInvite, sendClassInviteNow, decideLiveRequest, applyLiveClass,
   student, unlockFor, saveSettings, setCourse, unenroll, leave, T, can, gate, featureOf, saveSite, lookup, signupAs, previewWelcome: () => { location.hash = '#/start/besucher'; } };
 window.addEventListener('acct:in', e => { reload().then(() => { if (e.detail && e.detail.fresh && /^#?\/?$/.test(location.hash)) location.hash = '#/start'; }); });
 window.addEventListener('acct:out', () => { profileRequest++; loading=null; OFF=false; P = null; ORG = null; mine = { orgs: [], staff: [] }; apply(); if (/^#?\/?$/.test(location.hash)) location.hash = '#/start'; });
