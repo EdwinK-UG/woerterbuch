@@ -206,6 +206,11 @@ function applyBrand() {
     document.title = ORG.name + ' · Deutschklinik';
   } else { if (el) el.remove(); root.style.removeProperty('--ac'); root.style.removeProperty('--org'); document.title = 'Deutschklinik'; }
   if(window.updatePageMetadata)updatePageMetadata();
+  const colour=ORG&&/^#[0-9a-f]{6}$/i.test(ORG.theme||'')?ORG.theme:null;
+  root.style.setProperty('--ac-ink',colour?ink(colour):'#fff');
+  if(colour)root.style.setProperty('--ac-salt',`color-mix(in srgb, ${colour} 14%, var(--card))`);else root.style.removeProperty('--ac-salt');
+  const favicon=document.querySelector('link[rel="icon"]');
+  if(favicon)favicon.href=colour?'data:image/svg+xml,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="18" fill="${colour}"/><text x="32" y="46" text-anchor="middle" font-family="Georgia,serif" font-size="46" fill="${ink(colour)}">D</text></svg>`):'favicon.svg?v=3';
   icons();
 }
 function apply() {
@@ -954,11 +959,12 @@ function viewWelcome() {
       <button class="btn primary" onclick="ACCT.sheet('up')">${T('Start learning for free', 'Kostenlos loslegen')} ${icn('arrow-right')}</button></div>
       <div class="kd-home-art" aria-hidden="true">${welcomeArt('learn')}</div></section>
     ${free.length ? `<section class="kd-home-try" aria-labelledby="home-try"><div><h2 id="home-try">${T('Try a little German.', 'Probiere ein bisschen Deutsch.')}</h2><p>${T('No account needed.', 'Ohne Konto.')}</p></div><div class="kd-home-tools">
-      ${free.includes('dict') ? `<form class="kd-look" role="search" onsubmit="event.preventDefault();KONTO.lookup(this.q.value)"><label class="sr-only" for="home-word">${T('Look up a German word', 'Deutsches Wort nachschlagen')}</label><input id="home-word" name="q" class="input" placeholder="${T('Look up a word …', 'Ein Wort nachschlagen …')}" autocomplete="off" lang="de" required><button class="btn primary" aria-label="${T('Search dictionary', 'Wörterbuch durchsuchen')}">${icn('search')}</button></form>` : ''}
+      ${free.includes('dict') ? `<form class="kd-look" role="search" onsubmit="event.preventDefault();KONTO.lookup(this.q.value)"><label class="sr-only" for="home-word">${T('Look up a German word', 'Deutsches Wort nachschlagen')}</label><input id="home-word" name="q" class="input" role="combobox" aria-autocomplete="list" aria-controls="home-suggestions" aria-expanded="false" placeholder="${T('Look up a word …', 'Ein Wort nachschlagen …')}" autocomplete="off" lang="de" required><button class="btn primary" aria-label="${T('Search dictionary', 'Wörterbuch durchsuchen')}">${icn('search')}</button><div id="home-suggestions" role="listbox" aria-label="${T('Search results','Suchergebnisse')}" hidden></div></form>` : ''}
       ${free.includes('games') ? `<a class="kd-home-game" href="#/play">${icn('gamepad-2')} ${T('Play a game', 'Ein Spiel spielen')} ${icn('arrow-up-right')}</a>` : ''}</div></section>` : ''}
     <section class="kd-home-live" aria-labelledby="home-live"><div class="kd-home-class-art" aria-hidden="true">${welcomeArt('class')}</div><div><p class="kd-eye">${T('Learn together', 'Gemeinsam lernen')}</p><h2 id="home-live">${T('A teacher. A class. Your next step.', 'Eine Lehrkraft. Eine Klasse. Dein nächster Schritt.')}</h2><p>${T('Find a live German class that fits your level and schedule.', 'Finde einen Deutsch-Live-Kurs, der zu deinem Niveau und Zeitplan passt.')}</p><a class="kd-home-link" href="#/live-classes">${T('Explore live classes', 'Live-Kurse entdecken')} ${icn('arrow-right')}</a></div></section>
     <div class="kd-home-more"><details><summary>${T('Find your level', 'Finde dein Niveau')} ${icn('plus')}</summary><div class="kd-home-levels">${LV.map(l => { const c = COURSE_COUNTS[l]; return `<div><span class="gr-lv ${l}">${l}</span><div><b>${esc(lvName(l))}</b><p>${c ? esc(T(LVDESC[l][0], LVDESC[l][1])) : T('Coming soon', 'Kommt bald')}</p>${c ? `<small>${[c.v ? c.v + ' ' + T('vocabulary topics', 'Wortschatz-Themen') : '', c.g ? c.g + ' ' + T('grammar chapters', 'Grammatik-Kapitel') : ''].filter(Boolean).join(' · ')}</small>` : ''}</div></div>`; }).join('')}</div></details>
     <details><summary>${T('For teachers & schools', 'Für Lehrkräfte & Schulen')} ${icn('plus')}</summary><div class="kd-home-teachers"><p>${T('Start a term, invite your learners and follow their progress.', 'Starte einen Kursdurchgang, lade Lernende ein und begleite ihren Fortschritt.')}</p><div class="row"><button class="btn" onclick="KONTO.signupAs('teacher')">${T('I am a teacher', 'Ich bin Lehrkraft')}</button><button class="btn" onclick="KONTO.signupAs('school')">${T('Register a school', 'Schule registrieren')}</button></div></div></details></div>`, 'kd kd-home');
+if($('home-word')&&window.bindHomeSearch)bindHomeSearch($('home-word'),$('home-suggestions'));
 }
 // Small inline vector scenes stay sharp on phones and need no image downloads.
 function welcomeArt(scene) {

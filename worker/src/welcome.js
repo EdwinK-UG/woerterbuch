@@ -1,5 +1,6 @@
 import { authenticated } from "./control.js";
-import { textBody, htmlBody, smtpSend } from "./mail-body.js";
+import { smtpSend } from "./mail-body.js";
+import { welcomeContent } from "./welcome-template.js";
 const json = (status, o, h) =>
   new Response(JSON.stringify(o), {
     status,
@@ -26,10 +27,10 @@ export async function enqueue(u, env, h) {
   if (await env.IMG.get("welcome|" + u.id))
     return json(200, { sent: false, reason: "already sent" }, h);
   const r = await env.DB.prepare(
-    `INSERT INTO welcome_jobs(user_id,email,next_try) VALUES(?1,?2,?3)
+    `INSERT INTO welcome_jobs(user_id,email,next_try,context) VALUES(?1,?2,?3,?4)
      ON CONFLICT(user_id) DO NOTHING RETURNING user_id`,
   )
-    .bind(u.id, u.email, Date.now())
+    .bind(u.id, u.email, Date.now(),JSON.stringify({role:(u.user_metadata||u.raw_user_meta_data||{}).role,name:(u.user_metadata||u.raw_user_meta_data||{}).name||(u.user_metadata||u.raw_user_meta_data||{}).display_name||(u.user_metadata||u.raw_user_meta_data||{}).info?.name||''}))
     .first();
   return json(r ? 202 : 200, { sent: false, queued: !!r }, h);
 }
@@ -82,7 +83,7 @@ export async function drainMail(env, send = smtpSend) {
     .run();
   // Remove failed recipients after seven days, preserving only the deduplication row.
   await env.DB.prepare(
-    "UPDATE welcome_jobs SET email=NULL WHERE state='failed' AND next_try<?1 AND email IS NOT NULL",
+    "UPDATE welcome_jobs SET email=NULL,context=NULL WHERE state='failed' AND next_try<?1 AND email IS NOT NULL",
   )
     .bind(now - 7 * 86400000)
     .run();
@@ -101,23 +102,27 @@ export async function drainMail(env, send = smtpSend) {
     const claim = crypto.randomUUID();
     const row = await env.DB.prepare(
       `UPDATE welcome_jobs SET claim=?1,next_try=?2,attempts=attempts+1
-      WHERE user_id=?3 AND state='queued' AND next_try<=?4 RETURNING email,attempts`,
+      WHERE user_id=?3 AND state='queued' AND next_try<=?4 RETURNING email,attempts,context`,
     )
       .bind(claim, Date.now() + 5 * 60000, user_id, Date.now())
       .first();
     if (!row) continue;
     try {
+      const content=welcomeContent(site.href,JSON.parse(row.context||'{}'));
       if (!(await env.IMG.get("welcome|" + user_id)))
         await send(
           env.SMTP_USER.trim(),
           env.SMTP_PASSWORD.replace(/\s+/g, ""),
           row.email,
-          "Welcome to Deutschklinik!",
-          textBody(site.href),
-          htmlBody(site.href),
+          content.subject,
+          content.text,
+          content.html,
           user_id,
           smtpHost,
           smtpPort,
+          undefined,
+          'support@deutschklinik.com',
+          {from:'hello@deutschklinik.com',fromName:'Deutschklinik'},
         );
     } catch (error) {
       const reason = /bad address/.test(error?.message || "") ? "address" : /timed? ?out/i.test(error?.message || "") ? "timeout" : /tls|ssl/i.test(error?.message || "") ? "tls" : /closed|reset|connection/i.test(error?.message || "") ? "connection" : "error";
@@ -138,7 +143,7 @@ export async function drainMail(env, send = smtpSend) {
       continue;
     }
     await env.DB.prepare(
-      "UPDATE welcome_jobs SET state='sent',email=NULL,claim=NULL,last_error=NULL WHERE user_id=?1 AND claim=?2",
+      "UPDATE welcome_jobs SET state='sent',email=NULL,context=NULL,claim=NULL,last_error=NULL WHERE user_id=?1 AND claim=?2",
     )
       .bind(user_id, claim)
       .run();

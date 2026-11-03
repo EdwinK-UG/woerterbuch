@@ -53,5 +53,11 @@
   @media(max-width:560px){.teacher-story{grid-template-columns:1fr;gap:.5rem;padding:1.5rem .2rem}.teacher-story aside{padding-top:0}.teacher-page .kd-logo{width:90px;height:90px}.invite-summary{padding:.8rem 1rem}}
   @media(prefers-reduced-motion:reduce){.topic-art,.play-tile{transition:none}.topic-art:hover,.play-tile:hover{transform:none}}
   `;
+  style.textContent += `
+  header .bar{height:auto;flex-wrap:wrap;padding-block:.65rem}html #orgbrand{max-width:min(25rem,48vw);overflow:visible;white-space:normal;flex-shrink:0;color:var(--fg);line-height:1.25}html #orgbrand span{display:block;overflow-wrap:anywhere}#orgbrand img{flex-shrink:0}header nav.tabs{flex-shrink:0}
+  @media(min-width:641px) and (max-width:1450px){header:has(#orgbrand) nav.tabs{order:5;flex-basis:100%;margin-left:0;justify-content:center}header:has(#orgbrand) #acct{margin-left:auto}}
+  @media(max-width:640px){html #orgbrand{font-size:.7rem;max-width:42vw}html #orgbrand span{display:block}header .brand{font-size:1.1rem}}
+  html .btn.primary,html .kd-home .btn.primary,html .btn.primary:hover{background:var(--ac);border-color:var(--ac);color:var(--ac-ink,#fff)}.kd-look{position:relative}#home-suggestions{position:absolute;top:calc(100% + .5rem);left:0;right:0;z-index:30;background:var(--card);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:1rem;padding:.35rem}#home-suggestions[hidden]{display:none}#home-suggestions a{display:flex;justify-content:space-between;gap:1rem;padding:.65rem .8rem;border-radius:.65rem;text-decoration:none;color:var(--fg)}#home-suggestions a:hover,#home-suggestions a[aria-selected=true]{background:var(--ac-salt)}#home-suggestions small{color:var(--mut)}
+  `;
   document.head.appendChild(style);
 })();
