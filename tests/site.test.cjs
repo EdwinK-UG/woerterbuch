@@ -130,6 +130,19 @@ test("welcome skips dictionary and grammar and a slow search preserves the typed
     await s.close();
   }
 });
+test("the homepage live-class link opens the class catalogue without loading the dictionary", async () => {
+  const s = await site("#/start");
+  try {
+    await until(() => s.document.querySelector('.kd-home-link'));
+    s.document.querySelector('.kd-home-link').click();
+    await until(() => s.document.querySelector('h1')?.textContent === 'Live instructor-led German classes');
+    assert.ok(s.calls.includes('/rest/v1/rpc/live_class_catalog'));
+    assert.ok(!s.calls.some((p) => /\.bin$|grammatik\//.test(p)));
+    assert.deepEqual(s.errors, []);
+  } finally {
+    await s.close();
+  }
+});
 test("the sign-in dialog has labels, traps focus and restores focus on Escape", async () => {
   const s = await site("#/start");
   try {
