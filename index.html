@@ -928,7 +928,7 @@ function exampleNoun(e){
 }
 async function findImgs(e){
   const w=plainW(e.w), out=[], seen=new Set(), add=a=>a.forEach(x=>{if(x.src&&!seen.has(x.src)){seen.add(x.src);out.push(x)}});
-  if(w==='erwerben')return [{src:'assets/words/erwerben.svg',cap:ui('Buying a home: acquiring property','Ein Haus kaufen: Eigentum erwerben'),url:''}];
+  if(w==='erwerben')return [{src:new URL('assets/words/erwerben.svg',location.href).href,cap:ui('Buying a home: acquiring property','Ein Haus kaufen: Eigentum erwerben'),url:''}];
   // Abstract concepts and actions need an editorial scene, not a loosely matched photograph.
   if(['abstract','verb','adj'].includes(imgKind(e)))return [];
   const en=await enCached(w), kind=imgKind(e);
@@ -958,6 +958,7 @@ function showImg(e,box,list,k){
 }
 async function loadImg(e){
   const box=document.getElementById('wimg'); if(!box||NOIMG.has(e.ps)||!e.ps)return;
+  if(plainW(e.w)==='erwerben'){showImg(e,box,await findImgs(e),0);return}
   if(!box.dataset.photo&&AI.free()){freeShow(e,box);return}
   const w=plainW(e.w), saved=LSI.get(w);
   if(saved){showImg(e,box,[saved],0)}
