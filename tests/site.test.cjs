@@ -473,6 +473,9 @@ test('the first mobile pointer tap opens a word preview and compatibility mouse 
  }finally{await s.close();}
 });
 
+test('grouped appearance and account controls remain operable',async()=>{
+ const s=await site('#/start');try{const group=s.document.querySelector('.header-tools'),theme=group.querySelector('#theme');assert.ok(group.querySelector('#acct'));theme.click();assert.equal(s.document.documentElement.dataset.theme,'dark');assert.equal(theme.getAttribute('aria-pressed'),'true');theme.click();assert.equal(s.document.documentElement.dataset.theme,'light');group.querySelector('#acct').click();await until(()=>s.document.querySelector('#ac_em'));assert.deepEqual(s.errors,[]);}finally{await s.close()}
+});
 test('unchanged school refresh keeps the hero, logo and favicon mounted',async()=>{
  const org={id:'00000000-0000-4000-ab00-000000000081',owner:'fixture',name:'Das Berliner Language Centre',theme:'#ac8935',kind:'school',logo_url:'https://site.test/icon-64.png',pass_mark:70};let loads=0;
  const s=await site('#/start/'+org.id,{account:true,profile:()=>Response.json([{user_id:'fixture',role:'school',unlocked:[],org_id:org.id}]),request:async u=>{
