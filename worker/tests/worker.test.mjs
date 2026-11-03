@@ -8,25 +8,30 @@ import { webcrypto } from "node:crypto";
 import { gunzipSync } from 'node:zlib';
 import worker from "../src/index.js";
 import { drainMail } from "../src/welcome.js";
-import { requestLiveClass, sendCourseInvitation } from "../src/invitations.js";
+import { requestLiveClass, sendCourseInvitation, previewCourseInvitation } from "../src/invitations.js";
 globalThis.crypto ||= webcrypto;
 test('term invitation contains configured dates, course length, timetable and course details', async () => {
-  const oldFetch=globalThis.fetch, sent=[];
+  const oldFetch=globalThis.fetch, sent=[],dir=mkdtempSync(join(tmpdir(),'invitation-mail-')),DB=db(join(dir,'fixture.sqlite'));
+  DB.exec(readFileSync(new URL('../migrations/0003_invitation_delivery.sql',import.meta.url),'utf8'));
   try {
     globalThis.fetch=async url=>{
       const path=new URL(url).pathname;
       if(path==='/auth/v1/user') return Response.json({id:'teacher',email:'teacher@example.invalid',email_confirmed_at:'2026-11-01T00:00:00Z'});
       if(path.endsWith('/can_manage_class')) return Response.json(true);
-      if(path==='/rest/v1/invites') return Response.json([{code:'abcdef123456'}]);
+      if(path==='/rest/v1/invites') return Response.json([{code:'abcdef123456',recipient_email:'student@example.invalid',expires_at:'2099-01-01T00:00:00Z'}]);
+      if(path==='/rest/v1/orgs')return Response.json([{name:'Teacher studio',theme:'#725ab3',owner:'teacher'}]);
+      if(path==='/rest/v1/profiles')return Response.json([{display_name:'A teacher'}]);
       if(path==='/rest/v1/classes') return Response.json([{name:'Evening German',level:'A1',term_name:'Spring 2027',starts_on:'2027-02-01',ends_on:'2027-02-28',schedule:'Mon & Wed 18:00 EAT (UTC+3)',course_details:'Weekly feedback and lesson recordings'}]);
       throw Error('Unexpected invitation request');
     };
-    const response=await sendCourseInvitation(new Request('https://worker.example.invalid/course-invitation',{method:'POST',headers:{Authorization:'Bearer verified'},body:JSON.stringify({class_id:'00000000-0000-4000-ab00-000000000001',to:'student@example.invalid',invite_url:'https://site.example.invalid/?join=abcdef123456'})}),{SITE_URL:'https://site.example.invalid/',SUPABASE_URL:'https://auth.example.invalid',SUPABASE_PUBLISHABLE_KEY:'fixture',SMTP_USER:'hello@example.invalid',SMTP_PASSWORD:'fixture'},{},async (...args)=>sent.push(args));
+    const response=await sendCourseInvitation(new Request('https://worker.example.invalid/course-invitation',{method:'POST',headers:{Authorization:'Bearer verified'},body:JSON.stringify({class_id:'00000000-0000-4000-ab00-000000000001',to:'student@example.invalid',invite_url:'https://site.example.invalid/?join=abcdef123456'})}),{DB,SITE_URL:'https://site.example.invalid/',SUPABASE_URL:'https://auth.example.invalid',SUPABASE_PUBLISHABLE_KEY:'fixture',SMTP_USER:'hello@example.invalid',SMTP_PASSWORD:'fixture'},{},async (...args)=>sent.push(args));
     assert.equal(response.status,200);
     for(const body of [sent[0][4],sent[0][5]]) for(const phrase of ['Spring 2027','4 weeks','2027','Weekly feedback and lesson recordings']) assert.ok(body.includes(phrase));
     assert.ok(sent[0][4].includes('Mon & Wed 18:00 EAT (UTC+3)'));
     assert.equal(sent[0][10],'teacher@example.invalid');
-  } finally {globalThis.fetch=oldFetch;}
+    assert.equal(sent[0][11].from,'hello@deutschklinik.com');
+    assert.ok(sent[0][5].includes('Teacher studio'));
+  } finally {globalThis.fetch=oldFetch;rmSync(dir,{recursive:true,force:true});}
 });
 test('class application notifies support and the private teacher without a service key', async () => {
   const oldFetch = globalThis.fetch, sent = [];
@@ -362,4 +367,41 @@ test("Worker contract: authenticated generation, durable bounds, review, delayed
     globalThis.fetch = oldFetch;
     rmSync(dir, { recursive: true, force: true });
   }
+});
+
+test('invitation errors give a safe diagnosis; retry reuses the link and accepted mail is deduplicated',async()=>{
+ const dir=mkdtempSync(join(tmpdir(),'invitation-retry-')),DB=db(join(dir,'fixture.sqlite')),oldFetch=globalThis.fetch;
+ DB.exec(readFileSync(new URL('../migrations/0003_invitation_delivery.sql',import.meta.url),'utf8'));
+ try{
+  globalThis.fetch=async(url)=>{const path=new URL(url).pathname;
+   if(path==='/auth/v1/user')return Response.json({id:'teacher',email:'teacher@example.invalid',email_confirmed_at:'2026-11-01'});
+   if(path.endsWith('/can_manage_class'))return Response.json(true);
+   if(path==='/rest/v1/classes')return Response.json([{org_id:'org',name:'A1 class',level:'A1',term_name:'Autumn',starts_on:'2026-11-23',ends_on:'2027-02-01',schedule:'Mon 20:00 EAT'}]);
+   if(path==='/rest/v1/orgs')return Response.json([{owner:'teacher',name:'Teacher studio'}]);
+   if(path==='/rest/v1/profiles')return Response.json([{display_name:'Teacher'}]);
+   if(path==='/rest/v1/invites')return Response.json([{code:'abcdef123456',recipient_email:'learner@example.invalid',expires_at:'2099-01-01'}]);
+   throw Error('unexpected fetch');
+  };
+  const env={DB,SITE_URL:'https://site.example.invalid/',SUPABASE_URL:'https://auth.example.invalid',SUPABASE_PUBLISHABLE_KEY:'key',SMTP_USER:'support@example.invalid',SMTP_PASSWORD:'not-a-real-secret'};
+  const request=()=>new Request('https://worker.example.invalid/course-invitation',{method:'POST',headers:{Authorization:'Bearer verified'},body:JSON.stringify({class_id:'00000000-0000-4000-ab00-000000000001',to:'learner@example.invalid',invite_url:env.SITE_URL+'?join=abcdef123456'})});
+  const failed=await sendCourseInvitation(request(),env,{},async()=>{throw Object.assign(Error('private provider response'),{smtpCode:535,smtpStage:'login_message'});});
+  assert.equal(failed.status,502);const error=await failed.json();assert.ok(error.error.includes('sign-in'));assert.ok(!JSON.stringify(error).includes('private provider response'));
+  assert.equal((await DB.prepare('SELECT last_error FROM invitation_mail').first()).last_error,'smtp_535_login_message');
+  let sends=0;const send=async()=>{sends++;};
+  assert.equal((await sendCourseInvitation(request(),env,{},send)).status,200);
+  assert.equal((await sendCourseInvitation(request(),env,{},send)).status,200);assert.equal(sends,1);
+  const preview=await previewCourseInvitation(new Request('https://worker.example.invalid/course-invitation/preview',{method:'POST',headers:{Authorization:'Bearer verified'},body:JSON.stringify({class_id:'00000000-0000-4000-ab00-000000000001',note:'<script>bad()</script>'})}),env,{});
+  assert.equal(preview.status,200);const html=(await preview.json()).html;assert.ok(html.includes('&lt;script&gt;'));assert.equal(html.includes('<script>'),false);assert.equal(sends,1);
+ }finally{globalThis.fetch=oldFetch;rmSync(dir,{recursive:true,force:true});}
+});
+
+test('SMTP authenticates the mailbox and sends a branded alias with teacher reply-to',async()=>{
+ const {smtpSend}=await import('../src/mail-body.js');let controller;const commands=[];
+ const readable=new ReadableStream({start(c){controller=c;c.enqueue(new TextEncoder().encode('220 mail ready\r\n'));}});
+ const replies=['250-mail\r\n250 AUTH LOGIN\r\n','334 user\r\n','334 password\r\n','235 signed in\r\n','250 sender\r\n','250 recipient\r\n','354 send message\r\n','250 accepted\r\n'];
+ const writable=new WritableStream({write(data){const command=new TextDecoder().decode(data);commands.push(command);const reply=replies.shift();if(reply)controller.enqueue(new TextEncoder().encode(reply));}});
+ await smtpSend('support@example.invalid','fixture','learner@example.invalid','Your invitation','Text','<b>HTML</b>','stable-id','smtp.example.invalid',465,()=>({readable,writable,close:async()=>{}}),'teacher@example.invalid',{from:'hello@example.invalid',fromName:'Teacher studio'});
+ assert.equal(commands[2].trim(),Buffer.from('support@example.invalid').toString('base64'));
+ assert.ok(commands.includes('MAIL FROM:<hello@example.invalid>\r\n'));
+ const mime=commands.find(c=>c.includes('MIME-Version'));assert.ok(mime.includes('Reply-To: <teacher@example.invalid>'));assert.ok(mime.includes('<hello@example.invalid>'));assert.ok(mime.includes('Message-ID: <stable-id@example.invalid>'));
 });

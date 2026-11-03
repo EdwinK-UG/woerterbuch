@@ -58,9 +58,10 @@ export async function smtpSend(
   smtpPort = 465,
   open = connect,
   replyTo = "",
+  options = {},
 ) {
   if (
-    ![to, user].every((x) => /^[^\s@<>]+@[^\s@<>]+$/.test(x)) ||
+    ![to, user, options.from || user].every((x) => /^[^\s@<>]+@[^\s@<>]+$/.test(x)) ||
     (replyTo && !/^[^\s@<>]+@[^\s@<>]+$/.test(replyTo)) ||
     !/^[a-z0-9.-]+$/i.test(smtpHost) ||
     !Number.isInteger(smtpPort) ||
@@ -116,17 +117,17 @@ export async function smtpSend(
     await step("AUTH LOGIN", [334]);
     await step(b64(user), [334]);
     await step(b64(pass), [235]);
-    await step(`MAIL FROM:<${user}>`, [250]);
+    await step(`MAIL FROM:<${options.from || user}>`, [250]);
     await step(`RCPT TO:<${to}>`, [250, 251]);
     await step("DATA", [354]);
     const bnd = "b" + crypto.randomUUID().replace(/-/g, "");
     const msg = [
-      `From: ${encWord("Deutschklinik")} <${user}>`,
+      `From: ${"=?UTF-8?B?"+b64(String(options.fromName || "Deutschklinik").replace(/[\r\n]/g," "))+"?="} <${options.from || user}>`,
       ...(replyTo ? [`Reply-To: <${replyTo}>`] : []),
       `To: <${to}>`,
       `Subject: ${encWord(subject)}`,
       `Date: ${new Date().toUTCString().replace("GMT", "+0000")}`,
-      `Message-ID: <${messageId}@welcome.invalid>`,
+      `Message-ID: <${messageId}@${(options.from || user).split("@")[1]}>`,
       "MIME-Version: 1.0",
       `Content-Type: multipart/alternative; boundary="${bnd}"`,
       "",

@@ -52,3 +52,13 @@ For a failed welcome job, inspect `last_error` with its attempt count. `smtp_535
 The example disables image transformations until they are provisioned. Export D1 and inventory KV before a release. Test restoring them to separate resources. Roll back the Worker code through Cloudflare and retain the additive tables for diagnosis.
 
 Cron invokes a scheduled Worker handler. Database webhooks can deliver row change events with configured headers. [Cloudflare Cron documentation](https://developers.cloudflare.com/workers/configuration/cron-triggers/), [Supabase webhook documentation](https://supabase.com/docs/guides/database/webhooks)
+
+## Invitations and teaching onboarding
+
+Apply `migrations/0003_invitation_delivery.sql` before deploying this Worker. `POST /course-invitation/preview` renders a teacher-authorised preview without creating a link or sending mail. `POST /course-invitation` accepts only a class-managed, unexpired, addressed invitation whose recipient matches. The database completes enrolment after email confirmation, including confirmation on another device. Shared links remain a separate action.
+
+Invitation mail authenticates with `SMTP_USER` / `SMTP_PASSWORD`, sends from `INVITATION_FROM` (default `hello@deutschklinik.com`, which must be an authorised Zoho alias), and uses the verified sending teacher as Reply-To. The branded HTML and plain text include the saved term, dates, length, timetable and course details. `/site-invitation` is restricted to the site owner and addressed teacher/school invitations.
+
+D1 keeps an invitation's sending state and a protocol-only error diagnostic; it does not store recipients or email bodies. Accepted messages are deduplicated by invitation code. A failed send can retry the same link, with a maximum of five attempts. Each sender may create up to 30 email invitations per day; shared links do not use this email allowance. An SMTP acceptance means the provider accepted the message, not a guarantee of inbox placement.
+
+Apply Supabase migration `20261103144457_teacher_onboarding_and_invitations.sql` for confirmation-based teacher activation, addressed invitations, learner term details and the owner account directory. Deploy `supabase/functions/owner-accounts` with platform JWT verification disabled: its handler validates the live user with Auth and verifies `is_founder()` before using the server-only admin key. Owner accounts are protected; deletion requires typing the target email and removes owned logo objects first. Fresh database installations must run the migrations after the two base setup scripts.
