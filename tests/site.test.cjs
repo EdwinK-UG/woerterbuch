@@ -161,6 +161,38 @@ test("the sign-in dialog has labels, traps focus and restores focus on Escape", 
     await s.close();
   }
 });
+test("signup blocks malformed addresses and typos before making an Auth request", async () => {
+  const s = await site("#/start");
+  try {
+    s.window.ACCT.sheet("up");
+    const input = s.document.querySelector("#ac_em");
+    s.document.querySelector("#ac_pw").value = "fixture-password";
+    input.value = "eddymulindwa03@hmail.com";
+    await s.window.ACCT.submit("up");
+    assert.ok(!s.calls.includes("/auth/v1/signup"));
+    assert.equal(input.getAttribute("aria-invalid"), "true");
+    assert.match(s.document.querySelector("#ac_email_feedback").textContent, /eddymulindwa03@gmail.com/);
+    assert.equal(input.checkValidity(), false);
+    s.document.querySelector("#ac_email_feedback button").click();
+    assert.equal(input.value, "eddymulindwa03@gmail.com");
+    assert.equal(input.checkValidity(), true);
+    input.value = "person@company";
+    await s.window.ACCT.submit("up");
+    assert.ok(!s.calls.includes("/auth/v1/signup"));
+    assert.match(input.validationMessage, /complete email address/);
+    input.value = "student@deutschklinik.com";
+    input.dispatchEvent(new s.window.Event("blur"));
+    assert.equal(input.checkValidity(), true);
+    input.value = "intentional@hmail.com";
+    input.dispatchEvent(new s.window.Event("blur"));
+    s.document.querySelectorAll("#ac_email_feedback button")[1].click();
+    assert.equal(input.checkValidity(), true);
+    await s.window.ACCT.submit("up");
+    assert.ok(s.calls.includes("/auth/v1/signup"));
+  } finally {
+    await s.close();
+  }
+});
 test("failed definitions settle, show retry and recover on the next click", async () => {
   let n = 0;
   const s = await site("#/w/Haus", {
