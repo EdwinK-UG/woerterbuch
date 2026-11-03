@@ -1,5 +1,5 @@
 import { handleWelcome, welcomeHook, drainMail } from "./welcome.js";
-import { sendCourseInvitation, previewCourseInvitation, sendSiteInvitation, requestLiveClass } from "./invitations.js";
+import { sendCourseInvitation, previewCourseInvitation, courseInvitationStatus, sendSiteInvitation, requestLiveClass } from "./invitations.js";
 import { english } from "./english.js";
 import {
   authenticated,
@@ -108,6 +108,10 @@ async function route(req, env, ctx) {
   if (url.pathname === "/course-invitation/preview") {
     if (!ALLOWED.includes(origin)) return json({error:"Forbidden"},403,h);
     return previewCourseInvitation(req,env,h);
+  }
+  if (url.pathname === "/course-invitation/status") {
+    if (!ALLOWED.includes(origin)) return json({error:"Forbidden"},403,h);
+    return courseInvitationStatus(req,env,h);
   }
   if (url.pathname === "/course-invitation") {
     if (!ALLOWED.includes(origin)) return json({ error: "only for the Deutschklinik site" }, 403, h);

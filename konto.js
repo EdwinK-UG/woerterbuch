@@ -209,9 +209,14 @@ function applyBrand() {
   const colour=ORG&&/^#[0-9a-f]{6}$/i.test(ORG.theme||'')?ORG.theme:null;
   root.style.setProperty('--ac-ink',colour?ink(colour):'#fff');
   if(colour)root.style.setProperty('--ac-salt',`color-mix(in srgb, ${colour} 14%, var(--card))`);else root.style.removeProperty('--ac-salt');
-  const favicon=document.querySelector('link[rel="icon"]');
-  if(favicon)favicon.href=colour?'data:image/svg+xml,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="18" fill="${colour}"/><text x="32" y="46" text-anchor="middle" font-family="Georgia,serif" font-size="46" fill="${ink(colour)}">D</text></svg>`):'favicon.svg?v=3';
+  setBrandIcon(colour);
   icons();
+}
+function setBrandIcon(colour){
+  document.querySelectorAll('link[rel="icon"]').forEach(link=>link.remove());
+  const favicon=document.createElement('link');favicon.rel='icon';favicon.type='image/svg+xml';
+  favicon.href=colour?'data:image/svg+xml,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="18" fill="${colour}"/><text x="32" y="46" text-anchor="middle" font-family="Georgia,serif" font-size="46" fill="${ink(colour)}">D</text></svg>`):'favicon.svg?v=3';
+  document.head.append(favicon);
 }
 function apply() {
   applyNav(); applyBrand();
@@ -558,7 +563,7 @@ async function loadOrg(org) {
   next.tasks = next.classes.length ? await q('/rest/v1/assignments?select=*&class_id=in.(' + next.classes.map(c => c.id).join(',') + ')&order=due_at.asc.nullslast') || [] : [];
   if (next.classes.length) try { next.liveRequests = await q('/rest/v1/live_class_requests?select=*&class_id=in.(' + next.classes.map(c => c.id).join(',') + ')&order=created_at.desc') || []; } catch (e) { next.liveRequests = []; }
   if(request!==orgLoadGeneration||me()?.id!==user)return false;
-  D=next;return true;
+  D=next;setBrandIcon(/^#[0-9a-f]{6}$/i.test(org.theme||'')?org.theme:null);return true;
 }
 const sName = id => esc((D.profiles[id] && D.profiles[id].display_name) || T('(no name)', '(ohne Namen)'));
 const curLv = p => (p && LV.includes(p.level) && p.unlocked.includes(p.level) ? p.level : p && p.unlocked.slice(-1)[0] || null);
@@ -639,6 +644,7 @@ async function viewClasses(arg) {
       <div class="ks-row"><span>${T('Live class', 'Live-Unterricht')}</span><span>${c.live_open ? T('Open for applications', 'Für Anmeldungen geöffnet') : T('Private / invite-only', 'Privat / nur mit Einladung')}</span><button class="btn sm" onclick="KONTO.liveClassSheet('${c.id}')">${icn('settings-2')} ${T('Set up', 'Einrichten')}</button></div>
       ${c.live_open ? `<p class="ks-tip">${T('Starts', 'Start')}: ${dt(c.starts_on)} · ${T('Ends', 'Ende')}: ${dt(c.ends_on)}${c.schedule ? ' · ' + esc(c.schedule) : ''}</p>` : ''}
       <ul class="ks-inv">${D.invites.filter(i => i.class_id === c.id).map(invRow).join('')}</ul>
+      <details><summary>${T('Invitation email status','Status der Einladungs-E-Mails')}</summary><p class="ks-tip">${T('Check whether the mail provider accepted each invitation. Inbox delivery can take a few minutes; ask learners to check spam too.','Prüfen Sie, ob der Mailanbieter die Einladungen angenommen hat. Die Zustellung kann einige Minuten dauern; bitte auch den Spamordner prüfen.')}</p><button class="btn sm" onclick="KONTO.checkInvitationMail('${c.id}')">${T('Check email status','E-Mail-Status prüfen')}</button><div id="mail_status_${c.id}" role="status"></div></details>
       ${apps.length ? `<h4 class="ks-h">${icn('inbox')} ${T('Live class applications', 'Anmeldungen zum Live-Unterricht')}</h4><ul class="ks-inv">${apps.map(r => `<li><b>${sName(r.user_id)}</b><span class="spacer"></span><button class="btn sm" onclick="KONTO.decideLiveRequest('${r.id}',false)">${T('Decline', 'Ablehnen')}</button><button class="btn sm primary" onclick="KONTO.decideLiveRequest('${r.id}',true)">${T('Accept & enrol', 'Annehmen & einschreiben')}</button></li>`).join('')}</ul>` : ''}
       <h4 class="ks-h">${T('Learners · results at level', 'Lernende · Ergebnisse auf Niveau')} ${c.level}</h4>
       ${ms.length ? `<div class="ks-tw"><table class="ks-t"><tr><th>${T('Name', 'Name')}</th><th>${T('Levels', 'Niveaus')}</th><th>${T('Passed', 'Bestanden')}</th><th>Ø</th><th></th></tr>${ms.map(m => { const g = grade(m.user_id, c), p = D.profiles[m.user_id] || { unlocked: [] };
@@ -719,6 +725,13 @@ async function workerPost(path, body) {
   return d;
 }
 let classInviteDraft=null,pendingInvite=null;
+async function checkInvitationMail(id){
+  const target=$('mail_status_'+id);if(!target)return;target.textContent=T('Checking…','Wird geprüft…');
+  try{const result=await workerPost('/course-invitation/status',{class_id:id});if(!target.isConnected)return;
+    const states={sent:T('Accepted by mail provider','Vom Mailanbieter angenommen'),sending:T('Sending','Wird gesendet'),failed:T('Sending failed — create a new invitation or contact support','Versand fehlgeschlagen — neue Einladung erstellen oder Support kontaktieren'),not_sent:T('Email not sent','E-Mail nicht gesendet')};
+    target.innerHTML=result.invitations?.length?`<ul class="ks-inv">${result.invitations.map(record=>{const invite=D.invites.find(i=>i.code===record.code);return `<li><b>${esc(invite?.recipient_email||T('Learner','Lernende Person'))}</b> · ${esc(states[record.state]||states.not_sent)}${record.updated_at?' · '+esc(new Date(record.updated_at).toLocaleString()):''}</li>`}).join('')}</ul>`:T('No individual invitation emails for this class yet. Shareable links do not send an email.','Noch keine persönlichen Einladungs-E-Mails für diese Klasse. Ein Link zum Teilen versendet keine E-Mail.');
+  }catch(error){if(target.isConnected)target.textContent=err(error)}
+}
 async function inviteLearner() {
   if(!isStaff())return;
   if(!D.org){const orgs=await staffOrgs();if(!orgs.length){location.hash='#/klasse';return;}if(!await loadOrg(orgs[0]))return;}
@@ -754,6 +767,7 @@ async function sendClassInviteNow(id){
       classInviteDraft={id,to,code};
     }
     const r=await workerPost('/course-invitation',{class_id:id,to,name,note,invite_url:location.origin+location.pathname+'?join='+classInviteDraft.code});
+    if(r.sent!==true)throw Error(T('The email was not accepted. Please retry.','Die E-Mail wurde nicht angenommen. Bitte erneut versuchen.'));
     closeSheet();refresh();toastM(T('Invitation sent to ','Einladung gesendet an ')+to);
   }catch(e){status.textContent=err(e);if(button)button.disabled=false;}
 }
@@ -855,6 +869,7 @@ async function viewOrgPage(id) {
   let o=null,terms=[];
   try{if(/^[0-9a-f-]{36}$/i.test(id||'')){const rpcCall=me()?rpc:rpcAnon;[o,terms]=await Promise.all([rpcCall('org_page',{p_id:id}),rpcCall('org_public_terms',{p_org:id})]);}}catch(e){}
   if(!o)return page(T('Not found','Nicht gefunden'),`<p class="sub">${T('This teaching page is not available.','Diese Unterrichtsseite ist nicht verfügbar.')}</p>`);
+  setBrandIcon(/^#[0-9a-f]{6}$/i.test(o.theme||'')?o.theme:null);
   const own=!!mine.orgs.find(x=>x.id===o.id),member=!!(ORG&&ORG.id===o.id),where=[o.city,o.country].filter(Boolean).map(esc).join(' · ');
   page('',`<div class="teacher-page">${hero(o,`<p class="kd-eye">${esc(o.org_type||(o.kind==='school'?T('Language school','Sprachschule'):T('German teacher','Deutschlehrkraft')))}${where?' · '+where:''}</p><h1>${esc(o.name)}</h1>${o.tagline?`<p class="kd-hi">${esc(o.tagline)}</p>`:''}<div class="row">${own?`<a class="btn kd-cta" href="#/settings">${icn('palette')} ${T('Personalise my page','Meine Seite gestalten')}</a><a class="btn kd-ghost" href="#/start/${o.id}">${T('My dashboard','Meine Übersicht')}</a>`:member?`<a class="btn kd-cta" href="#/start">${T('My classroom','Mein Kursraum')}</a>`:`<button class="btn kd-cta" onclick="KONTO.codeSheet()">${icn('mail-open')} ${T('Accept an invitation','Einladung annehmen')}</button>`}${okUrl(o.website)?`<a class="btn kd-ghost" href="${esc(o.website)}" target="_blank" rel="noopener noreferrer">${icn('arrow-up-right')} ${T('Website','Website')}</a>`:''}</div>`)}
   <div class="teacher-story"><div>${o.about?`<p class="play-eyebrow">${T('Meet your teacher','Ihre Lehrkraft kennenlernen')}</p><h2>${T('Learning, your way.','Lernen auf Ihre Art.')}</h2><p class="teacher-bio">${esc(o.about).replace(/\n/g,'<br>')}</p>`:own?`<h2>${T('Make this space yours.','Gestalten Sie Ihren Bereich.')}</h2><p>${T('Add your story, a portrait or logo, your languages and a welcome message in Settings.','Ergänzen Sie Ihre Geschichte, ein Porträt oder Logo, Ihre Sprachen und einen Willkommenstext in den Einstellungen.')}</p>`:`<div class="teacher-intro">${SiteDesign.art('words')}<h2>${T('Make room for German.','Platz für Deutsch.')}</h2><p>${T('Use your invitation to open your classroom.','Mit Ihrer Einladung öffnet sich Ihr Kursraum.')}</p></div>`}</div><aside>${o.owner_name?`<p>${icn('user-round')} ${esc(o.owner_name)}</p>`:''}${o.languages?`<p>${icn('languages')} ${esc(o.languages)}</p>`:''}${(o.levels||[]).length?`<div class="kd-lvchips">${lvSort(o.levels).map(l=>`<span class="gr-lv ${l}">${l}</span>`).join('')}</div>`:''}<small>${T('Teaching on Deutschklinik since','Bei Deutschklinik seit')} ${dt(o.created_at)}</small></aside></div>
@@ -1143,7 +1158,7 @@ document.head.appendChild(st);
 window.KONTO = { level, lang, passMark, canOpen, lvState, unlock, lockSheet, unlocked: unlockedSet, profile: () => P, org: () => ORG, view, routes: ROUTES, fillMe, saveLevel, askLevel,
   signupFields, signupCheck, signupData, request, reqFields, sendRequest, join, decide, inviteSheet, makeSiteInvite, delSiteInvite, codeSheet,
   saveOrg, dropLogo, orgPass, addClass, classPass, invite, delInvite, moveMember, removeMember, addTask, delTask, copy, reload, refresh, liveClassSheet, saveLiveClass, sendClassInvite, sendClassInviteNow, inviteLearner, previewInvite, loadOwnerUsers, deleteAccountSheet, deleteAccount, decideLiveRequest, applyLiveClass,
-  student, unlockFor, saveSettings, setCourse, unenroll, leave, T, can, gate, featureOf, saveSite, lookup, signupAs, previewWelcome: () => { location.hash = '#/start/besucher'; } };
+  student, unlockFor, saveSettings, setCourse, unenroll, leave, T, can, gate, featureOf, saveSite, lookup, signupAs, checkInvitationMail, previewWelcome: () => { location.hash = '#/start/besucher'; } };
 window.addEventListener('acct:in', e => { reload().then(() => {
   if(e.detail&&e.detail.fresh&&/^#?\/?$/.test(location.hash))location.hash='#/start';
   const pending=pendingInvite;pendingInvite=null;
