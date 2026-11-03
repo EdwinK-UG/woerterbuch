@@ -53,7 +53,7 @@
     } catch { /* Browser storage may be full or unavailable. */ }
   }
   async function request(entry, hash, batch, generate) {
-    const key = hash+':'+batch, local = stored(key);
+    const key = 'v2:'+hash+':'+batch, local = stored(key);
     if (batches.has(key)) return batches.get(key);
     if (local?.version === 1 && Array.isArray(local.items)) { batches.set(key, local); return local; }
     if (!seeds) seeds = fetch('content/dictionary-english.json').then(r => r.ok ? r.json() : {}).catch(() => ({}));
