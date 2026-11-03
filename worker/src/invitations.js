@@ -22,7 +22,7 @@ const supabase = async (env, path, token, options = {}) => {
     },
   });
   const body = await response.json().catch(() => null);
-  if (!response.ok) throw new Error("database request failed");
+  if (!response.ok) throw Object.assign(new Error("Class service could not load "+path.split("?")[0].split("/").pop()+" (HTTP "+response.status+")."),{status:response.status});
   return body;
 };
 const smtp = (env) => ({ host: String(env.SMTP_HOST || "smtppro.zoho.com"), port: Number(env.SMTP_PORT || 465) });
@@ -44,7 +44,7 @@ export async function previewCourseInvitation(req,env,headers){
   const user=await authenticated(req,env,headers);if(user instanceof Response)return user;
   const body=await req.json().catch(()=>null),id=text(body?.class_id,36);
   if(!/^[0-9a-f-]{36}$/i.test(id))return json(400,{error:'Choose a teaching term.'},headers);
-  const context=await courseContext(req,env,id);if(!context)return json(403,{error:'Only the responsible teacher or school owner may preview an invitation.'},headers);
+  let context;try{context=await courseContext(req,env,id);}catch(error){return json(503,{error:error.status?error.message:"Class service could not be reached. Please retry."},headers);}if(!context)return json(403,{error:'Only the responsible teacher or school owner may preview an invitation.'},headers);
   const content=invitationContent({...context,name:text(body?.name,60),note:text(body?.note,500),inviteUrl:env.SITE_URL});
   return json(200,{html:content.html},headers);
 }
@@ -60,7 +60,7 @@ export async function sendCourseInvitation(req, env, headers, send = smtpSend) {
   try{
     context=await courseContext(req,env,classId);if(!context)return json(403,{error:'Only the class teacher or owner may send invitations.'},headers);
     invitation=(await supabase(env,`/rest/v1/invites?select=code,recipient_email,expires_at&code=eq.${url.searchParams.get('join')}&class_id=eq.${classId}&member_role=eq.student&uses_left=gt.0`,req.headers.get('Authorization')))?.[0];
-  }catch{return json(503,{error:'Class details could not be loaded. Please retry.'},headers);}
+  }catch(error){return json(503,{error:error.status?error.message:"Class details could not be loaded. Please retry."},headers);}
   if(!invitation||Date.parse(invitation.expires_at)<=Date.now()||invitation.recipient_email?.toLowerCase()!==to)return json(400,{error:'This invitation does not match the class or recipient. Create a new invitation.'},headers);
   const {course}=context;
   if(!course.term_name||!course.starts_on||!course.ends_on||!course.schedule)return json(400,{error:'Complete the term name, dates and timetable in class setup before sending invitations.'},headers);

@@ -478,3 +478,35 @@ test('a teacher can preview and retry an addressed term email without creating m
   assert.deepEqual(s.errors,[]);
  }finally{await s.close();}
 });
+test('a late class load cannot erase the current dashboard invitation choices',async()=>{
+ const org={id:'00000000-0000-4000-ab00-000000000091',owner:'fixture',name:'Teacher studio',kind:'teacher',pass_mark:70},course={id:'00000000-0000-4000-ab00-000000000092',name:'Evening class',level:'A1',term_name:'Spring',starts_on:'2027-02-01',ends_on:'2027-02-28',schedule:'Mon 18:00 EAT'};let release,loads=0;
+ const held=new Promise(r=>release=r);
+ const s=await site('#/klasse',{account:true,profile:()=>Response.json([{user_id:'fixture',role:'teacher',unlocked:[],org_id:null}]),request:async(u)=>{
+  if(u.pathname==='/rest/v1/orgs')return Response.json([org]);
+  if(u.pathname==='/rest/v1/classes'){loads++;if(loads===1)return held;return Response.json([course]);}
+ }});
+ try{
+  await until(()=>loads>=1);s.window.location.hash='#/start/'+org.id;
+  await until(()=>s.document.querySelector('[onclick="KONTO.inviteLearner()"]'));
+  release(Response.json([]));await new Promise(r=>setTimeout(r,30));
+  await s.window.KONTO.inviteLearner();assert.ok(s.document.querySelector('#ci_class').textContent.includes('Evening class'));
+  assert.deepEqual(s.errors,[]);
+ }finally{release(Response.json([]));await s.close();}
+});
+test('an ended session opens sign-in and restores the invitation draft after the same user signs in',async()=>{
+ const org={id:'00000000-0000-4000-ab00-0000000000a1',owner:'fixture',name:'Teacher studio',kind:'teacher',pass_mark:70},course={id:'00000000-0000-4000-ab00-0000000000a2',name:'German',level:'A1',term_name:'Spring',starts_on:'2027-02-01',ends_on:'2027-02-28',schedule:'Mon 18:00 EAT'};
+ const s=await site('#/klasse',{account:true,profile:()=>Response.json([{user_id:'fixture',role:'teacher',unlocked:[],org_id:null}]),request:async(u)=>{
+  if(u.pathname==='/rest/v1/orgs')return Response.json([org]);if(u.pathname==='/rest/v1/classes')return Response.json([course]);
+  if(u.pathname==='/course-invitation/preview')return Response.json({error:'session_not_found'},{status:401});
+ }});
+ try{
+  await until(()=>s.document.querySelector('.ks-cls'));s.window.KONTO.sendClassInvite(course.id);
+  s.document.querySelector('#ci_name').value='A learner';s.document.querySelector('#ci_email').value='learner@example.invalid';
+  await s.window.KONTO.previewInvite(course.id);
+  assert.equal(s.document.querySelector('#ac_em').value,'fixture@example.invalid');assert.ok(s.document.querySelector('#ac_msg').textContent.includes('session has ended'));
+  s.window.dispatchEvent(new s.window.CustomEvent('acct:in',{detail:{fresh:false}}));
+  await until(()=>s.document.querySelector('#ci_email'));
+  assert.equal(s.document.querySelector('#ci_email').value,'learner@example.invalid');assert.equal(s.document.querySelector('#ci_name').value,'A learner');
+  assert.deepEqual(s.errors,[]);
+ }finally{await s.close();}
+});

@@ -405,3 +405,12 @@ test('SMTP authenticates the mailbox and sends a branded alias with teacher repl
  assert.ok(commands.includes('MAIL FROM:<hello@example.invalid>\r\n'));
  const mime=commands.find(c=>c.includes('MIME-Version'));assert.ok(mime.includes('Reply-To: <teacher@example.invalid>'));assert.ok(mime.includes('<hello@example.invalid>'));assert.ok(mime.includes('Message-ID: <stable-id@example.invalid>'));
 });
+
+test('Cloudflare Auth verification uses supported manual redirects and never follows a token-bearing redirect',async()=>{
+ const {authenticated}=await import('../src/control.js');const oldFetch=globalThis.fetch;let calls=0;
+ try{
+  globalThis.fetch=async(url,options)=>{calls++;assert.equal(options.redirect,'manual');return new Response(null,{status:302,headers:{Location:'https://different.example.invalid/'}});};
+  const response=await authenticated(new Request('https://worker.example.invalid',{headers:{Authorization:'Bearer verified'}}),{SUPABASE_URL:'https://auth.example.invalid',SUPABASE_PUBLISHABLE_KEY:'public'},{});
+  assert.equal(response.status,503);assert.equal(calls,1);
+ }finally{globalThis.fetch=oldFetch;}
+});
