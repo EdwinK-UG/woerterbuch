@@ -1,5 +1,6 @@
 import { authenticated } from "./control.js";
 import { smtpSend } from "./mail-body.js";
+import { invitationContent } from "./invitation-template.js";
 
 const email = (value) =>
   typeof value === "string" && /^[^\s@<>]+@[^\s@<>]+$/.test(value.trim());
@@ -10,10 +11,6 @@ const json = (status, body, headers) =>
   });
 const text = (value, max) => String(value || "").trim().slice(0, max);
 const date = (value) => (value ? new Date(value + "T12:00:00Z").toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }) : "to be confirmed");
-const duration = (course) => {
-  const days = Math.round((Date.parse(course.ends_on) - Date.parse(course.starts_on)) / 86400000) + 1;
-  return Number.isFinite(days) && days > 0 ? (days % 7 === 0 ? `${days / 7} weeks` : `${days} days`) : "to be confirmed";
-};
 const supabase = async (env, path, token, options = {}) => {
   const response = await fetch(new URL(path, env.SUPABASE_URL), {
     ...options,
@@ -30,63 +27,64 @@ const supabase = async (env, path, token, options = {}) => {
 };
 const smtp = (env) => ({ host: String(env.SMTP_HOST || "smtppro.zoho.com"), port: Number(env.SMTP_PORT || 465) });
 
-function inviteText({ name, course, inviteUrl, note }) {
-  return `Hello${name ? " " + name : ""},
-
-You are invited to join ${course.name} (${course.level}) with Deutschklinik.
-
-Your course
-- Term: ${course.term_name || course.name}
-- Starts: ${date(course.starts_on)}
-- Ends: ${date(course.ends_on)}
-- Course length: ${duration(course)}
-- Meeting time: ${course.schedule || "to be confirmed"}
-- What you can use: vocabulary and grammar lessons, progress tracking, flashcards, games, and instructor guidance.
-${course.course_details ? "\nCourse details:\n" + course.course_details + "\n" : ""}
-${note ? "\nA note from your teacher:\n" + note + "\n" : ""}
-Create your free learner account and accept your invitation here:
-${inviteUrl}
-
-Once you confirm your account, your dashboard will show this class and its ${course.level} course.
-
-See you in class,
-Deutschklinik`;
+const diagnostic = error => Number.isInteger(error?.smtpCode) ? 'smtp_'+error.smtpCode+'_'+error.smtpStage : 'transport_'+(error?.smtpStage||'unknown');
+const mailProblem = error => error?.smtpCode===535 ? 'The mail provider rejected the saved sign-in. Please contact support; your invitation is saved for retry.' : error?.smtpCode>=500 && error?.smtpStage==='RCPT' ? 'The mail provider rejected this recipient. Check the email address and try again.' : 'The email provider could not accept the invitation. Your invitation is saved; please retry in a moment.';
+async function courseContext(req,env,classId){
+  const token=req.headers.get('Authorization');
+  const manager=await supabase(env,'/rest/v1/rpc/can_manage_class',token,{method:'POST',body:JSON.stringify({p_class:classId})});
+  if(manager!==true)return null;
+  const course=(await supabase(env,`/rest/v1/classes?select=id,org_id,teacher_id,name,level,term_name,starts_on,ends_on,schedule,course_details&id=eq.${classId}`,token))?.[0];
+  if(!course)return null;
+  const org=(await supabase(env,`/rest/v1/orgs?select=name,logo_url,theme,owner&id=eq.${course.org_id}`,token))?.[0]||{};
+  const teacher=(await supabase(env,`/rest/v1/profiles?select=display_name&user_id=eq.${course.teacher_id||org.owner}`,token))?.[0]?.display_name||org.name;
+  return {course,org,teacher};
 }
-
-function inviteHtml(data) {
-  const esc = (s) => String(s || "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-  return `<main style="font-family:Arial,sans-serif;max-width:560px;margin:auto;color:#20242b"><h1>Deutsch<span style="color:#1f6feb">klinik</span></h1><h2>Your class invitation</h2><p>Hello${data.name ? " " + esc(data.name) : ""},</p><p>You are invited to join <b>${esc(data.course.name)}</b> (${esc(data.course.level)}).</p><ul><li><b>Term:</b> ${esc(data.course.term_name || data.course.name)}</li><li><b>Course length:</b> ${esc(duration(data.course))}</li><li><b>Starts:</b> ${esc(date(data.course.starts_on))}</li><li><b>Ends:</b> ${esc(date(data.course.ends_on))}</li><li><b>Meeting time:</b> ${esc(data.course.schedule || "to be confirmed")}</li></ul><p>While you learn, you have vocabulary and grammar lessons, progress tracking, flashcards, games, and instructor guidance.</p>${data.course.course_details ? `<p style="white-space:pre-line"><b>Course details</b><br>${esc(data.course.course_details)}</p>` : ""}${data.note ? `<p><b>A note from your teacher:</b><br>${esc(data.note)}</p>` : ""}<p><a href="${esc(data.inviteUrl)}" style="display:inline-block;background:#1f6feb;color:white;padding:12px 18px;border-radius:999px;text-decoration:none;font-weight:bold">Create my account and join</a></p><p>After you confirm your account, your dashboard will show this class and its course.</p><p>See you in class,<br>Deutschklinik</p></main>`;
+export async function previewCourseInvitation(req,env,headers){
+  if(req.method!=='POST')return json(405,{error:'POST only'},headers);
+  const user=await authenticated(req,env,headers);if(user instanceof Response)return user;
+  const body=await req.json().catch(()=>null),id=text(body?.class_id,36);
+  if(!/^[0-9a-f-]{36}$/i.test(id))return json(400,{error:'Choose a teaching term.'},headers);
+  const context=await courseContext(req,env,id);if(!context)return json(403,{error:'Only the responsible teacher or school owner may preview an invitation.'},headers);
+  const content=invitationContent({...context,name:text(body?.name,60),note:text(body?.note,500),inviteUrl:env.SITE_URL});
+  return json(200,{html:content.html},headers);
 }
-
 export async function sendCourseInvitation(req, env, headers, send = smtpSend) {
-  if (req.method !== "POST") return json(405, { error: "POST only" }, headers);
-  const user = await authenticated(req, env, headers);
-  if (user instanceof Response) return user;
-  const body = await req.json().catch(() => null);
-  const classId = text(body?.class_id, 36), to = text(body?.to, 120), name = text(body?.name, 60), inviteUrl = text(body?.invite_url, 500), note = text(body?.note, 500);
-  if (!/^[0-9a-f-]{36}$/i.test(classId) || !email(to)) return json(400, { error: "A class and valid learner email are required." }, headers);
-  const site = new URL(env.SITE_URL);
-  let url;
-  try { url = new URL(inviteUrl); } catch { return json(400, { error: "Invalid invitation link." }, headers); }
-  if (url.origin !== site.origin || !/^[0-9a-f]{12}$/i.test(url.searchParams.get("join") || "")) return json(400, { error: "Invalid invitation link." }, headers);
-  let classes;
-  try {
-    const token = req.headers.get("Authorization");
-    const manager = await supabase(env, "/rest/v1/rpc/can_manage_class", token, { method: "POST", body: JSON.stringify({ p_class: classId }) });
-    if (manager !== true) return json(403, { error: "Only the class teacher or owner may send invitations." }, headers);
-    const invitations = await supabase(env, `/rest/v1/invites?select=code&code=eq.${url.searchParams.get("join")}&class_id=eq.${encodeURIComponent(classId)}&member_role=eq.student&uses_left=gt.0`, token);
-    if (!invitations?.length) return json(400, { error: "The invitation does not belong to this class." }, headers);
-    classes = await supabase(env, `/rest/v1/classes?select=id,name,level,term_name,starts_on,ends_on,schedule,course_details&id=eq.${encodeURIComponent(classId)}`, token);
+  if(req.method!=='POST')return json(405,{error:'POST only'},headers);
+  const user=await authenticated(req,env,headers);if(user instanceof Response)return user;
+  const body=await req.json().catch(()=>null);
+  const classId=text(body?.class_id,36),to=text(body?.to,120).toLowerCase(),name=text(body?.name,60),note=text(body?.note,500);
+  if(!/^[0-9a-f-]{36}$/i.test(classId)||!email(to))return json(400,{error:'Choose a class and enter a valid learner email.'},headers);
+  let url;try{url=new URL(body?.invite_url);}catch{return json(400,{error:'Invalid invitation link.'},headers);}
+  if(url.origin!==new URL(env.SITE_URL).origin||url.pathname!==new URL(env.SITE_URL).pathname||!new RegExp('^[0-9a-f]{12}$','i').test(url.searchParams.get('join')||''))return json(400,{error:'Invalid invitation link.'},headers);
+  let context,invitation;
+  try{
+    context=await courseContext(req,env,classId);if(!context)return json(403,{error:'Only the class teacher or owner may send invitations.'},headers);
+    invitation=(await supabase(env,`/rest/v1/invites?select=code,recipient_email,expires_at&code=eq.${url.searchParams.get('join')}&class_id=eq.${classId}&member_role=eq.student&uses_left=gt.0`,req.headers.get('Authorization')))?.[0];
+  }catch{return json(503,{error:'Class details could not be loaded. Please retry.'},headers);}
+  if(!invitation||Date.parse(invitation.expires_at)<=Date.now()||invitation.recipient_email?.toLowerCase()!==to)return json(400,{error:'This invitation does not match the class or recipient. Create a new invitation.'},headers);
+  const {course}=context;
+  if(!course.term_name||!course.starts_on||!course.ends_on||!course.schedule)return json(400,{error:'Complete the term name, dates and timetable in class setup before sending invitations.'},headers);
+  if(!env.SMTP_USER||!env.SMTP_PASSWORD)return json(503,{error:'Mail is not configured.'},headers);
+  const content=invitationContent({...context,name,note,inviteUrl:url.href});
+  return deliverInvitation(env,headers,user,invitation.code,to,content,context.org.name,send);
+}
+async function deliverInvitation(env,headers,user,id,to,content,brand,send=smtpSend){
+  const now=Date.now(),day=new Date(now).toISOString().slice(0,10);
+  const existing=await env.DB.prepare('SELECT state,updated_at,attempts FROM invitation_mail WHERE id=?1').bind(id).first();
+  if(existing?.state==='sent')return json(200,{sent:true,already_sent:true},headers);
+  if(existing?.state==='sending'&&existing.updated_at>now-120000)return json(409,{error:'This invitation is still being sent. Check the inbox before retrying.'},headers);
+  const claim=await env.DB.prepare(`INSERT INTO invitation_mail(id,sender,day,state,updated_at,attempts) SELECT ?1,?2,?3,'sending',?4,1 WHERE (SELECT count(*) FROM invitation_mail WHERE sender=?2 AND day=?3)<30
+    ON CONFLICT(id) DO UPDATE SET state='sending',updated_at=?4,attempts=invitation_mail.attempts+1 WHERE invitation_mail.state<>'sent' AND (invitation_mail.state<>'sending' OR invitation_mail.updated_at<=?5) AND invitation_mail.attempts<5 RETURNING id`).bind(id,user.id,day,now,now-120000).first();
+  if(!claim)return json(429,{error:'The invitation sending limit has been reached. Please try again tomorrow or contact support.'},headers);
+  const transport=smtp(env);
+  try{
+    await send(env.SMTP_USER.trim(),env.SMTP_PASSWORD.replace(/\s+/g,''),to,content.subject,content.text,content.html,'invite-'+id,transport.host,transport.port,undefined,user.email,{from:env.INVITATION_FROM||'hello@deutschklinik.com',fromName:brand||'Deutschklinik'});
+  }catch(error){
+    await env.DB.prepare("UPDATE invitation_mail SET state='failed',last_error=?2,updated_at=?3 WHERE id=?1").bind(id,diagnostic(error),Date.now()).run();
+    return json(502,{error:mailProblem(error),reference:id},headers);
   }
-  catch { return json(403, { error: "You cannot send an invitation for this class." }, headers); }
-  const course = classes?.[0];
-  if (!course) return json(403, { error: "You cannot send an invitation for this class." }, headers);
-  if (!course.term_name || !course.starts_on || !course.ends_on || !course.schedule)
-    return json(400, { error: "Complete the term name, dates and timetable in class setup before sending invitations." }, headers);
-  if (!env.SMTP_USER || !env.SMTP_PASSWORD) return json(503, { error: "Mail is not configured." }, headers);
-  const transport = smtp(env), payload = { name, course, inviteUrl, note };
-  await send(env.SMTP_USER.trim(), env.SMTP_PASSWORD.replace(/\s+/g, ""), to, `Your ${course.level} class invitation · Deutschklinik`, inviteText(payload), inviteHtml(payload), crypto.randomUUID(), transport.host, transport.port, undefined, user.email);
-  return json(200, { sent: true }, headers);
+  await env.DB.prepare("UPDATE invitation_mail SET state='sent',last_error=NULL,updated_at=?2 WHERE id=?1").bind(id,Date.now()).run();
+  return json(200,{sent:true},headers);
 }
 
 export async function requestLiveClass(req, env, headers, send = smtpSend) {
@@ -114,4 +112,20 @@ export async function requestLiveClass(req, env, headers, send = smtpSend) {
     await Promise.all(recipients.map((to) => send(env.SMTP_USER.trim(), env.SMTP_PASSWORD.replace(/\s+/g, ""), to, `New ${request.level} class application · Deutschklinik`, message, `<pre style="font-family:Arial,sans-serif;white-space:pre-wrap">${message.replace(/&/g,"&amp;").replace(/</g,"&lt;")}</pre>`, crypto.randomUUID(), transport.host, transport.port)));
   }
   return json(200, { status: request.status, class_name: request.class_name, level: request.level }, headers);
+}
+
+export async function sendSiteInvitation(req,env,headers,send=smtpSend){
+ if(req.method!=='POST')return json(405,{error:'POST only'},headers);
+ const user=await authenticated(req,env,headers);if(user instanceof Response)return user;
+ const token=req.headers.get('Authorization'),owner=await supabase(env,'/rest/v1/rpc/is_founder',token,{method:'POST',body:'{}'});
+ if(owner!==true)return json(403,{error:'Only the site owner may invite teachers and schools.'},headers);
+ const body=await req.json().catch(()=>null),code=text(body?.code,12);
+ if(!/^[0-9a-f]{12}$/i.test(code))return json(400,{error:'Invalid invitation.'},headers);
+ const invitation=(await supabase(env,`/rest/v1/site_invites?select=code,name,email,role,expires_at,uses_left&code=eq.${code}`,token))?.[0];
+ if(!invitation||!['teacher','school'].includes(invitation.role)||!email(invitation.email)||invitation.uses_left<1||Date.parse(invitation.expires_at)<=Date.now())return json(400,{error:'Choose a valid, addressed teacher or school invitation.'},headers);
+ if(!env.SMTP_USER||!env.SMTP_PASSWORD)return json(503,{error:'Mail is not configured.'},headers);
+ const url=new URL(env.SITE_URL);url.searchParams.set('invite',code);
+ const what=invitation.role==='school'?'your school':'your teaching workspace';
+ const content={subject:'Your invitation to teach · Deutschklinik',text:`Hello${invitation.name?' '+invitation.name:''},\n\nYou are invited to set up ${what} on Deutschklinik. Create an account, confirm your email and your personalised dashboard will be ready. Choose your own terms, classes, schedule and branding, then invite your learners.\n\nAccept your invitation: ${url.href}\n\nQuestions? Reply to this email.`,html:`<html><body style="margin:0;background:#f6f4ef;font-family:Arial,sans-serif;color:#242a34"><main style="max-width:500px;margin:32px auto;padding:30px;background:white;border:1px solid #e8e4dc;border-radius:24px"><b>Deutsch<span style="color:#1f6feb">klinik</span></b><h1 style="font-family:Georgia,serif;font-size:34px;font-weight:normal">Your space to teach.</h1><p style="line-height:1.8">Create ${what}, confirm your email and go straight to your personalised dashboard.</p><p style="line-height:1.8;color:#626a77">Your terms. Your timetable. Your branding.<br>Invite learners and follow their progress.</p><a style="display:inline-block;margin-top:20px;padding:14px 22px;border-radius:999px;background:#1f6feb;color:white;text-decoration:none" href="${url.href.replace(/&/g,'&amp;')}">Accept my invitation ↗</a><p style="font-size:12px;color:#747b87;margin-top:28px">Questions? Reply to this email or contact support@deutschklinik.com.</p></main></body></html>`};
+ return deliverInvitation(env,headers,user,'site-'+code,invitation.email,content,'Deutschklinik',send);
 }

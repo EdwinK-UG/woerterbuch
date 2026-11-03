@@ -52,6 +52,7 @@ async function site(hash = "", options = {}) {
       w.fetch = async (url, request = {}) => {
         const u = new URL(url, w.location.href);
         calls.push(u.pathname);
+        if(options.request){const result=await options.request(u,request);if(result)return result;}
         if (u.hostname === "site.test") {
           if (u.pathname === '/content/dictionary-english.json') return new Response(read('content/dictionary-english.json'));
           if (u.pathname.endsWith("core.bin")) return new Response(core);
@@ -443,4 +444,37 @@ test('word-map taps and Enter only preview; the explicit link opens an entry and
     link.click();await until(()=>s.window.location.hash===href);
     assert.deepEqual(s.errors,[]);
   } finally {await s.close();}
+});
+test('the first mobile pointer tap opens a word preview and compatibility mouse events do not hide it',async()=>{
+ const s=await site('#/w/lernen');try{
+  await until(()=>s.document.querySelector('.word-space g.node'));const node=s.document.querySelector('.word-space g.node');
+  const event=(type,pointerType)=>{const e=new s.window.Event(type,{bubbles:true,cancelable:true});Object.assign(e,{pointerType,clientX:80,clientY:90});return e;};
+  node.dispatchEvent(event('pointerdown','touch'));node.dispatchEvent(event('pointerup','touch'));
+  assert.equal(node.getAttribute('aria-expanded'),'true');assert.ok(s.document.querySelector('.wmpop.on'));
+  node.dispatchEvent(event('pointerout','mouse'));
+  await new Promise(r=>setTimeout(r,260));
+  assert.ok(s.document.querySelector('.wmpop.on'));assert.equal(s.window.location.hash,'#/w/lernen');
+  assert.deepEqual(s.errors,[]);
+ }finally{await s.close();}
+});
+
+test('a teacher can preview and retry an addressed term email without creating more invitations',async()=>{
+ const org={id:'00000000-0000-4000-ab00-000000000081',owner:'fixture',name:'Teacher studio',kind:'teacher',pass_mark:70},course={id:'00000000-0000-4000-ab00-000000000082',name:'Evening German',level:'A1',term_name:'Spring',starts_on:'2027-02-01',ends_on:'2027-02-28',schedule:'Mon 18:00 EAT'};let inserts=0,sends=0,body;
+ const s=await site('#/klasse',{account:true,profile:()=>Response.json([{user_id:'fixture',role:'teacher',unlocked:[],org_id:null}]),request:async(u,r)=>{
+  if(u.pathname==='/rest/v1/orgs')return Response.json([org]);
+  if(u.pathname==='/rest/v1/classes')return Response.json([course]);
+  if(u.pathname==='/rest/v1/invites'&&r.method==='POST'){inserts++;body=JSON.parse(r.body);return Response.json([{code:'abcdef123456'}]);}
+  if(u.pathname==='/course-invitation/preview')return Response.json({html:'<h1>Spring invitation</h1>'});
+  if(u.pathname==='/course-invitation'){sends++;return sends===1?Response.json({error:'Please retry this saved invitation.'},{status:502}):Response.json({sent:true});}
+ }});
+ try{
+  await until(()=>s.document.querySelector('.ks-cls'));
+  s.window.KONTO.sendClassInvite(course.id);
+  assert.ok(s.document.querySelector('.invite-summary').textContent.includes('Spring'));
+  s.document.querySelector('#ci_name').value='Learner';s.document.querySelector('#ci_email').value='learner@example.invalid';
+  await s.window.KONTO.previewInvite(course.id);assert.ok(s.document.querySelector('#ci_preview').srcdoc.includes('Spring invitation'));assert.equal(sends,0);
+  await s.window.KONTO.sendClassInviteNow(course.id);assert.ok(s.document.querySelector('#ci_status').textContent.includes('retry'));assert.equal(s.document.querySelector('#ci_send').disabled,false);
+  await s.window.KONTO.sendClassInviteNow(course.id);assert.equal(inserts,1);assert.equal(sends,2);assert.equal(body.recipient_email,'learner@example.invalid');assert.equal(body.class_id,course.id);
+  assert.deepEqual(s.errors,[]);
+ }finally{await s.close();}
 });

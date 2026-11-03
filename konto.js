@@ -64,6 +64,7 @@ async function load() {
     if (!current()) return;
     if (!profile) throw new Error('Profile unavailable');
     if (fresh) LSs('gd_signup', null);
+    if (profile.requested_role) { await rpc('complete_teacher_onboarding'); rows = await q('/rest/v1/profiles?select=*&user_id=eq.' + u.id); profile = rows[0]; }
     if (!Array.isArray(profile.unlocked)) throw new Error('Enrollment schema unavailable');
     const org = profile.org_id ? await rpc('my_org') : null;
     const memberships = { orgs: [], staff: [] };
@@ -248,7 +249,7 @@ function detailFields(kind, v = {}, pre = 'kd') {
     + f('about', T('About you (shown on your page)', 'Über Sie (auf Ihrer Seite)'), ta('about', T('How you teach, who you teach, what makes your lessons special …', 'Wie und wen Sie unterrichten, was Ihren Unterricht besonders macht …'), v.about, 2000))
     + `<div class="ks-2">${f('city', T('City', 'Stadt'), inp('city', 'Kampala', v.city, 80))}${f('country', T('Country', 'Land'), inp('country', 'Uganda', v.country, 80))}</div>`
     + f('languages', T('Languages you speak', 'Ihre Sprachen'), inp('languages', T('e.g. English, Luganda, German', 'z. B. Englisch, Luganda, Deutsch'), v.languages))
-    + f('website', T('Website (optional)', 'Website (optional)'), inp('website', 'https://…', v.website, 200, 'url'));
+    + f('website', T('Website (optional)', 'Website (optional)'), inp('website', 'https://…', v.website, 200, 'url')) + f('logo', T('Portrait or logo (optional)', 'Porträt oder Logo (optional)'), `<input class="input" id="${pre}_logo" type="file" accept="image/png,image/jpeg,image/webp"><small>${T('We fit your picture automatically, without cropping.', 'Ihr Bild wird automatisch ohne Beschneiden eingepasst.')}</small>`);
   return f('name', T('Name of the school *', 'Name der Schule *'), inp('name', T('e.g. Kampala German Centre', 'z. B. Deutschzentrum Kampala'), v.name, 80))
     + f('org_type', T('Type', 'Art'), `<select class="input" id="${pre}_org_type">${ORGTYPES().map(t => `<option${v.org_type === t ? ' selected' : ''}>${esc(t)}</option>`).join('')}</select>`)
     + f('tagline', T('Short slogan', 'Kurzer Slogan'), inp('tagline', T('e.g. German for work, study and life', 'z. B. Deutsch für Beruf, Studium und Alltag'), v.tagline))
@@ -273,9 +274,9 @@ function shrinkLogo(file) {
     if (!/^image\/(png|jpe?g|webp|gif)$/.test(file.type)) return rej(new Error(T('Please choose a PNG, JPG or WebP picture.', 'Bitte ein PNG-, JPG- oder WebP-Bild wählen.')));
     const img = new Image(), url = URL.createObjectURL(file);
     img.onload = () => {
-      const s = Math.min(1, 320 / Math.max(img.width, img.height)), c = document.createElement('canvas');
-      c.width = Math.max(1, Math.round(img.width * s)); c.height = Math.max(1, Math.round(img.height * s));
-      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url);
+      const s = Math.min(1, 288 / Math.max(img.width, img.height)), c = document.createElement('canvas');
+      c.width = 320; c.height = 320;
+      const w=img.width*s,h=img.height*s; c.getContext('2d').drawImage(img,(320-w)/2,(320-h)/2,w,h); URL.revokeObjectURL(url);
       c.toBlob(b => b ? res({ blob: b, data: c.toDataURL(b.type) }) : rej(new Error('image')), 'image/webp', .9);
     };
     img.onerror = () => { URL.revokeObjectURL(url); rej(new Error(T('This picture cannot be read.', 'Dieses Bild kann nicht gelesen werden.'))); };
@@ -329,8 +330,9 @@ function suMore() {
       ${pv.type === 'org' ? `<p class="ks-n">${icn('info')} ${T('Your teacher unlocks your level for you.', 'Deine Lehrkraft schaltet dein Niveau für dich frei.')}</p>` : ''}`;
   } else {
     h += `<div class="ks-dt">${detailFields(r, pv.type === 'site' && r === 'school' ? { name: pv.name } : {}, 'su')}</div>`;
-    if (!invited) h += `<p class="ks-n">${icn('shield-check')} ${T('We check teacher and school accounts and then switch them on. Until then you can use everything as a learner.', 'Konten für Lehrkräfte und Schulen prüfen wir und schalten sie dann frei. Bis dahin kannst du alles als Lernende/r nutzen.')}</p>`;
+    if (!invited) h += `<p class="ks-n">${icn('shield-check')} ${T('Confirm your email to open your own teaching dashboard and personalised page.', 'Bestätigen Sie Ihre E-Mail, um Ihre Unterrichtsübersicht und persönliche Seite zu öffnen.')}</p>`;
   }
+  if(pv.type==='org'&&pv.term_name)h+=`<div class="invite-summary"><span class="play-eyebrow">${esc(pv.term_name)}</span><p>${dt(pv.starts_on)} – ${dt(pv.ends_on)}</p><p>${esc(pv.schedule||'')}</p>${pv.course_details?`<details><summary>${T('Your course','Dein Kurs')}</summary><p>${esc(pv.course_details)}</p></details>`:''}</div>`;
   box.innerHTML = h; icons();
   const lg = $('su_logo'); if (lg) lg.onchange = async () => { try { SU.logo = await shrinkLogo(lg.files[0]); } catch (e) { SU.logo = null; lg.value = ''; toastM(e.message); } };
 }
@@ -499,7 +501,8 @@ async function viewLearner() {
       <p class="kd-hi">${name ? T(`Hello ${name}!`, `Hallo ${name}!`) : T('Hello!', 'Hallo!')} ${cur ? T(`You are learning German at level ${cur}.`, `Du lernst Deutsch auf Niveau ${cur}.`) : P.org_id ? T('Your teacher will unlock your level soon.', 'Deine Lehrkraft schaltet dein Niveau bald frei.') : T('Choose a level to start your course.', 'Wähle ein Niveau, um mit deinem Kurs zu beginnen.')}</p>
       ${ORG && ORG.welcome ? `<p class="kd-wel">${esc(ORG.welcome)}</p>` : ''}
       <div class="row">${cur ? `<a class="btn kd-cta" href="#/kurs/${cur}">${icn('play')} ${T('Go to my course', 'Zu meinem Kurs')}</a>` : !P.org_id ? `<button class="btn kd-cta" onclick="KONTO.askLevel()">${T('Choose my level', 'Niveau wählen')}</button>` : ''}${ORG ? `<a class="btn kd-ghost" href="#/schule/${ORG.id}">${icn('school')} ${ORG.kind === 'school' ? T('School page', 'Schulseite') : T('Teacher page', 'Seite der Lehrkraft')}</a>` : ''}</div>`)}
-    ${P.requested_role ? `<p class="kd-note">${icn('hourglass')} ${T(`Your ${ROLE(P.requested_role).toLowerCase()} account is being checked. We will switch it on soon.`, `Dein Konto als ${ROLE(P.requested_role)} wird geprüft. Wir schalten es bald frei.`)}</p>` : ''}
+    ${ORG?.class?.term_name?`<section class="kd-card learner-term"><span class="play-eyebrow">${esc(ORG.class.term_name)}</span><h2>${esc(ORG.class.name)}</h2><p>${dt(ORG.class.starts_on)} – ${dt(ORG.class.ends_on)}</p><p>${esc(ORG.class.schedule||'')}</p>${ORG.class.meeting_details?`<details><summary>${T('Joining details','Teilnahmeinformationen')}</summary><p style="white-space:pre-line">${esc(ORG.class.meeting_details)}</p></details>`:''}</section>`:''}
+    ${P.requested_role ? `<p class="kd-note">${icn('hourglass')} ${T('Confirm your email to finish activating your teaching workspace.','Bestätigen Sie Ihre E-Mail, um Ihren Unterrichtsbereich zu aktivieren.')}</p>` : ''}
     ${kpis([['flame', streak, T('day streak', 'Tage am Stück')], ['dumbbell', week, T('exercises this week', 'Übungen diese Woche')], ['history', lastR ? ago(lastR.at) : '–', T('last practice', 'zuletzt geübt'), lastR ? chTitle(lastR.ch) : ''], ['trophy', Object.values(b).filter(v => v * 100 >= pm).length, T('exercises passed', 'Übungen bestanden'), T(`from ${pm} %`, `ab ${pm} %`)]])}
     ${tasks.length ? `<h2 class="kd-h">${icn('clipboard-list')} ${T('Assignments', 'Aufgaben')}</h2><ul class="kd-tasks">${taskRows}</ul>` : ''}
     <h2 class="kd-h">${icn('graduation-cap')} ${T('My courses', 'Meine Kurse')}</h2><div class="kd-lvs">${open.map(card).join('') || `<p class="sub">${T('No level unlocked yet.', 'Noch kein Niveau freigeschaltet.')}</p>`}</div>
@@ -576,7 +579,7 @@ async function viewStaff(arg) {
   const upcoming = D.tasks.filter(t => !t.due_at || new Date(t.due_at) > Date.now() - 864e5).slice(0, 6);
   page('', `${hero(org, `<p class="kd-eye">${esc(org.org_type || (org.kind === 'school' ? T('School', 'Schule') : T('Teacher', 'Lehrkraft')))}${org.city ? ' · ' + esc(org.city) : ''}</p><h1>${esc(org.name)}</h1>
       ${org.tagline ? `<p class="kd-hi">${esc(org.tagline)}</p>` : ''}
-      <div class="row"><a class="btn kd-cta" href="#/klasse/${org.id}">${icn('users')} ${T('Classes & invitations', 'Klassen & Einladungen')}</a><a class="btn kd-ghost" href="#/schule/${org.id}">${icn('eye')} ${T('Home page', 'Startseite ansehen')}</a>${owner ? `<a class="btn kd-ghost" href="#/settings">${icn('pencil')} ${T('Edit page', 'Seite bearbeiten')}</a>` : ''}</div>`)}
+      <div class="row"><button class="btn kd-cta" onclick="KONTO.inviteLearner()">${icn('send')} ${T('Invite a learner', 'Lernende einladen')}</button><a class="btn kd-ghost" href="#/klasse/${org.id}">${icn('calendar-days')} ${T('Teaching terms', 'Kursdurchgänge')}</a><a class="btn kd-ghost" href="#/schule/${org.id}">${icn('eye')} ${T('Home page', 'Startseite ansehen')}</a>${owner ? `<a class="btn kd-ghost" href="#/settings">${icn('pencil')} ${T('Edit page', 'Seite bearbeiten')}</a>` : ''}</div>`)}
     ${orgs.length > 1 ? `<p class="row">${orgs.map(o => `<a class="btn sm${o.id === org.id ? ' primary' : ''}" href="#/start/${o.id}">${esc(o.name)}</a>`).join('')}</p>` : ''}
     ${kpis([['users', studs.length, T('learners', 'Lernende')], ['layers', D.classes.length, T('classes', 'Klassen'), org.kind === 'school' ? teachers.length + ' ' + T('teachers', 'Lehrkräfte') : ''], ['activity', active, T('active this week', 'aktiv diese Woche')], ['gauge', avg30 == null ? '–' : avg30 + ' %', T('average score', 'Durchschnitt'), T('last 30 days', 'letzte 30 Tage')], ['hand', pend.length, T('waiting for you', 'warten auf Sie')]])}
     ${pend.length ? `<h2 class="kd-h">${icn('hand')} ${T('Waiting for a level', 'Warten auf ein Niveau')}</h2><div class="kd-card"><p class="m">${T('These learners cannot open course content until you unlock a level for them.', 'Diese Lernenden können erst üben, wenn Sie ein Niveau freischalten.')}</p>
@@ -696,22 +699,45 @@ async function workerPost(path, body) {
   const r = await fetch(APP_CONFIG.workerUrl + path, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + await A().token() }, body: JSON.stringify(body) });
   const d = await r.json().catch(() => ({})); if (!r.ok) throw new Error(d.error || 'Email service unavailable'); return d;
 }
+let classInviteDraft=null;
+async function inviteLearner() {
+  if(!isStaff())return;
+  if(!D.org){const orgs=await staffOrgs();if(!orgs.length){location.hash='#/klasse';return;}await loadOrg(orgs[0]);}
+  const classes=D.classes;
+  if(!classes.length){toastM(T('Start a teaching term first.', 'Bitte zuerst einen Kursdurchgang erstellen.'));location.hash='#/klasse/'+D.org.id;return;}
+  sendClassInvite(classes[0].id);
+}
 function sendClassInvite(id) {
-  const c = D.classes.find(x => x.id === id); if (!c) return;
-  openSheet(`<h3>${T('Send class invitation', 'Klasseneinladung senden')}</h3><p>${T('This email is sent from hello@deutschklinik.com. Replies go directly to your teacher email.', 'Diese E-Mail wird von hello@deutschklinik.com gesendet. Antworten gehen direkt an Ihre Lehrkraft-E-Mail.')}</p>
-    <div class="ks-form"><label>${T('Learner name', 'Name der lernenden Person')}<input class="input" id="ci_name" maxlength="60" autocomplete="name"></label><label>${T('Learner e-mail', 'E-Mail der lernenden Person')}<input class="input" id="ci_email" type="email" maxlength="120" autocomplete="email"></label><label>${T('Personal note (optional)', 'Persönliche Nachricht (optional)')}<textarea class="input" id="ci_note" maxlength="500" rows="3"></textarea></label></div>
-    <p class="ks-tip">${esc(c.name)} · ${c.level}${c.starts_on ? ' · ' + dt(c.starts_on) : ''}${c.schedule ? ' · ' + esc(c.schedule) : ''}</p><div class="row" style="margin-top:1rem"><span class="spacer"></span><button class="btn" onclick="closeSheet()">${T('Cancel', 'Abbrechen')}</button><button class="btn primary" onclick="KONTO.sendClassInviteNow('${id}')">${icn('send')} ${T('Send invitation', 'Einladung senden')}</button></div>`);
+  const c=D.classes.find(x=>x.id===id);if(!c)return;
+  classInviteDraft=null;
+  const complete=!!(c.term_name&&c.starts_on&&c.ends_on&&c.schedule);
+  openSheet(`<h3>${T('Invite a learner','Lernende einladen')}</h3><p class="ks-tip">${T('From hello@deutschklinik.com · replies go to you.','Von hello@deutschklinik.com · Antworten gehen an Sie.')}</p>
+    <div class="ks-form"><label>${T('Teaching term','Kursdurchgang')}<select class="input" id="ci_class" onchange="KONTO.sendClassInvite(this.value)">${D.classes.map(x=>`<option value="${x.id}"${x.id===id?' selected':''}>${esc(x.name)} · ${esc(x.term_name||x.level)}</option>`).join('')}</select></label>
+    <div class="invite-summary"><span class="play-eyebrow">${esc(c.level)} · ${esc(c.term_name||'')}</span><h4>${esc(c.name)}</h4><p>${dt(c.starts_on)} – ${dt(c.ends_on)}</p><p>${esc(c.schedule||T('Add a timetable in term setup','Zeitplan in den Kurseinstellungen ergänzen'))}</p>${c.course_details?`<details><summary>${T('What is included','Kursangebot')}</summary><p>${esc(c.course_details)}</p></details>`:''}</div>
+    <label>${T('Learner name','Name der lernenden Person')}<input class="input" id="ci_name" maxlength="60" autocomplete="off"></label><label>${T('Learner email','E-Mail der lernenden Person')}<input class="input" id="ci_email" type="email" maxlength="120" autocomplete="off" required></label><label>${T('Personal note (optional)','Persönliche Nachricht (optional)')}<textarea class="input" id="ci_note" maxlength="500" rows="2"></textarea></label></div>
+    <p id="ci_status" class="ks-tip" role="status">${complete?T('The email includes your branding, dates, timetable and an enrolment link.','Die E-Mail enthält Ihr Branding, Termine, Zeitplan und den Einschreibelink.'):T('Complete the term name, dates and timetable before sending.','Vor dem Versand bitte Kursname, Termine und Zeitplan ergänzen.')}</p><div class="row" style="margin-top:1rem"><button class="btn" onclick="KONTO.previewInvite('${id}')">${icn('eye')} ${T('Preview email','E-Mail-Vorschau')}</button><span class="spacer"></span>${complete?`<button id="ci_send" class="btn primary" onclick="KONTO.sendClassInviteNow('${id}')">${icn('send')} ${T('Send invitation','Einladung senden')}</button>`:`<button class="btn primary" onclick="closeSheet();KONTO.liveClassSheet('${id}')">${T('Complete term details','Kursdaten ergänzen')}</button>`}</div>`);
   icons();
 }
-const sendClassInviteNow = id => act(async () => {
-  const c = D.classes.find(x => x.id === id), name = (($('ci_name') || {}).value || '').trim(), to = (($('ci_email') || {}).value || '').trim(), note = (($('ci_note') || {}).value || '').trim();
-  if (!c || !/^[^\s@<>]+@[^\s@<>]+$/.test(to)) throw new Error(T('Enter the learner’s e-mail address.', 'Bitte die E-Mail-Adresse der lernenden Person eingeben.'));
-  const r = await q('/rest/v1/invites', { method: 'POST', headers: { Prefer: 'return=representation' }, body: { org_id: D.org.id, class_id: c.id, member_role: 'student', level: c.level, uses_left: 1 } });
-  const code = r?.[0]?.code; if (!code) throw new Error(T('Could not create an invitation.', 'Einladung konnte nicht erstellt werden.'));
-  const invite_url = location.origin + location.pathname + '?join=' + code;
-  await workerPost('/course-invitation', { class_id: c.id, to, name, note, invite_url });
-  closeSheet(); refresh();
-}, T('Invitation sent', 'Einladung gesendet'));
+async function previewInvite(id){
+  const status=$('ci_status');try{const r=await workerPost('/course-invitation/preview',{class_id:id,name:($('ci_name')?.value||'').trim(),note:($('ci_note')?.value||'').trim()});
+    let frame=$('ci_preview');if(!frame){frame=document.createElement('iframe');frame.id='ci_preview';frame.title=T('Invitation email preview','Vorschau der Einladungs-E-Mail');frame.setAttribute('sandbox','');frame.style.cssText='width:100%;height:520px;border:1px solid var(--line);border-radius:1rem;margin-top:1rem;background:white';status.after(frame);}frame.srcdoc=r.html;status.textContent=T('Preview only — no email has been sent.','Nur Vorschau — es wurde keine E-Mail gesendet.');
+  }catch(e){status.textContent=err(e);}
+}
+async function sendClassInviteNow(id){
+  const c=D.classes.find(x=>x.id===id),name=($('ci_name')?.value||'').trim(),to=($('ci_email')?.value||'').trim().toLowerCase(),note=($('ci_note')?.value||'').trim(),button=$('ci_send'),status=$('ci_status');
+  if(!c||!$('ci_email')?.reportValidity()||!to)return;
+  if(button?.disabled)return;
+  button.disabled=true;status.textContent=T('Sending your invitation…','Einladung wird gesendet…');
+  try{
+    if(!classInviteDraft||classInviteDraft.id!==id||classInviteDraft.to!==to){
+      const r=await q('/rest/v1/invites',{method:'POST',headers:{Prefer:'return=representation'},body:{org_id:D.org.id,class_id:id,member_role:'student',level:c.level,uses_left:1,recipient_email:to}});
+      const code=r?.[0]?.code;if(!code)throw Error(T('Could not create an invitation.','Einladung konnte nicht erstellt werden.'));
+      classInviteDraft={id,to,code};
+    }
+    const r=await workerPost('/course-invitation',{class_id:id,to,name,note,invite_url:location.origin+location.pathname+'?join='+classInviteDraft.code});
+    closeSheet();refresh();toastM(T('Invitation sent to ','Einladung gesendet an ')+to);
+  }catch(e){status.textContent=err(e);if(button)button.disabled=false;}
+}
 const delInvite = code => act(async () => { await q('/rest/v1/invites?code=eq.' + code, { method: 'DELETE' }); refresh(); });
 const decideLiveRequest = (id, accept) => act(async () => { await rpc('decide_live_class_request', { p_request: id, p_accept: !!accept }); refresh(); }, accept ? T('Learner enrolled', 'Lernende Person eingeschrieben') : T('Application declined', 'Anmeldung abgelehnt'));
 const moveMember = (u, c) => act(async () => { await PATCH('/rest/v1/org_members?org_id=eq.' + D.org.id + '&user_id=eq.' + u, { class_id: c || null }); const m = D.members.find(x => x.user_id === u); if (m) m.class_id = c || null; }, T('Moved', 'Verschoben'));
@@ -755,7 +781,7 @@ async function viewAdmin() {
   const link = c => location.origin + location.pathname + '?invite=' + c;
   page('', `<section class="kd-hero cv-grid"><div><p class="kd-eye">${T('Site owner', 'Betreiber/in')}</p><h1>${T('What is happening on Deutschklinik', 'Was auf Deutschklinik passiert')}</h1>
       <p class="kd-hi">${T(`${s.users || 0} accounts · ${s.new7 || 0} new this week`, `${s.users || 0} Konten · ${s.new7 || 0} neu diese Woche`)}</p>
-      <div class="row"><a class="btn kd-cta" href="#/klasse">${icn('calendar-plus')} ${T('My teaching terms', 'Meine Kursdurchgänge')}</a><button class="btn kd-ghost" onclick="KONTO.inviteSheet()">${icn('send')} ${T('Invite someone', 'Jemanden einladen')}</button>${(s.pending || 0) ? `<a class="btn kd-ghost" href="#kd-rq" onclick="event.preventDefault();document.getElementById('kd-rq').scrollIntoView({behavior:'smooth'})">${icn('shield-check')} ${s.pending} ${T('to approve', 'freizugeben')}</a>` : ''}</div></div></section>
+      <div class="row"><button class="btn kd-cta" onclick="KONTO.inviteLearner()">${icn('send')} ${T('Invite a learner', 'Lernende einladen')}</button><a class="btn kd-ghost" href="#/klasse">${icn('calendar-plus')} ${T('My teaching terms', 'Meine Kursdurchgänge')}</a><a class="btn kd-ghost" href="#owner-accounts" onclick="event.preventDefault();document.getElementById('owner-accounts').open=true;document.getElementById('owner-accounts').scrollIntoView({behavior:'smooth'});KONTO.loadOwnerUsers()">${icn('users')} ${T('Manage accounts','Konten verwalten')}</a><button class="btn kd-ghost" onclick="KONTO.inviteSheet()">${icn('send')} ${T('Invite someone', 'Jemanden einladen')}</button>${(s.pending || 0) ? `<a class="btn kd-ghost" href="#kd-rq" onclick="event.preventDefault();document.getElementById('kd-rq').scrollIntoView({behavior:'smooth'})">${icn('shield-check')} ${s.pending} ${T('to approve', 'freizugeben')}</a>` : ''}</div></div></section>
     ${kpis([['users', s.users || 0, T('accounts', 'Konten'), `${s.confirmed || 0} ${T('confirmed', 'bestätigt')}`], ['user-plus', s.new7 || 0, T('new this week', 'neu diese Woche'), `${s.new30 || 0} ${T('in 30 days', 'in 30 Tagen')}`], ['log-in', s.signin7 || 0, T('signed in this week', 'angemeldet diese Woche')],
       ['activity', a.active7 || 0, T('active learners', 'aktive Lernende'), T('7 days', '7 Tage')], ['dumbbell', a.ex7 || 0, T('exercises this week', 'Übungen diese Woche'), a.avg30 != null ? `Ø ${a.avg30} % (30 ${T('days', 'Tage')})` : ''],
       ['school', orgs.school || 0, T('schools', 'Schulen'), `${orgs.teacher || 0} ${T('teacher pages', 'Lehrkraft-Seiten')}`], ['layers', s.classes || 0, T('classes', 'Klassen'), `${s.in_school || 0} ${T('learners in schools', 'Lernende in Schulen')}`], ['hourglass', s.pending || 0, T('waiting for approval', 'warten auf Freigabe')]])}
@@ -763,6 +789,7 @@ async function viewAdmin() {
       <div class="kd-card"><h3>${T('Exercises done per day', 'Übungen pro Tag')} <small>${T('last 30 days', 'letzte 30 Tage')}</small></h3>${bars(last30(a.daily), T('Exercises per day', 'Übungen pro Tag'))}</div>
       <div class="kd-card"><h3>${T('Learners by level', 'Lernende nach Niveau')}</h3>${hbars(s.levels || {}, [...LV, '–'])}<p class="ks-tip">– = ${T('no level chosen yet', 'noch kein Niveau gewählt')}</p></div>
       <div class="kd-card"><h3>${T('Accounts by role', 'Konten nach Rolle')}</h3>${hbars(Object.fromEntries(Object.entries(roles).map(([k, v]) => [ROLE(k), v])), ['learner', 'teacher', 'school', 'founder'].map(ROLE))}</div></div>
+    <details class="kd-card owner-accounts" id="owner-accounts" ontoggle="if(this.open)KONTO.loadOwnerUsers()"><summary>${T('Manage accounts','Konten verwalten')}</summary><div class="row" style="margin:1rem 0"><input class="input" id="owner_search" type="search" placeholder="${T('Search by email','Nach E-Mail suchen')}" onkeydown="if(event.key==='Enter')KONTO.loadOwnerUsers()"><button class="btn" onclick="KONTO.loadOwnerUsers()">${T('Search','Suchen')}</button></div><div id="owner_users"></div></details>
     <h2 class="kd-h" id="kd-rq">${icn('shield-check')} ${T('Teacher and school requests', 'Anfragen von Lehrkräften und Schulen')}</h2>
     ${rs.length ? `<div class="kd-rqs">${rs.map(r => `<div class="kd-card kd-rq"><div class="h"><b>${esc(r.display_name || r.email)}</b><span class="tag">${ROLE(r.requested_role)}</span><small>${esc(r.email)} · ${dt(r.created_at)}</small></div><div class="d">${detail(r.request_info)}</div>
       <div class="row"><span class="spacer"></span><button class="btn sm" onclick="KONTO.decide('${r.user_id}',false)">${T('Reject', 'Ablehnen')}</button><button class="btn sm primary" onclick="KONTO.decide('${r.user_id}',true)">${icn('check')} ${T('Approve and create page', 'Freischalten und Seite anlegen')}</button></div></div>`).join('')}</div>` : `<p class="sub">${T('No open requests.', 'Keine offenen Anfragen.')}</p>`}
@@ -775,51 +802,53 @@ async function viewAdmin() {
       ${(a.top || []).length ? `<h2 class="kd-h">${icn('flame')} ${T('Most practised (30 days)', 'Am meisten geübt (30 Tage)')}</h2><div class="ks-tw"><table class="ks-t"><tr><th>${T('Topic / chapter', 'Thema / Kapitel')}</th><th>${T('Exercises', 'Übungen')}</th><th>${T('Learners', 'Lernende')}</th></tr>${a.top.map(t => `<tr><td><a href="${chHash(t.chapter)}">${esc(chTitle(t.chapter))}</a></td><td>${t.n}</td><td>${t.users}</td></tr>`).join('')}</table></div>` : ''}</div></div>`, 'kd');
 }
 async function decide(id, ok) { try { await rpc('decide_request', { p_user: id, p_ok: ok }); toastM(ok ? T('Approved – their page is ready', 'Freigeschaltet – die Seite ist angelegt') : T('Rejected', 'Abgelehnt')); refreshView(); } catch (e) { toastM(err(e)); } }
-function inviteSheet() {
-  openSheet(`<h3>${T('Invite someone', 'Jemanden einladen')}</h3><p>${T('You get a link to send. It opens a sign-up form for the right role, in English. Teacher and school invitations are already approved.', 'Sie bekommen einen Link zum Verschicken. Er öffnet ein Anmeldeformular für die passende Rolle, auf Englisch. Einladungen für Lehrkräfte und Schulen sind schon freigegeben.')}</p>
-    <div class="ks-form"><label>${T('Invite as', 'Einladen als')}<select class="input" id="si_role" onchange="document.getElementById('si_lvw').hidden=this.value!=='learner'"><option value="school">${T('School', 'Schule')}</option><option value="teacher">${T('Teacher', 'Lehrkraft')}</option><option value="learner">${T('Learner', 'Lernende/r')}</option></select></label>
-      <label>${T('Name (school or person)', 'Name (Schule oder Person)')}<input class="input" id="si_name" maxlength="80"></label>
-      <label>${T('E-mail (optional, fills in the form)', 'E-Mail (optional, wird vorausgefüllt)')}<input class="input" id="si_email" type="email" maxlength="120"></label>
-      <label id="si_lvw" hidden>${T('Level', 'Niveau')}<select class="input" id="si_level">${lvOpts('', T('Let them choose', 'Selbst wählen lassen'))}</select></label>
-      <label>${T('Note for you (optional)', 'Notiz für Sie (optional)')}<input class="input" id="si_note" maxlength="300"></label>
-      <label>${T('How many people may use it', 'Wie viele Personen dürfen ihn nutzen')}<input class="input" id="si_uses" type="number" min="1" max="500" value="1"></label></div>
-    <div class="row" style="margin-top:1rem"><span class="spacer"></span><button class="btn" onclick="closeSheet()">${T('Cancel', 'Abbrechen')}</button><button class="btn primary" onclick="KONTO.makeSiteInvite()">${T('Create link', 'Link erstellen')}</button></div>`);
+let siteInviteDraft=null;
+function inviteSheet(){
+ siteInviteDraft=null;
+ openSheet(`<h3>${T('Invite a teacher or school','Lehrkraft oder Schule einladen')}</h3><p class="ks-tip">${T('Send a personal invitation from hello@deutschklinik.com. For students, use “Invite a learner” and choose a teaching term.','Senden Sie eine persönliche Einladung von hello@deutschklinik.com. Für Lernende wählen Sie „Lernende einladen“ und einen Kursdurchgang.')}</p><div class="ks-form"><label>${T('Invite as','Einladen als')}<select class="input" id="si_role"><option value="teacher">${T('Teacher','Lehrkraft')}</option><option value="school">${T('School','Schule')}</option></select></label><label>${T('Name','Name')}<input class="input" id="si_name" maxlength="80"></label><label>${T('Email','E-Mail')}<input class="input" id="si_email" type="email" required maxlength="120"></label></div><p id="si_status" class="ks-tip" role="status">${T('They confirm their email and go straight to their teaching dashboard.','Nach der E-Mail-Bestätigung öffnet sich direkt die Unterrichtsübersicht.')}</p><div class="row" style="margin-top:1rem"><button class="btn" onclick="closeSheet()">${T('Cancel','Abbrechen')}</button><span class="spacer"></span><button class="btn primary" id="si_send" onclick="KONTO.makeSiteInvite()">${icn('send')} ${T('Send invitation','Einladung senden')}</button></div>`);icons();
 }
-async function makeSiteInvite() {
-  const g = id => ($(id) || {}).value || '', role = g('si_role'), body = { role, name: g('si_name').trim() || null, email: g('si_email').trim() || null, note: g('si_note').trim() || null, uses_left: Math.max(1, Math.min(500, parseInt(g('si_uses'), 10) || 1)) };
-  if (role === 'learner' && LV.includes(g('si_level'))) body.level = g('si_level');
-  try {
-    const r = await q('/rest/v1/site_invites', { method: 'POST', headers: { Prefer: 'return=representation' }, body });
-    const code = r && r[0] && r[0].code, url = location.origin + location.pathname + '?invite=' + code;
-    const what = role === 'school' ? 'set up your school' : role === 'teacher' ? 'teach German with your learners' : 'learn German';
-    const mail = `mailto:${encodeURIComponent(body.email || '')}?subject=${encodeURIComponent('Your invitation to Deutschklinik')}&body=${encodeURIComponent(`Hello${body.name ? ' ' + body.name : ''},\n\nyou are invited to ${what} on Deutschklinik – German courses from A1 to C1 with a dictionary, vocabulary, grammar, flashcards and games.\n\nCreate your account here:\n${url}\n\nSee you there!`)}`;
-    openSheet(`<h3>${icn('check')} ${T('Invitation ready', 'Einladung erstellt')}</h3><p>${T('Send this link. It works', 'Schicken Sie diesen Link. Er gilt')} ${body.uses_left}× ${T('for 30 days.', '30 Tage lang.')}</p>
-      <input class="input" readonly value="${esc(url)}" onclick="this.select()" style="width:100%">
-      <div class="row" style="margin-top:1rem"><a class="btn" href="${esc(mail)}">${icn('mail')} ${T('Write e-mail', 'E-Mail schreiben')}</a><button class="btn" onclick="KONTO.copy('${esc(url)}')">${icn('copy')} ${T('Copy', 'Kopieren')}</button><span class="spacer"></span><button class="btn primary" onclick="closeSheet();KONTO.refresh()">${T('Done', 'Fertig')}</button></div>`);
-    icons();
-  } catch (e) { toastM(err(e)); }
+async function makeSiteInvite(){
+ const role=$('si_role').value,name=$('si_name').value.trim(),email=$('si_email').value.trim().toLowerCase(),status=$('si_status'),button=$('si_send');
+ if(!$('si_email').reportValidity())return;if(button.disabled)return;button.disabled=true;status.textContent=T('Sending invitation…','Einladung wird gesendet…');
+ try{
+  if(!siteInviteDraft||siteInviteDraft.email!==email||siteInviteDraft.role!==role){const rows=await q('/rest/v1/site_invites',{method:'POST',headers:{Prefer:'return=representation'},body:{role,name:name||null,email,uses_left:1}});siteInviteDraft={code:rows[0].code,role,email};}
+  await workerPost('/site-invitation',{code:siteInviteDraft.code});closeSheet();refresh();toastM(T('Invitation sent to ','Einladung gesendet an ')+email);
+ }catch(e){status.textContent=err(e);button.disabled=false;}
 }
 const delSiteInvite = code => { if (!confirm(T('Delete this invitation? The link will stop working.', 'Einladung löschen? Der Link funktioniert dann nicht mehr.'))) return; act(async () => { await q('/rest/v1/site_invites?code=eq.' + code, { method: 'DELETE' }); refresh(); }); };
 
+let ownerUsers=[],ownerOffset=0,ownerSearch='';
+async function loadOwnerUsers(offset=0){
+  if(!isFounder())return;
+  ownerOffset=offset;ownerSearch=$('owner_search')?.value||ownerSearch;
+  const target=$('owner_users');if(!target)return;
+  target.innerHTML='<p role="status">'+T('Loading accounts…','Konten werden geladen…')+'</p>';
+  try{const data=await rpc('owner_accounts',{p_search:ownerSearch,p_offset:offset});ownerUsers=data.users||[];
+    target.innerHTML=`<p class="ks-tip">${data.total} ${T('accounts','Konten')}</p><div class="ks-tw"><table class="ks-t"><tr><th>${T('Account','Konto')}</th><th>${T('Role','Rolle')}</th><th></th></tr>${ownerUsers.map(u=>`<tr><td><b>${esc(u.display_name||u.email)}</b><small class="ks-it">${esc(u.email)} · ${u.email_confirmed_at?T('Email confirmed','E-Mail bestätigt'):T('Awaiting email confirmation','Wartet auf E-Mail-Bestätigung')}</small></td><td>${ROLE(u.role||'learner')}</td><td>${u.protected?T('Protected','Geschützt'):`<button class="btn sm" onclick="KONTO.deleteAccountSheet('${u.id}')">${icn('trash-2')} ${T('Delete','Löschen')}</button>`}</td></tr>`).join('')}</table></div><div class="row">${offset?`<button class="btn sm" onclick="KONTO.loadOwnerUsers(${Math.max(0,offset-50)})">${T('Previous','Zurück')}</button>`:''}${offset+50<data.total?`<button class="btn sm" onclick="KONTO.loadOwnerUsers(${offset+50})">${T('Next','Weiter')}</button>`:''}</div>`;icons();
+  }catch(e){target.textContent=err(e);}
+}
+function deleteAccountSheet(id){
+ const u=ownerUsers.find(u=>u.id===id);if(!u||u.protected)return;
+ openSheet(`<h3>${T('Delete account','Konto löschen')}</h3><p><b>${esc(u.email)}</b></p><p>${T('This permanently removes the account, saved learning data and results.','Das Konto, gespeicherte Lerndaten und Ergebnisse werden endgültig gelöscht.')}</p>${u.pages?`<p>${T('It also removes their teaching pages and classes. Learners keep their own accounts but lose that school membership.','Auch die Unterrichtsseiten und Klassen werden entfernt. Lernende behalten ihr Konto, verlieren aber diese Schulmitgliedschaft.')}<br>${u.pages} ${T('pages','Seiten')} · ${u.classes} ${T('classes','Klassen')} · ${u.memberships} ${T('memberships','Mitgliedschaften')}</p>`:''}<label class="ks-l">${T('Type the email to confirm','E-Mail zur Bestätigung eingeben')}<input class="input" id="delete_email" type="email" autocomplete="off"></label><p id="delete_status" role="status"></p><div class="row"><button class="btn" onclick="closeSheet()">${T('Cancel','Abbrechen')}</button><span class="spacer"></span><button class="btn" id="delete_account" onclick="KONTO.deleteAccount('${id}')">${T('Permanently delete account','Konto endgültig löschen')}</button></div>`);
+}
+async function deleteAccount(id){
+ const u=ownerUsers.find(x=>x.id===id),status=$('delete_status'),button=$('delete_account'),email=$('delete_email')?.value.trim();
+ if(!u||u.protected||email?.toLowerCase()!==u.email.toLowerCase()){status.textContent=T('Type the exact account email.','Bitte die genaue Konto-E-Mail eingeben.');return;}
+ button.disabled=true;
+ try{await q('/functions/v1/owner-accounts',{method:'POST',body:{user_id:id,confirm_email:email}});closeSheet();await loadOwnerUsers(ownerOffset);toastM(T('Account deleted','Konto gelöscht'));}catch(e){status.textContent=err(e);button.disabled=false;}
+}
+
 /* ---------- a school's or teacher's own home page ---------- */
 async function viewOrgPage(id) {
-  busy();
-  if (me()) await ready();
-  let o = null;
-  try { o = /^[0-9a-f-]{36}$/i.test(id || '') ? await (me() ? rpc : rpcAnon)('org_page', { p_id: id }) : null; } catch (e) {}
-  if (!o) return page(T('Not found', 'Nicht gefunden'), `<p class="sub">${T('This page does not exist (any more).', 'Diese Seite gibt es nicht (mehr).')}</p>`);
-  const own = !!mine.orgs.find(x => x.id === o.id), member = !!(ORG && ORG.id === o.id);
-  const where = [o.city, o.country].filter(Boolean).map(esc).join(', ');
-  page('', `${hero(o, `<p class="kd-eye">${esc(o.org_type || (o.kind === 'school' ? T('Language school', 'Sprachschule') : T('German teacher', 'Deutschlehrkraft')))}${where ? ' · ' + where : ''}</p><h1>${esc(o.name)}</h1>
-      ${o.tagline ? `<p class="kd-hi">${esc(o.tagline)}</p>` : ''}
-      <div class="row">${own ? `<a class="btn kd-cta" href="#/settings">${icn('pencil')} ${T('Edit this page', 'Seite bearbeiten')}</a><a class="btn kd-ghost" href="#/start/${o.id}">${icn('layout-dashboard')} ${T('Dashboard', 'Übersicht')}</a>`
-        : member ? `<a class="btn kd-cta" href="#/start">${icn('play')} ${T('Go to my course', 'Zu meinem Kurs')}</a>`
-        : `<button class="btn kd-cta" onclick="KONTO.codeSheet()">${icn('key-round')} ${T('I have an invitation code', 'Ich habe einen Einladungscode')}</button>`}${okUrl(o.website) || /^http:\/\//.test(o.website || '') ? `<a class="btn kd-ghost" href="${esc(o.website)}" target="_blank" rel="noopener noreferrer">${icn('external-link')} ${T('Website', 'Website')}</a>` : ''}</div>`)}
-    <div class="kd-grid2"><div class="kd-card"><h3>${o.kind === 'school' ? T('About us', 'Über uns') : T('About me', 'Über mich')}</h3>${o.about ? `<p class="kd-about">${esc(o.about).replace(/\n/g, '<br>')}</p>` : `<p class="sub">${own ? T('Tell learners about yourself in Settings.', 'Erzählen Sie in den Einstellungen etwas über sich.') : '–'}</p>`}
-        ${o.owner_name ? `<p class="kd-meta">${icn('user-round')} ${esc(o.owner_name)}</p>` : ''}${o.languages ? `<p class="kd-meta">${icn('languages')} ${esc(o.languages)}</p>` : ''}</div>
-      <div class="kd-card"><h3>${T('Courses', 'Kurse')}</h3>${(o.levels || []).length ? `<div class="kd-lvchips">${lvSort(o.levels).map(l => `<span><span class="gr-lv ${l}">${l}</span> ${esc(lvName(l))}</span>`).join('')}</div>` : `<p class="sub">${T('Courses will be listed here.', 'Hier stehen bald die Kurse.')}</p>`}
-        <div class="kd-mini">${o.students ? `<span><b>${o.students}</b> ${T('learners', 'Lernende')}</span>` : ''}${o.kind === 'school' && o.teachers ? `<span><b>${o.teachers}</b> ${T('teachers', 'Lehrkräfte')}</span>` : ''}<span>${T('on Deutschklinik since', 'bei Deutschklinik seit')} ${dt(o.created_at)}</span></div></div></div>
-    <div class="kd-card kd-what"><h3>${T('What learners get', 'Was Lernende bekommen')}</h3><div class="kd-tools static"><span>${icn('book-a')}<b>${T('Vocabulary', 'Wortschatz')}</b><small>A1 – C1</small></span><span>${icn('book-open-text')}<b>${T('Grammar', 'Grammatik')}</b><small>A1 – B1</small></span><span>${icn('layers')}<b>${T('Flashcards', 'Lernkarten')}</b><small>${T('spaced repetition', 'mit Wiederholung')}</small></span><span>${icn('gamepad-2')}<b>${T('Games', 'Spiele')}</b><small>${T('quiz in class', 'Quiz im Unterricht')}</small></span></div></div>`, 'kd');
+  busy();if(me())await ready();
+  let o=null,terms=[];
+  try{if(/^[0-9a-f-]{36}$/i.test(id||'')){const rpcCall=me()?rpc:rpcAnon;[o,terms]=await Promise.all([rpcCall('org_page',{p_id:id}),rpcCall('org_public_terms',{p_org:id})]);}}catch(e){}
+  if(!o)return page(T('Not found','Nicht gefunden'),`<p class="sub">${T('This teaching page is not available.','Diese Unterrichtsseite ist nicht verfügbar.')}</p>`);
+  const own=!!mine.orgs.find(x=>x.id===o.id),member=!!(ORG&&ORG.id===o.id),where=[o.city,o.country].filter(Boolean).map(esc).join(' · ');
+  page('',`<div class="teacher-page">${hero(o,`<p class="kd-eye">${esc(o.org_type||(o.kind==='school'?T('Language school','Sprachschule'):T('German teacher','Deutschlehrkraft')))}${where?' · '+where:''}</p><h1>${esc(o.name)}</h1>${o.tagline?`<p class="kd-hi">${esc(o.tagline)}</p>`:''}<div class="row">${own?`<a class="btn kd-cta" href="#/settings">${icn('palette')} ${T('Personalise my page','Meine Seite gestalten')}</a><a class="btn kd-ghost" href="#/start/${o.id}">${T('My dashboard','Meine Übersicht')}</a>`:member?`<a class="btn kd-cta" href="#/start">${T('My classroom','Mein Kursraum')}</a>`:`<button class="btn kd-cta" onclick="KONTO.codeSheet()">${icn('mail-open')} ${T('Accept an invitation','Einladung annehmen')}</button>`}${okUrl(o.website)?`<a class="btn kd-ghost" href="${esc(o.website)}" target="_blank" rel="noopener noreferrer">${icn('arrow-up-right')} ${T('Website','Website')}</a>`:''}</div>`)}
+  <div class="teacher-story"><div>${o.about?`<p class="play-eyebrow">${T('Meet your teacher','Ihre Lehrkraft kennenlernen')}</p><h2>${T('Learning, your way.','Lernen auf Ihre Art.')}</h2><p class="teacher-bio">${esc(o.about).replace(/\n/g,'<br>')}</p>`:own?`<h2>${T('Make this space yours.','Gestalten Sie Ihren Bereich.')}</h2><p>${T('Add your story, a portrait or logo, your languages and a welcome message in Settings.','Ergänzen Sie Ihre Geschichte, ein Porträt oder Logo, Ihre Sprachen und einen Willkommenstext in den Einstellungen.')}</p>`:''}</div><aside>${o.owner_name?`<p>${icn('user-round')} ${esc(o.owner_name)}</p>`:''}${o.languages?`<p>${icn('languages')} ${esc(o.languages)}</p>`:''}${(o.levels||[]).length?`<div class="kd-lvchips">${lvSort(o.levels).map(l=>`<span class="gr-lv ${l}">${l}</span>`).join('')}</div>`:''}<small>${T('Teaching on Deutschklinik since','Bei Deutschklinik seit')} ${dt(o.created_at)}</small></aside></div>
+  ${terms.length?`<section class="teacher-terms"><p class="play-eyebrow">${T('Learn together','Gemeinsam lernen')}</p><h2>${T('Find your next class.','Finden Sie Ihren nächsten Kurs.')}</h2><div class="kd-grid2">${terms.map(c=>`<article class="kd-card"><span class="gr-lv ${c.level}">${c.level}</span><h3>${esc(c.name)}</h3><p class="play-eyebrow">${esc(c.term_name)}</p><p>${dt(c.starts_on)} – ${dt(c.ends_on)}</p><p>${esc(c.schedule)}</p>${c.course_details?`<details><summary>${T('Inside this course','Das bietet der Kurs')}</summary><p style="white-space:pre-line">${esc(c.course_details)}</p></details>`:''}<a class="btn" href="#/live-classes">${T('View class & sign up','Kurs ansehen & anmelden')} ${icn('arrow-up-right')}</a></article>`).join('')}</div></section>`:own?`<section class="quiet-empty">${SiteDesign.art('together')}<h2>${T('Your next term starts with you.','Ihr nächster Kurs beginnt mit Ihnen.')}</h2><p>${T('Choose dates, a level and a timetable, then invite your learners.','Wählen Sie Termine, Niveau und Zeitplan und laden Sie Lernende ein.')}</p><a class="btn primary" href="#/klasse/${o.id}">${T('Start a teaching term','Kursdurchgang starten')}</a></section>`:''}
+  <details class="dashboard-extra"><summary>${T('Your learning toolkit','Ihre Lernwerkzeuge')}</summary><div class="kd-tools static"><span>${icn('book-a')}<b>${T('Vocabulary & grammar','Wortschatz & Grammatik')}</b></span><span>${icn('layers')}<b>${T('Flashcards','Lernkarten')}</b></span><span>${icn('gamepad-2')}<b>${T('Games','Spiele')}</b></span><span>${icn('chart-line')}<b>${T('Your progress','Ihr Fortschritt')}</b></span></div></details></div>`,'kd');
 }
 function codeSheet() {
   openSheet(`<h3>${T('Join with a code', 'Mit Code beitreten')}</h3><p>${T('Enter the code from your invitation link.', 'Gib den Code aus deinem Einladungslink ein.')}</p><input class="input" id="kj_code" autocomplete="off" style="width:100%" placeholder="z. B. 3f9a1c0b7d2e">
@@ -871,7 +900,7 @@ async function viewSettings() {
       <div class="ks-row"><span>${T('Code', 'Code')}</span><input class="input" id="ks_code" placeholder="${T('Invitation code from a school or teacher', 'Einladungscode einer Schule oder Lehrkraft')}" autocomplete="off"><button class="btn sm" onclick="KONTO.join(document.getElementById('ks_code').value)">${T('Use', 'Einlösen')}</button></div>`) : ''}
     ${own ? sec(own.kind === 'school' ? 'school' : 'presentation', own.kind === 'school' ? T('School page', 'Schulseite') : T('My teacher page', 'Meine Seite als Lehrkraft'), `<p class="ks-tip">${T('This is what your learners and visitors see. Your colour and logo also appear across the site for your learners.', 'Das sehen Ihre Lernenden und Besucher. Farbe und Logo erscheinen für Ihre Lernenden auch auf der ganzen Seite.')}</p><div class="ks-form">${orgForm(own)}</div>`)
       : isStaff() && P.role !== 'founder' && !mine.staff.length ? sec('school', T('Your page', 'Ihre Seite'), `<div class="ks-form">${orgForm(null, P.role === 'school' ? 'school' : 'teacher')}</div>`) : ''}
-    ${learner ? sec('presentation', T('Teacher or school?', 'Lehrkraft oder Schule?'), P.requested_role ? `<p class="sub">${icn('hourglass')} ${T(`Your request (${ROLE(P.requested_role)}) is being checked.`, `Deine Anfrage (${ROLE(P.requested_role)}) wird geprüft.`)}</p>` : `<p class="sub">${T('Teachers and schools get classes, invitation links, assignments and their own home page.', 'Lehrkräfte und Schulen bekommen Klassen, Einladungslinks, Aufgaben und eine eigene Startseite.')}</p><button class="btn" onclick="KONTO.request()">${T('Request an account', 'Konto anfragen')}</button>`) : ''}
+    ${learner ? sec('presentation', T('Teacher or school?', 'Lehrkraft oder Schule?'), P.requested_role ? `<p class="sub">${icn('hourglass')} ${T(`Confirm your email to finish setting up your teaching account.`, `Bestätige deine E-Mail, um dein Lehrkonto fertig einzurichten.`)}</p>` : `<p class="sub">${T('Teachers and schools get classes, invitation links, assignments and their own home page.', 'Lehrkräfte und Schulen bekommen Klassen, Einladungslinks, Aufgaben und eine eigene Startseite.')}</p><button class="btn" onclick="KONTO.request()">${T('Start teaching', 'Unterrichten starten')}</button>`) : ''}
     ${isFounder() ? sec('sliders-horizontal', T('Site access (owner)', 'Zugang zur Seite (Betreiber)'), `<p class="ks-tip">${T('Choose who may use each part of Deutschklinik. “Enrolled” means signed in and with a level unlocked. Teachers and schools can always use everything that is not switched off.', 'Legen Sie fest, wer welchen Teil von Deutschklinik nutzen darf. „Eingeschrieben“ heißt: angemeldet und mit freigeschaltetem Niveau. Lehrkräfte und Schulen dürfen alles, was nicht ausgeschaltet ist.')}</p>
       <div class="ks-form kd-acc">${Object.keys(FDEF).map(f => `<label><span>${T(FEAT[f][0], FEAT[f][1])}</span><select class="input" id="sf_${f}">${FMODES().map(o => `<option value="${o[0]}"${mode(f) === o[0] ? ' selected' : ''}>${o[1]}</option>`).join('')}</select></label>`).join('')}
       <label>${T('Welcome headline for visitors (empty = default)', 'Begrüßung für Besucher – Überschrift (leer = Standard)')}<input class="input" id="sw_h" maxlength="120" value="${esc((SITE.welcome || {}).headline || '')}" placeholder="Welcome to Deutschklinik"></label>
@@ -895,9 +924,9 @@ async function leave() {
   act(async () => { await q('/rest/v1/org_members?org_id=eq.' + ORG.id + '&user_id=eq.' + me().id, { method: 'DELETE' }); await reload(); }, T('You left the school', 'Du hast die Schule verlassen'));
 }
 function request() {
-  openSheet(`<h3>${T('Account for teachers and schools', 'Konto für Lehrkräfte und Schulen')}</h3><p>${T('With it you create classes, invite learners, set assignments with deadlines and your own pass mark, and get your own home page. We check the request and then switch it on.', 'Damit legen Sie Klassen an, laden Lernende ein, stellen Aufgaben mit Termin und eigener Bestehensgrenze und bekommen eine eigene Startseite. Wir prüfen die Anfrage und schalten das Konto frei.')}</p>
+  openSheet(`<h3>${T('Account for teachers and schools', 'Konto für Lehrkräfte und Schulen')}</h3><p>${T('With it you create classes, invite learners, set assignments with deadlines and your own pass mark, and get your own home page. Your confirmed email activates your teaching workspace immediately.', 'Damit legen Sie Klassen an, laden Lernende ein, stellen Aufgaben mit Termin und eigener Bestehensgrenze und bekommen eine eigene Startseite. Mit Ihrer bestätigten E-Mail wird Ihr Unterrichtsbereich sofort aktiviert.')}</p>
     <div class="ks-form"><select class="input" id="kr_role" onchange="KONTO.reqFields()"><option value="teacher">${T('I am a teacher', 'Ich bin Lehrkraft')}</option><option value="school">${T('We are a school / organisation', 'Wir sind eine Schule / Organisation')}</option></select><div id="kr_more"></div></div>
-    <div class="row" style="margin-top:1rem"><span class="spacer"></span><button class="btn" onclick="closeSheet()">${T('Cancel', 'Abbrechen')}</button><button class="btn primary" onclick="KONTO.sendRequest()">${T('Send request', 'Anfrage senden')}</button></div>`);
+    <div class="row" style="margin-top:1rem"><span class="spacer"></span><button class="btn" onclick="closeSheet()">${T('Cancel', 'Abbrechen')}</button><button class="btn primary" onclick="KONTO.sendRequest()">${T('Create my teaching workspace', 'Unterrichtsbereich erstellen')}</button></div>`);
   reqFields();
 }
 function reqFields() { const r = $('kr_role').value; $('kr_more').innerHTML = detailFields(r, {}, 'kr'); }
@@ -905,7 +934,7 @@ async function sendRequest() {
   const r = $('kr_role').value, info = readDetails(r, 'kr');
   if (r === 'school' && (!info.name || info.name.length < 2)) return toastM(T('Please enter the name of the school.', 'Bitte den Namen der Schule eingeben.'));
   try { const lf = $('kr_logo'); if (lf && lf.files && lf.files[0]) { const s = await shrinkLogo(lf.files[0]); info.logo_url = await uploadLogo(s.blob); } } catch (e) { return toastM(err(e)); }
-  if (await saveProfile({ requested_role: r, request_info: info }, T('Request sent – we will get back to you.', 'Anfrage gesendet – wir melden uns.'))) { closeSheet(); refreshView(); }
+  try { await rpc('register_teaching_account', {p_kind:r,p_info:info}); closeSheet(); await reload(); location.hash='#/start'; refreshView(); toastM(T('Your teaching workspace is ready', 'Ihr Unterrichtsbereich ist bereit')); } catch(e) { toastM(err(e)); }
 }
 
 /* ---------- home for visitors who are not signed in: Deutschklinik ---------- */
@@ -1101,7 +1130,7 @@ document.head.appendChild(st);
 /* ---------- start ---------- */
 window.KONTO = { level, lang, passMark, canOpen, lvState, unlock, lockSheet, unlocked: unlockedSet, profile: () => P, org: () => ORG, view, routes: ROUTES, fillMe, saveLevel, askLevel,
   signupFields, signupCheck, signupData, request, reqFields, sendRequest, join, decide, inviteSheet, makeSiteInvite, delSiteInvite, codeSheet,
-  saveOrg, dropLogo, orgPass, addClass, classPass, invite, delInvite, moveMember, removeMember, addTask, delTask, copy, reload, refresh, liveClassSheet, saveLiveClass, sendClassInvite, sendClassInviteNow, decideLiveRequest, applyLiveClass,
+  saveOrg, dropLogo, orgPass, addClass, classPass, invite, delInvite, moveMember, removeMember, addTask, delTask, copy, reload, refresh, liveClassSheet, saveLiveClass, sendClassInvite, sendClassInviteNow, inviteLearner, previewInvite, loadOwnerUsers, deleteAccountSheet, deleteAccount, decideLiveRequest, applyLiveClass,
   student, unlockFor, saveSettings, setCourse, unenroll, leave, T, can, gate, featureOf, saveSite, lookup, signupAs, previewWelcome: () => { location.hash = '#/start/besucher'; } };
 window.addEventListener('acct:in', e => { reload().then(() => { if (e.detail && e.detail.fresh && /^#?\/?$/.test(location.hash)) location.hash = '#/start'; }); });
 window.addEventListener('acct:out', () => { profileRequest++; loading=null; OFF=false; P = null; ORG = null; mine = { orgs: [], staff: [] }; apply(); if (/^#?\/?$/.test(location.hash)) location.hash = '#/start'; });

@@ -409,7 +409,7 @@ kbd{font:600 .66rem Inter,system-ui,sans-serif;padding:.1rem .35rem;border-radiu
 <script src="js/game-messages.js?v=f0e0633452ab"></script>
 <script src="js/render-safety.js?v=cbceea56a80a"></script>
 <script src="js/dictionary-english.js?v=422aef8ffb62" data-curated="content/dictionary-english.json?v=1c4818c1b1d7"></script>
-<script src="js/site-design.js?v=65fef1511921"></script>
+<script src="js/site-design.js?v=95bdb424b5d6"></script>
 <script id="data" type="application/octet-stream" data-src="core.bin?v=4c9f34b8d0dd" data-defs="defs.bin?v=5e525dc56850"></script>
 <script>
 "use strict";
@@ -1145,7 +1145,7 @@ function wmCard(node){
   const map=node.closest('.wmap'); if(!map)return;
   clearTimeout(wmHide);
   let pop=map.querySelector('.wmpop'); if(!pop){pop=document.createElement('div');pop.className='wmpop';pop.id='wm-preview';pop.setAttribute('role','dialog');map.appendChild(pop);
-    pop.addEventListener('pointerenter',()=>clearTimeout(wmHide)); pop.addEventListener('pointerleave',ev=>{if(ev.pointerType==='mouse')wmHideSoon()})}
+    pop.addEventListener('pointerenter',()=>clearTimeout(wmHide)); pop.addEventListener('pointerleave',ev=>{if(ev.pointerType==='mouse'&&canHover())wmHideSoon()})}
   const w=node.dataset.w, lbl=node.dataset.l, g=node.dataset.g, e=w?E[WIDX.get(w)]:null;
   pop.lang=document.documentElement.lang;pop.setAttribute('aria-label',ui('Preview: ','Vorschau: ')+lbl);pop.setAttribute('aria-hidden','false');
   const tag=`<span class="wmtag" style="--c:${WMGC[g]}">${ui(({s:'Similar word',g:'Opposite',f:'Word family',n:'Related idea'})[g],WMGL[g])}</span><button class="wmclose" type="button" aria-label="${ui('Close word preview','Wortvorschau schließen')}">×</button>`;
@@ -1188,9 +1188,14 @@ document.addEventListener('pointerdown',ev=>{lastPtr=ev.pointerType||'mouse'},tr
 document.addEventListener('touchstart',()=>{lastPtr='touch'},{capture:true,passive:true});
 const canHover=()=>lastPtr==='mouse'&&matchMedia('(hover: hover)').matches;
 document.addEventListener('pointerover',ev=>{const n=ev.target.closest&&ev.target.closest('.wmap g.node'); if(n&&canHover()&&ev.pointerType==='mouse'){clearTimeout(wmHide); if(wmCur!==n)wmCard(n)}});
-document.addEventListener('pointerout',ev=>{const n=ev.target.closest&&ev.target.closest('.wmap g.node'); if(n&&ev.pointerType==='mouse'&&!(ev.relatedTarget&&n.contains(ev.relatedTarget)))wmHideSoon()});
+document.addEventListener('pointerout',ev=>{const n=ev.target.closest&&ev.target.closest('.wmap g.node'); if(n&&canHover()&&ev.pointerType==='mouse'&&!(ev.relatedTarget&&n.contains(ev.relatedTarget)))wmHideSoon()});
+let wmTouch=null,wmLastTouch=0;
+document.addEventListener('pointerdown',ev=>{const n=ev.target.closest?.('.wmap g.node');wmTouch=ev.pointerType==='touch'&&n?{node:n,x:ev.clientX,y:ev.clientY}:null;},true);
+document.addEventListener('pointerup',ev=>{const t=wmTouch;wmTouch=null;if(ev.pointerType==='touch'&&t&&t.node===ev.target.closest?.('.wmap g.node')&&Math.hypot(ev.clientX-t.x,ev.clientY-t.y)<12){wmLastTouch=Date.now();wmCard(t.node);ev.preventDefault();}},{passive:false});
+document.addEventListener('pointercancel',()=>{wmTouch=null});
 document.addEventListener('click',ev=>{
   const n=ev.target.closest&&ev.target.closest('.wmap g.node');
+  if(n&&Date.now()-wmLastTouch<700){ev.preventDefault();return;}
   if(n){wmCard(n);return} // A node always previews. Only the explicit card link navigates.
   if(!(ev.target.closest&&ev.target.closest('.wmpop')))wmHideNow();
 });
@@ -3109,5 +3114,5 @@ if(tabs&&!tabs.querySelector('[data-t="play"]')){const a=document.createElement(
 })();
 </script>
 <!-- ===== /Spiele ===== -->
-<script src="konto.js?v=0198acfb4331"></script>
+<script src="konto.js?v=a1ee21f5411a"></script>
 </body></html>

@@ -1,5 +1,5 @@
 import { handleWelcome, welcomeHook, drainMail } from "./welcome.js";
-import { sendCourseInvitation, requestLiveClass } from "./invitations.js";
+import { sendCourseInvitation, previewCourseInvitation, sendSiteInvitation, requestLiveClass } from "./invitations.js";
 import { english } from "./english.js";
 import {
   authenticated,
@@ -95,6 +95,14 @@ async function route(req, env, ctx) {
     if (!ALLOWED.includes(origin))
       return json({ error: "only for the Wörterbuch site" }, 403, h);
     return handleWelcome(req, env, h);
+  }
+  if(url.pathname==="/site-invitation"){
+    if(!ALLOWED.includes(origin))return json({error:"Forbidden"},403,h);
+    return sendSiteInvitation(req,env,h);
+  }
+  if (url.pathname === "/course-invitation/preview") {
+    if (!ALLOWED.includes(origin)) return json({error:"Forbidden"},403,h);
+    return previewCourseInvitation(req,env,h);
   }
   if (url.pathname === "/course-invitation") {
     if (!ALLOWED.includes(origin)) return json({ error: "only for the Deutschklinik site" }, 403, h);
