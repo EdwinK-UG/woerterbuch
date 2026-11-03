@@ -560,7 +560,7 @@ function scriptFile(src){
 function loadGram(){
   if(!gramP)gramP=(async()=>{
     if(typeof LESSON_EXERCISES==='undefined')await scriptFile('grammatik/catalog.js?v=606c7f51c6cd');
-    if(!window.GRAM)await scriptFile('grammatik/grammatik.js?v=4e5938afb66a');
+    if(!window.GRAM)await scriptFile('grammatik/grammatik.js?v=bb70b99fa167');
   })().catch(e=>{gramP=null;throw e});
   return gramP;
 }
