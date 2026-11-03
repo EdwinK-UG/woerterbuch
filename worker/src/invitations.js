@@ -63,7 +63,14 @@ export async function sendCourseInvitation(req, env, headers) {
   try { url = new URL(inviteUrl); } catch { return json(400, { error: "Invalid invitation link." }, headers); }
   if (url.origin !== site.origin || !/^[0-9a-f]{12}$/i.test(url.searchParams.get("join") || "")) return json(400, { error: "Invalid invitation link." }, headers);
   let classes;
-  try { classes = await supabase(env, `/rest/v1/classes?select=id,name,level,starts_on,ends_on,schedule&id=eq.${encodeURIComponent(classId)}`, req.headers.get("Authorization")); }
+  try {
+    const token = req.headers.get("Authorization");
+    const manager = await supabase(env, "/rest/v1/rpc/can_manage_class", token, { method: "POST", body: JSON.stringify({ p_class: classId }) });
+    if (manager !== true) return json(403, { error: "Only the class teacher or owner may send invitations." }, headers);
+    const invitations = await supabase(env, `/rest/v1/invites?select=code&code=eq.${url.searchParams.get("join")}&class_id=eq.${encodeURIComponent(classId)}&member_role=eq.student&uses_left=gt.0`, token);
+    if (!invitations?.length) return json(400, { error: "The invitation does not belong to this class." }, headers);
+    classes = await supabase(env, `/rest/v1/classes?select=id,name,level,starts_on,ends_on,schedule&id=eq.${encodeURIComponent(classId)}`, token);
+  }
   catch { return json(403, { error: "You cannot send an invitation for this class." }, headers); }
   const course = classes?.[0];
   if (!course) return json(403, { error: "You cannot send an invitation for this class." }, headers);

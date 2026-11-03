@@ -12,6 +12,22 @@ const migration = readFileSync(
   new URL("../migrations/0001_review_and_operations.sql", import.meta.url),
   "utf8",
 );
+test("class invitations reject a learner even if that learner can read the class", async () => {
+  const oldFetch = globalThis.fetch;
+  try {
+    globalThis.fetch = async (url) => {
+      if (String(url).endsWith('/auth/v1/user')) return Response.json({ id: 'learner', email: 'learner@example.invalid', email_confirmed_at: '2026-11-01T00:00:00Z' });
+      if (String(url).endsWith('/rpc/can_manage_class')) return Response.json(false);
+      throw new Error('Unauthorised request reached class data or mail transport');
+    };
+    const response = await worker.fetch(new Request('https://worker.example.invalid/course-invitation', {
+      method: 'POST', headers: { Origin: 'https://client.example.invalid', Authorization: 'Bearer verified', 'Content-Type': 'application/json' },
+      body: JSON.stringify({ class_id: '00000000-0000-4000-ab00-000000000001', to: 'target@example.invalid', invite_url: 'https://client.example.invalid/?join=abcdef123456' }),
+    }), { ALLOWED_ORIGINS: 'https://client.example.invalid', SITE_URL: 'https://client.example.invalid/', SUPABASE_URL: 'https://auth.example.invalid', SUPABASE_PUBLISHABLE_KEY: 'fixture' }, {});
+    assert.equal(response.status, 403);
+    assert.match((await response.json()).error, /class teacher or owner/);
+  } finally { globalThis.fetch = oldFetch; }
+});
 const adapter = `import json,sqlite3,sys
 path,sql,args,mode=json.load(sys.stdin)
 con=sqlite3.connect(path);con.row_factory=sqlite3.Row
