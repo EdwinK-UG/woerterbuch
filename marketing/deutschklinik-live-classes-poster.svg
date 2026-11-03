@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1240" height="1754" viewBox="0 0 1240 1754" role="img" aria-labelledby="title desc">
+  <title id="title">Deutschklinik live German classes poster</title><desc id="desc">Minimal poster advertising free German learning and live instructor-led classes from 23 November.</desc>
+  <rect width="1240" height="1754" fill="#f6f4ef"/>
+  <rect x="74" y="70" width="1092" height="1614" rx="40" fill="#fff" stroke="#dce7f8" stroke-width="3"/>
+  <rect x="74" y="70" width="1092" height="20" rx="10" fill="#1f6feb"/>
+  <text x="126" y="194" font-family="Arial,Helvetica,sans-serif" font-size="47" font-weight="700" fill="#20242b">Deutsch<tspan fill="#1f6feb">klinik</tspan></text>
+  <text x="126" y="255" font-family="Arial,Helvetica,sans-serif" font-size="24" font-weight="700" letter-spacing="4" fill="#697386">GERMAN, MADE CLEAR</text>
+  <line x1="126" y1="313" x2="1114" y2="313" stroke="#dce7f8" stroke-width="3"/>
+  <text x="126" y="451" font-family="Arial,Helvetica,sans-serif" font-size="82" font-weight="700" fill="#20242b">Start learning</text>
+  <text x="126" y="540" font-family="Arial,Helvetica,sans-serif" font-size="82" font-weight="700" fill="#20242b">German today.</text>
+  <text x="126" y="612" font-family="Arial,Helvetica,sans-serif" font-size="34" fill="#4a5260">Free at deutschklinik.com</text>
+  <rect x="126" y="687" width="988" height="3" fill="#dce7f8"/>
+  <g font-family="Arial,Helvetica,sans-serif" fill="#20242b"><text x="126" y="790" font-size="27" font-weight="700">LEARN AT YOUR PACE</text><text x="126" y="842" font-size="31">Vocabulary · grammar · flashcards · games</text><text x="126" y="894" font-size="31">Your progress, saved in one learner account.</text></g>
+  <rect x="126" y="975" width="988" height="264" rx="26" fill="#eaf2ff"/>
+  <text x="172" y="1058" font-family="Arial,Helvetica,sans-serif" font-size="27" font-weight="700" letter-spacing="2" fill="#1f6feb">LIVE INSTRUCTOR-LED CLASSES</text>
+  <text x="172" y="1133" font-family="Arial,Helvetica,sans-serif" font-size="52" font-weight="700" fill="#20242b">Starting 23 November</text>
+  <text x="172" y="1191" font-family="Arial,Helvetica,sans-serif" font-size="29" fill="#4a5260">Choose your level and apply for your class.</text>
+  <g transform="translate(126 1320)"><rect width="362" height="244" rx="22" fill="#20242b"/><text x="31" y="65" font-family="Arial,Helvetica,sans-serif" font-size="24" font-weight="700" fill="#fff">SIGN UP</text><text x="31" y="111" font-family="Arial,Helvetica,sans-serif" font-size="25" fill="#c9dcff">Scan to see live classes</text><text x="31" y="174" font-family="Arial,Helvetica,sans-serif" font-size="23" fill="#fff">deutschklinik.com</text></g>
+  <rect x="742" y="1300" width="372" height="372" rx="20" fill="#fff" stroke="#dce7f8" stroke-width="3"/><image href="live-classes-qr.svg" x="748" y="1306" width="360" height="360"/>
+  <text x="126" y="1631" font-family="Arial,Helvetica,sans-serif" font-size="26" fill="#4a5260">Questions? support@deutschklinik.com  ·  +256 755 221 543</text>
+</svg>

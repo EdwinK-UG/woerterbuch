@@ -1,4 +1,5 @@
 import { handleWelcome, welcomeHook, drainMail } from "./welcome.js";
+import { sendCourseInvitation, requestLiveClass } from "./invitations.js";
 import {
   authenticated,
   reserve,
@@ -89,6 +90,14 @@ async function route(req, env, ctx) {
     if (!ALLOWED.includes(origin))
       return json({ error: "only for the Wörterbuch site" }, 403, h);
     return handleWelcome(req, env, h);
+  }
+  if (url.pathname === "/course-invitation") {
+    if (!ALLOWED.includes(origin)) return json({ error: "only for the Deutschklinik site" }, 403, h);
+    return sendCourseInvitation(req, env, h);
+  }
+  if (url.pathname === "/live-class-request") {
+    if (!ALLOWED.includes(origin)) return json({ error: "only for the Deutschklinik site" }, 403, h);
+    return requestLiveClass(req, env, h);
   }
   if (url.pathname === "/pic")
     return req.method === "GET"
