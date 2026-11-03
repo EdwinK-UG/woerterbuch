@@ -7,7 +7,49 @@ import { spawnSync } from "node:child_process";
 import { webcrypto } from "node:crypto";
 import worker from "../src/index.js";
 import { drainMail } from "../src/welcome.js";
+import { requestLiveClass, sendCourseInvitation } from "../src/invitations.js";
 globalThis.crypto ||= webcrypto;
+test('term invitation contains configured dates, course length, timetable and course details', async () => {
+  const oldFetch=globalThis.fetch, sent=[];
+  try {
+    globalThis.fetch=async url=>{
+      const path=new URL(url).pathname;
+      if(path==='/auth/v1/user') return Response.json({id:'teacher',email:'teacher@example.invalid',email_confirmed_at:'2026-11-01T00:00:00Z'});
+      if(path.endsWith('/can_manage_class')) return Response.json(true);
+      if(path==='/rest/v1/invites') return Response.json([{code:'abcdef123456'}]);
+      if(path==='/rest/v1/classes') return Response.json([{name:'Evening German',level:'A1',term_name:'Spring 2027',starts_on:'2027-02-01',ends_on:'2027-02-28',schedule:'Mon & Wed 18:00 EAT (UTC+3)',course_details:'Weekly feedback and lesson recordings'}]);
+      throw Error('Unexpected invitation request');
+    };
+    const response=await sendCourseInvitation(new Request('https://worker.example.invalid/course-invitation',{method:'POST',headers:{Authorization:'Bearer verified'},body:JSON.stringify({class_id:'00000000-0000-4000-ab00-000000000001',to:'student@example.invalid',invite_url:'https://site.example.invalid/?join=abcdef123456'})}),{SITE_URL:'https://site.example.invalid/',SUPABASE_URL:'https://auth.example.invalid',SUPABASE_PUBLISHABLE_KEY:'fixture',SMTP_USER:'hello@example.invalid',SMTP_PASSWORD:'fixture'},{},async (...args)=>sent.push(args));
+    assert.equal(response.status,200);
+    for(const body of [sent[0][4],sent[0][5]]) for(const phrase of ['Spring 2027','4 weeks','2027','Weekly feedback and lesson recordings']) assert.ok(body.includes(phrase));
+    assert.ok(sent[0][4].includes('Mon & Wed 18:00 EAT (UTC+3)'));
+    assert.equal(sent[0][10],'teacher@example.invalid');
+  } finally {globalThis.fetch=oldFetch;}
+});
+test('class application notifies support and the private teacher without a service key', async () => {
+  const oldFetch = globalThis.fetch, sent = [];
+  try {
+    globalThis.fetch = async (url, options) => {
+      const path = new URL(url).pathname;
+      if (path === '/auth/v1/user') return Response.json({id:'student',email:'student@example.invalid',email_confirmed_at:'2026-11-01T00:00:00Z'});
+      if (path === '/rest/v1/rpc/request_live_class') return Response.json({request_id:'application',status:'pending',class_name:'German A1',level:'A1'});
+      if (path === '/rest/v1/profiles') return Response.json([{display_name:'Student'}]);
+      if (path === '/rest/v1/rpc/teacher_mail_context') {
+        assert.deepEqual(JSON.parse(options.body), {p_request:'application',p_worker_secret:'fixture-mail-secret'});
+        return Response.json({notification_email:'teacher@example.invalid'});
+      }
+      throw Error('Unexpected mail request');
+    };
+    const response = await requestLiveClass(new Request('https://worker.example.invalid/live-class-request', {method:'POST',headers:{Authorization:'Bearer verified'},body:JSON.stringify({class_id:'00000000-0000-4000-ab00-000000000001'})}), {
+      SUPABASE_URL:'https://auth.example.invalid',SUPABASE_PUBLISHABLE_KEY:'fixture',SMTP_USER:'hello@example.invalid',SMTP_PASSWORD:'fixture',WELCOME_HOOK_SECRET:'fixture-mail-secret',
+    }, {}, async (...args) => sent.push(args));
+    assert.equal(response.status,200);
+    assert.deepEqual(sent.map(x=>x[2]).sort(),['support@deutschklinik.com','teacher@example.invalid']);
+    assert.ok(sent.every(x=>x[4].includes('student@example.invalid')));
+    assert.equal((await response.text()).includes('teacher@example.invalid'),false);
+  } finally { globalThis.fetch=oldFetch; }
+});
 const migration = readFileSync(
   new URL("../migrations/0001_review_and_operations.sql", import.meta.url),
   "utf8",
