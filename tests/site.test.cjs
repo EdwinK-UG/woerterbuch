@@ -23,7 +23,9 @@ async function site(hash = "", options = {}) {
       calls.push(new URL(url).pathname);
       return Promise.resolve(
         new URL(url).hostname === "site.test"
-          ? read(decodeURIComponent(new URL(url).pathname.slice(1)))
+          ? (options.catalog && new URL(url).pathname === "/grammatik/catalog.js"
+            ? Buffer.from(options.catalog)
+            : read(decodeURIComponent(new URL(url).pathname.slice(1))))
           : Buffer.from(""),
       );
     }
@@ -231,6 +233,19 @@ test("course overview, contents and progress need no full chapter or dictionary"
     await until(() => s.document.querySelector("#view .empty"));
     assert.ok(s.calls.includes("/functions/v1/lessons"));
     assert.deepEqual(s.calls.filter((p) => /k\d+\.js$/.test(p)), []);
+    assert.deepEqual(s.errors, []);
+  } finally {
+    await s.close();
+  }
+});
+test("a missing catalogue entry leaves that chapter coming soon without breaking the overview", async () => {
+  const catalog = read("grammatik/catalog.js").toString().replace(/^  "201":.*\n/m, "");
+  const s = await site("#/v", { catalog, account: true, features: { vocab: "everyone" }, profile: () => new Response('[{"user_id":"fixture","role":"learner","unlocked":["A1"],"level":"A1"}]') });
+  try {
+    await until(() => s.document.querySelector('.gr-row[data-n="202"]'));
+    assert.equal(s.document.querySelector('.gr-row[data-n="201"]'), null);
+    assert.ok(s.document.querySelector('.gr-row[data-n="202"]'));
+    assert.ok(s.document.querySelector('#grlist .gr-card.soon[title="Kommt bald"]'));
     assert.deepEqual(s.errors, []);
   } finally {
     await s.close();

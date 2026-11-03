@@ -945,6 +945,7 @@ window.addEventListener('storage',event=>{if (event.key===LKEY) {bestCache=null;
 window.addEventListener('online',()=>pull().then(sync));
 window.addEventListener('beforeunload',event=>{if(unsavedState){event.preventDefault();event.returnValue=''}});
 function chapterProgress(c) {
+  if (!c) return { passed: 0, total: 0 };
   const g = c.exercises.filter(x => x.graded !== false); let passed = 0;
   for (const x of g) { const b = best(c.n, x.id); if (b && b.score / b.total >= PASS) passed++; }
   return { passed, total: g.length };
@@ -1027,7 +1028,7 @@ function list() {
     html += `<details class="gr-acc" data-k="${H(gk)}" style="--h:${g.h}"${open ? ' open' : ''}><summary><span class="badge">${icn(g.ic)}</span><span class="gr-gt">${H(g.t)}</span>
       <span class="gr-gl">${lvls.map(l => `<span class="gr-lv ${l}">${l}</span>`).join('')}</span><small>${g.soon ? 'kommt bald' : `${g.ch.length} ${g.vocab ? 'Themen' : 'Kapitel'}${done ? ` · ${done} geschafft` : ''}`}</small><span class="chev">${icn('chevron-down')}</span></summary>
       <div class="gr-rows">${g.soon ? `<p class="gr-clw">Die Themen für ${g.lv} sind in Arbeit.</p>` : cs.map(c => {
-        const n = c[0], ok = READY[n], pr = ok ? chapterProgress(chapterSummary(n)) : null, all = pr && pr.total && pr.passed === pr.total, ck = 'c:' + n, copen = ok && st[ck] === 1;
+        const n = c[0], summary = chapterSummary(n), ok = READY[n] && !!summary, pr = ok ? chapterProgress(summary) : null, all = pr && pr.total && pr.passed === pr.total, ck = 'c:' + n, copen = ok && st[ck] === 1;
         const body = `<span class="gr-num">${numLabel(n)}</span><span class="gr-ct"><b>${H(c[1])}</b><small>${H(c[2])}</small></span>${pr && pr.passed ? `<span class="gr-pp">${pr.passed}/${pr.total}</span>` : ''}${all ? `<span class="gr-done" title="Alle Übungen bestanden">${icn('circle-check')}</span>` : ''}<span class="gr-lv ${c[3]}">${c[3]}</span>`;
         if (!ok) return `<div class="gr-row soon"><div class="gr-card soon" title="Kommt bald">${body}</div></div>`;
         if (!allowed(n)) return `<div class="gr-row soon"><div class="gr-card soon" title="Ab Niveau ${c[3]}">${body}<span class="gr-pp">${icn('lock')} ${c[3]}</span></div></div>`;
