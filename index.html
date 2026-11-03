@@ -1711,6 +1711,38 @@ function setBtn(){
   b.classList.toggle('signin',!session)
 }
 let lastEmail='';
+// A typo warning is not proof that a mailbox does not exist. Keep custom
+// domains valid and let an intentional near-match be explicitly confirmed.
+function signupEmailProblem(value){
+  const address=String(value||'').trim(), at=address.lastIndexOf('@');
+  if(!address||address.length>254||at<1||at>64||!/^[^\s@<>]+@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,63}$/i.test(address)||address.slice(0,at).includes('..')||/^[.]|[.]$/.test(address.slice(0,at)))return {invalid:true};
+  const typos={'hmail.com':'gmail.com','gmai.com':'gmail.com','gmial.com':'gmail.com','gamil.com':'gmail.com','gmail.con':'gmail.com','gmail.co':'gmail.com','gmail.cm':'gmail.com','gnail.com':'gmail.com','hotmial.com':'hotmail.com','hotmail.con':'hotmail.com','outlok.com':'outlook.com','outlook.con':'outlook.com','yaho.com':'yahoo.com','yahoo.con':'yahoo.com','icloud.con':'icloud.com'};
+  const domain=address.slice(at+1).toLowerCase();
+  return typos[domain]?{suggestion:address.slice(0,at+1)+typos[domain]}:null;
+}
+function setupSignupEmail(){
+  const input=$('ac_em'), feedback=$('ac_email_feedback');if(!input||!feedback)return;
+  let confirmed='';
+  const validate=()=>{
+    input.setCustomValidity('');feedback.replaceChildren();
+    const value=input.value.trim(), problem=signupEmailProblem(value);
+    if(!value){input.removeAttribute('aria-invalid');return true}
+    if(!problem||(!problem.invalid&&confirmed===value)){input.removeAttribute('aria-invalid');return true}
+    const message=problem.invalid?tr('Please enter a complete email address, for example name@gmail.com.','Bitte gib eine vollständige E-Mail-Adresse ein, zum Beispiel name@gmail.com.')
+      :tr('Please check your email address. Did you mean '+problem.suggestion+'?','Bitte prüfe deine E-Mail-Adresse. Meintest du '+problem.suggestion+'?');
+    input.setCustomValidity(message);input.setAttribute('aria-invalid','true');
+    const label=document.createElement('span');label.textContent=message;feedback.append(label);
+    if(problem.suggestion){
+      const fix=document.createElement('button');fix.type='button';fix.className='acct-link';fix.textContent=tr('Use '+problem.suggestion,problem.suggestion+' verwenden');fix.onclick=()=>{input.value=problem.suggestion;validate();input.focus()};feedback.append(document.createTextNode(' '),fix);
+      const keep=document.createElement('button');keep.type='button';keep.className='acct-link';keep.textContent=tr('This address is correct','Diese Adresse ist richtig');keep.onclick=()=>{confirmed=value;validate();input.focus()};feedback.append(document.createTextNode(' · '),keep);
+    }
+    return false;
+  };
+  input.addEventListener('input',()=>{input.setCustomValidity('');feedback.replaceChildren();input.removeAttribute('aria-invalid')});
+  input.addEventListener('blur',validate);
+  input.addEventListener('invalid',()=>{if(input.value)validate()});
+  input.signupValidate=validate;
+}
 // welcome e-mail for brand-new accounts (sent by our Cloudflare worker; it checks the account is new)
 function welcomeMail(tok){if(APP_CONFIG.readOnly)return;fetch(APP_CONFIG.workerUrl+'/welcome',{method:'POST',headers:{Authorization:'Bearer '+tok}}).catch(()=>{})}
 function msg(t,ok){const m=$('ac_msg');if(m){m.textContent=t||'';m.classList.toggle('ok',!!ok)}}
@@ -1735,7 +1767,7 @@ function sheet(mode){
     up:tr('Free. Your course, lists and cards are saved in your account. Nobody else can see them.','Kostenlos. Dein Kurs, deine Listen und Karten werden in deinem Konto gespeichert. Niemand sonst kann sie sehen.'),
     reset:tr('Enter your e-mail address. We send you a link to set a new password.','Gib deine E-Mail-Adresse ein. Wir schicken dir einen Link, mit dem du ein neues Passwort festlegst.'),
     newpw:tr('Choose a new password for your account.','Lege ein neues Passwort für dein Konto fest.')}[mode];
-  const emailIn=mode==='newpw'?'':`<label for="ac_em">${tr('E-mail','E-Mail')}</label><input class="input" id="ac_em" type="email" autocomplete="email" placeholder="${tr('E-mail','E-Mail')}" required value="${esc(lastEmail)}">`;
+  const emailIn=mode==='newpw'?'':`<label for="ac_em">${tr('E-mail','E-Mail')}</label><input class="input" id="ac_em" type="email" autocomplete="email" ${mode==='up'?'aria-describedby="ac_email_feedback" maxlength="254"':''} placeholder="${tr('E-mail','E-Mail')}" required value="${esc(lastEmail)}">${mode==='up'?'<div class="acct-msg" id="ac_email_feedback" aria-live="polite"></div>':''}`;
   const pwIn=mode==='reset'?'':`<label for="ac_pw">${tr('Password','Passwort')}</label><input class="input" id="ac_pw" type="password" minlength="6" required autocomplete="${mode==='in'?'current-password':'new-password'}" placeholder="${mode==='in'?tr('Password','Passwort'):tr('Password (at least 6 characters)','Passwort (mind. 6 Zeichen)')}">`;
   openSheet(`<h3>${T[0]}</h3><p>${intro}</p>${tabs}
     <form class="acct-f" onsubmit="event.preventDefault();ACCT.submit('${mode}')">${emailIn}${pwIn}
@@ -1743,10 +1775,14 @@ function sheet(mode){
     <div class="row">${mode==='in'?`<button type="button" class="acct-link" onclick="ACCT.sheet('reset')">${tr('Forgot password?','Passwort vergessen?')}</button>`:''}${mode==='reset'?`<button type="button" class="acct-link" onclick="ACCT.sheet('in')">${tr('Back to sign in','Zurück zur Anmeldung')}</button>`:''}
     <span class="spacer"></span><button type="button" class="btn" onclick="closeSheet()">${tr('Cancel','Abbrechen')}</button><button class="btn primary" id="ac_go" type="submit">${T[1]}</button></div></form>`);
   setTimeout(()=>{const f=$(mode==='newpw'||lastEmail?'ac_pw':'ac_em')||$('ac_em');if(f)f.focus()},60);
-  if(mode==='up'&&window.KONTO)KONTO.signupFields();
+  if(mode==='up'){setupSignupEmail();if(window.KONTO)KONTO.signupFields()}
 }
 async function submit(mode){
   const em=($('ac_em')||{}).value, pw=($('ac_pw')||{}).value, go=$('ac_go');
+  if(mode==='up'){
+    const input=$('ac_em');
+    if(!input||!(input.signupValidate?input.signupValidate():!signupEmailProblem(em))||!input.checkValidity()){if(input){input.reportValidity();input.focus()}return}
+  }
   if(em)lastEmail=em.trim();
   if(go)go.disabled=true; msg('');
   try{
