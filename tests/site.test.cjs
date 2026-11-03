@@ -473,6 +473,16 @@ test('the first mobile pointer tap opens a word preview and compatibility mouse 
  }finally{await s.close();}
 });
 
+test('unchanged school refresh keeps the hero, logo and favicon mounted',async()=>{
+ const org={id:'00000000-0000-4000-ab00-000000000081',owner:'fixture',name:'Das Berliner Language Centre',theme:'#ac8935',kind:'school',logo_url:'https://site.test/icon-64.png',pass_mark:70};let loads=0;
+ const s=await site('#/start/'+org.id,{account:true,profile:()=>Response.json([{user_id:'fixture',role:'school',unlocked:[],org_id:org.id}]),request:async u=>{
+ if(u.pathname==='/rest/v1/orgs')return Response.json([org]);if(u.pathname==='/rest/v1/rpc/my_org')return Response.json(org);if(u.pathname==='/rest/v1/classes'){loads++;return Response.json([])}
+ }});try{await until(()=>s.document.querySelector('.kd-hero'));
+ const hero=s.document.querySelector('.kd-hero'),logo=s.document.querySelector('#orgbrand img'),favicon=s.document.querySelector('link[rel=icon]'),before=loads;
+ s.window.KONTO.refresh();assert.equal(s.document.querySelector('.kd-hero'),hero);await until(()=>loads>before);await new Promise(r=>setTimeout(r,100));assert.equal(s.document.querySelector('.kd-hero'),hero);
+ await s.window.KONTO.reload();await new Promise(r=>setTimeout(r,100));assert.equal(s.document.querySelector('#orgbrand img'),logo);assert.equal(s.document.querySelector('link[rel=icon]'),favicon);assert.equal(s.document.querySelector('.kd-hero'),hero);assert.deepEqual(s.errors,[]);
+ }finally{await s.close()}
+});
 for(const kind of ['teacher','school'])test(`a ${kind} gets its own favicon and can send an addressed invitation`,async()=>{
  const org={id:'00000000-0000-4000-ab00-000000000081',owner:'fixture',name:'Gold classroom',theme:'#ac8935',kind,pass_mark:70},course={id:'00000000-0000-4000-ab00-000000000082',name:'German A1',level:'A1',term_name:'Spring',starts_on:'2027-02-01',ends_on:'2027-02-28',schedule:'Mon 18:00 EAT'};let sends=0;
  const s=await site('#/klasse',{account:true,profile:()=>Response.json([{user_id:'fixture',role:kind,unlocked:[],org_id:null}]),request:async(u,r)=>{
