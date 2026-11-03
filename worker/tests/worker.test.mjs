@@ -9,6 +9,15 @@ import { gunzipSync } from 'node:zlib';
 import worker from "../src/index.js";
 import {duration} from "../src/invitation-template.js";
 import { drainMail } from "../src/welcome.js";
+import { welcomeContent } from '../src/welcome-template.js';
+test('welcome mail guides each audience to its own workflow and escapes personal names',()=>{
+ for(const role of ['learner','teacher','school']){
+ const content=welcomeContent('https://deutschklinik.com/',{role,name:'<Edwin>'});
+ assert.ok(content.html.includes('&lt;Edwin&gt;'));assert.ok(content.html.includes('welcome-'+role+'.png'));
+ assert.ok(content.text.includes(role==='learner'?'English meanings':role==='teacher'?'teacher page':'school’s name'));
+ if(role!=='learner')assert.ok(!content.text.includes('ask your teacher'));
+ }
+});
 import { requestLiveClass, sendCourseInvitation, previewCourseInvitation } from "../src/invitations.js";
 globalThis.crypto ||= webcrypto;
 test('term invitation contains configured dates, course length, timetable and course details', async () => {
@@ -161,6 +170,7 @@ test("Worker contract: authenticated generation, durable bounds, review, delayed
     DB.exec(migration);
     DB.exec(migration);
     DB.exec(readFileSync(new URL("../migrations/0002_mail_diagnostics.sql", import.meta.url), "utf8"));
+    DB.exec(readFileSync(new URL("../migrations/0004_welcome_context.sql", import.meta.url), "utf8"));
     const kv = new Map(),
       meta = new Map(),
       calls = [];

@@ -135,6 +135,18 @@ test("welcome skips dictionary and grammar and a slow search preserves the typed
     await s.close();
   }
 });
+test('home suggestions open a word directly without a search-page detour',async()=>{
+ const s=await site('#/start');try{
+ await until(()=>s.document.querySelector('#home-word'));
+ const input=s.document.querySelector('#home-word');input.value='erwerben';input.dispatchEvent(new s.window.Event('input'));
+ await until(()=>s.document.querySelector('#home-suggestions a'));
+ assert.equal(s.window.location.hash,'#/start');assert.equal(input.getAttribute('aria-expanded'),'true');
+ assert.ok(!s.calls.includes('/defs.bin'));
+ input.dispatchEvent(new s.window.KeyboardEvent('keydown',{key:'Enter',bubbles:true,cancelable:true}));
+ await until(()=>s.window.location.hash.includes('/w/erwerben'));
+ assert.deepEqual(s.errors,[]);
+ }finally{await s.close()}
+});
 test("the homepage live-class link opens the class catalogue without loading the dictionary", async () => {
   const s = await site("#/start");
   try {

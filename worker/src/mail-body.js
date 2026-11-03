@@ -1,42 +1,5 @@
 import { connect } from "cloudflare:sockets";
-export { textBody, htmlBody };
-function textBody(SITE) {
-  return `Hello and welcome to Deutschklinik!
-
-We're glad you're here. Explore German vocabulary, grammar and practice activities at your own pace.
-
-What to do next:
-- Choose an available level, or ask your teacher to unlock it
-- Look up any of over 32,000 words, with meanings, examples and pronunciation
-- Collect words in lists and practise them as flashcards
-- Play games – alone or live with your whole class
-
-Start here: ${SITE}
-
-Enjoy learning!
-Your Deutschklinik team`;
-}
-
-function htmlBody(SITE) {
-  const li = (emoji, b, t) =>
-    `<tr><td style="padding:6px 10px 6px 0;font-size:20px;vertical-align:top">${emoji}</td><td style="padding:6px 0;font-size:15px;line-height:1.45;color:#20242b"><b>${b}</b> ${t}</td></tr>`;
-  return `<!doctype html><html><body style="margin:0;background:#f6f4ef;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f6f4ef;padding:24px 12px"><tr><td align="center">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#ffffff;border-radius:16px;padding:28px 26px;border:1px solid #e7e3da">
-<tr><td style="font-size:24px;font-weight:700;color:#20242b;padding-bottom:6px">Deutsch<span style="color:#1f6feb">klinik</span></td></tr>
-<tr><td style="font-size:20px;font-weight:700;color:#20242b;padding:10px 0 6px">Welcome! 👋</td></tr>
-<tr><td style="font-size:15px;line-height:1.5;color:#4a5260;padding-bottom:14px">We're glad you're here. Explore German vocabulary, grammar and practice activities at your own pace.</td></tr>
-<tr><td style="font-size:13px;font-weight:700;letter-spacing:.06em;color:#6b7482;text-transform:uppercase;padding:4px 0">What to do next</td></tr>
-<tr><td><table role="presentation" cellpadding="0" cellspacing="0">
-${li("🎓", "Choose your level", "– or ask your teacher to unlock it")}
-${li("🔎", "Over 32,000 words", "with meanings, examples and pronunciation")}
-${li("🗂️", "Lists and flashcards", "– collect words and practise them")}
-${li("🎮", "Games", "– alone or live with your whole class")}
-</table></td></tr>
-<tr><td style="padding:22px 0 8px"><a href="${SITE}" style="display:inline-block;background:#1f6feb;color:#ffffff;text-decoration:none;font-weight:700;font-size:15px;padding:12px 22px;border-radius:999px">Start learning</a></td></tr>
-<tr><td style="font-size:14px;color:#6b7482;padding-top:10px">Enjoy learning!<br>Your Deutschklinik team</td></tr>
-</table></td></tr></table></body></html>`;
-}
+// SMTP transport is shared by role-specific welcome mail and term invitations.
 
 // ---------- minimal SMTP client (implicit TLS) ----------
 const b64 = (s) => btoa(String.fromCharCode(...new TextEncoder().encode(s)));

@@ -3,7 +3,7 @@
 <head>
 <link rel="canonical" href="https://deutschklinik.com/">
 <meta charset="utf-8">
-<link rel="icon" href="favicon.ico?v=2" sizes="any">
+<link rel="icon" href="favicon.svg?v=3" type="image/svg+xml">
 <link rel="icon" type="image/png" sizes="32x32" href="icon-32.png?v=2">
 <link rel="apple-touch-icon" href="icon-180.png?v=2">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -409,7 +409,7 @@ kbd{font:600 .66rem Inter,system-ui,sans-serif;padding:.1rem .35rem;border-radiu
 <script src="js/game-messages.js?v=f0e0633452ab"></script>
 <script src="js/render-safety.js?v=cbceea56a80a"></script>
 <script src="js/dictionary-english.js?v=422aef8ffb62" data-curated="content/dictionary-english.json?v=1c4818c1b1d7"></script>
-<script src="js/site-design.js?v=8f60a73411ce"></script>
+<script src="js/site-design.js?v=c7404dacaded"></script>
 <script id="data" type="application/octet-stream" data-src="core.bin?v=4c9f34b8d0dd" data-defs="defs.bin?v=5e525dc56850"></script>
 <script>
 "use strict";
@@ -498,6 +498,16 @@ async function downloadDictionary(button){
   }catch{button.disabled=false;toast(KONTO.T('Download failed. Please try again online.','Download fehlgeschlagen. Bitte online erneut versuchen.'))}
 }
 function openLookup(word){searchText=String(word||'').trim();if(location.hash==='#/')route();else go('')}
+// Load only the compact index when a visitor starts typing on the welcome page.
+window.bindHomeSearch=function(input,list){
+  let revision=0,selected=-1,items=[];
+  const close=()=>{list.hidden=true;input.setAttribute('aria-expanded','false');input.removeAttribute('aria-activedescendant')};
+  const draw=()=>{list.innerHTML=items.map((e,k)=>`<a id="home-option-${k}" role="option" aria-selected="${k===selected}" href="#/w/${encodeURIComponent(e.w)}"><strong>${esc(e.w)}</strong><small>${POSL[e.ps]||''}</small></a>`).join('');list.hidden=!items.length;input.setAttribute('aria-expanded',String(!!items.length));if(selected>=0)input.setAttribute('aria-activedescendant','home-option-'+selected)};
+  input.addEventListener('input',async()=>{const mine=++revision;selected=-1;if(!input.value.trim()){items=[];close();return}try{await ensureCore();if(mine!==revision||!input.isConnected)return;items=search(input.value,6);draw()}catch{close()}});
+  input.addEventListener('keydown',event=>{if(event.key==='Escape'){revision++;close()}else if(!list.hidden&&items.length){if(event.key==='ArrowDown'||event.key==='ArrowUp'){event.preventDefault();selected=Math.max(0,Math.min(items.length-1,selected+(event.key==='ArrowDown'?1:-1)));draw()}else if(event.key==='Enter'){event.preventDefault();go('w/'+items[Math.max(0,selected)].w)}}});
+  input.addEventListener('focus',()=>{if(items.length)draw()});
+  document.addEventListener('pointerdown',event=>{if(input.isConnected&&!input.closest('form').contains(event.target))close()},{signal:(()=>{const c=new AbortController();window.addEventListener('hashchange',()=>c.abort(),{once:true});return c.signal})()});
+};
 /* ---------- search ---------- */
 function search(qr,limit=60){
   const f=fold(qr); if(!f)return [];
@@ -828,8 +838,8 @@ function say(i,btn){
 })();
 /* ---------- PICTURES: Wikipedia (nouns) and Wikimedia Commons search; verbs/adjectives translated via Wiktionary ---------- */
 const IMGC=new Map(), NOIMG=new Set(['adv','prp','kon','pro','ptk','Artikel','Fragewort','Info','num','Interjektion']);
-const LSI={get(k){try{return JSON.parse(localStorage.getItem('gd_img2_'+k)||'null')}catch(e){return null}},
-  set(k,v){try{localStorage.setItem('gd_img2_'+k,JSON.stringify(v))}catch(e){}}};
+const LSI={get(k){try{return JSON.parse(localStorage.getItem('gd_img3_'+k)||'null')}catch(e){return null}},
+  set(k,v){try{localStorage.setItem('gd_img3_'+k,JSON.stringify(v))}catch(e){}}};
 async function jget(url,ms=7000){
   const c=new AbortController(); const t=setTimeout(()=>c.abort(),ms);
   try{const r=await fetch(url,{signal:c.signal}); return r.ok?await r.json():null}catch(e){return null}finally{clearTimeout(t)}
@@ -878,7 +888,7 @@ async function wikiDe(q){             // best-matching German Wikipedia articles
   const j=await jget('https://de.wikipedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrlimit=3&prop=pageimages|pageprops'
     +'&piprop=thumbnail&pithumbsize=480&gsrsearch='+encodeURIComponent(q));
   const ps=j&&j.query?Object.values(j.query.pages).sort((a,b)=>a.index-b.index):[];
-  return ps.filter(p=>p.thumbnail&&!(p.pageprops&&'disambiguation' in p.pageprops)&&goodShape(p.thumbnail.width,p.thumbnail.height))
+  return ps.filter(p=>p.title.toLocaleLowerCase('de')===q.toLocaleLowerCase('de')&&p.thumbnail&&!(p.pageprops&&'disambiguation' in p.pageprops)&&goodShape(p.thumbnail.width,p.thumbnail.height))
     .slice(0,2).map(p=>({src:p.thumbnail.source,url:'https://de.wikipedia.org/wiki/'+encodeURIComponent(p.title),cap:'Wikipedia · '+p.title}));
 }
 async function wikiEn(t){             // lead picture of the English article with exactly this title ("Justice" -> Lady Justice)
@@ -918,10 +928,13 @@ function exampleNoun(e){
 }
 async function findImgs(e){
   const w=plainW(e.w), out=[], seen=new Set(), add=a=>a.forEach(x=>{if(x.src&&!seen.has(x.src)){seen.add(x.src);out.push(x)}});
+  if(w==='erwerben')return [{src:'assets/words/erwerben.svg',cap:ui('Buying a home: acquiring property','Ein Haus kaufen: Eigentum erwerben'),url:''}];
+  // Abstract concepts and actions need an editorial scene, not a loosely matched photograph.
+  if(['abstract','verb','adj'].includes(imgKind(e)))return [];
   const en=await enCached(w), kind=imgKind(e);
   const noun=(kind==='verb'||kind==='adj')?exampleNoun(e):null, obj=noun?await enCached(noun):null;
   let plan;                           // [source, query] in order of how good that source usually is for this kind of word
-  if(kind==='thing')         plan=[[wikiDe,w],[wikiEn,en],[commons,en],[commons,w],[stock,en]];
+  if(kind==='thing')         plan=[[wikiDe,w],[wikiEn,en],[commons,en,1],[commons,w,1],[stock,en]];
   else if(kind==='abstract') plan=[[wikiEn,en],[stock,en],[wikiDe,w],[commons,en]];
   else if(kind==='colour')   plan=[[wikiEn,en&&en+' (color)'],[wikiEn,en],[commons,en&&en+' colour']];
   else if(kind==='verb'){ const g=en&&gerund(en);
@@ -931,7 +944,6 @@ async function findImgs(e){
     plan=[[stock,en&&en+' '+who],[commons,en&&en+' '+who,1],[commons,en&&obj&&en+' '+obj,1],[commons,en&&en+' face',1],[wikiEn,en]];
   }
   for(const [src,q,strict] of plan){ if(!q)continue; add(await src(q,strict)); if(out.length>=6)break }
-  if(!out.length)add(await commons(w));  // last resort: the German word itself
   return out;
 }
 function showImg(e,box,list,k){
@@ -3114,5 +3126,5 @@ if(tabs&&!tabs.querySelector('[data-t="play"]')){const a=document.createElement(
 })();
 </script>
 <!-- ===== /Spiele ===== -->
-<script src="konto.js?v=8722fe4c5673"></script>
+<script src="konto.js?v=1b61c8425942"></script>
 </body></html>
