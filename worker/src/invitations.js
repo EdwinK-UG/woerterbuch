@@ -48,6 +48,21 @@ export async function previewCourseInvitation(req,env,headers){
   const content=invitationContent({...context,name:text(body?.name,60),note:text(body?.note,500),inviteUrl:env.SITE_URL});
   return json(200,{html:content.html},headers);
 }
+export async function courseInvitationStatus(req,env,headers){
+  if(req.method!=='POST')return json(405,{error:'POST only'},headers);
+  const user=await authenticated(req,env,headers);if(user instanceof Response)return user;
+  const body=await req.json().catch(()=>null),id=text(body?.class_id,36);
+  if(!/^[0-9a-f-]{36}$/i.test(id))return json(400,{error:'Choose a class.'},headers);
+  let invitations;
+  try{
+    if(!await courseContext(req,env,id))return json(403,{error:'Only the responsible teacher or school owner may check invitation mail.'},headers);
+    invitations=await supabase(env,`/rest/v1/invites?select=code&class_id=eq.${id}&recipient_email=not.is.null&order=expires_at.desc&limit=100`,req.headers.get('Authorization'));
+  }catch{return json(503,{error:'Invitation status could not be loaded. Please retry.'},headers);}
+  const codes=(invitations||[]).map(i=>i.code).filter(code=>/^[0-9a-f]{12}$/i.test(code));
+  const rows=codes.length?(await env.DB.prepare(`SELECT id,state,updated_at FROM invitation_mail WHERE id IN (${codes.map(()=>'?').join(',')})`).bind(...codes).all()).results||[]:[];
+  const records=new Map(rows.map(row=>[row.id,row]));
+  return json(200,{invitations:codes.map(code=>({code,state:records.get(code)?.state||'not_sent',updated_at:records.get(code)?.updated_at||null}))},headers);
+}
 export async function sendCourseInvitation(req, env, headers, send = smtpSend) {
   if(req.method!=='POST')return json(405,{error:'POST only'},headers);
   const user=await authenticated(req,env,headers);if(user instanceof Response)return user;

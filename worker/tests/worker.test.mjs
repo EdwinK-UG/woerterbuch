@@ -7,7 +7,7 @@ import { spawnSync } from "node:child_process";
 import { webcrypto } from "node:crypto";
 import { gunzipSync } from 'node:zlib';
 import worker from "../src/index.js";
-import {duration} from "../src/invitation-template.js";
+import {duration,invitationContent} from "../src/invitation-template.js";
 import { drainMail } from "../src/welcome.js";
 import { welcomeContent } from '../src/welcome-template.js';
 test('welcome mail guides each audience to its own workflow and escapes personal names',()=>{
@@ -18,7 +18,21 @@ test('welcome mail guides each audience to its own workflow and escapes personal
  if(role!=='learner')assert.ok(!content.text.includes('ask your teacher'));
  }
 });
-import { requestLiveClass, sendCourseInvitation, previewCourseInvitation } from "../src/invitations.js";
+import { requestLiveClass, sendCourseInvitation, previewCourseInvitation, courseInvitationStatus } from "../src/invitations.js";
+test('invitation button and wordmark use school colours with readable contrast',()=>{
+ for(const colour of ['#ac8935','#ebdf13']){
+ const content=invitationContent({org:{name:'School',theme:colour},course:{name:'A1',level:'A1'},inviteUrl:'https://deutschklinik.com/'});
+ assert.ok(content.html.includes('background:'+colour+';color:'+(colour==='#ebdf13'?'#14202e':'#ffffff')));
+ assert.ok(!content.html.includes('#1f6feb'));assert.ok(content.html.includes('Deutsch<span style="color:'));
+ }
+});
+test('email status is restricted to class managers and cannot expose another class',async()=>{
+ const previous=globalThis.fetch;let manager=false,queries=0;
+ const DB={prepare(sql){queries++;assert.ok(sql.includes('WHERE id IN (?)'));return {bind(...ids){assert.deepEqual(ids,['abcdef123456']);return {all:async()=>({results:[{id:ids[0],state:'sent',updated_at:100}]})}}}}};
+ globalThis.fetch=async url=>{const p=new URL(url).pathname;if(p==='/auth/v1/user')return Response.json({id:'staff',email_confirmed_at:'2026-11-01'});if(p.endsWith('/can_manage_class'))return Response.json(manager);if(p.endsWith('/classes'))return Response.json([{org_id:'org'}]);if(p.endsWith('/orgs'))return Response.json([{owner:'owner'}]);if(p.endsWith('/profiles'))return Response.json([]);if(p.endsWith('/invites'))return Response.json([{code:'abcdef123456'}]);throw Error(p)};
+ const call=()=>courseInvitationStatus(new Request('https://worker.invalid/course-invitation/status',{method:'POST',headers:{Authorization:'Bearer fixture'},body:JSON.stringify({class_id:'00000000-0000-4000-ab00-000000000001'})}),{SUPABASE_URL:'https://auth.invalid',SUPABASE_PUBLISHABLE_KEY:'fixture',DB},{});
+ try{assert.equal((await call()).status,403);assert.equal(queries,0);manager=true;const r=await call();assert.equal(r.status,200);assert.deepEqual((await r.json()).invitations,[{code:'abcdef123456',state:'sent',updated_at:100}]);}finally{globalThis.fetch=previous}
+});
 globalThis.crypto ||= webcrypto;
 test('term invitation contains configured dates, course length, timetable and course details', async () => {
   const oldFetch=globalThis.fetch, sent=[],dir=mkdtempSync(join(tmpdir(),'invitation-mail-')),DB=db(join(dir,'fixture.sqlite'));

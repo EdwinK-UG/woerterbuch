@@ -473,6 +473,20 @@ test('the first mobile pointer tap opens a word preview and compatibility mouse 
  }finally{await s.close();}
 });
 
+for(const kind of ['teacher','school'])test(`a ${kind} gets its own favicon and can send an addressed invitation`,async()=>{
+ const org={id:'00000000-0000-4000-ab00-000000000081',owner:'fixture',name:'Gold classroom',theme:'#ac8935',kind,pass_mark:70},course={id:'00000000-0000-4000-ab00-000000000082',name:'German A1',level:'A1',term_name:'Spring',starts_on:'2027-02-01',ends_on:'2027-02-28',schedule:'Mon 18:00 EAT'};let sends=0;
+ const s=await site('#/klasse',{account:true,profile:()=>Response.json([{user_id:'fixture',role:kind,unlocked:[],org_id:null}]),request:async(u,r)=>{
+ if(u.pathname==='/rest/v1/orgs')return Response.json([org]);if(u.pathname==='/rest/v1/classes')return Response.json([course]);
+ if(u.pathname==='/rest/v1/invites'&&r.method==='POST')return Response.json([{code:'abcdef123456'}]);
+ if(u.pathname==='/course-invitation'){sends++;return Response.json({sent:true})}
+ if(u.pathname==='/course-invitation/status')return Response.json({invitations:[{code:'abcdef123456',state:'sent'}]});
+ }});try{await until(()=>s.document.querySelector('.ks-cls'));
+ assert.equal(s.document.querySelectorAll('link[rel=icon]').length,1);assert.ok(decodeURIComponent(s.document.querySelector('link[rel=icon]').href).includes('#ac8935'));
+ s.window.KONTO.sendClassInvite(course.id);s.document.querySelector('#ci_email').value='learner@example.invalid';await s.window.KONTO.sendClassInviteNow(course.id);assert.equal(sends,1);
+ await until(()=>s.document.querySelector('#mail_status_'+course.id));await s.window.KONTO.checkInvitationMail(course.id);assert.match(s.document.querySelector('#mail_status_'+course.id).textContent,/Accepted by mail provider/);
+ assert.deepEqual(s.errors,[]);
+ }finally{await s.close()}
+});
 test('a teacher can preview and retry an addressed term email without creating more invitations',async()=>{
  const org={id:'00000000-0000-4000-ab00-000000000081',owner:'fixture',name:'Teacher studio',kind:'teacher',pass_mark:70},course={id:'00000000-0000-4000-ab00-000000000082',name:'Evening German',level:'A1',term_name:'Spring',starts_on:'2027-02-01',ends_on:'2027-02-28',schedule:'Mon 18:00 EAT'};let inserts=0,sends=0,body;
  const s=await site('#/klasse',{account:true,profile:()=>Response.json([{user_id:'fixture',role:'teacher',unlocked:[],org_id:null}]),request:async(u,r)=>{
