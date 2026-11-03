@@ -38,6 +38,7 @@
   const api = {source, fingerprint};
   globalThis.DictionaryEnglish = api;
   if (typeof document === 'undefined') return;
+  const curatedURL = document.currentScript?.dataset.curated || 'content/dictionary-english.json';
 
   const jobs = new Map(), batches = new Map();
   let seeds;
@@ -55,10 +56,10 @@
   async function request(entry, hash, batch, generate) {
     const key = 'v2:'+hash+':'+batch, local = stored(key);
     if (batches.has(key)) return batches.get(key);
-    if (local?.version === 1 && Array.isArray(local.items)) { batches.set(key, local); return local; }
-    if (!seeds) seeds = fetch('content/dictionary-english.json').then(r => r.ok ? r.json() : {}).catch(() => ({}));
+    if (!seeds) seeds = fetch(curatedURL).then(r => r.ok ? r.json() : {}).catch(() => ({}));
     const seed = (await seeds)[hash];
     if (seed) { const result = {version:1,reviewed:true,items:seed.slice(batch*BATCH,(batch+1)*BATCH)}; batches.set(key, result); save(key, result); return result; }
+    if (local?.version === 1 && Array.isArray(local.items)) { batches.set(key, local); return local; }
     const jobKey = key+':'+generate;
     if (jobs.has(jobKey)) return jobs.get(jobKey);
     const job = (async () => {

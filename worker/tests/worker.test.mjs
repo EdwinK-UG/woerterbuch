@@ -116,7 +116,7 @@ test('English translates only fingerprinted public source, caches results and ke
     DB.exec(migration);
     const core=JSON.parse(gunzipSync(readFileSync(new URL('../../core.bin',import.meta.url))));
     const definitions=JSON.parse(gunzipSync(readFileSync(new URL('../../defs.bin',import.meta.url))));
-    const id=core.e.findIndex(row=>row[0]==='Haus'), word='Haus', definition=definitions[id][0];
+    const id=core.e.findIndex(row=>row[0]==='schön'), word='schön', definition=definitions[id][0];
     const hash=await DictionaryEnglish.fingerprint(word,definition), cache=new Map(); let calls=0, malformed=false;
     const env={DB,IMG:{get:async k=>cache.get(k),put:async(k,v)=>cache.set(k,v)},ALLOWED_ORIGINS:'https://client.example.invalid',GENERATION_ENABLED:'true',GLOBAL_DAILY_JOBS:'2',USER_DAILY_JOBS:'2',AI:{run:async(_model,opts)=>{
       calls++; const data=JSON.parse(opts.messages[1].content);

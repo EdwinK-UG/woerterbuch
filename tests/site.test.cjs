@@ -172,14 +172,14 @@ test('English meanings follow their senses, examples stay folded and the German-
 });
 test('generated translations render as text and a failed request can be retried', async () => {
   let failing=true;
-  const s=await site('#/w/Haus',{english:(_url,request)=> {
+  const s=await site('#/w/Garten',{english:(_url,request)=> {
     if (!request.method) return new Response('{}',{status:404});
-    return failing ? new Response('{}',{status:503}) : Response.json({version:1,reviewed:false,items:[{key:'s0',en:'house; home <img src=x onerror=bad()>'},{key:'e0:0',en:'The old house is a listed building.'}]});
+    return failing ? new Response('{}',{status:503}) : Response.json({version:1,reviewed:false,items:[{key:'s0',en:'garden; park <img src=x onerror=bad()>'},{key:'e0:0',en:'The children are playing in the garden.'}]});
   }});
   try {
     await until(()=>s.document.querySelector('.english-retry'));
     failing=false; s.document.querySelector('.english-retry').click();
-    await until(()=>s.document.querySelector('.english-gloss')?.textContent.includes('house; home'));
+    await until(()=>s.document.querySelector('.english-gloss')?.textContent.includes('garden; park'));
     assert.equal(s.document.querySelector('.english-gloss img'),null);
     assert.match(s.document.querySelector('.english-status').textContent,/Machine translated/);
     assert.deepEqual(s.errors,[]);
