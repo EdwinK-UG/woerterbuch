@@ -1,5 +1,18 @@
 {
   "Apfel": {"s0":"apple"},
+  "Haus": {
+    "s0":"house", "e0:0":"The old house is a listed building.",
+    "s1":"building; hall", "e1:0":"The venue was completely sold out for the famous singer's guest performance.",
+    "s2":"home", "e2:0":"He left home at seven o'clock to go to work.",
+    "s3":"to be at home; to stay at home", "s4":"to go home; to come home",
+    "s5":"household; audience; house",
+    "e5:0":"The bang woke up the whole household.",
+    "e5:1":"The audience went wild with excitement at the pop star's concert.",
+    "s6":"house; family", "e6:0":"She socialises with the city's leading families.",
+    "s7":"house; dynasty", "e7:0":"the House of Hohenzollern",
+    "s8":"firm; company", "e8:0":"Our long-established firm has had only satisfied customers for over fifty years.",
+    "s9":"the White House"
+  },
   "Bank¹": {"s0":"bench", "s1":"school desk"},
   "Bank²": {
     "s0":"bank; financial institution",

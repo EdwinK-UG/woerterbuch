@@ -72,7 +72,7 @@ self.addEventListener('fetch', e => {
     return;
   }
 
-  if (/\/(?:konto\.js|js\/[^/]+\.js|grammatik\/[^/]+\.js|icon-[^/]+\.png|favicon\.ico)$/.test(u.pathname)) {
+  if (/\/(?:konto\.js|js\/[^/]+\.js|content\/dictionary-english\.json|grammatik\/[^/]+\.js|icon-[^/]+\.png|favicon\.ico)$/.test(u.pathname)) {
     e.respondWith((async()=>{
       const cache=await caches.open(SHELL),hit=await cache.match(req);
       if(hit)return hit;

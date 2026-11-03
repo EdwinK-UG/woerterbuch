@@ -5,6 +5,80 @@
       "en": "apple"
     }
   ],
+  "9294935bbec896ba0395cac7ecdd5f82b6d1003b57521cf3ccbf089d5200babb": [
+    {
+      "key": "s0",
+      "en": "house"
+    },
+    {
+      "key": "e0:0",
+      "en": "The old house is a listed building."
+    },
+    {
+      "key": "s1",
+      "en": "building; hall"
+    },
+    {
+      "key": "e1:0",
+      "en": "The venue was completely sold out for the famous singer's guest performance."
+    },
+    {
+      "key": "s2",
+      "en": "home"
+    },
+    {
+      "key": "e2:0",
+      "en": "He left home at seven o'clock to go to work."
+    },
+    {
+      "key": "s3",
+      "en": "to be at home; to stay at home"
+    },
+    {
+      "key": "s4",
+      "en": "to go home; to come home"
+    },
+    {
+      "key": "s5",
+      "en": "household; audience; house"
+    },
+    {
+      "key": "e5:0",
+      "en": "The bang woke up the whole household."
+    },
+    {
+      "key": "e5:1",
+      "en": "The audience went wild with excitement at the pop star's concert."
+    },
+    {
+      "key": "s6",
+      "en": "house; family"
+    },
+    {
+      "key": "e6:0",
+      "en": "She socialises with the city's leading families."
+    },
+    {
+      "key": "s7",
+      "en": "house; dynasty"
+    },
+    {
+      "key": "e7:0",
+      "en": "the House of Hohenzollern"
+    },
+    {
+      "key": "s8",
+      "en": "firm; company"
+    },
+    {
+      "key": "e8:0",
+      "en": "Our long-established firm has had only satisfied customers for over fifty years."
+    },
+    {
+      "key": "s9",
+      "en": "the White House"
+    }
+  ],
   "811be7fa95e424913af7f3f43ac4f7a40c5ec47ed7d4d91fa0bcce1205e43332": [
     {
       "key": "s0",
