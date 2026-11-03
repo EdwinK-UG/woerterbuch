@@ -153,6 +153,7 @@ test('English meanings follow their senses, examples stay folded and the German-
     await until(()=>s.document.querySelector('.english-gloss')?.textContent);
     const meanings = [...s.document.querySelectorAll('.english-gloss')];
     assert.equal(meanings[0].textContent,'to learn (from someone)');
+    assert.ok([...s.document.querySelectorAll('.dictionary-extra summary')].every(summary=>!summary.closest('i')));
     assert.ok(Object.keys(s.window.localStorage).some(key=>key.startsWith('gd_en_')));
     assert.ok(meanings.some(line=>line.textContent==='to learn; to study'));
     const examples = [...s.document.querySelectorAll('.english-example')];
@@ -382,11 +383,64 @@ test("a late account language updates the games page without navigation", async 
   const profile = new Promise(resolve => release = resolve);
   const s = await site("#/play", { account: true, profile: () => profile });
   try {
-    await until(() => s.document.querySelector(".ghero h1"));
-    assert.equal(s.document.querySelector(".ghero h1").textContent, "Games");
+    await until(() => s.document.querySelector(".play-heading h1"));
+    assert.equal(s.document.querySelector(".play-heading h1").textContent, "Ready, set, play.");
     release(new Response('[{"user_id":"fixture","role":"learner","level":"A1","unlocked":["A1"],"ui_lang":"de"}]'));
-    await until(() => s.document.querySelector(".ghero h1")?.textContent === "Spiele");
-    assert.ok(s.document.querySelector('a[href="#/play/solo"]').textContent.includes("Allein spielen"));
+    await until(() => s.document.querySelector(".play-heading h1")?.textContent.includes("Auf die Plätze."));
+    assert.ok(s.document.querySelector('a[href="#/play/solo"]').textContent.includes("Schnelles Quiz"));
     assert.deepEqual(s.errors, []);
   } finally { await s.close(); }
+});
+test('visitor navigation stays at three destinations on dictionary and games routes', async()=>{
+  const s=await site('#/start');
+  const visible=()=>[...s.document.querySelectorAll('#tabs a')].filter(a=>!a.hidden).map(a=>a.dataset.t);
+  try {
+    await until(()=>s.document.querySelector('.kd-home'));
+    assert.deepEqual(visible(),['start','home','play']);
+    s.window.location.hash='#/';
+    await until(()=>s.document.querySelector('.topic-gallery'));
+    assert.deepEqual(visible(),['start','home','play']);
+    assert.equal(s.document.querySelector('#dictionary-topics').open,false);
+    s.window.location.hash='#/play';
+    await until(()=>s.document.querySelector('.play-shelf'));
+    assert.deepEqual(visible(),['start','home','play']);
+    assert.equal(s.document.querySelectorAll('.play-tile').length,3);
+    assert.equal(s.document.querySelector('.play-more').open,false);
+    assert.deepEqual(s.errors,[]);
+  } finally {await s.close();}
+});
+test('dictionary collections render a small first page and filter without losing their words',async()=>{
+  const s=await site('#/cat/essen');
+  try {
+    await until(()=>s.document.querySelector('#cat-words .wrow'));
+    assert.equal(s.document.querySelectorAll('#cat-words .wrow').length,60);
+    const word=s.document.querySelector('#cat-words .hw').textContent;
+    s.document.querySelector('#cat-more').click();
+    assert.equal(s.document.querySelectorAll('#cat-words .wrow').length,120);
+    const input=s.document.querySelector('#cat-filter'); input.value=word; input.dispatchEvent(new s.window.Event('input',{bubbles:true}));
+    assert.ok(s.document.querySelector('#cat-words').textContent.includes(word));
+    assert.ok(s.document.querySelectorAll('#cat-words .wrow').length<60);
+    assert.deepEqual(s.errors,[]);
+  } finally {await s.close();}
+});
+test('word-map taps and Enter only preview; the explicit link opens an entry and English stays with the preview',async()=>{
+  const s=await site('#/w/lernen',{english:(_url,request)=>!request.method?new Response('{}',{status:404}):Response.json({version:1,reviewed:false,items:[{key:'s0',en:'a related meaning'}]})});
+  try {
+    await until(()=>s.document.querySelector('.word-space g.node'));
+    const node=s.document.querySelector('.word-space g.node');
+    s.document.dispatchEvent(new s.window.Event('touchstart',{bubbles:true}));
+    const click=()=>node.dispatchEvent(new s.window.MouseEvent('click',{bubbles:true}));
+    click();click();
+    assert.equal(s.window.location.hash,'#/w/lernen');
+    assert.equal(s.document.querySelectorAll('.wmpop').length,1);
+    assert.equal(node.getAttribute('aria-expanded'),'true');
+    node.focus();
+    node.dispatchEvent(new s.window.KeyboardEvent('keydown',{key:'Enter',bubbles:true,cancelable:true}));
+    assert.equal(s.window.location.hash,'#/w/lernen');
+    await until(()=>s.document.querySelector('.wmpop .wm-en')?.textContent);
+    assert.equal(s.document.querySelector('.wmpop .wm-en').lang,'en');
+    const link=s.document.querySelector('.wmpop .wmgo'),href=link.getAttribute('href');
+    link.click();await until(()=>s.window.location.hash===href);
+    assert.deepEqual(s.errors,[]);
+  } finally {await s.close();}
 });

@@ -11,7 +11,7 @@ function updatePageMetadata() {
     g: ["Grammar", "Grammatik"],
     lists: ["Revision lists", "Revisionslisten"],
     decks: ["Flashcards", "Lernkarten"],
-    play: ["Practice games", "Lernspiele"],
+    play: ["Play", "Spielen"],
     "": ["German dictionary", "Deutsches Wörterbuch"],
   };
   const title =
