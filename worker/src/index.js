@@ -43,7 +43,12 @@ export default {
   async fetch(req, env, ctx) {
     try {
       return await route(req, env, ctx);
-    } catch {
+    } catch (error) {
+      if(new URL(req.url).pathname.includes('invitation')){
+        // Retain code locations only, never bodies, headers or SMTP replies.
+        const detail=JSON.stringify({type:error?.name||'Error',reference:error?.name==='ReferenceError'&&/^[\w$]+ is not defined$/.test(error.message)?error.message:undefined,frames:String(error?.stack||'').split('\n').slice(1,3).map(x=>x.trim())});
+        try{await env.DB.prepare("INSERT INTO invitation_mail(id,sender,day,state,updated_at,attempts,last_error) VALUES(?1,'diagnostic',?2,'failed',?3,0,?4) ON CONFLICT(id) DO UPDATE SET updated_at=?3,last_error=?4").bind('diagnostic-'+new URL(req.url).pathname.split('/').pop(),new Date().toISOString().slice(0,10),Date.now(),detail).run();}catch{}
+      }
       return json({ error: "Service temporarily unavailable" }, 503, {
         "Cache-Control": "no-store",
         ...cors(req.headers.get("Origin"), origins(env)),

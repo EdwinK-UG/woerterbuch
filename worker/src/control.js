@@ -23,14 +23,15 @@ export async function authenticated(req, env, h) {
   const r = await fetch(new URL("/auth/v1/user", url), {
     headers: { apikey: env.SUPABASE_PUBLISHABLE_KEY, Authorization: token },
     signal: AbortSignal.timeout(7000),
-    redirect: "error",
+    redirect: "manual",
   });
-  if (!r.ok)
-    return reply(
-      r.status === 401 || r.status === 403 ? 401 : 503,
-      { error: "Account verification unavailable." },
-      h,
-    );
+  if (!r.ok) {
+    const content=await r.text();let detail={};try{detail=JSON.parse(content);}catch{}
+    const code=String(detail.code||detail.error_code||detail.error||'');
+    const safeCode=/^[a-z_0-9]{1,80}$/i.test(code)?code:content.includes('Cloudflare')?'cloudflare_rejection':'provider_rejection';
+    try{await env.DB.prepare("INSERT INTO invitation_mail(id,sender,day,state,updated_at,attempts,last_error) VALUES('diagnostic-auth','diagnostic',?1,'failed',?2,0,?3) ON CONFLICT(id) DO UPDATE SET updated_at=?2,last_error=?3").bind(new Date().toISOString().slice(0,10),Date.now(),JSON.stringify({status:r.status,code:safeCode,contentType:r.headers.get('Content-Type'),categories:['api key','token','session','banned','forbidden','browser','blocked','permission','cloudflare'].filter(x=>content.toLowerCase().includes(x))})).run();}catch{}
+    return reply(r.status===401||r.status===403?401:503,{error:r.status===401||r.status===403?'Your session has ended. Please sign in again.':'Account verification is temporarily unavailable.'},h);
+  }
   const u = await r.json();
   if (!u.id || !u.email_confirmed_at)
     return reply(403, { error: "Confirm your account first." }, h);

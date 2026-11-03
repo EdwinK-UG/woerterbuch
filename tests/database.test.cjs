@@ -102,7 +102,10 @@ test('confirmed teachers self-activate; addressed class invitations enrol only t
     await assert.rejects(db.query('select public.owner_accounts()'),/owner only/);
     await db.exec('reset role');
     const classId=(await db.query("insert into public.classes(org_id,name,level) values($1,'B1 evening','B1') returning id",[profile.org_id])).rows[0].id;
-    await db.query("insert into public.invites(code,org_id,class_id,member_role,level,recipient_email,uses_left,created_by) values('abcdef123456',$1,$2,'student','B1','learner@example.invalid',1,$3)",[profile.org_id,classId,teacher]);
+    await db.exec('set role authenticated');await db.query("select set_config('request.jwt.claim.sub',$1,false)",[teacher]);
+    const addressed=(await db.query("insert into public.invites(org_id,class_id,member_role,level,recipient_email,uses_left) values($1,$2,'student','B1','learner@example.invalid',1) returning code",[profile.org_id,classId])).rows[0].code;
+    await db.exec('reset role');
+    await db.query("update public.invites set code='abcdef123456' where code=$1",[addressed]);
     await db.query(`insert into auth.users(id,email,raw_user_meta_data) values($1,'learner@example.invalid','{"join":"abcdef123456"}'),($2,'other@example.invalid','{"join":"abcdef123456"}')`,[learner,other]);
     assert.equal((await db.query('select count(*)::int n from public.org_members')).rows[0].n,0);
     await db.query('update auth.users set email_confirmed_at=now() where id=$1',[other]);

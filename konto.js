@@ -397,7 +397,7 @@ function fillMe() {
   if (!P) { box.innerHTML = `<p class="muted" style="font-size:.82rem">${T('Loading profile …', 'Profil wird geladen …')}</p>`; ready().then(fillMe); return; }
   const go = h => `onclick="closeSheet();location.hash='${h}'"`;
   box.innerHTML = `<div class="ks-card">
-    <div class="ks-row"><span>${T('Role', 'Rolle')}</span><b>${ROLE(P.role)}</b>${P.requested_role ? ` <small class="ks-pend">${ROLE(P.requested_role)} · ${T('being checked', 'wird geprüft')}</small>` : ''}</div>
+    <div class="ks-row"><span>${T('Role', 'Rolle')}</span><b>${ROLE(P.role)}</b>${P.requested_role ? ` <small class="ks-pend">${ROLE(P.requested_role)} · ${T('confirm email', 'E-Mail bestätigen')}</small>` : ''}</div>
     ${ORG && ORG.name ? `<div class="ks-row"><span>${ORG.kind === 'school' ? T('School', 'Schule') : T('Teacher', 'Lehrkraft')}</span><b>${esc(ORG.name)}</b>${ORG.class ? ` <small>· ${esc(ORG.class.name)}</small>` : ''}</div>` : ''}
     ${P.role === 'learner' ? `<div class="ks-row"><span>${T('Levels', 'Niveaus')}</span>${unlockedSet().map(l => `<span class="gr-lv ${l}">${l}</span>`).join(' ') || `<small>${T('none yet', 'noch keins')}</small>`}</div>` : ''}
     <div class="ks-links"><button class="btn sm primary" ${go('#/start')}>${icn('layout-dashboard')} ${T('My home', 'Meine Startseite')}</button>
@@ -537,19 +537,23 @@ async function staffOrgs() {
   return orgs;
 }
 let D = { org: null, classes: [], members: [], profiles: {}, invites: [], tasks: [], res: [], liveRequests: [] };
+let orgLoadGeneration=0;
 async function loadOrg(org) {
-  D = { org, classes: [], members: [], profiles: {}, invites: [], tasks: [], res: [], liveRequests: [] };
-  D.classes = await q('/rest/v1/classes?select=*&org_id=eq.' + org.id + '&order=created_at') || [];
-  D.members = await q('/rest/v1/org_members?select=*&org_id=eq.' + org.id) || [];
-  D.invites = await q('/rest/v1/invites?select=*&org_id=eq.' + org.id + '&order=expires_at.desc') || [];
-  const ids = D.members.map(m => m.user_id);
+  const request=++orgLoadGeneration,user=me()?.id;
+  const next = { org, classes: [], members: [], profiles: {}, invites: [], tasks: [], res: [], liveRequests: [] };
+  next.classes = await q('/rest/v1/classes?select=*&org_id=eq.' + org.id + '&order=created_at') || [];
+  next.members = await q('/rest/v1/org_members?select=*&org_id=eq.' + org.id) || [];
+  next.invites = await q('/rest/v1/invites?select=*&org_id=eq.' + org.id + '&order=expires_at.desc') || [];
+  const ids = next.members.map(m => m.user_id);
   if (ids.length) {
-    (await q('/rest/v1/profiles?select=user_id,display_name,level,unlocked,created_at&user_id=in.(' + ids.join(',') + ')') || []).forEach(p => { p.unlocked = p.unlocked || []; D.profiles[p.user_id] = p; });
-    D.members = D.members.filter(member => D.profiles[member.user_id]);
-    D.res = await A().practiceSummary(Object.keys(D.profiles));
+    (await q('/rest/v1/profiles?select=user_id,display_name,level,unlocked,created_at&user_id=in.(' + ids.join(',') + ')') || []).forEach(p => { p.unlocked = p.unlocked || []; next.profiles[p.user_id] = p; });
+    next.members = next.members.filter(member => next.profiles[member.user_id]);
+    next.res = await A().practiceSummary(Object.keys(next.profiles));
   }
-  D.tasks = D.classes.length ? await q('/rest/v1/assignments?select=*&class_id=in.(' + D.classes.map(c => c.id).join(',') + ')&order=due_at.asc.nullslast') || [] : [];
-  if (D.classes.length) try { D.liveRequests = await q('/rest/v1/live_class_requests?select=*&class_id=in.(' + D.classes.map(c => c.id).join(',') + ')&order=created_at.desc') || []; } catch (e) { D.liveRequests = []; }
+  next.tasks = next.classes.length ? await q('/rest/v1/assignments?select=*&class_id=in.(' + next.classes.map(c => c.id).join(',') + ')&order=due_at.asc.nullslast') || [] : [];
+  if (next.classes.length) try { next.liveRequests = await q('/rest/v1/live_class_requests?select=*&class_id=in.(' + next.classes.map(c => c.id).join(',') + ')&order=created_at.desc') || []; } catch (e) { next.liveRequests = []; }
+  if(request!==orgLoadGeneration||me()?.id!==user)return false;
+  D=next;return true;
 }
 const sName = id => esc((D.profiles[id] && D.profiles[id].display_name) || T('(no name)', '(ohne Namen)'));
 const curLv = p => (p && LV.includes(p.level) && p.unlocked.includes(p.level) ? p.level : p && p.unlocked.slice(-1)[0] || null);
@@ -562,7 +566,7 @@ async function viewStaff(arg) {
   const orgs = await staffOrgs();
   if (!orgs.length) return needOrg(P.role === 'school' ? 'school' : 'teacher');
   const org = orgs.find(o => o.id === arg) || orgs[0], owner = org.owner === me().id;
-  try { await loadOrg(org); } catch (e) { return page(T('Dashboard', 'Übersicht'), `<p class="sub">${esc(err(e))}</p>`); }
+  try { if(!await loadOrg(org))return; } catch (e) { return page(T('Dashboard', 'Übersicht'), `<p class="sub">${esc(err(e))}</p>`); }
   const studs = D.members.filter(m => m.member_role === 'student'), teachers = D.members.filter(m => m.member_role === 'teacher');
   const lastAct = {}, b = bestMap(D.res); D.res.forEach(r => { const t = Date.parse(r.created_at); if (!lastAct[r.user_id] || t > lastAct[r.user_id]) lastAct[r.user_id] = t; });
   const active = studs.filter(m => Date.now() - (lastAct[m.user_id] || 0) < 7 * 864e5).length;
@@ -610,11 +614,11 @@ async function viewClasses(arg) {
   if (!me()) return need();
   busy(); await ready(); await ensureGram();
   if (OFF) return page(T('Classes', 'Klassen'), `<p class="sub">${T('This is not set up yet.', 'Diese Funktion ist noch nicht eingerichtet.')}</p>`);
-  if (!isStaff()) return page(T('Classes', 'Klassen'), `<p class="sub">${T('Teachers and schools manage classes here.', 'Hier verwalten Lehrkräfte und Schulen ihre Klassen.')}${P && P.requested_role ? ' ' + T('Your request is being checked.', 'Deine Anfrage wird geprüft.') : ''}</p>${P && !P.requested_role ? `<p><button class="btn primary" onclick="KONTO.request()">${T('Request a teacher / school account', 'Konto für Lehrkräfte / Schulen anfragen')}</button></p>` : ''}`);
+  if (!isStaff()) return page(T('Classes', 'Klassen'), `<p class="sub">${T('Teachers and schools manage classes here.', 'Hier verwalten Lehrkräfte und Schulen ihre Klassen.')}${P && P.requested_role ? ' ' + T('Confirm your email to activate teaching.', 'Bestätigen Sie Ihre E-Mail, um zu unterrichten.') : ''}</p>${P && !P.requested_role ? `<p><button class="btn primary" onclick="KONTO.request()">${T('Request a teacher / school account', 'Konto für Lehrkräfte / Schulen anfragen')}</button></p>` : ''}`);
   const orgs = await staffOrgs();
   if (!orgs.length) return needOrg(P.role === 'school' ? 'school' : 'teacher');
   const org = orgs.find(o => o.id === arg) || orgs[0], owner = org.owner === me().id;
-  try { await loadOrg(org); } catch (e) { return page(T('Classes', 'Klassen'), `<p class="sub">${esc(err(e))}</p>`); }
+  try { if(!await loadOrg(org))return; } catch (e) { return page(T('Classes', 'Klassen'), `<p class="sub">${esc(err(e))}</p>`); }
   const best = bestMap(D.res), link = c => location.origin + location.pathname + '?join=' + c;
   const invRow = i => `<li><code>${esc(i.code)}</code> · ${i.member_role === 'teacher' ? T('teachers', 'Lehrkräfte') : T('learners', 'Lernende')}${i.level ? ' · ' + i.level : ''} · ${T(`${i.uses_left} uses left`, `noch ${i.uses_left}×`)} · ${T('until', 'bis')} ${dt(i.expires_at)}
     <button class="btn sm" onclick="KONTO.copy('${link(i.code)}')">${icn('copy')} ${T('Copy link', 'Link kopieren')}</button><button class="btn sm" title="${T('Delete', 'Löschen')}" onclick="KONTO.delInvite('${i.code}')">${icn('trash-2')}</button></li>`;
@@ -697,12 +701,22 @@ const invite = (role, cls, lv) => act(async () => {
 }, T('Invitation link created', 'Einladungslink erstellt'));
 async function workerPost(path, body) {
   const r = await fetch(APP_CONFIG.workerUrl + path, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + await A().token() }, body: JSON.stringify(body) });
-  const d = await r.json().catch(() => ({})); if (!r.ok) throw new Error(d.error || 'Email service unavailable'); return d;
+  const d=await r.json().catch(()=>({}));
+  if(!r.ok){
+    if(r.status===401){
+      const user=me(),id=$('ci_class')?.value;
+      if(id)pendingInvite={account:user?.id,id,name:$('ci_name')?.value||'',to:$('ci_email')?.value||'',note:$('ci_note')?.value||'',draft:classInviteDraft};
+      A().sheet('in');if($('ac_em')&&user?.email)$('ac_em').value=user.email;
+      if($('ac_msg'))$('ac_msg').textContent=T('Your session has ended. Sign in again to continue. No email has been sent.','Ihre Sitzung ist beendet. Bitte erneut anmelden. Es wurde keine E-Mail gesendet.');
+    }
+    throw Object.assign(new Error(r.status===401?T('Sign in again to continue.','Bitte erneut anmelden.'):d.error||'Email service unavailable'),{status:r.status});
+  }
+  return d;
 }
-let classInviteDraft=null;
+let classInviteDraft=null,pendingInvite=null;
 async function inviteLearner() {
   if(!isStaff())return;
-  if(!D.org){const orgs=await staffOrgs();if(!orgs.length){location.hash='#/klasse';return;}await loadOrg(orgs[0]);}
+  if(!D.org){const orgs=await staffOrgs();if(!orgs.length){location.hash='#/klasse';return;}if(!await loadOrg(orgs[0]))return;}
   const classes=D.classes;
   if(!classes.length){toastM(T('Start a teaching term first.', 'Bitte zuerst einen Kursdurchgang erstellen.'));location.hash='#/klasse/'+D.org.id;return;}
   sendClassInvite(classes[0].id);
@@ -773,30 +787,22 @@ async function viewAdmin() {
   if (!me()) return need();
   busy(); await ready(); await ensureGram();
   if (!P || P.role !== 'founder') return page(T('Owner dashboard', 'Übersicht'), `<p class="sub">${T('This page is only for the site owner.', 'Diese Seite ist nur für die Betreiberin / den Betreiber.')}</p>`);
-  let s = {}, rs = [], inv = [];
-  try { [s, rs, inv] = await Promise.all([rpc('site_stats'), rpc('pending_requests'), q('/rest/v1/site_invites?select=*&order=created_at.desc&limit=50')]); }
+  let s = {}, inv = [];
+  try { [s, inv] = await Promise.all([rpc('site_stats'), q('/rest/v1/site_invites?select=*&order=created_at.desc&limit=50')]); }
   catch (e) { return page(T('Owner dashboard', 'Übersicht'), `<p class="sub">${esc(err(e))}</p>`); }
   s = s || {}; const a = s.activity || {}, roles = s.roles || {}, orgs = s.orgs || {};
-  const detail = i => { i = i || {}; return ['name', 'org_type', 'tagline', 'city', 'country', 'languages', 'website'].filter(k => i[k]).map(k => `<span>${esc(i[k])}</span>`).join(' · ') + (i.about ? `<p>${esc(i.about)}</p>` : '') + (okUrl(i.logo_url) ? `<img src="${esc(i.logo_url)}" alt="" class="kd-rqlogo" referrerpolicy="no-referrer">` : ''); };
   const link = c => location.origin + location.pathname + '?invite=' + c;
   page('', `<section class="kd-hero cv-grid"><div><p class="kd-eye">${T('Site owner', 'Betreiber/in')}</p><h1>${T('What is happening on Deutschklinik', 'Was auf Deutschklinik passiert')}</h1>
       <p class="kd-hi">${T(`${s.users || 0} accounts · ${s.new7 || 0} new this week`, `${s.users || 0} Konten · ${s.new7 || 0} neu diese Woche`)}</p>
-      <div class="row"><button class="btn kd-cta" onclick="KONTO.inviteLearner()">${icn('send')} ${T('Invite a learner', 'Lernende einladen')}</button><a class="btn kd-ghost" href="#/klasse">${icn('calendar-plus')} ${T('My teaching terms', 'Meine Kursdurchgänge')}</a><a class="btn kd-ghost" href="#owner-accounts" onclick="event.preventDefault();document.getElementById('owner-accounts').open=true;document.getElementById('owner-accounts').scrollIntoView({behavior:'smooth'});KONTO.loadOwnerUsers()">${icn('users')} ${T('Manage accounts','Konten verwalten')}</a><button class="btn kd-ghost" onclick="KONTO.inviteSheet()">${icn('send')} ${T('Invite someone', 'Jemanden einladen')}</button>${(s.pending || 0) ? `<a class="btn kd-ghost" href="#kd-rq" onclick="event.preventDefault();document.getElementById('kd-rq').scrollIntoView({behavior:'smooth'})">${icn('shield-check')} ${s.pending} ${T('to approve', 'freizugeben')}</a>` : ''}</div></div></section>
+      <div class="row"><button class="btn kd-cta" onclick="KONTO.inviteLearner()">${icn('send')} ${T('Invite a learner', 'Lernende einladen')}</button><a class="btn kd-ghost" href="#/klasse">${icn('calendar-plus')} ${T('My teaching terms', 'Meine Kursdurchgänge')}</a><a class="btn kd-ghost" href="#owner-accounts" onclick="event.preventDefault();document.getElementById('owner-accounts').open=true;document.getElementById('owner-accounts').scrollIntoView({behavior:'smooth'});KONTO.loadOwnerUsers()">${icn('users')} ${T('Manage accounts','Konten verwalten')}</a><button class="btn kd-ghost" onclick="KONTO.inviteSheet()">${icn('send')} ${T('Invite someone', 'Jemanden einladen')}</button></div></div></section>
     ${kpis([['users', s.users || 0, T('accounts', 'Konten'), `${s.confirmed || 0} ${T('confirmed', 'bestätigt')}`], ['user-plus', s.new7 || 0, T('new this week', 'neu diese Woche'), `${s.new30 || 0} ${T('in 30 days', 'in 30 Tagen')}`], ['log-in', s.signin7 || 0, T('signed in this week', 'angemeldet diese Woche')],
       ['activity', a.active7 || 0, T('active learners', 'aktive Lernende'), T('7 days', '7 Tage')], ['dumbbell', a.ex7 || 0, T('exercises this week', 'Übungen diese Woche'), a.avg30 != null ? `Ø ${a.avg30} % (30 ${T('days', 'Tage')})` : ''],
-      ['school', orgs.school || 0, T('schools', 'Schulen'), `${orgs.teacher || 0} ${T('teacher pages', 'Lehrkraft-Seiten')}`], ['layers', s.classes || 0, T('classes', 'Klassen'), `${s.in_school || 0} ${T('learners in schools', 'Lernende in Schulen')}`], ['hourglass', s.pending || 0, T('waiting for approval', 'warten auf Freigabe')]])}
+      ['school', orgs.school || 0, T('schools', 'Schulen'), `${orgs.teacher || 0} ${T('teacher pages', 'Lehrkraft-Seiten')}`], ['layers', s.classes || 0, T('classes', 'Klassen'), `${s.in_school || 0} ${T('learners in schools', 'Lernende in Schulen')}`], ['mail', (s.users||0)-(s.confirmed||0), T('awaiting email confirmation', 'warten auf E-Mail-Bestätigung')]])}
     <div class="kd-grid2"><div class="kd-card"><h3>${T('Sign-ups per day', 'Registrierungen pro Tag')} <small>${T('last 30 days', 'letzte 30 Tage')}</small></h3>${bars(last30(s.signups), T('Sign-ups per day', 'Registrierungen pro Tag'))}</div>
       <div class="kd-card"><h3>${T('Exercises done per day', 'Übungen pro Tag')} <small>${T('last 30 days', 'letzte 30 Tage')}</small></h3>${bars(last30(a.daily), T('Exercises per day', 'Übungen pro Tag'))}</div>
       <div class="kd-card"><h3>${T('Learners by level', 'Lernende nach Niveau')}</h3>${hbars(s.levels || {}, [...LV, '–'])}<p class="ks-tip">– = ${T('no level chosen yet', 'noch kein Niveau gewählt')}</p></div>
       <div class="kd-card"><h3>${T('Accounts by role', 'Konten nach Rolle')}</h3>${hbars(Object.fromEntries(Object.entries(roles).map(([k, v]) => [ROLE(k), v])), ['learner', 'teacher', 'school', 'founder'].map(ROLE))}</div></div>
     <details class="kd-card owner-accounts" id="owner-accounts" ontoggle="if(this.open)KONTO.loadOwnerUsers()"><summary>${T('Manage accounts','Konten verwalten')}</summary><div class="row" style="margin:1rem 0"><input class="input" id="owner_search" type="search" placeholder="${T('Search by email','Nach E-Mail suchen')}" onkeydown="if(event.key==='Enter')KONTO.loadOwnerUsers()"><button class="btn" onclick="KONTO.loadOwnerUsers()">${T('Search','Suchen')}</button></div><div id="owner_users"></div></details>
-    <h2 class="kd-h" id="kd-rq">${icn('shield-check')} ${T('Teacher and school requests', 'Anfragen von Lehrkräften und Schulen')}</h2>
-    ${rs.length ? `<div class="kd-rqs">${rs.map(r => `<div class="kd-card kd-rq"><div class="h"><b>${esc(r.display_name || r.email)}</b><span class="tag">${ROLE(r.requested_role)}</span><small>${esc(r.email)} · ${dt(r.created_at)}</small></div><div class="d">${detail(r.request_info)}</div>
-      <div class="row"><span class="spacer"></span><button class="btn sm" onclick="KONTO.decide('${r.user_id}',false)">${T('Reject', 'Ablehnen')}</button><button class="btn sm primary" onclick="KONTO.decide('${r.user_id}',true)">${icn('check')} ${T('Approve and create page', 'Freischalten und Seite anlegen')}</button></div></div>`).join('')}</div>` : `<p class="sub">${T('No open requests.', 'Keine offenen Anfragen.')}</p>`}
-    <h2 class="kd-h">${icn('send')} ${T('Invitations', 'Einladungen')}</h2>
-    <div class="kd-card">${inv.length ? `<div class="ks-tw"><table class="ks-t"><tr><th>${T('For', 'Für')}</th><th>${T('Role', 'Rolle')}</th><th>${T('Used', 'Benutzt')}</th><th>${T('Until', 'Bis')}</th><th></th></tr>${inv.map(i => `<tr><td><b>${esc(i.name || '–')}</b><div class="ks-it">${esc(i.email || '')}${i.note ? ' · ' + esc(i.note) : ''}</div></td><td>${ROLE(i.role)}${i.level ? ' · ' + i.level : ''}</td><td>${i.used_count}/${i.used_count + i.uses_left}</td><td>${dt(i.expires_at)}</td>
-      <td class="ks-act"><button class="btn sm" onclick="KONTO.copy('${link(i.code)}')">${icn('copy')}</button><button class="btn sm" onclick="KONTO.delSiteInvite('${i.code}')">${icn('trash-2')}</button></td></tr>`).join('')}</table></div>` : `<p class="sub">${T('No invitations yet.', 'Noch keine Einladungen.')}</p>`}
-      <button class="btn primary" onclick="KONTO.inviteSheet()">${icn('send')} ${T('Invite someone', 'Jemanden einladen')}</button></div>
     <div class="kd-grid2"><div><h2 class="kd-h">${icn('user-plus')} ${T('Newest accounts', 'Neueste Konten')}</h2><div class="ks-tw"><table class="ks-t"><tr><th>${T('E-mail', 'E-Mail')}</th><th>${T('Role', 'Rolle')}</th><th>${T('Joined', 'Seit')}</th></tr>${(s.recent || []).map(r => `<tr><td>${esc(r.display_name || '')}<div class="ks-it">${esc(r.email)}${r.confirmed ? '' : ` · <span class="ks-pend">${T('not confirmed', 'nicht bestätigt')}</span>`}</div></td><td>${ROLE(r.role || 'learner')}${r.level ? ' · ' + r.level : ''}${r.requested_role ? ` · <span class="ks-pend">${ROLE(r.requested_role)}?</span>` : ''}${r.org ? `<div class="ks-it">${esc(r.org)}</div>` : ''}</td><td>${dt(r.created_at)}</td></tr>`).join('')}</table></div></div>
       <div><h2 class="kd-h">${icn('school')} ${T('Schools and teachers', 'Schulen und Lehrkräfte')}</h2>${(s.org_list || []).length ? `<div class="ks-tw"><table class="ks-t"><tr><th>${T('Name', 'Name')}</th><th>${T('Learners', 'Lernende')}</th><th>${T('Classes', 'Klassen')}</th></tr>${s.org_list.map(o => `<tr><td><a href="#/schule/${o.id}">${esc(o.name)}</a><div class="ks-it">${o.kind === 'school' ? T('School', 'Schule') : T('Teacher', 'Lehrkraft')}${o.city ? ' · ' + esc(o.city) : ''}</div></td><td>${o.students}</td><td>${o.classes}</td></tr>`).join('')}</table></div>` : `<p class="sub">${T('None yet.', 'Noch keine.')}</p>`}
       ${(a.top || []).length ? `<h2 class="kd-h">${icn('flame')} ${T('Most practised (30 days)', 'Am meisten geübt (30 Tage)')}</h2><div class="ks-tw"><table class="ks-t"><tr><th>${T('Topic / chapter', 'Thema / Kapitel')}</th><th>${T('Exercises', 'Übungen')}</th><th>${T('Learners', 'Lernende')}</th></tr>${a.top.map(t => `<tr><td><a href="${chHash(t.chapter)}">${esc(chTitle(t.chapter))}</a></td><td>${t.n}</td><td>${t.users}</td></tr>`).join('')}</table></div>` : ''}</div></div>`, 'kd');
@@ -1132,7 +1138,14 @@ window.KONTO = { level, lang, passMark, canOpen, lvState, unlock, lockSheet, unl
   signupFields, signupCheck, signupData, request, reqFields, sendRequest, join, decide, inviteSheet, makeSiteInvite, delSiteInvite, codeSheet,
   saveOrg, dropLogo, orgPass, addClass, classPass, invite, delInvite, moveMember, removeMember, addTask, delTask, copy, reload, refresh, liveClassSheet, saveLiveClass, sendClassInvite, sendClassInviteNow, inviteLearner, previewInvite, loadOwnerUsers, deleteAccountSheet, deleteAccount, decideLiveRequest, applyLiveClass,
   student, unlockFor, saveSettings, setCourse, unenroll, leave, T, can, gate, featureOf, saveSite, lookup, signupAs, previewWelcome: () => { location.hash = '#/start/besucher'; } };
-window.addEventListener('acct:in', e => { reload().then(() => { if (e.detail && e.detail.fresh && /^#?\/?$/.test(location.hash)) location.hash = '#/start'; }); });
+window.addEventListener('acct:in', e => { reload().then(() => {
+  if(e.detail&&e.detail.fresh&&/^#?\/?$/.test(location.hash))location.hash='#/start';
+  const pending=pendingInvite;pendingInvite=null;
+  if(pending&&pending.account===me()?.id&&D.classes.some(c=>c.id===pending.id)){
+    sendClassInvite(pending.id);classInviteDraft=pending.draft;
+    if($('ci_name'))$('ci_name').value=pending.name;if($('ci_email'))$('ci_email').value=pending.to;if($('ci_note'))$('ci_note').value=pending.note;
+  }
+}); });
 window.addEventListener('acct:out', () => { profileRequest++; loading=null; OFF=false; P = null; ORG = null; mine = { orgs: [], staff: [] }; apply(); if (/^#?\/?$/.test(location.hash)) location.hash = '#/start'; });
 // invitation links: …/?join=CODE (school or teacher) and …/?invite=CODE (from the site owner)
 const sp = new URLSearchParams(location.search), jc = sp.get('join'), ic = sp.get('invite');
