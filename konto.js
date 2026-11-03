@@ -200,7 +200,7 @@ function applyBrand() {
   let el = $('orgbrand');
   if (ORG && ORG.name) {
     if (!el && b) { el = document.createElement('a'); el.id = 'orgbrand'; b.after(el); }
-    if (el) { el.href = '#/schule/' + ORG.id; el.title = ORG.name; el.innerHTML = `${okUrl(ORG.logo_url) ? `<img src="${esc(ORG.logo_url)}" alt="" referrerpolicy="no-referrer">` : icn(ORG.kind === 'school' ? 'school' : 'graduation-cap')}<span>${esc(ORG.name)}</span>`; }
+    if (el) { el.href = '#/schule/' + ORG.id; el.title = ORG.name; const key=JSON.stringify([ORG.id,ORG.logo_url,ORG.kind,ORG.name]);if(el.dataset.brandKey!==key){el.dataset.brandKey=key;el.innerHTML = `${okUrl(ORG.logo_url) ? `<img src="${esc(ORG.logo_url)}" alt="" width="28" height="28" referrerpolicy="no-referrer">` : icn(ORG.kind === 'school' ? 'school' : 'graduation-cap')}<span>${esc(ORG.name)}</span>`;} }
     if (/^#[0-9a-f]{6}$/i.test(ORG.theme || '')) { root.style.setProperty('--ac', ORG.theme); root.style.setProperty('--org', ORG.theme); }
     else { root.style.removeProperty('--ac'); root.style.removeProperty('--org'); }
     document.title = ORG.name + ' · Deutschklinik';
@@ -212,7 +212,10 @@ function applyBrand() {
   setBrandIcon(colour);
   icons();
 }
+let brandIconColour;
 function setBrandIcon(colour){
+  if(brandIconColour===colour&&document.querySelectorAll('link[rel="icon"]').length===1)return;
+  brandIconColour=colour;
   document.querySelectorAll('link[rel="icon"]').forEach(link=>link.remove());
   const favicon=document.createElement('link');favicon.rel='icon';favicon.type='image/svg+xml';
   favicon.href=colour?'data:image/svg+xml,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="18" fill="${colour}"/><text x="32" y="46" text-anchor="middle" font-family="Georgia,serif" font-size="46" fill="${ink(colour)}">D</text></svg>`):'favicon.svg?v=3';
@@ -421,11 +424,14 @@ function fillMe() {
 
 /* ---------- shared bits for pages ---------- */
 const pct = (a, b) => (b ? Math.round(a / b * 100) : 0);
+let pageMarkup='',pageNode=null,pageHash='';
 function page(title, body, cls = '') {
   if (location.hash.slice(2).split('/')[0] !== CUR) return false;
-  V().innerHTML = `<div class="ks-page ${cls}">${title ? `<h1 class="page">${title}</h1>` : ''}${body}</div>`; icons(); return true;
+  const markup=`<div class="ks-page ${cls}">${title ? `<h1 class="page">${title}</h1>` : ''}${body}</div>`;
+  if(pageNode===V().firstElementChild&&pageHash===location.hash&&pageMarkup===markup)return true;
+  V().innerHTML=markup;pageMarkup=markup;pageNode=V().firstElementChild;pageHash=location.hash;icons();return true;
 }
-const busy = () => page('', `<div class="loading"><div class="spin"></div>${T('Loading …', 'Wird geladen …')}</div>`);
+const busy = () => {if(pageNode===V().firstElementChild&&pageHash===location.hash&&!pageNode.querySelector('.loading'))return;page('', `<div class="loading"><div class="spin"></div>${T('Loading …', 'Wird geladen …')}</div>`);};
 function need() {
   page(T('Please sign in', 'Bitte anmelden'), `<p class="sub">${T('Sign in or create a free account to see this page.', 'Melde dich an oder erstelle ein kostenloses Konto, um diese Seite zu sehen.')}</p>
     <p class="row"><button class="btn primary" onclick="ACCT.sheet('up')">${T('Create account', 'Konto erstellen')}</button><button class="btn" onclick="ACCT.sheet('in')">${T('Sign in', 'Anmelden')}</button></p>`);
