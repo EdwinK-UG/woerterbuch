@@ -572,3 +572,24 @@ test('an ended session opens sign-in and restores the invitation draft after the
   assert.deepEqual(s.errors,[]);
  }finally{await s.close();}
 });
+
+test('signup opens the app immediately, shows a quiet confirmation prompt and confirms only after an explicit click',async()=>{
+ const uid='00000000-0000-4000-ab00-000000000092';
+ let verified=false,confirmations=0,resends=0;
+ const s=await site('#/start',{profile:()=>Response.json([{user_id:uid,role:'learner',display_name:'Alex',level:'A1',unlocked:['A1']}]),request:async(u,r)=>{
+  if(u.pathname==='/auth/v1/signup')return Response.json({access_token:'fixture-token',refresh_token:'fixture-refresh',expires_in:3600,user:{id:uid,email:'alex@example.com',app_metadata:{dk_email_verification_required:true}}});
+  if(u.pathname.endsWith('/email_verification_status'))return Response.json({verified,required:!verified,email:'alex@example.com'});
+  if(u.pathname.endsWith('/request_email_verification')){resends++;return Response.json({queued:true});}
+  if(u.pathname==='/email-verification/send')return Response.json({sent:true});
+  if(u.pathname.endsWith('/confirm_email_token')){confirmations++;verified=true;assert.equal(JSON.parse(r.body).p_token,'a'.repeat(64));return Response.json({verified:true});}
+ }});
+ try{
+  s.window.ACCT.sheet('up');s.document.querySelector('#ac_em').value='alex@example.com';s.document.querySelector('#ac_pw').value='fixture-password';s.document.querySelector('#su_pname').value='Alex';
+  await s.window.ACCT.submit('up');await until(()=>s.window.ACCT.user()?.id===uid);await until(()=>!s.document.querySelector('#email-status-banner').hidden);
+  assert.equal(s.window.location.hash,'#/start');assert.ok(s.document.querySelector('#email-status-banner').textContent.includes('Keep learning'));
+  s.document.querySelector('#email-status-banner button').click();await until(()=>resends===1);
+  s.window.location.hash='#/confirm-email/00000000-0000-4000-ab00-000000000092/'+'a'.repeat(64);
+  await until(()=>s.document.querySelector('#email-confirm-action'));assert.equal(s.window.location.hash,'#/confirm-email');assert.equal(confirmations,0);
+  s.document.querySelector('#email-confirm-action').click();await until(()=>confirmations===1);await until(()=>s.document.querySelector('#email-status-banner').hidden);assert.ok(!s.window.localStorage.getItem('gd_session').includes('a'.repeat(64)));assert.deepEqual(s.errors,[]);
+ }finally{await s.close()}
+});

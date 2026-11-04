@@ -1,0 +1,62 @@
+const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),{PGlite}=require('@electric-sql/pglite');
+test('immediate access is distinct from mailbox proof; confirmations, reminders and school claims are bounded',async()=>{
+ const db=new PGlite();const owner='00000000-0000-4000-ab00-000000000091',user='00000000-0000-4000-ab00-000000000092',org='00000000-0000-4000-ab00-000000000093',cls='00000000-0000-4000-ab00-000000000094';
+ try{
+ for(const f of ['tests/school-security-bootstrap.sql','supabase_setup.sql','accounts_setup.sql'])await db.exec(fs.readFileSync(f,'utf8'));
+ for(const f of fs.readdirSync('supabase/migrations').filter(x=>!x.endsWith('_welcome_delivery.sql')).sort())await db.exec(fs.readFileSync('supabase/migrations/'+f,'utf8'));
+ await db.exec(`create schema vault;create table vault.decrypted_secrets(name text,decrypted_secret text);insert into vault.decrypted_secrets values('deutschklinik_welcome_hook','fixture-secret');`);
+ await db.query("insert into auth.users(id,email,email_confirmed_at) values($1,'teacher@example.invalid',now())",[owner]);
+ await db.query("insert into public.orgs(id,owner,kind,name,theme) values($1,$2,'school','Gold school','#ac8935')",[org,owner]);
+ await db.query("insert into public.classes(id,org_id,name,level) values($1,$2,'B1','B1')",[cls,org]);
+ await db.query("insert into public.invites(code,org_id,class_id,member_role,recipient_email,uses_left,created_by) values('abcdef123456',$1,$2,'student','learner@example.invalid',1,$3)",[org,cls,owner]);
+ await db.exec('update app_private.signup_policy set immediate_access=true');
+ await db.query(`insert into auth.users(id,email,email_confirmed_at,raw_user_meta_data) values($1,'learner@example.invalid',now(),'{"join":"abcdef123456","name":"Alex","level":"A1"}')`,[user]);
+ await db.query("update auth.users set raw_app_meta_data='{\"provider\":\"email\"}' where id=$1",[user]);
+ assert.equal((await db.query("select raw_app_meta_data->>'dk_email_verification_required' as pending from auth.users where id=$1",[user])).rows[0].pending,'true');
+ assert.equal((await db.query('select app_private.email_is_verified($1) as v',[user])).rows[0].v,false);
+ assert.equal((await db.query('select count(*)::int n from public.org_members')).rows[0].n,0);
+ await db.exec('set role authenticated');await db.query("select set_config('request.jwt.claim.sub',$1,false)",[user]);
+ assert.equal((await db.query('select public.email_verification_status() as s')).rows[0].s.required,true);
+ await assert.rejects(db.query("select public.join_with_code('abcdef123456')"),/confirm your email/);
+ await assert.rejects(db.query('select * from app_private.email_verifications'),/permission denied/);
+ await db.exec('reset role;set role anon');
+ await assert.rejects(db.query("select public.claim_verification_mail('wrong')"),/not authorised/);
+ const claim=async()=> (await db.query("select public.claim_verification_mail('fixture-secret') as j")).rows[0].j;
+ const finish=async j=>db.query("select public.finish_verification_mail('fixture-secret',$1,$2,true)",[user,j.claim]);
+ const first=(await claim())[0];assert.equal(first.org.name,'Gold school');assert.equal(first.stage,0);assert.match(first.token,/^[a-f0-9]{64}$/);assert.deepEqual(await claim(),[]);
+ await assert.rejects(db.query('select public.confirm_email_token($1,$2)',[user,'a'.repeat(64)]),/invalid or expired/);
+ await finish(first);assert.deepEqual(await claim(),[]);
+ await db.exec('reset role');
+ let row=(await db.query('select extract(epoch from(next_send_at-last_sent_at))/3600 as h from app_private.email_verifications')).rows[0];assert.equal(+row.h,24);
+ await db.query('update app_private.email_verifications set next_send_at=now()-interval \'1 second\' where user_id=$1',[user]);await db.exec('set role anon');
+ const second=(await claim())[0];assert.equal(second.stage,1);await finish(second);
+ await db.exec('reset role');row=(await db.query('select extract(epoch from(next_send_at-last_sent_at))/3600 as h from app_private.email_verifications')).rows[0];assert.equal(+row.h,48);
+ await db.query('update app_private.email_verifications set next_send_at=now()-interval \'1 second\' where user_id=$1',[user]);await db.exec('set role anon');
+ const third=(await claim())[0];assert.equal(third.stage,2);await finish(third);assert.deepEqual(await claim(),[]);
+ await db.exec('reset role');await db.query("update app_private.email_verification_tokens set expires_at=now()-interval '1 second' where token_hash=encode(sha256(convert_to($1,'UTF8')),'hex')",[third.token]);await db.exec('set role anon');await assert.rejects(db.query('select public.confirm_email_token($1,$2)',[user,third.token]),/invalid or expired/);
+ // Earlier email links remain valid when a later reminder is sent.
+ await db.query('select public.confirm_email_token($1,$2)',[user,first.token]);
+ await db.exec('reset role');assert.equal((await db.query('select app_private.email_is_verified($1) as v',[user])).rows[0].v,true);
+ assert.equal((await db.query('select count(*)::int n from public.org_members where user_id=$1',[user])).rows[0].n,1);
+ assert.equal((await db.query("select uses_left from public.invites where code='abcdef123456'")).rows[0].uses_left,0);
+ assert.equal((await db.query('select next_send_at from app_private.email_verifications')).rows[0].next_send_at,null);
+ await db.exec('set role anon');await db.query('select public.confirm_email_token($1,$2)',[user,first.token]);
+ await db.exec('reset role');
+ // Tokens bind the exact address, not just the account ID.
+ await db.query("update auth.users set email='changed@example.invalid' where id=$1",[user]);
+ await db.exec('set role anon');await assert.rejects(db.query('select public.confirm_email_token($1,$2)',[user,first.token]),/invalid or expired/);
+ await db.exec('reset role');await db.query('update app_private.email_verifications set attempt_day=null,lease_id=null,lease_until=null where user_id=$1',[user]);await db.exec('set role anon');
+ const changed=(await claim())[0];await db.query('select public.confirm_email_token($1,$2,true)',[user,changed.token]);assert.deepEqual(await claim(),[]);
+ await db.exec('reset role;set role authenticated');await db.query("select set_config('request.jwt.claim.sub',$1,false)",[user]);
+ assert.equal((await db.query('select public.email_verification_status() as s')).rows[0].s.verified,false);
+ await db.query('select public.request_email_verification()');assert.equal((await db.query('select public.request_email_verification() as r')).rows[0].r.wait,true);
+ await db.exec('reset role;update app_private.signup_policy set immediate_access=false');
+ const legacy='00000000-0000-4000-ab00-000000000096';
+ await db.query(`insert into auth.users(id,email,raw_user_meta_data) values($1,'legacy@example.invalid','{"role":"teacher","name":"Legacy teacher"}')`,[legacy]);
+ await db.exec(fs.readFileSync('supabase/activate-immediate-signup.sql','utf8'));
+ assert.ok((await db.query('select email_confirmed_at from auth.users where id=$1',[legacy])).rows[0].email_confirmed_at);
+ assert.equal((await db.query('select app_private.email_is_verified($1) as v',[legacy])).rows[0].v,false);
+ assert.equal((await db.query('select role from public.profiles where user_id=$1',[legacy])).rows[0].role,'teacher');
+ assert.equal((await db.query('select app_private.email_is_verified($1) as v',[owner])).rows[0].v,true);
+ }finally{await db.close()}
+});

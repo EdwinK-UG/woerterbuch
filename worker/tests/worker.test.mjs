@@ -453,3 +453,27 @@ test('brand button labels stay readable across light, dark and middle-luminance 
  const lum=hex=>hex.slice(1).match(/../g).map(x=>parseInt(x,16)/255).map(v=>v<=.03928?v/12.92:((v+.055)/1.055)**2.4).reduce((a,c,i)=>a+c*[.2126,.7152,.0722][i],0);
  for(const theme of ['#ac8935','#ebdf13','#808080','#777777','#ffffff','#000000','#1f6feb','#ee8868','#28634c']){const b=mailBrand({theme}),a=lum(b.colour),ink=lum(b.ink);assert.ok((Math.max(a,ink)+.05)/(Math.min(a,ink)+.05)>=4.5,theme);}
 });
+
+test('verification mail is branded, uses a non-login confirmation capability, and checks current eligibility before sending',async()=>{
+ const {drainVerification,verificationContent,verificationHook}=await import('../src/email-verification.js');
+ const {authenticated}=await import('../src/control.js');
+ const job={user_id:'00000000-0000-4000-ab00-000000000092',email:'learner@example.invalid',claim:'00000000-0000-4000-ab00-000000000095',token:'a'.repeat(64),stage:1,org:{name:'Gold School',theme:'#ac8935'}};
+ const c=verificationContent('https://deutschklinik.com/',job);assert.match(c.subject,/Reminder/);assert.ok(c.html.includes('background:#ac8935'));assert.ok(c.text.includes('#/confirm-email/'+job.user_id));assert.ok(c.text.includes('#/stop-email/'));assert.ok(!c.text.includes('access_token'));
+ const old=globalThis.fetch,completed=[];let current=true,sends=0;
+ const env={SUPABASE_URL:'https://auth.example.invalid',SUPABASE_PUBLISHABLE_KEY:'fixture',WELCOME_HOOK_SECRET:'secret',SMTP_USER:'hello@example.invalid',SMTP_PASSWORD:'fixture',SITE_URL:'https://deutschklinik.com/'};
+ globalThis.fetch=async(url,opts={})=>{
+  const p=new URL(url).pathname;
+  if(p==='/auth/v1/user')return Response.json({id:job.user_id,email_confirmed_at:'2026-11-05',app_metadata:{dk_email_verification_required:true}});
+  if(p.endsWith('/claim_verification_mail'))return Response.json([job]);
+  if(p.endsWith('/verification_mail_current'))return Response.json({send:current});
+  if(p.endsWith('/finish_verification_mail')){completed.push(JSON.parse(opts.body));return Response.json(null);}
+  throw Error(p);
+ };
+ try{
+  const req=new Request('https://worker.example.invalid/',{headers:{Authorization:'Bearer fixture'}});
+  assert.equal((await authenticated(req,env,{})).status,403);assert.equal((await authenticated(req,env,{},{allowUnverified:true})).id,job.user_id);
+  await drainVerification(env,async()=>sends++);assert.equal(sends,1);assert.equal(completed[0].p_sent,true);
+  current=false;await drainVerification(env,async()=>sends++);assert.equal(sends,1);assert.equal(completed[1].p_sent,false);
+  const bad=await verificationHook(new Request('https://worker.example.invalid/',{method:'POST',headers:{Authorization:'Bearer wrong'},body:JSON.stringify({user_id:job.user_id})}),env,{});assert.equal(bad.status,403);
+ }finally{globalThis.fetch=old;}
+});

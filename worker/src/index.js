@@ -1,3 +1,4 @@
+import {drainVerification,verificationWake,verificationHook} from './email-verification.js';
 import { handleWelcome, welcomeHook, drainMail } from "./welcome.js";
 import { sendCourseInvitation, previewCourseInvitation, courseInvitationStatus, sendSiteInvitation, requestLiveClass } from "./invitations.js";
 import { english } from "./english.js";
@@ -38,7 +39,7 @@ function json(obj, status, headers) {
 
 export default {
   async scheduled(_event, env, ctx) {
-    ctx.waitUntil(drainMail(env));
+    ctx.waitUntil(Promise.allSettled([drainMail(env),drainVerification(env)]));
   },
   async fetch(req, env, ctx) {
     try {
@@ -66,6 +67,8 @@ async function route(req, env, ctx) {
   const url = new URL(req.url);
   const origin = req.headers.get("Origin") || "";
   const h = cors(origin, ALLOWED);
+  if(url.pathname==="/hooks/email-verification")return verificationHook(req,env,h);
+  if(url.pathname==="/email-verification/send"){if(!ALLOWED.includes(origin))return json({error:"Forbidden"},403,h);return verificationWake(req,env,h);}
   if (url.pathname === "/hooks/welcome") return welcomeHook(req, env, h);
   if (req.method === "OPTIONS") {
     return new Response(null, {

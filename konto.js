@@ -370,12 +370,12 @@ function suMore() {
   const name = keep('su_pname') || (pv.type === 'site' && pv.role !== 'school' ? pv.name || '' : '');
   let h = `<label class="ks-l">${r === 'school' ? T('Your name (contact person)', 'Ihr Name (Ansprechperson)') : T('Your name', 'Dein Name')}${r === 'learner' ? '' : ' *'}<input class="input" id="su_pname" maxlength="60" autocomplete="name" placeholder="${T('First and last name', 'Vor- und Nachname')}" value="${esc(name)}"></label>`;
   if (r === 'learner') {
-    if (pv.type === 'org' && pv.level && pv.class) h += `<p class="ks-n">${icn('lock-open')} ${T(`Your class is at level ${esc(pv.level)} – it is unlocked for you.`, `Deine Klasse ist auf Niveau ${esc(pv.level)} – es ist für dich freigeschaltet.`)}</p>`;
+    if (pv.type === 'org' && pv.level && pv.class) h += `<p class="ks-n">${icn('lock-open')} ${T(`Your class is at level ${esc(pv.level)}. Confirm your email to join.`, `Deine Klasse ist auf Niveau ${esc(pv.level)}. Bestätige deine E-Mail, um beizutreten.`)}</p>`;
     else h += `<label class="ks-l">${T('My level', 'Mein Niveau')}<select class="input" id="su_level">${lvOpts(pv.level || '', T('Not sure yet', 'Noch nicht sicher'))}</select></label>
       ${pv.type === 'org' ? `<p class="ks-n">${icn('info')} ${T('Your teacher unlocks your level for you.', 'Deine Lehrkraft schaltet dein Niveau für dich frei.')}</p>` : ''}`;
   } else {
     h += `<div class="ks-dt">${detailFields(r, pv.type === 'site' && r === 'school' ? { name: pv.name } : {}, 'su')}</div>`;
-    if (!invited) h += `<p class="ks-n">${icn('shield-check')} ${T('Confirm your email to open your own teaching dashboard and personalised page.', 'Bestätigen Sie Ihre E-Mail, um Ihre Unterrichtsübersicht und persönliche Seite zu öffnen.')}</p>`;
+    if (!invited) h += `<p class="ks-n">${icn('shield-check')} ${T('Your teaching workspace opens straight away. Confirm your email to send invitations.', 'Ihr Unterrichtsbereich öffnet sich sofort. Bestätigen Sie Ihre E-Mail, um Einladungen zu senden.')}</p>`;
   }
   if(pv.type==='org'&&pv.term_name)h+=`<div class="invite-summary"><span class="play-eyebrow">${esc(pv.term_name)}</span><p>${dt(pv.starts_on)} – ${dt(pv.ends_on)}</p><p>${esc(pv.schedule||'')}</p>${pv.course_details?`<details><summary>${T('Your course','Dein Kurs')}</summary><p>${esc(pv.course_details)}</p></details>`:''}</div>`;
   box.innerHTML = h; icons();
@@ -422,6 +422,7 @@ async function join(code) {
 }
 async function handleInvite() {
   const I = INV(); if (!I || !P) return false;
+  try{const verification=await rpc('email_verification_status');if(verification?.required&&!verification.verified)return false;}catch{}
   const pv = I.pv || {}, act = I.t === 'join' ? 'join_with_code' : 'redeem_invite';
   const user = me().id;
   try {

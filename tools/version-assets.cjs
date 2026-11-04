@@ -17,6 +17,7 @@ const files = [
   "js/site-design.js",
   "content/dictionary-english.json",
   "js/pages.js",
+  "js/email-verification.js",
   "grammatik/catalog.js",
   "grammatik/grammatik.js",
 ];

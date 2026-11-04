@@ -4,8 +4,8 @@ begin;
 create function pg_temp.check_ok(ok boolean, problem text) returns void language plpgsql as $$
 begin if ok is not true then raise exception 'TEST FAILED: %',problem; end if; end $$;
 
-insert into auth.users(id) values ('00000000-0000-4000-ab00-000000000001'),
- ('00000000-0000-4000-ab00-000000000002'),('00000000-0000-4000-ab00-000000000003');
+insert into auth.users(id,email_confirmed_at) values ('00000000-0000-4000-ab00-000000000001',now()),
+ ('00000000-0000-4000-ab00-000000000002',now()),('00000000-0000-4000-ab00-000000000003',now());
 insert into public.orgs(id,owner,kind,name) values
  ('00000000-0000-4000-ab00-000000000011','00000000-0000-4000-ab00-000000000001','school','School A'),
  ('00000000-0000-4000-ab00-000000000012','00000000-0000-4000-ab00-000000000002','school','School B');
