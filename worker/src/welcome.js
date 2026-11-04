@@ -14,7 +14,7 @@ const json = (status, o, h) =>
 const uuid = /^[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}$/i;
 export async function enqueue(u, env, h) {
   if (
-    !u?.email_confirmed_at ||
+    !u?.email_confirmed_at || u.app_metadata?.dk_email_verification_required===true ||
     !uuid.test(u.id) ||
     !/^\S+@\S+$/.test(u.email || "")
   )

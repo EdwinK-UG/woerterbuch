@@ -401,6 +401,7 @@ kbd{font:600 .66rem Inter,system-ui,sans-serif;padding:.1rem .35rem;border-radiu
 <div class="modal" id="modal" aria-hidden="true"><div class="sheet" id="sheet" role="dialog" aria-modal="true" tabindex="-1"></div></div>
 
 <script src="config.js?v=bce20ec90cdd"></script>
+<script src="js/email-verification.js?v=dc82e0086602"></script>
 <script src="js/pages.js?v=4bdfd342abbf"></script>
 <script src="js/course-counts.js?v=a500004e0728"></script>
 <script src="js/study-sync.js?v=9de759f82df1"></script>
@@ -528,6 +529,7 @@ function route(){
   KONTO.applyBrand();
   const request=++routeGeneration;
   const h=location.hash.slice(2)||'';
+  if(window.EMAIL_VERIFY?.handleRoute(h))return;
   let arg;
   const p=h.split('/')[0];
   try{arg=decodeURIComponent(h.split('/').slice(1).join('/')||'')}catch{V().textContent=ui('This link is invalid.','Dieser Link ist ungültig.');return}
@@ -3129,5 +3131,5 @@ if(tabs&&!tabs.querySelector('[data-t="play"]')){const a=document.createElement(
 })();
 </script>
 <!-- ===== /Spiele ===== -->
-<script src="konto.js?v=181b44ae5406"></script>
+<script src="konto.js?v=6429941153ab"></script>
 </body></html>

@@ -15,7 +15,7 @@ export function ownerAccountHandler({url,key,serviceKey,fetcher=fetch}){
       const callerHeaders={apikey:key,Authorization:authorization,'Content-Type':'application/json'};
       const verified=await fetcher(url+'/auth/v1/user',{headers:callerHeaders});
       if(!verified.ok)return answer(401,{error:'Sign in again.'});
-      const caller=await verified.json();if(!caller.id||!caller.email_confirmed_at)return answer(403,{error:'Confirm your email first.'});
+      const caller=await verified.json();if(!caller.id||(!caller.email_confirmed_at||caller.app_metadata?.dk_email_verification_required===true))return answer(403,{error:'Confirm your email first.'});
       const owner=await fetcher(url+'/rest/v1/rpc/is_founder',{method:'POST',headers:callerHeaders,body:'{}'});
       if(!owner.ok||await owner.json()!==true)return answer(403,{error:'Only the site owner can delete accounts.'});
       const body=await request.json().catch(()=>null),id=body?.user_id;

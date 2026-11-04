@@ -14,7 +14,7 @@ export const pending = (h) =>
     { pending: true, message: "Suggestion submitted for editorial review." },
     h,
   );
-export async function authenticated(req, env, h) {
+export async function authenticated(req, env, h, {allowUnverified=false}={}) {
   const token = req.headers.get("Authorization") || "";
   if (!/^Bearer [^\s]+$/i.test(token))
     return reply(401, { error: "Sign in to create new material." }, h);
@@ -33,7 +33,7 @@ export async function authenticated(req, env, h) {
     return reply(r.status===401||r.status===403?401:503,{error:r.status===401||r.status===403?'Your session has ended. Please sign in again.':'Account verification is temporarily unavailable.'},h);
   }
   const u = await r.json();
-  if (!u.id || !u.email_confirmed_at)
+  if (!u.id || (!allowUnverified&&(!u.email_confirmed_at||u.app_metadata?.dk_email_verification_required===true)))
     return reply(403, { error: "Confirm your account first." }, h);
   return u;
 }
