@@ -473,6 +473,26 @@ test('the first mobile pointer tap opens a word preview and compatibility mouse 
  }finally{await s.close();}
 });
 
+test('a learner keeps their school identity across tools, switches cleanly, and loses it on sign-out',async()=>{
+ let org={id:'00000000-0000-4000-ab00-000000000081',name:'Gold School',kind:'school',theme:'#ebdf13',contact_email:'help@gold.invalid',logo_url:'https://site.test/icon-64.png'};
+ const s=await site('#/start',{account:true,profile:()=>Response.json([{user_id:'fixture',role:'learner',display_name:'Learner',unlocked:['A1'],level:'A1',org_id:org.id}]),request:async u=>u.pathname==='/rest/v1/rpc/my_org'?Response.json(org):undefined});
+ try{await until(()=>s.document.documentElement.dataset.school==='true');
+ for(const route of ['#/','#/decks','#/play','#/settings','#/kurs/A1','#/g']){s.window.location.hash=route;await new Promise(r=>setTimeout(r,60));assert.equal(s.document.querySelector('header .brand').textContent,'Gold School');assert.equal(s.document.documentElement.style.getPropertyValue('--brand'),'#ebdf13');assert.ok(s.document.title.includes('Gold School'));assert.ok(s.document.querySelector('.site-footer a[href="mailto:help@gold.invalid"]'));}
+ assert.notEqual(s.document.documentElement.style.getPropertyValue('--ac'),'#ebdf13');assert.equal(s.document.querySelector('link[rel=icon]').href,org.logo_url);
+ org={id:'00000000-0000-4000-ab00-000000000082',name:'Green School',kind:'school',theme:'#28634c',contact_email:'help@green.invalid'};await s.window.KONTO.reload();assert.equal(s.document.querySelector('header .brand').textContent,'GGreen School');assert.ok(!s.document.querySelector('.site-footer').textContent.includes('Gold School'));assert.equal(s.window.KONTO.brand().id,org.id);
+ await s.window.ACCT.signOut();assert.equal(s.document.documentElement.dataset.school,'false');assert.match(s.document.querySelector('header .brand').textContent,/Deutschklinik/);assert.equal(s.window.KONTO.brand(),null);assert.equal(s.document.documentElement.style.getPropertyValue('--brand'),'');assert.deepEqual(s.errors,[]);
+ }finally{await s.close()}
+});
+test('visitors retain a public school identity while exploring its learning tools',async()=>{
+ const org={id:'00000000-0000-4000-ab00-000000000081',name:'Gold School',kind:'school',theme:'#ac8935'};
+ const s=await site('#/schule/'+org.id,{request:async u=>u.pathname==='/rest/v1/rpc/org_page'?Response.json(org):u.pathname==='/rest/v1/rpc/org_public_terms'?Response.json([]):undefined});
+ try{await until(()=>s.window.KONTO.brand()?.id===org.id);s.window.location.hash='#/';await until(()=>s.document.querySelector('#q'));assert.ok(s.document.querySelector('header .brand').textContent.includes(org.name));assert.equal(s.window.KONTO.brand().id,org.id);assert.equal(s.document.querySelector('#tabs a[data-t=start]').getAttribute('href'),'#/schule/'+org.id);s.window.ACCT.sheet('in');assert.ok(s.document.querySelector('#modal').textContent.includes(org.name));}finally{await s.close()}
+});
+test('a late public school response cannot overwrite the current learner school',async()=>{
+ let release;const held=new Promise(r=>release=r),own={id:'00000000-0000-4000-ab00-000000000081',name:'Own School',kind:'school',theme:'#28634c'};
+ const s=await site('#/schule/00000000-0000-4000-ab00-000000000082',{account:true,profile:()=>Response.json([{user_id:'fixture',role:'learner',unlocked:['A1'],level:'A1',org_id:own.id}]),request:async u=>{if(u.pathname==='/rest/v1/rpc/my_org')return Response.json(own);if(u.pathname==='/rest/v1/rpc/org_page')return held;if(u.pathname==='/rest/v1/rpc/org_public_terms')return Response.json([])}});
+ try{await until(()=>s.window.KONTO.brand()?.id===own.id);s.window.location.hash='#/decks';await new Promise(r=>setTimeout(r,50));release(Response.json({id:'00000000-0000-4000-ab00-000000000082',name:'Other School',kind:'school',theme:'#cc8855'}));await new Promise(r=>setTimeout(r,100));assert.equal(s.window.KONTO.brand().id,own.id);assert.ok(!s.document.querySelector('header .brand').textContent.includes('Other School'));}finally{release(Response.json(null));await s.close()}
+});
 test('grouped appearance and account controls remain operable',async()=>{
  const s=await site('#/start');try{const group=s.document.querySelector('.header-tools'),theme=group.querySelector('#theme');assert.ok(group.querySelector('#acct'));theme.click();assert.equal(s.document.documentElement.dataset.theme,'dark');assert.equal(theme.getAttribute('aria-pressed'),'true');theme.click();assert.equal(s.document.documentElement.dataset.theme,'light');group.querySelector('#acct').click();await until(()=>s.document.querySelector('#ac_em'));assert.deepEqual(s.errors,[]);}finally{await s.close()}
 });
@@ -481,9 +501,9 @@ test('unchanged school refresh keeps the hero, logo and favicon mounted',async()
  const s=await site('#/start/'+org.id,{account:true,profile:()=>Response.json([{user_id:'fixture',role:'school',unlocked:[],org_id:org.id}]),request:async u=>{
  if(u.pathname==='/rest/v1/orgs')return Response.json([org]);if(u.pathname==='/rest/v1/rpc/my_org')return Response.json(org);if(u.pathname==='/rest/v1/classes'){loads++;return Response.json([])}
  }});try{await until(()=>s.document.querySelector('.kd-hero'));
- const hero=s.document.querySelector('.kd-hero'),logo=s.document.querySelector('#orgbrand img'),favicon=s.document.querySelector('link[rel=icon]'),before=loads;
+ const hero=s.document.querySelector('.kd-hero'),logo=s.document.querySelector('header .brand img'),favicon=s.document.querySelector('link[rel=icon]'),before=loads;assert.ok(logo);
  s.window.KONTO.refresh();assert.equal(s.document.querySelector('.kd-hero'),hero);await until(()=>loads>before);await new Promise(r=>setTimeout(r,100));assert.equal(s.document.querySelector('.kd-hero'),hero);
- await s.window.KONTO.reload();await new Promise(r=>setTimeout(r,100));assert.equal(s.document.querySelector('#orgbrand img'),logo);assert.equal(s.document.querySelector('link[rel=icon]'),favicon);assert.equal(s.document.querySelector('.kd-hero'),hero);assert.deepEqual(s.errors,[]);
+ await s.window.KONTO.reload();await new Promise(r=>setTimeout(r,100));assert.equal(s.document.querySelector('header .brand img'),logo);assert.equal(s.document.querySelector('link[rel=icon]'),favicon);assert.equal(s.document.querySelector('.kd-hero'),hero);assert.deepEqual(s.errors,[]);
  }finally{await s.close()}
 });
 for(const kind of ['teacher','school'])test(`a ${kind} gets its own favicon and can send an addressed invitation`,async()=>{

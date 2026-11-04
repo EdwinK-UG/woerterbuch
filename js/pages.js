@@ -12,13 +12,19 @@ function updatePageMetadata() {
     lists: ["Revision lists", "Revisionslisten"],
     decks: ["Flashcards", "Lernkarten"],
     play: ["Play", "Spielen"],
+    klasse: ["Classes & invitations", "Klassen & Einladungen"],
+    settings: ["Settings", "Einstellungen"],
+    kurs: ["My course", "Mein Kurs"],
+    aufgaben: ["Assignments", "Aufgaben"],
+    schule: ["School", "Schule"],
+    admin: ["Owner dashboard", "Übersicht"],
     "": ["German dictionary", "Deutsches Wörterbuch"],
   };
   const title =
     word || (names[parts[0]] ? ui(...names[parts[0]]) : "Deutschklinik");
-  const school = window.KONTO?.org()?.name;
+  const school = window.KONTO?.brand()?.name;
   document.title =
-    title + " · " + (school ? school + " · " : "") + "Deutschklinik";
+    title + " · " + (school || "Deutschklinik");
   const description = document.querySelector('meta[name="description"]');
   if (description)
     description.content = word

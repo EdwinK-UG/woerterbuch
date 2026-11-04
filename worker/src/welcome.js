@@ -1,6 +1,7 @@
 import { authenticated } from "./control.js";
 import { smtpSend } from "./mail-body.js";
 import { welcomeContent } from "./welcome-template.js";
+import {mailBrand} from './mail-brand.js';
 const json = (status, o, h) =>
   new Response(JSON.stringify(o), {
     status,
@@ -108,7 +109,13 @@ export async function drainMail(env, send = smtpSend) {
       .first();
     if (!row) continue;
     try {
-      const content=welcomeContent(site.href,JSON.parse(row.context||'{}'));
+      let context=JSON.parse(row.context||'{}');
+      if(env.WELCOME_HOOK_SECRET){
+        const response=await fetch(new URL('/rest/v1/rpc/welcome_brand_context',env.SUPABASE_URL),{method:'POST',headers:{apikey:env.SUPABASE_PUBLISHABLE_KEY,'Content-Type':'application/json'},body:JSON.stringify({p_user:user_id,p_worker_secret:env.WELCOME_HOOK_SECRET}),signal:AbortSignal.timeout(7000),redirect:'manual'});
+        if(!response.ok)throw Error('Welcome context unavailable');
+        context=await response.json();
+      }
+      const content=welcomeContent(site.href,context),branding=mailBrand(context.org||{});
       if (!(await env.IMG.get("welcome|" + user_id)))
         await send(
           env.SMTP_USER.trim(),
@@ -121,8 +128,8 @@ export async function drainMail(env, send = smtpSend) {
           smtpHost,
           smtpPort,
           undefined,
-          'support@deutschklinik.com',
-          {from:'hello@deutschklinik.com',fromName:'Deutschklinik'},
+          branding.contact,
+          {from:'hello@deutschklinik.com',fromName:branding.name==='Deutschklinik'?'Deutschklinik':branding.name+' · Deutschklinik'},
         );
     } catch (error) {
       const reason = /bad address/.test(error?.message || "") ? "address" : /timed? ?out/i.test(error?.message || "") ? "timeout" : /tls|ssl/i.test(error?.message || "") ? "tls" : /closed|reset|connection/i.test(error?.message || "") ? "connection" : "error";
