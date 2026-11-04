@@ -35,7 +35,7 @@ async function courseContext(req,env,classId){
   if(manager!==true)return null;
   const course=(await supabase(env,`/rest/v1/classes?select=id,org_id,teacher_id,name,level,term_name,starts_on,ends_on,schedule,course_details&id=eq.${classId}`,token))?.[0];
   if(!course)return null;
-  const org=(await supabase(env,`/rest/v1/orgs?select=name,logo_url,theme,owner&id=eq.${course.org_id}`,token))?.[0]||{};
+  const org=(await supabase(env,`/rest/v1/orgs?select=name,kind,logo_url,theme,owner,contact_email&id=eq.${course.org_id}`,token))?.[0]||{};
   const teacher=(await supabase(env,`/rest/v1/profiles?select=display_name&user_id=eq.${course.teacher_id||org.owner}`,token))?.[0]?.display_name||org.name;
   return {course,org,teacher};
 }
@@ -81,9 +81,9 @@ export async function sendCourseInvitation(req, env, headers, send = smtpSend) {
   if(!course.term_name||!course.starts_on||!course.ends_on||!course.schedule)return json(400,{error:'Complete the term name, dates and timetable in class setup before sending invitations.'},headers);
   if(!env.SMTP_USER||!env.SMTP_PASSWORD)return json(503,{error:'Mail is not configured.'},headers);
   const content=invitationContent({...context,name,note,inviteUrl:url.href});
-  return deliverInvitation(env,headers,user,invitation.code,to,content,context.org.name,send);
+  return deliverInvitation(env,headers,user,invitation.code,to,content,context.org.name,send,email(context.org.contact_email)?context.org.contact_email:user.email);
 }
-async function deliverInvitation(env,headers,user,id,to,content,brand,send=smtpSend){
+async function deliverInvitation(env,headers,user,id,to,content,brand,send=smtpSend,replyTo=user.email){
   const now=Date.now(),day=new Date(now).toISOString().slice(0,10);
   const existing=await env.DB.prepare('SELECT state,updated_at,attempts FROM invitation_mail WHERE id=?1').bind(id).first();
   if(existing?.state==='sent')return json(200,{sent:true,already_sent:true},headers);
@@ -93,7 +93,7 @@ async function deliverInvitation(env,headers,user,id,to,content,brand,send=smtpS
   if(!claim)return json(429,{error:'The invitation sending limit has been reached. Please try again tomorrow or contact support.'},headers);
   const transport=smtp(env);
   try{
-    await send(env.SMTP_USER.trim(),env.SMTP_PASSWORD.replace(/\s+/g,''),to,content.subject,content.text,content.html,'invite-'+id,transport.host,transport.port,undefined,user.email,{from:env.INVITATION_FROM||'hello@deutschklinik.com',fromName:brand&&brand!=='Deutschklinik'?brand+' · Deutschklinik':'Deutschklinik'});
+    await send(env.SMTP_USER.trim(),env.SMTP_PASSWORD.replace(/\s+/g,''),to,content.subject,content.text,content.html,'invite-'+id,transport.host,transport.port,undefined,replyTo,{from:env.INVITATION_FROM||'hello@deutschklinik.com',fromName:brand&&brand!=='Deutschklinik'?brand+' · Deutschklinik':'Deutschklinik'});
   }catch(error){
     await env.DB.prepare("UPDATE invitation_mail SET state='failed',last_error=?2,updated_at=?3 WHERE id=?1").bind(id,diagnostic(error),Date.now()).run();
     return json(502,{error:mailProblem(error),reference:id},headers);

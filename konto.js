@@ -17,6 +17,19 @@ const okUrl = u => /^https:\/\/[^\s<>"']+$/.test(String(u || ''));
 
 let profileRequest = 0;
 let P = null, ORG = null, OFF = false, loading = null, mine = { orgs: [], staff: [] }, CUR = '';
+let pageBrand=null,staffBrand=null,visitorBrand=null;
+const platformBrand=document.querySelector('header .brand')?.innerHTML||'';
+function brand(){
+  const user=me()?.id||null;
+  if(me()&&!P)return null;
+  if(P?.role==='founder'&&location.hash.startsWith('#/admin'))return null;
+  if(pageBrand?.hash===location.hash&&pageBrand.user===user)return pageBrand.org;
+  if(P?.role==='learner')return ORG;
+  if(staffBrand?.user===user&&isStaff())return staffBrand.org;
+  if(ORG)return ORG;
+  if(!me()){const invite=INV()?.pv;if(invite?.type==='org')return {id:invite.org_id,name:invite.org,kind:invite.kind,theme:invite.theme,logo_url:invite.logo_url,contact_email:invite.contact_email};return visitorBrand;}
+  return null;
+}
 
 /* ---------- language: menus and account pages in English or German; the courses themselves stay German ---------- */
 function lang() {
@@ -44,7 +57,7 @@ async function load() {
   const u = me(), request = ++profileRequest;
   const current = () => request === profileRequest && me()?.id === u?.id;
   OFF = false;
-  if (P?.user_id !== u?.id) { P = null; ORG = null; mine = {orgs:[],staff:[]}; }
+  if (P?.user_id !== u?.id) { P = null; ORG = null; pageBrand=null;staffBrand=null;visitorBrand=null;mine = {orgs:[],staff:[]}; }
   if (!u) { P = null; ORG = null; mine = { orgs: [], staff: [] }; apply(); return; }
   try {
     let rows = await q('/rest/v1/profiles?select=*&user_id=eq.' + u.id);
@@ -76,10 +89,11 @@ async function load() {
       } catch (e) {}
     }
     if (!current()) return;
-    P = profile; ORG = org; mine = memberships;
+    P = profile; ORG = org || memberships.orgs[0] || null; mine = memberships;
+    if(staffBrand){const updated=memberships.orgs.find(o=>o.id===staffBrand.org.id);if(updated)staffBrand={user:u.id,org:updated};else if(!memberships.staff.includes(staffBrand.org.id))staffBrand=null;else{const rows=await q('/rest/v1/orgs?select=*&id=eq.'+staffBrand.org.id);staffBrand=rows?.[0]?{user:u.id,org:rows[0]}:null;}}
     await pendingLogo();
     if (!current() || await handleInvite()) return;
-  } catch (e) { if (!current()) return; OFF = true; P = null; ORG = null; mine = {orgs:[],staff:[]}; }
+  } catch (e) { if (!current()) return; OFF = true; P = null; ORG = null;pageBrand=null;staffBrand=null;mine = {orgs:[],staff:[]}; }
   if (current()) apply();
 }
 function reload() { loading = load(); return loading; }
@@ -183,44 +197,61 @@ function applyNav() {
   document.documentElement.dataset.ui = en ? 'en' : 'de';
   document.documentElement.lang = en ? 'en' : 'de';
   tabs.querySelectorAll('a[data-t]').forEach(a => {
-    const t = NAV[a.dataset.t]; if (!t) return; const s = a.querySelector('span'); if (s) s.textContent = t[en ? 0 : 1];
+    let t = NAV[a.dataset.t]; if (!t) return;
+    if(brand()?.kind==='school'&&me()){if(a.dataset.t==='start')t=P?.role==='learner'?['Classroom','Kursraum']:['Overview','Übersicht'];if(a.dataset.t==='home')t=['Dictionary','Wörterbuch'];}
+    const s = a.querySelector('span'); if (s) s.textContent = t[en ? 0 : 1];
     const f = TAB_F[a.dataset.t], off = f && mode(f) === 'off' && !isFounder(), lk = f && !off && !can(f);
     a.hidden = !!off || a.dataset.t === 'cats' || (!me() && !['start','home','play'].includes(a.dataset.t)); a.classList.toggle('ks-lk', !!lk);
     let k = a.querySelector('.ks-lki'); if (lk && !k) a.insertAdjacentHTML('beforeend', LOCK); if (!lk && k) k.remove();
     a.title = t[en ? 0 : 1] + (lk ? ' – ' + T('locked', 'gesperrt') : '');
   });
   const b = document.querySelector('header .brand'); if (b) b.setAttribute('href', '#/start');
+  if(st)st.href=!me()&&brand()?.kind==='school'?'#/schule/'+brand().id:'#/start';
   const ab = $('acct'); if (ab && !me()) { const sp = ab.querySelector('span'); if (sp) sp.textContent = T('Sign in', 'Anmelden'); ab.title = T('Sign in or create a free account', 'Anmelden oder kostenloses Konto erstellen'); }
   if(ab){ab.setAttribute('aria-label',me()?T('Open your account','Konto öffnen'):T('Sign in','Anmelden'));const label=ab.querySelector('.account-label');if(label)label.textContent=T('Account','Konto');}
   icons();
 }
 const LOCK = '<svg class="ks-lki" viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
-const ink = hex => { const m = /^#?([0-9a-f]{6})$/i.exec(hex || ''); if (!m) return '#fff'; const n = parseInt(m[1], 16), c = [n >> 16, n >> 8 & 255, n & 255].map(v => { v /= 255; return v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); }); return .2126 * c[0] + .7152 * c[1] + .0722 * c[2] > .45 ? '#14202e' : '#fff'; };
+const ink = hex => { const m = /^#?([0-9a-f]{6})$/i.exec(hex || ''); if (!m) return '#fff'; const n = parseInt(m[1], 16), c = [n >> 16, n >> 8 & 255, n & 255].map(v => { v /= 255; return v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); }); const light=.2126*c[0]+.7152*c[1]+.0722*c[2];return light>.179?((light+.05)/.0638>=4.5?'#14202e':'#000000'):'#fff'; };
+function readableAccent(hex){
+  const channels=hex.slice(1).match(/../g).map(v=>parseInt(v,16));
+  const luminance=rgb=>rgb.map(v=>{v/=255;return v<=.03928?v/12.92:((v+.055)/1.055)**2.4}).reduce((a,v,i)=>a+v*[.2126,.7152,.0722][i],0);
+  const dark=document.documentElement.dataset.theme==='dark'||(!document.documentElement.dataset.theme&&matchMedia('(prefers-color-scheme:dark)').matches),background=dark?.009:.905;
+  for(let i=0;i<=20;i++){const mix=channels.map(v=>Math.round(v*(1-i/20)+(dark?255:0)*i/20)),light=luminance(mix);if((Math.max(light,background)+.05)/(Math.min(light,background)+.05)>=4.5)return '#'+mix.map(v=>v.toString(16).padStart(2,'0')).join('');}
+  return dark?'#ffffff':'#20242b';
+}
 function applyBrand() {
-  const root = document.documentElement, b = document.querySelector('header .brand');
-  let el = $('orgbrand');
-  if (ORG && ORG.name) {
-    if (!el && b) { el = document.createElement('a'); el.id = 'orgbrand'; b.after(el); }
-    if (el) { el.href = '#/schule/' + ORG.id; el.title = ORG.name; const key=JSON.stringify([ORG.id,ORG.logo_url,ORG.kind,ORG.name]);if(el.dataset.brandKey!==key){el.dataset.brandKey=key;el.innerHTML = `${okUrl(ORG.logo_url) ? `<img src="${esc(ORG.logo_url)}" alt="" width="28" height="28" referrerpolicy="no-referrer">` : icn(ORG.kind === 'school' ? 'school' : 'graduation-cap')}<span>${esc(ORG.name)}</span>`;} }
-    if (/^#[0-9a-f]{6}$/i.test(ORG.theme || '')) { root.style.setProperty('--ac', ORG.theme); root.style.setProperty('--org', ORG.theme); }
-    else { root.style.removeProperty('--ac'); root.style.removeProperty('--org'); }
-    document.title = ORG.name + ' · Deutschklinik';
-  } else { if (el) el.remove(); root.style.removeProperty('--ac'); root.style.removeProperty('--org'); document.title = 'Deutschklinik'; }
-  if(window.updatePageMetadata)updatePageMetadata();
-  const colour=ORG&&/^#[0-9a-f]{6}$/i.test(ORG.theme||'')?ORG.theme:null;
-  root.style.setProperty('--ac-ink',colour?ink(colour):'#fff');
-  if(colour)root.style.setProperty('--ac-salt',`color-mix(in srgb, ${colour} 14%, var(--card))`);else root.style.removeProperty('--ac-salt');
-  setBrandIcon(colour);
-  icons();
+  const root=document.documentElement,o=brand(),school=o?.kind==='school',b=document.querySelector('header .brand');
+  root.dataset.school=String(!!school);
+  if(b){
+    const markup=school?`${okUrl(o.logo_url)?`<img src="${esc(o.logo_url)}" width="38" height="38" alt="" class="logo school-brand-logo" referrerpolicy="no-referrer">`:`<span class="school-brand-monogram" aria-hidden="true">${esc(o.name.slice(0,1))}</span>`}<span class="school-brand-name">${esc(o.name)}</span>`:platformBrand;
+    if(b.dataset.identity!==markup){b.innerHTML=markup;b.dataset.identity=markup;}
+    b.href=school?(!me()?'#/schule/'+o.id:'#/start'):'#/start';b.setAttribute('aria-label',school?o.name+' · '+T('Home','Startseite'):'Deutschklinik');
+  }
+  let el=$('orgbrand');
+  if(o&&!school){
+    if(!el&&b){el=document.createElement('a');el.id='orgbrand';b.after(el);}
+    if(el){el.href='#/schule/'+o.id;el.title=o.name;const key=JSON.stringify([o.id,o.logo_url,o.name]);if(el.dataset.brandKey!==key){el.dataset.brandKey=key;el.innerHTML=`${okUrl(o.logo_url)?`<img src="${esc(o.logo_url)}" width="28" height="28" alt="" referrerpolicy="no-referrer">`:icn('graduation-cap')}<span>${esc(o.name)}</span>`;}}
+  }else if(el)el.remove();
+  const colour=o&&/^#[0-9a-f]{6}$/i.test(o.theme||'')?o.theme:null;
+  if(colour){root.style.setProperty('--brand',colour);root.style.setProperty('--org',colour);root.style.setProperty('--ac',readableAccent(colour));root.style.setProperty('--ac-salt',`color-mix(in srgb, ${colour} 14%, var(--card))`);root.style.setProperty('--brand-ink',ink(colour));root.style.setProperty('--ac-ink',ink(colour));}
+  else{for(const key of ['--brand','--org','--ac','--ac-salt','--brand-ink','--ac-ink'])root.style.removeProperty(key);}
+  setBrandIcon(colour,school&&okUrl(o.logo_url)?o.logo_url:null);
+  const footer=document.querySelector('.site-footer');
+  if(footer){const contact=school&&/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(o.contact_email||'')?'mailto:'+o.contact_email:school?'#/schule/'+o.id:'mailto:support@deutschklinik.com';
+    const markup=`${school?`<a class="school-footer-name" href="#/schule/${o.id}">${esc(o.name)}</a>`:''}<a href="#/privacy">${T('Privacy','Datenschutz')}</a><a href="${esc(contact)}">${school?T('School help','Hilfe der Schule'):T('Support','Hilfe')}</a>${school?`<small class="powered-by">${T('Powered by','Mit')} <a href="https://deutschklinik.com/" target="_blank" rel="noopener">Deutschklinik</a></small>`:''}`;
+    if(footer.dataset.identity!==markup){footer.innerHTML=markup;footer.dataset.identity=markup;}
+  }
+  if(window.updatePageMetadata)updatePageMetadata();icons();
 }
 let brandIconColour;
-function setBrandIcon(colour){
-  if(brandIconColour===colour&&document.querySelectorAll('link[rel="icon"]').length===1)return;
-  brandIconColour=colour;
+function setBrandIcon(colour,logo=null){
+  const key=JSON.stringify([colour,logo]);if(brandIconColour===key&&document.querySelectorAll('link[rel="icon"]').length===1)return;brandIconColour=key;
   document.querySelectorAll('link[rel="icon"]').forEach(link=>link.remove());
-  const favicon=document.createElement('link');favicon.rel='icon';favicon.type='image/svg+xml';
-  favicon.href=colour?'data:image/svg+xml,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="18" fill="${colour}"/><text x="32" y="46" text-anchor="middle" font-family="Georgia,serif" font-size="46" fill="${ink(colour)}">D</text></svg>`):'favicon.svg?v=3';
+  const favicon=document.createElement('link');favicon.rel='icon';
+  if(logo)favicon.href=logo;else{favicon.type='image/svg+xml';favicon.href=colour?'data:image/svg+xml,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="18" fill="${colour}"/><text x="32" y="46" text-anchor="middle" font-family="Georgia,serif" font-size="46" fill="${ink(colour)}">D</text></svg>`):'favicon.svg?v=3';}
   document.head.append(favicon);
+  let meta=document.querySelector('meta[name="theme-color"]');if(!meta){meta=document.createElement('meta');meta.name='theme-color';document.head.append(meta);}meta.content=colour||'#f6f4ef';
 }
 function apply() {
   applyNav(); applyBrand();
@@ -372,6 +403,7 @@ async function openInvite(t, code) {
   const pv = await invitePreview(code);
   if (!pv) { LSs('gd_inv', null); if (!me()) LSs('gd_lang', 'en'); toastM(T('This invitation is no longer valid. Please ask for a new link.', 'Diese Einladung ist nicht mehr gültig. Bitte frag nach einem neuen Link.')); return; }
   LSs('gd_inv', { t: pv.type === 'org' ? 'join' : 'invite', code, pv });
+  applyBrand();
   if (me()) { await reload(); return; }
   LSs('gd_lang', 'en'); applyNav();
   if (A() && A().sheet) A().sheet('up');
@@ -571,7 +603,7 @@ async function loadOrg(org) {
   next.tasks = next.classes.length ? await q('/rest/v1/assignments?select=*&class_id=in.(' + next.classes.map(c => c.id).join(',') + ')&order=due_at.asc.nullslast') || [] : [];
   if (next.classes.length) try { next.liveRequests = await q('/rest/v1/live_class_requests?select=*&class_id=in.(' + next.classes.map(c => c.id).join(',') + ')&order=created_at.desc') || []; } catch (e) { next.liveRequests = []; }
   if(request!==orgLoadGeneration||me()?.id!==user)return false;
-  D=next;setBrandIcon(/^#[0-9a-f]{6}$/i.test(org.theme||'')?org.theme:null);return true;
+  D=next;staffBrand={user,org};applyNav();applyBrand();return true;
 }
 const sName = id => esc((D.profiles[id] && D.profiles[id].display_name) || T('(no name)', '(ohne Namen)'));
 const curLv = p => (p && LV.includes(p.level) && p.unlocked.includes(p.level) ? p.level : p && p.unlocked.slice(-1)[0] || null);
@@ -752,7 +784,7 @@ function sendClassInvite(id) {
   const c=D.classes.find(x=>x.id===id);if(!c)return;
   classInviteDraft=null;
   const complete=!!(c.term_name&&c.starts_on&&c.ends_on&&c.schedule);
-  openSheet(`<h3>${T('Invite a learner','Lernende einladen')}</h3><p class="ks-tip">${T('From hello@deutschklinik.com · replies go to you.','Von hello@deutschklinik.com · Antworten gehen an Sie.')}</p>
+  openSheet(`<h3>${T('Invite a learner','Lernende einladen')}</h3><p class="ks-tip">${T('From hello@deutschklinik.com · replies go to ','Von hello@deutschklinik.com · Antworten gehen an ')}${esc(D.org.contact_email||T('your verified email.','Ihre bestätigte E-Mail.'))}</p>
     <div class="ks-form"><label>${T('Teaching term','Kursdurchgang')}<select class="input" id="ci_class" onchange="KONTO.sendClassInvite(this.value)">${D.classes.map(x=>`<option value="${x.id}"${x.id===id?' selected':''}>${esc(x.name)} · ${esc(x.term_name||x.level)}</option>`).join('')}</select></label>
     <div class="invite-summary"><span class="play-eyebrow">${esc(c.level)} · ${esc(c.term_name||'')}</span><h4>${esc(c.name)}</h4><p>${dt(c.starts_on)} – ${dt(c.ends_on)}</p><p>${esc(c.schedule||T('Add a timetable in term setup','Zeitplan in den Kurseinstellungen ergänzen'))}</p>${c.course_details?`<details><summary>${T('What is included','Kursangebot')}</summary><p>${esc(c.course_details)}</p></details>`:''}</div>
     <label>${T('Learner name','Name der lernenden Person')}<input class="input" id="ci_name" maxlength="60" autocomplete="off"></label><label>${T('Learner email','E-Mail der lernenden Person')}<input class="input" id="ci_email" type="email" maxlength="120" autocomplete="off" required></label><label>${T('Personal note (optional)','Persönliche Nachricht (optional)')}<textarea class="input" id="ci_note" maxlength="500" rows="2"></textarea></label></div>
@@ -874,11 +906,12 @@ async function deleteAccount(id){
 
 /* ---------- a school's or teacher's own home page ---------- */
 async function viewOrgPage(id) {
-  busy();if(me())await ready();
+  const requestedHash=location.hash,requestedUser=me()?.id||null;busy();if(me())await ready();
   let o=null,terms=[];
   try{if(/^[0-9a-f-]{36}$/i.test(id||'')){const rpcCall=me()?rpc:rpcAnon;[o,terms]=await Promise.all([rpcCall('org_page',{p_id:id}),rpcCall('org_public_terms',{p_org:id})]);}}catch(e){}
+  if(location.hash!==requestedHash||(me()?.id||null)!==requestedUser)return;
   if(!o)return page(T('Not found','Nicht gefunden'),`<p class="sub">${T('This teaching page is not available.','Diese Unterrichtsseite ist nicht verfügbar.')}</p>`);
-  setBrandIcon(/^#[0-9a-f]{6}$/i.test(o.theme||'')?o.theme:null);
+  pageBrand={hash:location.hash,user:me()?.id||null,org:o};if(!me())visitorBrand=o;applyNav();applyBrand();
   const own=!!mine.orgs.find(x=>x.id===o.id),member=!!(ORG&&ORG.id===o.id),where=[o.city,o.country].filter(Boolean).map(esc).join(' · ');
   page('',`<div class="teacher-page">${hero(o,`<p class="kd-eye">${esc(o.org_type||(o.kind==='school'?T('Language school','Sprachschule'):T('German teacher','Deutschlehrkraft')))}${where?' · '+where:''}</p><h1>${esc(o.name)}</h1>${o.tagline?`<p class="kd-hi">${esc(o.tagline)}</p>`:''}<div class="row">${own?`<a class="btn kd-cta" href="#/settings">${icn('palette')} ${T('Personalise my page','Meine Seite gestalten')}</a><a class="btn kd-ghost" href="#/start/${o.id}">${T('My dashboard','Meine Übersicht')}</a>`:member?`<a class="btn kd-cta" href="#/start">${T('My classroom','Mein Kursraum')}</a>`:`<button class="btn kd-cta" onclick="KONTO.codeSheet()">${icn('mail-open')} ${T('Accept an invitation','Einladung annehmen')}</button>`}${okUrl(o.website)?`<a class="btn kd-ghost" href="${esc(o.website)}" target="_blank" rel="noopener noreferrer">${icn('arrow-up-right')} ${T('Website','Website')}</a>`:''}</div>`)}
   <div class="teacher-story"><div>${o.about?`<p class="play-eyebrow">${o.kind==='school'?T('About our school','Über unsere Schule'):T('Meet your teacher','Ihre Lehrkraft kennenlernen')}</p><h2>${T('Learning, your way.','Lernen auf Ihre Art.')}</h2><p class="teacher-bio">${esc(o.about).replace(/\n/g,'<br>')}</p>`:own?`<h2>${T('Make this space yours.','Gestalten Sie Ihren Bereich.')}</h2><p>${T('Add your story, a portrait or logo, your languages and a welcome message in Settings.','Ergänzen Sie Ihre Geschichte, ein Porträt oder Logo, Ihre Sprachen und einen Willkommenstext in den Einstellungen.')}</p>`:`<div class="teacher-intro">${SiteDesign.art('words')}<h2>${T('Make room for German.','Platz für Deutsch.')}</h2><p>${T('Use your invitation to open your classroom.','Mit Ihrer Einladung öffnet sich Ihr Kursraum.')}</p></div>`}</div><aside>${o.owner_name?`<p>${icn('user-round')} ${esc(o.owner_name)}</p>`:''}${o.languages?`<p>${icn('languages')} ${esc(o.languages)}</p>`:''}${(o.levels||[]).length?`<div class="kd-lvchips">${lvSort(o.levels).map(l=>`<span class="gr-lv ${l}">${l}</span>`).join('')}</div>`:''}<small>${T('Teaching on Deutschklinik since','Bei Deutschklinik seit')} ${dt(o.created_at)}</small></aside></div>
@@ -894,6 +927,7 @@ function codeSheet() {
 function orgForm(o, kind) {
   kind = o ? o.kind : kind; const v = o || {};
   return `${detailFields(kind, v, 'ko')}
+    <label class="ks-l">${T('Public learner-help email (optional)','Öffentliche Kontakt-E-Mail für Lernende (optional)')}<input class="input" id="ko_contact_email" type="email" maxlength="120" value="${esc(v.contact_email||'')}" placeholder="help@your-school.com"><small>${T('Shown to your learners and used for replies to school welcome emails. Your private account email stays private.','Für Lernende und Antworten auf Willkommens-E-Mails. Die private Konto-E-Mail bleibt privat.')}</small></label>
     ${kind === 'teacher' ? `<label class="ks-l">${T('Name on your page', 'Name auf Ihrer Seite')}<input class="input" id="ko_name" maxlength="80" value="${esc(v.name || P.display_name || '')}"></label>
       <label class="ks-l">${T('Colour', 'Farbe')}<input class="input" id="ko_theme" type="color" value="${esc(/^#[0-9a-f]{6}$/i.test(v.theme || '') ? v.theme : '#1f6feb')}"></label>` : ''}
     <label class="ks-l">${T('Welcome message for your learners (on their home page)', 'Begrüßung für Ihre Lernenden (auf deren Startseite)')}<textarea class="input" id="ko_welcome" rows="2" maxlength="600">${esc(v.welcome || '')}</textarea></label>
@@ -904,6 +938,7 @@ function orgForm(o, kind) {
 async function saveOrg(id, kind) {
   const d = readDetails(kind, 'ko'), g = k => ($('ko_' + k) || {}).value;
   const body = { tagline: d.tagline || null, about: d.about || null, city: d.city || null, country: d.country || null, website: d.website || null, welcome: (g('welcome') || '').trim() || null, cover: g('cover') || 'waves' };
+  const contact=$('ko_contact_email');if(contact&&!contact.reportValidity())return;body.contact_email=(contact?.value||'').trim().toLowerCase()||null;
   if (kind === 'teacher') { body.name = (g('name') || '').trim(); body.languages = d.languages || null; body.theme = g('theme'); }
   else { body.name = d.name; body.org_type = d.org_type || null; body.theme = d.theme; }
   if (!body.name || body.name.length < 2) return toastM(T('Please enter a name.', 'Bitte einen Namen eingeben.'));
@@ -920,7 +955,7 @@ async function viewSettings() {
   if (!me()) return need();
   busy(); await ready();
   if (OFF || !P) return page(T('Settings', 'Einstellungen'), `<p class="sub">${T('Your account could not be loaded.', 'Dein Konto konnte nicht geladen werden.')}</p>${retryProfile()}`);
-  const learner = P.role === 'learner', own = mine.orgs[0], school = P.org_id && ORG && !ORG.owner;
+  const learner = P.role === 'learner', own = mine.orgs.find(o=>o.id===brand()?.id)||mine.orgs[0], school = P.org_id && ORG && !ORG.owner;
   const sec = (ic, h, body) => `<section class="kd-card kd-set"><h3>${icn(ic)} ${h}</h3>${body}</section>`;
   page(T('Settings', 'Einstellungen'), `
     ${sec('user-round', T('Profile', 'Profil'), `<div class="ks-form"><label>${T('E-mail', 'E-Mail')}<input class="input" value="${esc(me().email || '')}" disabled></label>
@@ -1164,7 +1199,7 @@ header .brand{flex-shrink:0}@media(min-width:1100px){header .wrap{max-width:1220
 document.head.appendChild(st);
 
 /* ---------- start ---------- */
-window.KONTO = { level, lang, passMark, canOpen, lvState, unlock, lockSheet, unlocked: unlockedSet, profile: () => P, org: () => ORG, view, routes: ROUTES, fillMe, saveLevel, askLevel,
+window.KONTO = { level, lang, passMark, canOpen, lvState, unlock, lockSheet, unlocked: unlockedSet, profile: () => P, org: () => ORG, brand, applyBrand, view, routes: ROUTES, fillMe, saveLevel, askLevel,
   signupFields, signupCheck, signupData, request, reqFields, sendRequest, join, decide, inviteSheet, makeSiteInvite, delSiteInvite, codeSheet,
   saveOrg, dropLogo, orgPass, addClass, classPass, invite, delInvite, moveMember, removeMember, addTask, delTask, copy, reload, refresh, liveClassSheet, saveLiveClass, sendClassInvite, sendClassInviteNow, inviteLearner, previewInvite, loadOwnerUsers, deleteAccountSheet, deleteAccount, decideLiveRequest, applyLiveClass,
   student, unlockFor, saveSettings, setCourse, unenroll, leave, T, can, gate, featureOf, saveSite, lookup, signupAs, checkInvitationMail, previewWelcome: () => { location.hash = '#/start/besucher'; } };
@@ -1176,7 +1211,8 @@ window.addEventListener('acct:in', e => { reload().then(() => {
     if($('ci_name'))$('ci_name').value=pending.name;if($('ci_email'))$('ci_email').value=pending.to;if($('ci_note'))$('ci_note').value=pending.note;
   }
 }); });
-window.addEventListener('acct:out', () => { profileRequest++; loading=null; OFF=false; P = null; ORG = null; mine = { orgs: [], staff: [] }; apply(); if (/^#?\/?$/.test(location.hash)) location.hash = '#/start'; });
+window.addEventListener('acct:out', () => { profileRequest++; loading=null; OFF=false; P = null; ORG = null;pageBrand=null;staffBrand=null;visitorBrand=null;LSs('gd_inv',null);mine = { orgs: [], staff: [] }; apply(); if (/^#?\/?$/.test(location.hash)) location.hash = '#/start'; });
+window.addEventListener('app:theme',applyBrand);
 // invitation links: …/?join=CODE (school or teacher) and …/?invite=CODE (from the site owner)
 const sp = new URLSearchParams(location.search), jc = sp.get('join'), ic = sp.get('invite');
 if (jc || ic) { history.replaceState(null, '', location.pathname + location.hash); setTimeout(() => openInvite(jc ? 'join' : 'invite', jc || ic), 500); }

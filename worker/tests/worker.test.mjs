@@ -9,6 +9,7 @@ import { gunzipSync } from 'node:zlib';
 import worker from "../src/index.js";
 import {duration,invitationContent} from "../src/invitation-template.js";
 import { drainMail } from "../src/welcome.js";
+import {mailBrand} from '../src/mail-brand.js';
 import { welcomeContent } from '../src/welcome-template.js';
 test('welcome mail guides each audience to its own workflow and escapes personal names',()=>{
  for(const role of ['learner','teacher','school']){
@@ -22,9 +23,13 @@ import { requestLiveClass, sendCourseInvitation, previewCourseInvitation, course
 test('invitation button and wordmark use school colours with readable contrast',()=>{
  for(const colour of ['#ac8935','#ebdf13']){
  const content=invitationContent({org:{name:'School',theme:colour},course:{name:'A1',level:'A1'},inviteUrl:'https://deutschklinik.com/'});
- assert.ok(content.html.includes('background:'+colour+';color:'+(colour==='#ebdf13'?'#14202e':'#ffffff')));
- assert.ok(!content.html.includes('#1f6feb'));assert.ok(content.html.includes('Deutsch<span style="color:'));
+ assert.ok(content.html.includes('background:'+colour+';color:#14202e'));
+ assert.ok(!content.html.includes('#1f6feb'));assert.ok(content.html.includes('>School</b> &nbsp; / &nbsp; Course invitation'));
  }
+});
+test('school welcome mail uses verified school and class context, escapes copy and routes help publicly',()=>{
+ const result=welcomeContent('https://deutschklinik.com/',{role:'learner',name:'Learner',org:{kind:'school',name:'Gold School',theme:'#ac8935',logo_url:'https://logo.invalid/gold.png',welcome:'Learn <together>',contact_email:'help@gold.invalid'},class:{name:'Evening A1',level:'A1'}});
+ assert.equal(result.subject,'Welcome to Gold School');assert.ok(result.html.includes('Welcome to Gold School.'));assert.ok(result.html.includes('Learn &lt;together&gt;'));assert.ok(result.html.includes('Evening A1'));assert.ok(result.html.includes('https://logo.invalid/gold.png'));assert.ok(result.html.includes('mailto:help@gold.invalid'));assert.ok(result.html.includes('background:#ac8935;color:#14202e'));assert.ok(!result.text.includes('Have a class invitation?'));
 });
 test('email status is restricted to class managers and cannot expose another class',async()=>{
  const previous=globalThis.fetch;let manager=false,queries=0;
@@ -246,6 +251,7 @@ test("Worker contract: authenticated generation, durable bounds, review, delayed
     };
     globalThis.fetch = async (url, opts) => {
       const x = String(url);
+      if(x.endsWith('/rest/v1/rpc/welcome_brand_context'))return Response.json({role:'learner',name:'A learner'});
       if (
         x.startsWith("https://auth.example.invalid/") &&
         opts.headers.Authorization === "Bearer verified"
@@ -441,4 +447,9 @@ test('Cloudflare Auth verification uses supported manual redirects and never fol
   const response=await authenticated(new Request('https://worker.example.invalid',{headers:{Authorization:'Bearer verified'}}),{SUPABASE_URL:'https://auth.example.invalid',SUPABASE_PUBLISHABLE_KEY:'public'},{});
   assert.equal(response.status,503);assert.equal(calls,1);
  }finally{globalThis.fetch=oldFetch;}
+});
+
+test('brand button labels stay readable across light, dark and middle-luminance school colours',()=>{
+ const lum=hex=>hex.slice(1).match(/../g).map(x=>parseInt(x,16)/255).map(v=>v<=.03928?v/12.92:((v+.055)/1.055)**2.4).reduce((a,c,i)=>a+c*[.2126,.7152,.0722][i],0);
+ for(const theme of ['#ac8935','#ebdf13','#808080','#777777','#ffffff','#000000','#1f6feb','#ee8868','#28634c']){const b=mailBrand({theme}),a=lum(b.colour),ink=lum(b.ink);assert.ok((Math.max(a,ink)+.05)/(Math.min(a,ink)+.05)>=4.5,theme);}
 });

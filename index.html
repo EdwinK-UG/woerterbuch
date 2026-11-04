@@ -401,14 +401,14 @@ kbd{font:600 .66rem Inter,system-ui,sans-serif;padding:.1rem .35rem;border-radiu
 <div class="modal" id="modal" aria-hidden="true"><div class="sheet" id="sheet" role="dialog" aria-modal="true" tabindex="-1"></div></div>
 
 <script src="config.js?v=bce20ec90cdd"></script>
-<script src="js/pages.js?v=499f4a03864f"></script>
+<script src="js/pages.js?v=4bdfd342abbf"></script>
 <script src="js/course-counts.js?v=a500004e0728"></script>
 <script src="js/study-sync.js?v=9de759f82df1"></script>
 <script src="js/game-i18n.js?v=9cb89f5a1bfd"></script>
 <script src="js/game-messages.js?v=f0e0633452ab"></script>
 <script src="js/render-safety.js?v=cbceea56a80a"></script>
 <script src="js/dictionary-english.js?v=422aef8ffb62" data-curated="content/dictionary-english.json?v=1c4818c1b1d7"></script>
-<script src="js/site-design.js?v=0840816ae282"></script>
+<script src="js/site-design.js?v=9d77298c1e68"></script>
 <script id="data" type="application/octet-stream" data-src="core.bin?v=4c9f34b8d0dd" data-defs="defs.bin?v=5e525dc56850"></script>
 <script>
 "use strict";
@@ -525,6 +525,7 @@ const gcol=a=>a==='der'?'var(--der)':a==='die'?'var(--die)':a==='das'?'var(--das
 let routeGeneration=0;
 function route(){
   if(!window.KONTO)return;
+  KONTO.applyBrand();
   const request=++routeGeneration;
   const h=location.hash.slice(2)||'';
   let arg;
@@ -1515,6 +1516,7 @@ document.getElementById('theme').onclick=()=>{
   const dark=matchMedia('(prefers-color-scheme:dark)').matches;
   const next=cur? (cur==='dark'?'light':'dark') : (dark?'light':'dark');
   applyTheme(next);LS.set('gd_theme',next);
+  window.dispatchEvent(new Event('app:theme'));
 };
 /* expose for inline handlers */
 Object.assign(window,{go,openAdd,addTo,addNew,quickCard,makeCards,newList,createList,renameList,delList,rmFromList,pickAll,listFromWords,closeSheet,reveal,ans,delDeck});
@@ -1791,12 +1793,12 @@ function sheet(mode){
   const T={in:[tr('Sign in','Anmelden'),tr('Sign in','Anmelden')],up:[tr('Create account','Konto erstellen'),tr('Sign up','Registrieren')],reset:[tr('Forgot password','Passwort vergessen'),tr('Send link','Link senden')],newpw:[tr('New password','Neues Passwort'),tr('Save','Speichern')]}[mode];
   const tabs=(mode==='in'||mode==='up')?`<div class="acct-tabs"><button type="button" class="${mode==='in'?'on':''}" onclick="ACCT.sheet('in')">${tr('Sign in','Anmelden')}</button><button type="button" class="${mode==='up'?'on':''}" onclick="ACCT.sheet('up')">${tr('Sign up','Registrieren')}</button></div>`:'';
   const intro={in:tr('Sign in to get your course, lists and cards on every device.','Melde dich an, um deinen Kurs, deine Listen und Karten auf jedem Gerät zu haben.'),
-    up:tr('Free. Your course, lists and cards are saved in your account. Nobody else can see them.','Kostenlos. Dein Kurs, deine Listen und Karten werden in deinem Konto gespeichert. Niemand sonst kann sie sehen.'),
+    up:tr('Free. Your lists and cards stay private. Your school can follow your course progress.','Kostenlos. Deine Listen und Karten bleiben privat. Deine Schule kann deinen Kursfortschritt verfolgen.'),
     reset:tr('Enter your e-mail address. We send you a link to set a new password.','Gib deine E-Mail-Adresse ein. Wir schicken dir einen Link, mit dem du ein neues Passwort festlegst.'),
     newpw:tr('Choose a new password for your account.','Lege ein neues Passwort für dein Konto fest.')}[mode];
   const emailIn=mode==='newpw'?'':`<label for="ac_em">${tr('E-mail','E-Mail')}</label><input class="input" id="ac_em" type="email" autocomplete="email" ${mode==='up'?'aria-describedby="ac_email_feedback" maxlength="254"':''} placeholder="${tr('E-mail','E-Mail')}" required value="${esc(lastEmail)}">${mode==='up'?'<div class="acct-msg" id="ac_email_feedback" aria-live="polite"></div>':''}`;
   const pwIn=mode==='reset'?'':`<label for="ac_pw">${tr('Password','Passwort')}</label><input class="input" id="ac_pw" type="password" minlength="6" required autocomplete="${mode==='in'?'current-password':'new-password'}" placeholder="${mode==='in'?tr('Password','Passwort'):tr('Password (at least 6 characters)','Passwort (mind. 6 Zeichen)')}">`;
-  openSheet(`<h3>${T[0]}</h3><p>${intro}</p>${tabs}
+  openSheet(`${window.KONTO?.brand()?.kind==='school'?`<p class="play-eyebrow">${esc(KONTO.brand().name)}</p>`:''}<h3>${T[0]}</h3><p>${intro}</p>${tabs}
     <form class="acct-f" onsubmit="event.preventDefault();ACCT.submit('${mode}')">${emailIn}${pwIn}
     <div class="acct-msg" id="ac_msg"></div>
     <div class="row">${mode==='in'?`<button type="button" class="acct-link" onclick="ACCT.sheet('reset')">${tr('Forgot password?','Passwort vergessen?')}</button>`:''}${mode==='reset'?`<button type="button" class="acct-link" onclick="ACCT.sheet('in')">${tr('Back to sign in','Zurück zur Anmeldung')}</button>`:''}
@@ -1911,7 +1913,8 @@ async function exportData(){
     const data={exported_at:new Date().toISOString(),profile:profile[0],...snapshot(),practice:attempts,
       pending_practice:LS.get('gd_gram',{att:[]}).att.filter(a=>a.uid===id&&!a.sent)};
     const link=document.createElement('a'),url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));
-    link.href=url;link.download='deutschklinik-data.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+    const school=window.KONTO?.brand();const filename=school?.kind==='school'?school.name.normalize('NFKD').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,60)+'-personal-data.json':'deutschklinik-data.json';
+    link.href=url;link.download=filename;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
   }catch(e){toast(de(e))}
 }
 // Upload a logo to the current account's public Storage folder.
@@ -1942,7 +1945,7 @@ const snoozed=()=>{try{return Date.now()<+(localStorage.getItem(KEY)||0)}catch(e
 const snooze=d=>{try{localStorage.setItem(KEY,String(Date.now()+d*864e5))}catch(e){}};
 let shown=false, views=0, active=0, lastAct=Date.now();
 function show(reason){
-  if(shown||signedIn()||snoozed()||document.getElementById('modal').classList.contains('show'))return;
+  if(shown||signedIn()||window.KONTO?.brand()?.kind==='school'||snoozed()||document.getElementById('modal').classList.contains('show'))return;
   shown=true;
   const T=(en,de)=>window.KONTO&&KONTO.lang&&KONTO.lang()==='de'?de:en;
   const hook=reason==='save'
@@ -3013,7 +3016,7 @@ const QE={
 function viewHub(){
   document.body.classList.remove('ingame');
   const tile=(kind,href,title,desc,meta)=>`<a class="play-tile ${kind}" href="${href}">${SiteDesign.art(kind)}<div class="tile-meta"><span>${meta}</span>${ic('sparkles')}</div><h2>${title}</h2><p>${desc}</p><span class="tile-go">${ic('play')}</span></a>`;
-  V().innerHTML=`<div class="play-hub"><div class="play-heading"><div><span class="play-eyebrow">Deutschklinik · ${ui('Play','Spielen')}</span><h1>${ui('Ready, set, <em>play.</em>','Auf die Plätze.<br><em>Losspielen.</em>')}</h1><p>${ui('Pick a game. Chase a new best.','Such dir ein Spiel. Knack deinen Rekord.')}</p></div><a class="play-pin" href="#/play/join">${ic('ticket')} ${ui('Have a PIN?','Hast du eine PIN?')} ${ic('arrow-right')}</a></div>
+  V().innerHTML=`<div class="play-hub"><div class="play-heading"><div><span class="play-eyebrow">${H(window.KONTO?.brand()?.name||'Deutschklinik')} · ${ui('Play','Spielen')}</span><h1>${ui('Ready, set, <em>play.</em>','Auf die Plätze.<br><em>Losspielen.</em>')}</h1><p>${ui('Pick a game. Chase a new best.','Such dir ein Spiel. Knack deinen Rekord.')}</p></div><a class="play-pin" href="#/play/join">${ic('ticket')} ${ui('Have a PIN?','Hast du eine PIN?')} ${ic('arrow-right')}</a></div>
     <div class="play-shelf">
       ${tile('memory','#/play/memory','Memory',ui('Find your perfect match.','Finde die passenden Paare.'),ui('Pairs & surprises','Paare & Überraschungen'))}
       ${tile('blitz','#/play/blitz',gt('Artikel-Blitz'),ui('Three articles. Sixty seconds.','Drei Artikel. Sechzig Sekunden.'),'der · die · das')}
@@ -3126,5 +3129,5 @@ if(tabs&&!tabs.querySelector('[data-t="play"]')){const a=document.createElement(
 })();
 </script>
 <!-- ===== /Spiele ===== -->
-<script src="konto.js?v=23c21318add5"></script>
+<script src="konto.js?v=181b44ae5406"></script>
 </body></html>
