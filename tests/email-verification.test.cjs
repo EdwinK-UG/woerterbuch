@@ -9,7 +9,7 @@ test('immediate access is distinct from mailbox proof; confirmations, reminders 
  await db.query("insert into public.orgs(id,owner,kind,name,theme) values($1,$2,'school','Gold school','#ac8935')",[org,owner]);
  await db.query("insert into public.classes(id,org_id,name,level) values($1,$2,'B1','B1')",[cls,org]);
  await db.query("insert into public.invites(code,org_id,class_id,member_role,recipient_email,uses_left,created_by) values('abcdef123456',$1,$2,'student','learner@example.invalid',1,$3)",[org,cls,owner]);
- await db.exec('update app_private.signup_policy set immediate_access=true');
+ await db.exec("create schema net;create function net.http_post(url text,headers jsonb,body jsonb,timeout_milliseconds integer) returns bigint language plpgsql as $$ begin raise exception 'fixture wakeup outage';end $$;update app_private.signup_policy set immediate_access=true");
  await db.query(`insert into auth.users(id,email,email_confirmed_at,raw_user_meta_data) values($1,'learner@example.invalid',now(),'{"join":"abcdef123456","name":"Alex","level":"A1"}')`,[user]);
  await db.query("update auth.users set raw_app_meta_data='{\"provider\":\"email\"}' where id=$1",[user]);
  assert.equal((await db.query("select raw_app_meta_data->>'dk_email_verification_required' as pending from auth.users where id=$1",[user])).rows[0].pending,'true');
