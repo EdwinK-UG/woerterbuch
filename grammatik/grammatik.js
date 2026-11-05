@@ -125,7 +125,7 @@ const GROUPS = [
   {"t":"Präpositionen · C1","ic":"book-open","h":160,"adv":true,"lv":"C1","ch":[[426,"Präpositionen der Redewiedergabe und Referenz","","C1"],[427,"Präpositionen mit verschiedenen Positionen","","C1"],[428,"„Sprechende“ Präpositionen","","C1"],[429,"Bedeutungen von in, an, auf, über, unter, vor","","C1"],[430,"Bedeutungen von um, bei, von, nach, aus, mit, zu","","C1"]]},
   {"t":"Ergänzungen · C1","ic":"book-open","h":160,"adv":true,"lv":"C1","ch":[[431,"Verben mit Nominativ, Akkusativ und Dativ","","C1"],[432,"Verben mit Genitiv","","C1"]]},
   {"t":"Zeiten · C1","ic":"book-open","h":160,"adv":true,"lv":"C1","ch":[[437,"Besondere Perfektformen: Modalverben und sehen, hören, lassen","","C1"],[439,"Vermutung und Zukunft mit dem Futur","","C1"],[440,"Überblick über die Zeiten im Deutschen","","C1"]]},
-  {"t":"Modalverben und Verbpräfixe · C1","ic":"book-open","h":160,"adv":true,"lv":"C1","ch":[[443,"Modalverben: Vermutungen über die Vergangenheit","","C1"],[445,"Trennbare und untrennbare Verben 1","","C1"],[446,"Trennbare und untrennbare Verben 2","","C1"]]},
+  {"t":"Modalverben und Verbpräfixe · C1","ic":"book-open","h":160,"adv":true,"lv":"C1","ch":[[441,"Modalverben in der Grundbedeutung","","C1"],[443,"Modalverben: Vermutungen über die Vergangenheit","","C1"],[445,"Trennbare und untrennbare Verben 1","","C1"],[446,"Trennbare und untrennbare Verben 2","","C1"]]},
   {"t":"Nomen, Artikel und Pronomen · C1","ic":"book-open","h":160,"adv":true,"lv":"C1","ch":[[449,"Genitiv","","C1"],[453,"Indefinitpronomen für Menschen","","C1"]]},
   {"t":"Adjektive · C1","ic":"book-open","h":160,"adv":true,"lv":"C1","ch":[[456,"Artikelwörter und Adjektivdeklination","","C1"],[457,"Komparation","","C1"]]},
   {"t":"Indirekte Rede · C1","ic":"book-open","h":160,"adv":true,"lv":"C1","ch":[[461,"Wiedergabe von Aufforderungen, Gerüchten und Selbstaussagen","","C1"]]},
@@ -135,7 +135,7 @@ const GROUPS = [
   {"t":"Schreiben und Sprechen · C1","ic":"book-open","h":160,"adv":true,"lv":"C1","ch":[[488,"Besondere Formen der mündlichen Sprache","","C1"]]},
   {"t":"Nachschlagen und trainieren","ic":"library","h":40,"ref":true,"ch":[[101,"Unregelmäßige Verben","Präteritum, Partizip, haben oder sein – mit Trainer","Liste"],[102,"Verben mit Dativ","helfen, danken, gefallen … – mit Trainer","Liste"],[103,"Verben mit Dativ und Akkusativ","jemandem etwas geben … – mit Trainer","Liste"],[104,"Verben mit Präpositionen","warten auf, denken an … – mit Trainer","Liste"],[180,"Begriffe und Synonyme","","Liste"],[181,"Wortpositionen im Satz: Gesamtschema","","Liste"],[182,"Präpositionen mit Akkusativ, Dativ und Genitiv","","Liste"],[183,"Verben, Adjektive und Nomen: nach Präpositionen","","Liste"],[184,"Verben, Adjektive und Nomen: alphabetisch","","Liste"],[185,"Dativ, Genitiv und zwei Akkusative","","Liste"],[186,"Unregelmäßige Verben: nach Vokalen","","Liste"],[187,"Unregelmäßige Verben: alphabetisch","","Liste"]]}
 ];
-const B2C1_READY = [86,401,87,88,89,90,91,407,408,94,95,410,96,97,412,98,413,99,414,100,415,105,417,418,419,109,110,111,112,113,114,426,116,427,428,429,430,120,431,432,187];   // B2–C1 grammar chapters that are finished
+const B2C1_READY = [86,401,87,88,89,90,91,407,408,94,95,410,96,97,412,98,413,99,414,100,415,105,417,418,419,109,110,111,112,113,114,426,116,427,428,429,430,120,431,432,122,123,124,125,126,437,127,128,439,440,130,441,131,443,133,187];   // B2–C1 grammar chapters that are finished
 const READY = Object.fromEntries([...B2C1_READY, ...Array.from({ length: 85 }, (_, i) => i + 1), 101, 102, 103, 104, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 261, 262, 263, 264, 265, 266, 267, 268, 269, 270, 271, 272, 273].map(n => [n, 1]));   // chapters that exist so far
 const TOTAL = GROUPS.reduce((s, g) => s + (g.ref || g.vocab ? 0 : g.ch.length), 0);
 /* level gating: a learner enrolled at level X sees chapters up to X; no level = everything open */
@@ -148,7 +148,7 @@ const topicNo = n => n > 260 ? n - 260 : n > 240 ? n - 240 : n > 220 ? n - 220 :
 const en = () => !!(window.KONTO && KONTO.lang && KONTO.lang() === 'en');
 const lockBtn = l => window.KONTO && KONTO.lockSheet ? `<button class="btn sm gr-unl" data-unlock="${l}">${icn(KONTO.lvState(l) === 'pending' ? 'hourglass' : 'lock-open')} ${KONTO.lvState(l) === 'pending' ? (en() ? 'Requested' : 'Angefragt') : KONTO.org && KONTO.org() ? (en() ? 'Ask my teacher' : 'Lehrkraft fragen') : (en() ? 'Enroll' : 'Einschreiben')}</button>` : '';
 const isRef = n => !!chInfo(n)?.g.ref;                       // the four reference lists
-const SOURCE_NO = {"86":1,"87":2,"88":3,"89":4,"90":5,"91":6,"94":9,"95":10,"96":11,"97":12,"98":13,"99":14,"100":15,"105":16,"109":20,"110":21,"111":22,"112":23,"113":24,"114":25,"116":27,"120":31,"122":33,"123":34,"124":35,"125":36,"126":37,"127":38,"128":39,"130":41,"131":42,"133":44,"134":45,"136":47,"137":48,"138":49,"139":50,"140":51,"141":52,"142":53,"143":54,"144":55,"146":57,"147":58,"148":59,"149":60,"151":62,"152":63,"153":64,"154":65,"155":66,"156":67,"157":68,"158":69,"159":70,"160":71,"161":72,"162":73,"163":74,"164":75,"165":76,"166":77,"167":78,"169":80,"170":81,"176":87,"401":1,"407":7,"408":8,"410":10,"412":12,"413":13,"414":14,"415":15,"417":17,"418":18,"419":19,"426":26,"427":27,"428":28,"429":29,"430":30,"431":31,"432":32,"437":37,"439":39,"440":40,"443":43,"445":45,"446":46,"449":49,"453":53,"456":56,"457":57,"461":61,"463":63,"464":64,"465":65,"466":66,"467":67,"468":68,"471":71,"472":72,"473":73,"479":79,"482":82,"483":83,"484":84,"485":85,"486":86,"488":88};
+const SOURCE_NO = {"86":1,"87":2,"88":3,"89":4,"90":5,"91":6,"94":9,"95":10,"96":11,"97":12,"98":13,"99":14,"100":15,"105":16,"109":20,"110":21,"111":22,"112":23,"113":24,"114":25,"116":27,"120":31,"122":33,"123":34,"124":35,"125":36,"126":37,"127":38,"128":39,"130":41,"131":42,"133":44,"134":45,"136":47,"137":48,"138":49,"139":50,"140":51,"141":52,"142":53,"143":54,"144":55,"146":57,"147":58,"148":59,"149":60,"151":62,"152":63,"153":64,"154":65,"155":66,"156":67,"157":68,"158":69,"159":70,"160":71,"161":72,"162":73,"163":74,"164":75,"165":76,"166":77,"167":78,"169":80,"170":81,"176":87,"401":1,"407":7,"408":8,"410":10,"412":12,"413":13,"414":14,"415":15,"417":17,"418":18,"419":19,"426":26,"427":27,"428":28,"429":29,"430":30,"431":31,"432":32,"437":37,"439":39,"440":40,"441":41,"443":43,"445":45,"446":46,"449":49,"453":53,"456":56,"457":57,"461":61,"463":63,"464":64,"465":65,"466":66,"467":67,"468":68,"471":71,"472":72,"473":73,"479":79,"482":82,"483":83,"484":84,"485":85,"486":86,"488":88};
 const gNo = n => SOURCE_NO[n] || n;              // B2–C1 chapters 105–177 are shown as 101–173
 const numLabel = n => isV(n) ? String(topicNo(n)) : isRef(n) ? icn('book-marked') : String(gNo(n));
 const chInfo = n => { for (const g of GROUPS) for (const c of g.ch) if (c[0] === n) return { g, c }; return null; };
@@ -1504,7 +1504,8 @@ function machine(el) {
 /* ---------- exercises ---------- */
 const LET = 'abcdefghijklmnop';
 function matchOpts(x) { x._opts = shuffle(x.items.map(it => it.r)); return `<div class="gr-mopts">${x._opts.map((r, k) => `<span><b>${LET[k]})</b> ${H(r)}</span>`).join('')}</div>`; }
-const itemsHTML = x => (x.type === 'match' ? matchOpts(x) : '') + x.items.map((it, i) => `<div class="gr-it" data-i="${i}"><span class="gr-in">${i + 1}</span><div class="gr-ib">${it.scene ? `<figure class="gr-scene">${window.GRAM_ART.draw(K,it.scene)}</figure>` : ''}${itemHTML(x, it, i)}<div class="gr-sol" hidden></div></div></div>`).join('');
+const itemBody = (x,it,i) => `${it.scene ? `<figure class="gr-scene">${window.GRAM_ART.draw(K,it.scene)}</figure>` : ''}${itemHTML(x,it,i)}<div class="gr-sol" hidden></div>`;
+const itemsHTML = x => (x.type === 'match' ? matchOpts(x) : '') + x.items.map((it, i) => `<div class="gr-it" data-i="${i}"><span class="gr-in">${i + 1}</span><div class="gr-ib">${itemBody(x,it,i)}</div></div>`).join('');
 function exHTML(x, n) {
   const legend = x.type === 'cases' ? `<div class="gr-legend"><span class="n">1× Nominativ</span><span class="d">2× Dativ</span><span class="a">3× Akkusativ</span></div>` : '';
   const lay = [x.grid ? 'grid' : '', x.cols ? 'cols' : '', x.flow ? 'flow' : ''].filter(Boolean).join(' ');
@@ -1537,11 +1538,11 @@ function itemHTML(x, it, i) {
     return `<div class="gr-line"></div><div class="gr-pool">${t.map(v => `<button class="gr-tile">${H(v)}</button>`).join('')}</div><span class="gr-end" hidden>${H(it.end)}</span>`; }
   if (x.type === 'type') return `<div class="gr-q">${H(it.q).replace(/\[([^\]]*)\]/g, '<mark>$1</mark>')}</div>
     <div class="gr-tl"><span>${H(it.pre)}</span>${it.long ? `<textarea rows="${it.rows || 6}" autocomplete="off" spellcheck="false" aria-label="Antwort ${i + 1}">${H(it.start || '')}</textarea>` : `<input autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Antwort ${i + 1}" value="${H(it.start || '')}">`}<span>${H(it.end)}</span></div>`;
-  if (x.type === 'fill') return it.replace(/^\(([^)]*)\)\s*/, (m, h) => `<span class="gr-hint">${H(h)}</span>`).replace(/\[\[([^\]]*)\]\]|([^[]+|\[)/g, (m, a, p) => {
+  if (x.type === 'fill') { let gap = 0; return it.replace(/^\(([^)]*)\)\s*/, (m, h) => `<span class="gr-hint">${H(h)}</span>`).replace(/\[\[([^\]]*)\]\]|([^[]+|\[)/g, (m, a, p) => {
     if (p != null) return p.startsWith('<span class="gr-hint">') ? p : H(p).replace(/\n/g, '<br>');
     let hint = ''; if (a[0] === '^') { a = a.slice(1); hint = a[0]; }
     const ok = a.split('|');
-    return `<input class="gr-fill" data-ok="${H(JSON.stringify(ok))}"${hint ? ` data-h="${H(hint)}" placeholder="${H(hint)} …"` : ''} style="--n:${Math.max(...ok.map(o => o.length))}" autocomplete="off" autocapitalize="off" spellcheck="false">${x.flow ? `<sup class="gr-gn">(${i + 1})</sup>` : ''}`; });
+    return `<input class="gr-fill" aria-label="Antwort ${i + 1}, Lücke ${++gap}" data-ok="${H(JSON.stringify(ok))}"${hint ? ` data-h="${H(hint)}" placeholder="${H(hint)} …"` : ''} style="--n:${Math.max(...ok.map(o => o.length))}" autocomplete="off" autocapitalize="off" spellcheck="false">${x.flow ? `<sup class="gr-gn">(${i + 1})</sup>` : ''}`; }); }
   if (x.type === 'match') return `<span class="gr-ml">${H(it.l)}</span><select class="gr-msel" aria-label="${H(it.l)}"><option value="">–</option>${(x._opts || []).map((r, k) => `<option value="${LET[k]}">${LET[k]})</option>`).join('')}</select>`;
   if (x.type === 'free') return `<div class="gr-q">${H(it.q)}</div><div class="gr-free"><textarea rows="2" placeholder="${H(it.ph)}" spellcheck="false"></textarea></div><div class="gr-fb"></div>`;
   return '';
@@ -1602,14 +1603,14 @@ function answers(x, ue) {
     if (x.type === 'select') { const selected=[...el.querySelectorAll('input:checked')].map(input=>it.options[+input.value]); return {ok:selected.length===it.ok.length&&it.ok.every(value=>selected.includes(value)),given:selected.join(' | '),empty:!selected.length}; }
     if (x.type === 'cases') { const tags = [...el.querySelectorAll('.gr-tag')]; return { ok: tags.every(g => g.dataset.st === g.dataset.k), given: tags.map(g => g.dataset.st || '-').join(''), empty: tags.every(g => !g.dataset.st) }; }
     if (x.type === 'choice') { const gaps = [...el.querySelectorAll('.gr-gap')], val = gaps.map(g => (g.querySelector('.sel') || {}).textContent || '');
-      return { ok: gaps.every((g, k) => val[k] === g.dataset.ok), given: val.join('|'), empty: val.every(v => !v) }; }
+      return { ok: gaps.every((g, k) => val[k] === g.dataset.ok), points: gaps.filter((g,k)=>val[k]===g.dataset.ok).length, total: gaps.length, given: val.join('|'), empty: val.every(v => !v) }; }
     if (x.type === 'order') { const v = [...el.querySelectorAll('.gr-line .gr-tile')].map(b => b.textContent).join(' ');
       return { ok: it.ok.includes(v) && !el.querySelector('.gr-pool').children.length, given: v, empty: !v }; }
     if (x.type === 'fill') { const ins = [...el.querySelectorAll('.gr-fill')], res = ins.map(i => { const ok = JSON.parse(i.dataset.ok), h = i.dataset.h, low = o => o.toLowerCase(); let v = i.value.trim();
         if (h && v && !ok.some(o => low(o) === low(v)) && ok.some(o => low(o) === low(h + v))) v = h + v;
         return { v, ok: ok.includes(v), ci: !ok.includes(v) && ok.some(o => o.toLowerCase() === v.toLowerCase()) }; });
       ins.forEach((inp, k) => { inp.classList.remove('right', 'wrong'); inp.classList.add(res[k].ok || res[k].ci ? 'right' : 'wrong'); });
-      return { ok: res.every(r => r.ok || r.ci), ci: res.some(r => r.ci), given: res.map(r => r.v).join('|'), empty: res.every(r => !r.v) }; }
+      return { ok: res.every(r => r.ok || r.ci), points: res.filter(r=>r.ok||r.ci).length, total: res.length, ci: res.some(r => r.ci), given: res.map(r => r.v).join('|'), empty: res.every(r => !r.v) }; }
     if (x.type === 'match') { const v = el.querySelector('select').value, ok = v && x._opts[LET.indexOf(v)] === it.r; return { ok: !!ok, given: v ? x._opts[LET.indexOf(v)] : '', empty: !v }; }
     if (x.type === 'type') { const raw = el.querySelector('input,textarea').value, v = sentenceNorm(raw, x.commas), ok = it.ok.some(a => sentenceNorm(a, x.commas) === v), ci = !ok && it.ok.some(a => sentenceNorm(a, x.commas).toLowerCase() === v.toLowerCase());
       return { ok: ok || ci, ci, given: raw.trim(), empty: !v }; }
@@ -1630,7 +1631,7 @@ function check(x, ue) {
   if (x.type === 'free') { freeCheck(x, ue); return; }
   const S = exState[x.id], res = answers(x, ue);
   if (res.every(r => r.empty)) { if (typeof toast === 'function') toast('Bearbeite zuerst die Aufgaben.'); return; }
-  const score = res.filter(r => r.ok).length, total = res.length, passed = score / total >= PASS;
+  const score = res.reduce((sum,r)=>sum+(x.perGap&&Number.isFinite(r.points)?r.points:Number(r.ok)),0), total = res.reduce((sum,r)=>sum+(x.perGap&&r.total?r.total:1),0), passed = score / total >= PASS;
   ue.querySelectorAll('.gr-it').forEach((el, i) => { const r = res[i]; el.classList.remove('ok', 'no'); void el.offsetWidth; el.classList.add(r.ok ? 'ok' : 'no');
     const s = el.querySelector('.gr-sol'); s.hidden = !(r.ok && r.ci); if (r.ok && r.ci) { s.className = 'gr-sol'; s.textContent = 'Richtig – aber achte auf Groß- und Kleinschreibung: ' + solText(x, x.items[i]).replace(/^Richtig: /, ''); } });
   const out = ue.querySelector('.gr-res');
@@ -1660,7 +1661,7 @@ function reset(x, ue) {
   exState[x.id] = { shown: false, checked: false };
   if (x.gen) x.items = x.gen();
   if (x.gen || x.type === 'match') { const box = ue.querySelector('.gr-items'); box.innerHTML = itemsHTML(x); }
-  if (x.type !== 'match') ue.querySelectorAll('.gr-it').forEach((el, i) => { el.classList.remove('ok', 'no'); el.querySelector('.gr-ib').innerHTML = itemHTML(x, x.items[i], i) + '<div class="gr-sol" hidden></div>'; });
+  if (x.type !== 'match') ue.querySelectorAll('.gr-it').forEach((el, i) => { el.classList.remove('ok', 'no'); el.querySelector('.gr-ib').innerHTML = itemBody(x, x.items[i], i); });
   const sh = ue.querySelector('[data-act="show"]'); if (sh) sh.disabled = true;
   ue.querySelector('.gr-res').textContent = '';
 }
