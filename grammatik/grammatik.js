@@ -1165,6 +1165,16 @@ async function loadChapter(n) {
   lessonLoads.set(n, loading);
   try { return await loading; } finally { if (lessonLoads.get(n) === loading) lessonLoads.delete(n); }
 }
+/* "Video ansehen": the lesson as a narrated animation (grammatik/watch.js, loaded on first use) */
+const WATCH_LEVELS = ['A1'];   // levels that have the video button; widen when more lessons are checked
+const hasWatch = c => !c.vocab && !isRef(c.n) && WATCH_LEVELS.includes(c.level) && !!c.understand?.length;
+const watchBtn = c => (hasWatch(c) ? `<button class="btn sm" data-watch="${c.n}">${icn('play')} Video ansehen</button>` : '');
+async function openWatch(n) {
+  const c = CH[n]; if (!c || !hasWatch(c)) return;
+  try { await window.loadWatch(); } catch (e) { if (typeof toast === 'function') toast('Das Video konnte nicht geladen werden. Bitte prüfe die Internetverbindung.'); return; }
+  const art = document.querySelector('.gr-art svg');
+  window.WATCH.open(c, { art: art ? art.outerHTML : '', number: gNo(c.n), onExercises: () => jump('grs-u') });
+}
 function jump(anchor) {
   const el = anchor && $(anchor); if (!el) return;
   const sec = el.closest('.gr-sec'); if (sec) sec.classList.remove('closed');
@@ -1201,7 +1211,7 @@ function render(c) {
      <p class="gr-eyebrow">${isRef(c.n) ? 'Nachschlagen und trainieren' : `Kapitel ${gNo(c.n)} · ${H(c.group)}`} · <span class="gr-lv ${c.level}">${c.level}</span></p>
      <h1>${H(c.title)}</h1><p class="gr-kick">${H(c.kicker)}</p><p class="gr-intro">${rich(c.intro)}</p>
      <div class="gr-prog" id="grprog">${progHTML(pr)}</div>
-     <div class="row" style="margin-top:.8rem"><button class="btn sm" onclick="GRAM.practice('solo')">${icn('gamepad-2')} Im Spiel üben</button></div></div>
+     <div class="row" style="margin-top:.8rem">${watchBtn(c)}<button class="btn sm" onclick="GRAM.practice('solo')">${icn('gamepad-2')} Im Spiel üben</button></div></div>
      <figure class="gr-art">${typeof c.art === 'function' ? c.art(K) : c.scene ? window.GRAM_ART.draw(K,c.scene) : ART[c.art] ? ART[c.art]() : ''}<figcaption><span>${fmt(c.hero)}</span>${sayBtn(c.hero)}</figcaption></figure>
    </div>
    <nav class="gr-toc"><a href="#grs-v" data-jump>${icn('lightbulb')} Verstehen</a>${hasExamples?`<a href="#grs-b" data-jump>${icn('quote')} Beispiele</a>`:''}<a href="#grs-u" data-jump>${icn('pencil')} Üben</a>${hasSpeak?`<a href="#grs-s" data-jump>${icn('mic')} Sprechen</a>`:''}${secAllBtn()}</nav>
@@ -1567,6 +1577,7 @@ function onClick(ev) {
   if (!t.closest('#grpop') && !t.closest('.gw')) closePop();
   const tb = t.closest('[data-toc]'); if (tb) { tocAll(tb.dataset.toc === 'open'); return; }
   const ex = t.closest('[data-exp]'); if (ex) { const r = ex.closest('.gr-row'), st = tocState(), open = !r.classList.contains('open'); st['c:' + r.dataset.n] = open ? 1 : 0; tocSave(st); rowOpen(r, open); icons(); return; }
+  const wb = t.closest('[data-watch]'); if (wb) { openWatch(+wb.dataset.watch); return; }
   const sa = t.closest('[data-secall]'); if (sa) { secToggleAll(sa); return; }
   const sh2 = t.closest('.gr-ch .gr-sec>h2'); if (sh2) { sh2.parentNode.classList.toggle('closed'); return; }
   const ch = t.closest('.gr-ch'); if (!ch || !cur) return;

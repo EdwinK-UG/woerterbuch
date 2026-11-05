@@ -583,9 +583,16 @@ function loadGram(){
   if(!gramP)gramP=(async()=>{
     if(typeof LESSON_EXERCISES==='undefined')await scriptFile('grammatik/catalog.js?v=20c407b905f8');
     if(!window.GRAM_ART)await scriptFile('grammatik/illustrations.js?v=cf922893ba5a');
-    if(!window.GRAM)await scriptFile('grammatik/grammatik.js?v=07f4af683a49');
+    if(!window.GRAM)await scriptFile('grammatik/grammatik.js?v=f68630ffcff0');
   })().catch(e=>{gramP=null;throw e});
   return gramP;
+}
+/* the narrated "Video ansehen" player: loaded only when a learner presses the button */
+let watchP=null;
+function loadWatch(){
+  if(window.WATCH)return Promise.resolve();
+  if(!watchP)watchP=scriptFile('grammatik/watch.js?v=437d4c2b3d7d').catch(e=>{watchP=null;throw e});
+  return watchP;
 }
 function openGram(arg,m){
   m=m||'g'; const name=m==='v'?'Der Wortschatz':'Die Grammatik';

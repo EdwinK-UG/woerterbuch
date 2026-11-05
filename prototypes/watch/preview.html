@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Watch prototype – Deutschklinik</title>
+<style>
+:root{--bg:#f6f4ef;--panel:#fffdf8;--card:#fff;--fg:#20242b;--mut:#6b7482;--line:#e7e2d7;--line2:#efeadf;--ac:#1f6feb;--ac-salt:#e9f1ff;--warn:#e4860a;
+  --nom:#b8730a;--nom-s:#fcf0d9;--dat:#7c3aed;--dat-s:#f1eafe;--akk:#0b8579;--akk-s:#dcf3ef;--cream:#fbf4e3;--cream-b:#ecdcb8;--cream-ink:#5a4626;
+  --sky1:#fdf1d6;--sky2:#f9e2bd;--sun:#f6b94a;--cloud:#fffaf0;--hill1:#a9cf8f;--hill2:#cde3a8;--ink:#2a2f38;--die:#e11d48;--wood:#b07a46;--metal:#9aa6b4;--der:#2563eb;--das:#0f9d6b}
+@media(prefers-color-scheme:dark){:root{--bg:#0f1319;--panel:#141a22;--card:#171e27;--fg:#e8ecf2;--mut:#9aa6b4;--line:#242d39;--line2:#1d2531;--ac:#6ea8fe;--ac-salt:#17273f;
+  --nom:#f2b450;--nom-s:#382a12;--dat:#b79bff;--dat-s:#2a1f47;--akk:#4fd1c0;--akk-s:#11332f;--cream:#1e1b15;--cream-b:#3a3223;--cream-ink:#e3d3b2;--sky1:#1e2638;--sky2:#2d2f45;--sun:#e8c46a;--cloud:#3a4258;--hill1:#2f4a35;--hill2:#3a5a3f;--ink:#e8ecf2}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 Inter,system-ui,sans-serif}
+main{max-width:760px;margin:0 auto;padding:24px 16px 60px}h1{font:700 1.8rem Fraunces,Georgia,serif;margin:.2rem 0}
+.tag{display:inline-block;padding:.1rem .55rem;border-radius:999px;background:var(--ac-salt);color:var(--ac);font:700 .72rem Inter,sans-serif;letter-spacing:.06em;text-transform:uppercase}
+p.sub{color:var(--mut);margin:.3rem 0 1rem}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:1rem 1.1rem;margin:1rem 0}
+select,button.go{font:600 .95rem Inter,sans-serif;padding:.6rem .9rem;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--fg)}
+button.go{background:var(--ac);color:#fff;border-color:var(--ac);cursor:pointer;min-height:46px}
+.row{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center}
+table{border-collapse:collapse;width:100%;font-size:.9rem}td,th{padding:.35rem .5rem;border-bottom:1px solid var(--line2);text-align:left;vertical-align:top}th{color:var(--mut);font-size:.72rem;text-transform:uppercase;letter-spacing:.05em}
+.mut{color:var(--mut);font-size:.85rem}
+</style>
+</head>
+<body>
+<main>
+  <span class="tag">Prototype</span>
+  <h1>Watch: a lesson as an explainer video</h1>
+  <p class="sub">Local test page. It reads the private lesson file from <code>.local/lessons</code>, builds the scenes and plays them with the browser's German voice. Nothing here is part of the live site.</p>
+  <div class="card">
+    <div class="row"><label for="ch" class="mut">Lesson</label>
+      <select id="ch"><option value="12">12 · Das Verb auf Position 2 (A1)</option><option value="1">1 · Personalpronomen (A1)</option><option value="8">8 · Trennbare Verben (A1)</option><option value="9">9 · Imperativ (A1)</option><option value="17">17 · Der Akkusativ (A1)</option><option value="26">26 · Perfekt mit haben (A1)</option><option value="16">16 · Verneinung: nicht und kein (A1)</option></select>
+      <button class="go" id="play">▶ Play explainer</button></div>
+    <label class="row mut" style="margin-top:.6rem"><input type="checkbox" id="rec" disabled> <span id="recmsg">Use recorded voice (none generated for this lesson yet)</span></label>
+    <p class="mut" id="msg" role="status">Loading lesson …</p>
+  </div>
+  <div class="card"><b>What the explainer will say and show</b><div id="plan" class="mut" style="margin-top:.5rem"></div></div>
+</main>
+<script src="../../grammatik/watch.js"></script>
+<script>
+// Minimal stand-in for the lesson engine: just enough to read a lesson file and draw its title picture.
+const K = (() => {
+  const base = {
+    svg: (inner, label) => `<svg viewBox="0 0 520 360" role="img" aria-label="${String(label || '').replace(/"/g, '')}">${inner}</svg>`,
+    grad: () => '<defs><linearGradient id="grsky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--sky1)"/><stop offset="1" stop-color="var(--sky2)"/></linearGradient></defs><rect width="520" height="360" fill="url(#grsky)"/>',
+    clouds: () => '<g fill="var(--cloud)"><ellipse cx="90" cy="62" rx="38" ry="12"/><ellipse cx="110" cy="53" rx="22" ry="14"/><ellipse cx="318" cy="38" rx="28" ry="9"/><ellipse cx="334" cy="31" rx="15" ry="9"/></g>',
+    sun: (x = 446, y = 66) => `<circle cx="${x}" cy="${y}" r="38" fill="var(--sun)" opacity=".25"/><circle cx="${x}" cy="${y}" r="25" fill="var(--sun)"/>`,
+  };
+  base.sky = (sun = true) => base.grad() + (sun ? base.sun() : '') + base.clouds() + '<path d="M0 262Q120 214 250 250T520 238V360H0Z" fill="var(--hill2)"/><path d="M0 300Q170 264 310 292T520 284V360H0Z" fill="var(--hill1)"/>';
+  return new Proxy(base, { get: (t, p) => (p in t ? t[p] : () => '') });
+})();
+let CUR = null;
+window.GRAM = { add: c => { CUR = c; } };
+const $ = id => document.getElementById(id);
+function loadLesson(n) {
+  return new Promise((res, rej) => { CUR = null; const s = document.createElement('script'); s.src = `../../.local/lessons/k${n}.js?${Date.now()}`; s.onload = () => (CUR ? res(CUR) : rej(new Error('empty'))); s.onerror = () => rej(new Error('not found')); document.head.appendChild(s); });
+}
+async function show() {
+  const n = $('ch').value; $('msg').textContent = 'Loading lesson …'; $('play').disabled = true;
+  try {
+    const c = await loadLesson(n), sc = WATCH.script(c), s = WATCH.stats(sc);
+    $('msg').textContent = `${s.scenes} scenes · ${s.steps} narrated steps · ${s.chars.toLocaleString()} characters of narration · about ${s.minutes} minutes` + (s.skipped.length ? ` · not yet animated: ${s.skipped.join(', ')}` : '');
+    $('plan').innerHTML = '<table><tr><th>#</th><th>Scene</th><th>Steps</th></tr>' + sc.map((x, i) => `<tr><td>${i + 1}</td><td>${x.label}</td><td>${x.steps.length}</td></tr>`).join('') + '</table>';
+    $('play').disabled = false; window.__c = c;
+    await checkRecorded(n, sc);
+  } catch (e) { $('msg').textContent = 'Could not load lesson: ' + e.message + ' (run the local server from the repository folder).'; }
+}
+// recorded narration made by tools/watch-audio.cjs (kept in .local/watch-audio, not part of the site)
+let REC = null;
+async function checkRecorded(n, sc) {
+  REC = null; $('rec').disabled = true; $('rec').checked = false; $('recmsg').textContent = 'Use recorded voice (none generated for this lesson yet)';
+  try {
+    const r = await fetch(`../../.local/watch-audio/k${n}/manifest.json?${Date.now()}`); if (!r.ok) return;
+    const m = await r.json(), by = {}; m.steps.forEach(x => { by[x.scene + '-' + x.step] = x; });
+    const ok = sc.reduce((a, s, si) => a + s.steps.filter((t, ti) => by[si + '-' + ti] && by[si + '-' + ti].say === t.say).length, 0), all = sc.reduce((a, s) => a + s.steps.length, 0);
+    REC = { n, by }; $('rec').disabled = !ok; $('rec').checked = ok === all;
+    $('recmsg').textContent = `Use recorded voice (${m.model}, ${ok} of ${all} steps match the current lesson text${ok < all ? ' – the rest use the browser voice' : ''})`;
+  } catch (e) { /* no recordings */ }
+}
+$('ch').onchange = show;
+$('play').onclick = () => {
+  const c = window.__c; let art = '';
+  try { if (typeof c.art === 'function') art = c.art(K); } catch (e) { art = ''; }
+  const audio = $('rec').checked && REC ? { urlFor: (si, ti, say) => { const x = REC.by[si + '-' + ti]; return x && x.say === say ? `../../.local/watch-audio/k${REC.n}/${x.file}` : null; } } : null;
+  WATCH.open(c, { art, audio, onExercises: () => { $('msg').textContent = 'In the real app this button jumps to the exercises of the lesson.'; } });
+};
+show();
+</script>
+</body>
+</html>
