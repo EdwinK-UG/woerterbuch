@@ -3,7 +3,7 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
 const root=path.resolve(__dirname,'../..'),dir=path.join(root,'.local/grammar-native/chapters');
 let count=0,groups=0;
 for(const file of fs.readdirSync(dir).filter(n=>/\.json$/.test(n)).sort()){
- const lesson=JSON.parse(fs.readFileSync(path.join(dir,file))),dom=new JSDOM('<main id="view"></main>',{url:'https://native.test/',runScripts:'outside-only'}),w=dom.window;
+ const authored=JSON.parse(fs.readFileSync(path.join(dir,file)));let lesson;require('node:vm').runInNewContext(fs.readFileSync(path.join(root,'.local/lessons/k'+authored.n+'.js'),'utf8'),{GRAM:{add:c=>lesson=c}});const dom=new JSDOM('<main id="view"></main>',{url:'https://native.test/',runScripts:'outside-only'}),w=dom.window;
  try{
   w.V=()=>w.document.getElementById('view');w.matchMedia=()=>({matches:true});w.crypto.randomUUID=require('node:crypto').randomUUID;w.ACCT={user:()=>({id:'native-check'})};
   w.eval(fs.readFileSync(path.join(root,'grammatik/illustrations.js'),'utf8'));w.eval(fs.readFileSync(path.join(root,'grammatik/grammatik.js'),'utf8'));

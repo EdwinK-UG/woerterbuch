@@ -135,7 +135,7 @@ const GROUPS = [
   {"t":"Schreiben und Sprechen · C1","ic":"book-open","h":160,"adv":true,"lv":"C1","ch":[[488,"Besondere Formen der mündlichen Sprache","","C1"]]},
   {"t":"Nachschlagen und trainieren","ic":"library","h":40,"ref":true,"ch":[[101,"Unregelmäßige Verben","Präteritum, Partizip, haben oder sein – mit Trainer","Liste"],[102,"Verben mit Dativ","helfen, danken, gefallen … – mit Trainer","Liste"],[103,"Verben mit Dativ und Akkusativ","jemandem etwas geben … – mit Trainer","Liste"],[104,"Verben mit Präpositionen","warten auf, denken an … – mit Trainer","Liste"],[180,"Begriffe und Synonyme","","Liste"],[181,"Wortpositionen im Satz: Gesamtschema","","Liste"],[182,"Präpositionen mit Akkusativ, Dativ und Genitiv","","Liste"],[183,"Verben, Adjektive und Nomen: nach Präpositionen","","Liste"],[184,"Verben, Adjektive und Nomen: alphabetisch","","Liste"],[185,"Dativ, Genitiv und zwei Akkusative","","Liste"],[186,"Unregelmäßige Verben: nach Vokalen","","Liste"],[187,"Unregelmäßige Verben: alphabetisch","","Liste"]]}
 ];
-const B2C1_READY = [86,401,87,88,89,90,91,407,408,94,95,410,96,97,412,187];   // B2–C1 grammar chapters that are finished
+const B2C1_READY = [86,401,87,88,89,90,91,407,408,94,95,410,96,97,412,98,413,99,414,100,415,105,417,418,419,109,110,111,112,113,114,426,116,427,428,429,430,120,431,432,187];   // B2–C1 grammar chapters that are finished
 const READY = Object.fromEntries([...B2C1_READY, ...Array.from({ length: 85 }, (_, i) => i + 1), 101, 102, 103, 104, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 261, 262, 263, 264, 265, 266, 267, 268, 269, 270, 271, 272, 273].map(n => [n, 1]));   // chapters that exist so far
 const TOTAL = GROUPS.reduce((s, g) => s + (g.ref || g.vocab ? 0 : g.ch.length), 0);
 /* level gating: a learner enrolled at level X sees chapters up to X; no level = everything open */
@@ -485,7 +485,7 @@ const CSS = `
 
 .gr-round-nav{display:flex;align-items:end;gap:.6rem;flex-wrap:wrap;margin:1.5rem 0}.gr-round-nav label{display:grid;gap:.4rem;flex:1;min-width:0}.gr-round-nav select{width:100%;padding:.75rem;border:1px solid var(--line);border-radius:.8rem;color:var(--fg);background:var(--card);font:inherit}.gr-round-nav [data-round-status]{flex-basis:100%;font-size:.85rem;color:var(--mut)}.gr-ue[hidden]{display:none}
 .gr-select{border:0;padding:0;margin:0;min-width:0}.gr-select legend{margin-bottom:.75rem;line-height:1.65}.gr-select label{display:inline-flex;align-items:center;gap:.5rem;margin:0 .5rem .5rem 0;border:1px solid var(--line);border-radius:.8rem;padding:.65rem .85rem;cursor:pointer;max-width:100%;overflow-wrap:anywhere}.gr-select label:has(:checked){border-color:var(--ac);background:var(--ac-salt)}.gr-select input{width:1.1rem;min-width:1.1rem;height:1.1rem;accent-color:var(--ac);margin:0}.gr-select input:focus-visible{outline:2px solid var(--ac);outline-offset:3px}
-.gr-tl:has(textarea){display:block}.gr-tl textarea{width:100%;resize:vertical;padding:.9rem;border:1px solid var(--line);border-radius:.8rem;font:inherit;line-height:1.7;background:var(--card);color:var(--fg)}.gr-tl textarea:focus{outline:2px solid var(--ac);outline-offset:2px}.gr-scene-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,15rem),1fr));gap:1rem}.gr-scene{margin:0;border:1px solid var(--line);border-radius:1rem;overflow:hidden;background:var(--card)}.gr-scene svg{width:100%;height:auto;display:block}.gr-scene figcaption{padding:.9rem}.gr-scene figcaption p{margin:.45rem 0;line-height:1.65}.gr-concept{margin:1.3rem 0}.gr-concept>figure{margin:0 auto -.4rem;width:min(100%,24rem);border-radius:1rem;overflow:hidden}.gr-concept>figure svg{width:100%;display:block;height:auto}
+.gr-tl:has(textarea){display:block}.gr-tl textarea{width:100%;resize:vertical;padding:.9rem;border:1px solid var(--line);border-radius:.8rem;font:inherit;line-height:1.7;background:var(--card);color:var(--fg)}.gr-tl textarea:focus{outline:2px solid var(--ac);outline-offset:2px}.gr-scene-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,15rem),1fr));gap:1rem}.gr-scene{margin:0;border:1px solid var(--line);border-radius:1rem;overflow:hidden;background:var(--card)}.gr-scene svg{width:100%;height:auto;display:block}.gr-it .gr-scene{max-width:26rem;margin:0 0 .9rem}.gr-scene figcaption{padding:.9rem}.gr-scene figcaption p{margin:.45rem 0;line-height:1.65}.gr-concept{margin:1.3rem 0}.gr-concept>figure{margin:0 auto -.4rem;width:min(100%,24rem);border-radius:1rem;overflow:hidden}.gr-concept>figure svg{width:100%;display:block;height:auto}
 /* contents list (Grammatik and Wortschatz) */
 .gr-tocbar{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;margin:0 0 .7rem}.gr-tocbar b{font-family:Fraunces,serif;font-size:1.2rem}.gr-tocbar .spacer{flex:1}
 .gr-acc{border:1px solid var(--line);background:var(--card);border-radius:1rem;margin:0 0 .6rem;overflow:hidden}
@@ -525,7 +525,7 @@ const CSS = `
 .gr-items.grid .gr-fill{max-width:100%}
 .gr-items.grid .gr-ib{display:flex;flex-direction:column;gap:.35rem}.gr-items.grid .vk-qpic{width:100%;height:auto;aspect-ratio:4/3;margin:0}
 .gr-items.grid .gr-in{position:absolute;margin:.3rem}
-.gr-items.cols{display:grid;grid-template-columns:repeat(auto-fill,minmax(17rem,1fr));gap:0 1.2rem}
+.gr-items.cols{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,17rem),1fr));gap:0 1.2rem}
 .gr-items.flow{display:block;line-height:2.5;font-family:Newsreader,serif;font-size:1.12rem}
 .gr-items.flow .gr-it{display:inline;padding:0;margin:0;border:0;background:none!important;box-shadow:none}
 .gr-items.flow .gr-it::after{content:" "}.gr-items.flow .gr-in,.gr-items.flow .gr-sol{display:none!important}.gr-items.flow .gr-ib{display:inline}
@@ -582,6 +582,8 @@ const CSS = `
 .gr-mopts{display:flex;flex-wrap:wrap;gap:.35rem .9rem;background:var(--cream);border:1px solid var(--cream-b);border-radius:.7rem;padding:.55rem .8rem;margin:0 0 .6rem;font-size:.95rem}
 .gr-mopts b{color:var(--ac)}
 .gr-items.cols .gr-mopts,.gr-items.grid .gr-mopts{grid-column:1/-1}
+.gr-items.cols:has(.gr-scene){grid-template-columns:repeat(2,minmax(0,1fr))}
+@media(max-width:640px){.gr-items.cols:has(.gr-scene){grid-template-columns:minmax(0,1fr)}}
 .gr-ml{display:inline-block;min-width:9rem;font-weight:600;margin-right:.5rem}
 .gr-msel{font:inherit;font-size:1rem;padding:.3rem .5rem;border:1px solid var(--line);border-radius:.5rem;background:var(--card);color:var(--fg);min-width:4.2rem}
 .gr-it.ok .gr-msel{border-color:var(--ok)}.gr-it.no .gr-msel{border-color:var(--bad)}
@@ -1502,7 +1504,7 @@ function machine(el) {
 /* ---------- exercises ---------- */
 const LET = 'abcdefghijklmnop';
 function matchOpts(x) { x._opts = shuffle(x.items.map(it => it.r)); return `<div class="gr-mopts">${x._opts.map((r, k) => `<span><b>${LET[k]})</b> ${H(r)}</span>`).join('')}</div>`; }
-const itemsHTML = x => (x.type === 'match' ? matchOpts(x) : '') + x.items.map((it, i) => `<div class="gr-it" data-i="${i}"><span class="gr-in">${i + 1}</span><div class="gr-ib">${itemHTML(x, it, i)}<div class="gr-sol" hidden></div></div></div>`).join('');
+const itemsHTML = x => (x.type === 'match' ? matchOpts(x) : '') + x.items.map((it, i) => `<div class="gr-it" data-i="${i}"><span class="gr-in">${i + 1}</span><div class="gr-ib">${it.scene ? `<figure class="gr-scene">${window.GRAM_ART.draw(K,it.scene)}</figure>` : ''}${itemHTML(x, it, i)}<div class="gr-sol" hidden></div></div></div>`).join('');
 function exHTML(x, n) {
   const legend = x.type === 'cases' ? `<div class="gr-legend"><span class="n">1× Nominativ</span><span class="d">2× Dativ</span><span class="a">3× Akkusativ</span></div>` : '';
   const lay = [x.grid ? 'grid' : '', x.cols ? 'cols' : '', x.flow ? 'flow' : ''].filter(Boolean).join(' ');
@@ -1510,8 +1512,8 @@ function exHTML(x, n) {
   const label = cur && cur.vocab ? exLabel(cur, x) : 'Übung ' + n;
   let body = `<div class="gr-items ${lay}">${itemsHTML(x)}</div>`;
   if (x.frame) body = `<div class="gr-frame ${x.frame}">${x.frame === 'form' ? `<div class="gr-fh">${icn('clipboard-list')}<span>${H(x.subject || 'Formular')}</span></div>` : ''}${x.frame === 'mail' ? `<div class="gr-fh">${icn('mail')}<span>${H(x.subject || 'Neue Nachricht')}</span></div>` : ''}${body}</div>`;
-  return `${x.before ? block(x.before) : ''}<div class="gr-ue${cur && cur.vocab ? ' vk-ue' : ''}" id="ue-${x.id}" data-ex="${x.id}" data-type="${x.type}"><div class="gr-ueh"><span class="gr-uen">${label}</span><h3>${H(x.title)}</h3><span id="ueb-${x.id}">${badgeHTML(x)}</span></div>
-    <p class="gr-uei">${rich(H(x.instr))}</p>${legend}${bank}${body}
+  return `<div class="gr-ue${cur && cur.vocab ? ' vk-ue' : ''}" id="ue-${x.id}" data-ex="${x.id}" data-type="${x.type}"><div class="gr-ueh"><span class="gr-uen">${label}</span><h3>${H(x.title)}</h3><span id="ueb-${x.id}">${badgeHTML(x)}</span></div>
+    <p class="gr-uei">${rich(H(x.instr))}</p>${legend}${bank}${x.before ? block(x.before) : ''}${body}
     <div class="gr-uef"><button class="btn primary gr-btn" data-act="check">${icn('check')} Prüfen</button>
     ${x.type === 'free' ? '' : `<button class="btn gr-btn" data-act="show" disabled title="Erst nach dem ersten Prüfen">${icn('eye')} Lösung zeigen</button>`}
     <button class="btn gr-btn" data-act="reset">${icn('rotate-ccw')} Neu</button><span class="gr-res"></span></div></div>

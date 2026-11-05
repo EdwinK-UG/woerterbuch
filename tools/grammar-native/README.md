@@ -6,11 +6,13 @@ The provided source is *Grammatik aktiv B2–C1 – Üben, Hören, Sprechen* by 
 
 ## Private authoring
 
-Authored JSON lives in `.local/grammar-native/chapters/NNN-B2.json`, `NNN-C1.json`, or `NNN-Liste.json`. Lesson bodies and source extraction remain private and outside the public repository. Each concept needs a meaningful `scene` or an illustrated `scenes` block. Rebuild tables as `grid`, `conj`, or `reflist` blocks.
+Authored JSON lives in `.local/grammar-native/chapters/NNN-B2.json`, `NNN-C1.json`, or `NNN-Liste.json`. Lesson bodies and source extraction remain private and outside the public repository. Each concept needs a meaningful `scene` or an illustrated `scenes` block. Scene kinds are explicit: a missing kind throws instead of silently substituting unrelated artwork. Custom sentence diagrams use `tokens`; preposition-position diagrams use `rows`. Object exercise items can carry a `scene` and must also have a useful text prompt for accessibility and the quiz mode. Rebuild tables as `grid`, `conj`, or `reflist` blocks.
 
 Every exercise must have a supported automatically graded type and a source mapping. Preserve intentionally incorrect source sentences in correction tasks. Check underlined text and tables against the rendered original: OCR frequently drops their words. Use the supplied answer key and explicitly encode valid alternatives. Constrain open-ended prompts enough to make marking fair while preserving every source scenario.
 
-Long `type` tasks use editable text fields with `start`, `long`, and `rows`. Set `commas: true` when comma placement matters. `select` tasks require every correct option and reject extra choices. `exercisePaging` displays large trainers in short rounds without discarding answers or saved grades.
+Long `type` tasks use editable text fields with `start`, `long`, and `rows`. Set `commas: true` when comma placement matters. `select` tasks require every correct option and reject extra choices. `exercisePaging` displays trainers in short rounds without discarding answers or saved grades. The compiler enables it for native lessons with multiple exercise groups. Context in `before` stays inside its own round, so tables from other rounds remain hidden.
+
+Partner activities live in `.local/grammar-native/partners/NNN.json`, with an original activity `id`, `targets` mapping level to authored lesson ID, and `understand` / `exercises` arrays. Optional `levels` limits a block or group to specific targets. The compiler appends fresh copies each build; originals and partner coverage are audited separately. Written partner prompts are adapted for submission, with optional paired practice; the source game format is not itself an online multiplayer implementation.
 
 ## Build and check
 
