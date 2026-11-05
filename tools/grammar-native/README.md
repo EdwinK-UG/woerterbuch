@@ -4,13 +4,15 @@ Use the existing A2/B1 lesson format: explanations, native tables, original SVG 
 
 The provided source is *Grammatik aktiv B2–C1 – Üben, Hören, Sprechen* by Friederike Jin and Ute Voß. `source-index.json` records chapter levels and page ranges; `exercise-index.json` records the 499 original numbered exercise groups. These indexes contain metadata only. Audio recordings are excluded at the user's request.
 
-## Authored checkpoint: source chapters 1–69
+## Complete native rebuild: source chapters 1–88
 
-The native rebuild currently contains 90 B2/C1 units plus the irregular-verb reference and trainer (91 units total). It includes partner activities 1–7 and written drills 2–28. All numbered source exercise groups through chapter 69 have mappings: 394 of 499 across the complete source. The private verifier submits 4,546 question rows containing 5,444 answer points in 661 exercise groups. Mapping and successful grading do not substitute for linguistic review.
+All 88 chapters are authored as 114 B2/C1 units, with eight searchable reference units (122 native units in total). All 499 numbered source exercise groups have level-specific mappings. The nine partner activities and all 36 written training activities are integrated; the source's audio track numbers 2–37 are recorded separately from training numbers 1–36. Audio recordings remain excluded.
 
-The latest additions cover adjective endings, comparison, participles, reported speech, temporal/causal/concessive/consecutive/conditional/modal clauses and infinitive constructions. Their illustrations are original, theme-aware SVGs; the dinner activity combines both partner versions and has five separately graded picture corrections. The practice-round selector has an explicit accessible name.
+The actual-submit verifier checks 921 exercise groups, 6,710 submitted question rows and 7,972 answer points. Long texts remain editable native exercises, and tables are reconstructed as HTML. The references retain 238 grouped preposition rows, 330 alphabetical lexical rows, 99 special case entries, 113 vowel-grouped verb rows and 144 alphabetical verb rows. Original theme-aware SVGs illustrate every concept block. Missing scene kinds fail explicitly. Source key errors and obsolete comma guidance have review notes in the private authoring files.
 
-Remaining work: source chapters 70–88, partner activities 8–9, written drills 29–37 and references 180–186. This authored checkpoint is not a deployment receipt; release the matching private bundle and website together.
+`audit.cjs` requires every chapter, level, numbered source group, partner activity, written activity and reference table. It verifies coverage, not exhaustive linguistic equivalence. The grading verifier checks mechanics against authored answer sets, not every possible valid free formulation. Prompts specify the required vocabulary and transformations, and explicit alternatives are retained where reviewed. A teacher's ongoing editorial review remains valuable.
+
+Release the matching protected lesson bundle and website together. The completion audit is an implementation record, not a deployment receipt.
 
 ## Private authoring
 
@@ -26,6 +28,7 @@ Partner activities live in `.local/grammar-native/partners/NNN.json`, with an or
 
 ```sh
 node tools/grammar-native/build.cjs
+node tools/grammar-native/audit.cjs
 node tools/grammar-native/verify.cjs
 node tools/build-course-catalog.cjs
 node tools/version-assets.cjs
@@ -34,6 +37,6 @@ npm run check
 
 Use Node 24. The private verifier submits each authored answer through the real rendering and grading code. It checks mechanics, not linguistic correctness: source review and desktop/mobile visual review are still required.
 
-`build.cjs` writes private lesson files, authored coverage, and source-group mappings under `.local/grammar-native/`. A mapping is not proof of complete linguistic review. Only authored units enter the ready catalogue; unconverted chapters stay unavailable. Reference lists do not inflate grammar chapter counts. B2 vocabulary remains separate.
+`build.cjs` writes private lesson files, authored coverage, and source-group mappings under `.local/grammar-native/`. A mapping is not proof of complete linguistic review. Only authored units enter the ready catalogue; all indexed B2/C1 chapters and appendix units are now authored. Reference lists do not inflate grammar chapter counts. B2 vocabulary remains separate.
 
 Before release, build and deploy the matching protected lesson bundle, then publish the website. A local catalogue change alone is not a release. Do not deploy the archived rejected source-image workbook.
