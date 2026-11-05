@@ -583,8 +583,8 @@ function loadGram(){
   if(!gramP)gramP=(async()=>{
     if(typeof LESSON_EXERCISES==='undefined')await scriptFile('grammatik/catalog.js?v=20c407b905f8');
     if(!window.GRAM_ART)await scriptFile('grammatik/illustrations.js?v=cf922893ba5a');
-    if(!window.GRAM_MOTION)await scriptFile('grammatik/motion.js?v=4485f4aac538');   // lets the scene pictures move; must load after illustrations.js
-    if(!window.GRAM)await scriptFile('grammatik/grammatik.js?v=d04802aa741c');
+    if(!window.GRAM_MOTION)await scriptFile('grammatik/motion.js?v=cf2eeb2d66c4');   // lets the scene pictures move; must load after illustrations.js
+    if(!window.GRAM)await scriptFile('grammatik/grammatik.js?v=5e1a5616009d');
   })().catch(e=>{gramP=null;throw e});
   return gramP;
 }

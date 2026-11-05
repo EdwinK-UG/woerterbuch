@@ -737,8 +737,8 @@ function css() {
 .gm-forms .gm-chip text{font-size:17px}.gm-forms .gm-chip text .chg{fill:var(--ac);font-weight:800}.gm-forms .gm-chip text .chg.o{fill:var(--nom)}
 .gm-wow .chg{animation:gm-hl 1.2s ease-in-out infinite}
 .gm-gear{opacity:0;transition:opacity .4s}.gm-gear.on{opacity:1}.gm-cog{transform-box:fill-box;transform-origin:center}.gm-gear.run .gm-cog.a{animation:gm-spin 1.2s linear infinite}.gm-gear.run .gm-cog.b{animation:gm-spin 1.2s linear infinite reverse}
-.gm-chip.r-pre rect,.gm-chip.r-post rect{fill:var(--sun);stroke:var(--wood);stroke-width:2.2}.gm-chip.r-pre text,.gm-chip.r-post text{fill:#2a2f38}
-.gm-chip.r-mid rect{fill:var(--akk-s);stroke:var(--akk);stroke-width:2.2}.gm-chip.r-mid text{fill:var(--akk)}
+.gm-adposition .gm-chip.r-pre rect,.gm-adposition .gm-chip.r-post rect{fill:var(--sun);stroke:var(--wood);stroke-width:2.2}.gm-adposition .gm-chip.r-pre text,.gm-adposition .gm-chip.r-post text{fill:#2a2f38}
+.gm-adposition .gm-chip.r-mid rect{fill:var(--akk-s);stroke:var(--akk);stroke-width:2.2}.gm-adposition .gm-chip.r-mid text{fill:var(--akk)}
 .gm-page{transform-box:fill-box;transform-origin:50% 0;transition:transform .9s cubic-bezier(.6,0,.4,1),opacity .6s .5s}.gm-flip .gm-page{transform:scaleY(.02) translateY(-30px);opacity:0}
 .gm-note{transform:translate(260px,60px) rotate(-14deg);opacity:0;transition:transform .8s cubic-bezier(.3,1.5,.5,1),opacity .4s}.gm-stick .gm-note{transform:translate(260px,196px) rotate(-3deg);opacity:1}
 .gm-note text{font-family:Inter,system-ui,sans-serif;font-weight:800;fill:#2a2f38}
