@@ -10,9 +10,9 @@ All 88 chapters are authored as 114 B2/C1 units, with eight searchable reference
 
 The actual-submit verifier checks 921 exercise groups, 6,710 submitted question rows and 7,972 answer points. Long texts remain editable native exercises, and tables are reconstructed as HTML. The references retain 238 grouped preposition rows, 330 alphabetical lexical rows, 99 special case entries, 113 vowel-grouped verb rows and 144 alphabetical verb rows. Original theme-aware SVGs illustrate every concept block. Missing scene kinds fail explicitly. Source key errors and obsolete comma guidance have review notes in the private authoring files.
 
-`audit.cjs` requires every chapter, level, numbered source group, partner activity, written activity and reference table. It verifies coverage, not exhaustive linguistic equivalence. The grading verifier checks mechanics against authored answer sets, not every possible valid free formulation. Prompts specify the required vocabulary and transformations, and explicit alternatives are retained where reviewed. A teacher's ongoing editorial review remains valuable.
+`audit.cjs` requires every chapter, level, numbered source group, partner activity, written activity and reference table. It verifies coverage, not exhaustive linguistic equivalence. The grading verifier checks mechanics against authored answer sets, not every possible valid free formulation. The case trainer uses multiple selection; bare preposition prompts accept the other connections attested for the same word in the source indexes. Prompts specify the required vocabulary and transformations, and explicit alternatives are retained where reviewed. A teacher's ongoing editorial review remains valuable.
 
-Release the matching protected lesson bundle and website together. The completion audit is an implementation record, not a deployment receipt.
+Release the matching protected lesson bundle and website together. `completion.json` records the verified content counts and private bundle hash, linking the publicly versioned implementation to protected course content. Website publication still has its own deployment status.
 
 ## Private authoring
 
