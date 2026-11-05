@@ -25,7 +25,7 @@ if (privateSources) {
 }
 const metadata = {},
   counts = {};
-for (const { n, level, vocab } of context.GRAM.chapters()) {
+for (const { n, level, vocab, ref } of context.GRAM.chapters()) {
   const ch = privateSources ? context.GRAM._test.CH[n] : { n, exercises: (context.catalog[n] || []).map(([id, title, flags]) => ({ id, title, more: !!(flags & 1), graded: !(flags & 2) })) };
   assert.equal(ch?.n, n, "missing private lesson " + n);
   assert.ok(ch.exercises.length, "missing exercises in " + n);
@@ -43,7 +43,7 @@ for (const { n, level, vocab } of context.GRAM.chapters()) {
     x.title,
     (x.more ? 1 : 0) | (x.graded === false || x.type === "free" ? 2 : 0),
   ]);
-  if (n < 100 || vocab) {
+  if (!ref) {
     counts[level] ||= { g: 0, v: 0 };
     counts[level][vocab ? "v" : "g"]++;
   }

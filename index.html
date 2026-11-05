@@ -403,7 +403,7 @@ kbd{font:600 .66rem Inter,system-ui,sans-serif;padding:.1rem .35rem;border-radiu
 <script src="config.js?v=bce20ec90cdd"></script>
 <script src="js/email-verification.js?v=dc82e0086602"></script>
 <script src="js/pages.js?v=4bdfd342abbf"></script>
-<script src="js/course-counts.js?v=a500004e0728"></script>
+<script src="js/course-counts.js?v=9a1d19b2a7b5"></script>
 <script src="js/study-sync.js?v=9de759f82df1"></script>
 <script src="js/game-i18n.js?v=9cb89f5a1bfd"></script>
 <script src="js/game-messages.js?v=f0e0633452ab"></script>
@@ -581,8 +581,9 @@ function scriptFile(src){
 }
 function loadGram(){
   if(!gramP)gramP=(async()=>{
-    if(typeof LESSON_EXERCISES==='undefined')await scriptFile('grammatik/catalog.js?v=606c7f51c6cd');
-    if(!window.GRAM)await scriptFile('grammatik/grammatik.js?v=bb70b99fa167');
+    if(typeof LESSON_EXERCISES==='undefined')await scriptFile('grammatik/catalog.js?v=7ca2e966dfae');
+    if(!window.GRAM_ART)await scriptFile('grammatik/illustrations.js?v=b17fb8eacabf');
+    if(!window.GRAM)await scriptFile('grammatik/grammatik.js?v=8104cd64c348');
   })().catch(e=>{gramP=null;throw e});
   return gramP;
 }
@@ -3067,7 +3068,7 @@ function viewSetup(kind){   // kind: solo | host | memory | blitz
   f.querySelectorAll('.gseg').forEach(g=>g.querySelectorAll('button').forEach(b=>b.onclick=()=>{g.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));s[g.dataset.f]=+b.dataset.v}));
   const srcSel=$('gsrc'), qo=$('gqopts'); const syncQ=()=>{if(qo)qo.style.display=srcSel.value.startsWith('quiz:')?'none':''; const tw=$('gtypesw'); if(tw)tw.style.display=srcSel.value.startsWith('gram:')?'none':''}; srcSel.onchange=syncQ; syncQ();
   if(quizzy)loadGram().then(()=>{ if(!$('gsrc'))return; const by={}; GRAM.list().forEach(c=>(by[c.group]=by[c.group]||[]).push(c));
-    srcSel.insertAdjacentHTML('beforeend',Object.keys(by).map(g=>`<optgroup label="${/^Wortschatz/.test(g)?'':gt("Grammatik · ")}${H(g)}">${by[g].map(c=>`<option value="gram:${c.n}">${c.n>200?(c.n>240?c.n-240:c.n>220?c.n-220:c.n-200)+'. ':c.n>100?'':c.n+'. '}${H(c.title)}</option>`).join('')}</optgroup>`).join(''));
+    srcSel.insertAdjacentHTML('beforeend',Object.keys(by).map(g=>`<optgroup label="${/^Wortschatz/.test(g)?'':gt("Grammatik · ")}${H(g)}">${by[g].map(c=>`<option value="gram:${c.n}">${c.ref?'':c.no+'. '}${H(c.title)}</option>`).join('')}</optgroup>`).join(''));
     if(cur.startsWith('gram:'))srcSel.value=cur; syncQ() }).catch(()=>{});
   f.onsubmit=ev=>{ev.preventDefault(); AU.wake();
     const [src,id]=srcSel.value.split(':'); s.src=src; if(src==='all'){s.lvl=+id;delete s.id}else s.id=id;
@@ -3131,5 +3132,5 @@ if(tabs&&!tabs.querySelector('[data-t="play"]')){const a=document.createElement(
 })();
 </script>
 <!-- ===== /Spiele ===== -->
-<script src="konto.js?v=6429941153ab"></script>
+<script src="konto.js?v=417edaf2be53"></script>
 </body></html>
