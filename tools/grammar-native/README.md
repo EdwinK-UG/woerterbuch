@@ -4,6 +4,14 @@ Use the existing A2/B1 lesson format: explanations, native tables, original SVG 
 
 The provided source is *Grammatik aktiv B2–C1 – Üben, Hören, Sprechen* by Friederike Jin and Ute Voß. `source-index.json` records chapter levels and page ranges; `exercise-index.json` records the 499 original numbered exercise groups. These indexes contain metadata only. Audio recordings are excluded at the user's request.
 
+## Authored checkpoint: source chapters 1–69
+
+The native rebuild currently contains 90 B2/C1 units plus the irregular-verb reference and trainer (91 units total). It includes partner activities 1–7 and written drills 2–28. All numbered source exercise groups through chapter 69 have mappings: 394 of 499 across the complete source. The private verifier submits 4,546 question rows containing 5,444 answer points in 661 exercise groups. Mapping and successful grading do not substitute for linguistic review.
+
+The latest additions cover adjective endings, comparison, participles, reported speech, temporal/causal/concessive/consecutive/conditional/modal clauses and infinitive constructions. Their illustrations are original, theme-aware SVGs; the dinner activity combines both partner versions and has five separately graded picture corrections. The practice-round selector has an explicit accessible name.
+
+Remaining work: source chapters 70–88, partner activities 8–9, written drills 29–37 and references 180–186. This authored checkpoint is not a deployment receipt; release the matching private bundle and website together.
+
 ## Private authoring
 
 Authored JSON lives in `.local/grammar-native/chapters/NNN-B2.json`, `NNN-C1.json`, or `NNN-Liste.json`. Lesson bodies and source extraction remain private and outside the public repository. Each concept needs a meaningful `scene` or an illustrated `scenes` block. Scene kinds are explicit: a missing kind throws instead of silently substituting unrelated artwork. Custom sentence diagrams use `tokens`; preposition-position diagrams use `rows`. Object exercise items can carry a `scene` and must also have a useful text prompt for accessibility and the quiz mode. Rebuild tables as `grid`, `conj`, or `reflist` blocks.
