@@ -470,10 +470,10 @@ function need() {
   page(T('Please sign in', 'Bitte anmelden'), `<p class="sub">${T('Sign in or create a free account to see this page.', 'Melde dich an oder erstelle ein kostenloses Konto, um diese Seite zu sehen.')}</p>
     <p class="row"><button class="btn primary" onclick="ACCT.sheet('up')">${T('Create account', 'Konto erstellen')}</button><button class="btn" onclick="ACCT.sheet('in')">${T('Sign in', 'Anmelden')}</button></p>`);
 }
-const chHash = n => (n > 200 ? '#/v/' : '#/g/') + n;
+const chHash = n => (CHS().find(c => c.n === Number(n))?.vocab ? '#/v/' : '#/g/') + n;
 async function ensureGram() { if (!window.GRAM && window.loadGram) { try { await loadGram(); } catch (e) {} } }
 const CHS = () => (window.GRAM && GRAM.chapters ? GRAM.chapters() : []);
-const chTitle = n => { const c = CHS().find(x => x.n === n); return c ? c.title : (n > 200 ? T('Topic ', 'Thema ') + n : T('Chapter ', 'Kapitel ') + n); };
+const chTitle = n => { const c = CHS().find(x => x.n === Number(n)); return c ? c.title : T('Chapter ', 'Kapitel ') + n; };
 const chLabel = c => (c.vocab ? T('Topic ', 'Thema ') : T('Chapter ', 'Kapitel ')) + c.no;
 /* best result per (user, chapter, exercise) → share correct */
 function bestMap(rows) {

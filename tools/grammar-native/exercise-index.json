@@ -1,0 +1,2940 @@
+{
+  "sourceSha256": "65ce70ab638e5c5beda36f6c67ace9008e82c316428ffd888c1c2db7dc5c5395",
+  "chapters": [
+    {
+      "chapter": 1,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 8
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 8
+        },
+        {
+          "number": 3,
+          "level": "B2",
+          "pdfPage": 9
+        },
+        {
+          "number": 4,
+          "level": "B2",
+          "pdfPage": 9
+        },
+        {
+          "number": 5,
+          "level": "B2",
+          "pdfPage": 9
+        },
+        {
+          "number": 6,
+          "level": "B2",
+          "pdfPage": 10
+        },
+        {
+          "number": 7,
+          "level": "C1",
+          "pdfPage": 10
+        },
+        {
+          "number": 8,
+          "level": "C1",
+          "pdfPage": 10
+        },
+        {
+          "number": 9,
+          "level": "C1",
+          "pdfPage": 10
+        },
+        {
+          "number": 10,
+          "level": "C1",
+          "pdfPage": 10
+        }
+      ]
+    },
+    {
+      "chapter": 2,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 12
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 12
+        },
+        {
+          "number": 3,
+          "level": "B2",
+          "pdfPage": 12
+        },
+        {
+          "number": 4,
+          "level": "B2",
+          "pdfPage": 12
+        }
+      ]
+    },
+    {
+      "chapter": 3,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 13
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 14
+        },
+        {
+          "number": 3,
+          "level": "B2",
+          "pdfPage": 14
+        },
+        {
+          "number": 4,
+          "level": "B2",
+          "pdfPage": 14
+        },
+        {
+          "number": 5,
+          "level": "B2",
+          "pdfPage": 14
+        },
+        {
+          "number": 6,
+          "level": "B2",
+          "pdfPage": 14
+        }
+      ]
+    },
+    {
+      "chapter": 4,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 15
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 16
+        },
+        {
+          "number": 3,
+          "level": "B2",
+          "pdfPage": 16
+        },
+        {
+          "number": 4,
+          "level": "B2",
+          "pdfPage": 16
+        },
+        {
+          "number": 5,
+          "level": "B2",
+          "pdfPage": 16
+        },
+        {
+          "number": 6,
+          "level": "B2",
+          "pdfPage": 16
+        }
+      ]
+    },
+    {
+      "chapter": 5,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 17
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 18
+        },
+        {
+          "number": 3,
+          "level": "B2",
+          "pdfPage": 18
+        },
+        {
+          "number": 4,
+          "level": "B2",
+          "pdfPage": 18
+        },
+        {
+          "number": 5,
+          "level": "B2",
+          "pdfPage": 18
+        },
+        {
+          "number": 6,
+          "level": "B2",
+          "pdfPage": 18
+        }
+      ]
+    },
+    {
+      "chapter": 6,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 19
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 20
+        },
+        {
+          "number": 3,
+          "level": "B2",
+          "pdfPage": 20
+        },
+        {
+          "number": 4,
+          "level": "B2",
+          "pdfPage": 20
+        },
+        {
+          "number": 5,
+          "level": "B2",
+          "pdfPage": 20
+        }
+      ]
+    },
+    {
+      "chapter": 7,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "C1",
+          "pdfPage": 21
+        },
+        {
+          "number": 2,
+          "level": "C1",
+          "pdfPage": 22
+        },
+        {
+          "number": 3,
+          "level": "C1",
+          "pdfPage": 22
+        },
+        {
+          "number": 4,
+          "level": "C1",
+          "pdfPage": 22
+        },
+        {
+          "number": 5,
+          "level": "C1",
+          "pdfPage": 22
+        },
+        {
+          "number": 6,
+          "level": "C1",
+          "pdfPage": 22
+        }
+      ]
+    },
+    {
+      "chapter": 8,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "C1",
+          "pdfPage": 24
+        },
+        {
+          "number": 2,
+          "level": "C1",
+          "pdfPage": 24
+        },
+        {
+          "number": 3,
+          "level": "C1",
+          "pdfPage": 24
+        },
+        {
+          "number": 4,
+          "level": "C1",
+          "pdfPage": 24
+        },
+        {
+          "number": 5,
+          "level": "C1",
+          "pdfPage": 24
+        },
+        {
+          "number": 6,
+          "level": "C1",
+          "pdfPage": 24
+        }
+      ]
+    },
+    {
+      "chapter": 9,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 28
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 28
+        },
+        {
+          "number": 3,
+          "level": "B2",
+          "pdfPage": 28
+        },
+        {
+          "number": 4,
+          "level": "B2",
+          "pdfPage": 28
+        },
+        {
+          "number": 5,
+          "level": "B2",
+          "pdfPage": 28
+        }
+      ]
+    },
+    {
+      "chapter": 10,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 29
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 30
+        },
+        {
+          "number": 3,
+          "level": "B2",
+          "pdfPage": 30
+        },
+        {
+          "number": 4,
+          "level": "B2",
+          "pdfPage": 30
+        },
+        {
+          "number": 5,
+          "level": "C1",
+          "pdfPage": 30
+        }
+      ]
+    },
+    {
+      "chapter": 11,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 31
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 31
+        },
+        {
+          "number": 3,
+          "level": "B2",
+          "pdfPage": 32
+        },
+        {
+          "number": 4,
+          "level": "B2",
+          "pdfPage": 32
+        },
+        {
+          "number": 5,
+          "level": "B2",
+          "pdfPage": 32
+        }
+      ]
+    },
+    {
+      "chapter": 12,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 33
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 34
+        },
+        {
+          "number": 3,
+          "level": "B2",
+          "pdfPage": 34
+        },
+        {
+          "number": 4,
+          "level": "B2",
+          "pdfPage": 34
+        },
+        {
+          "number": 5,
+          "level": "C1",
+          "pdfPage": 34
+        }
+      ]
+    },
+    {
+      "chapter": 13,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 35
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 36
+        },
+        {
+          "number": 3,
+          "level": "B2",
+          "pdfPage": 36
+        },
+        {
+          "number": 4,
+          "level": "C1",
+          "pdfPage": 36
+        },
+        {
+          "number": 5,
+          "level": "C1",
+          "pdfPage": 36
+        }
+      ]
+    },
+    {
+      "chapter": 14,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 39
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 40
+        },
+        {
+          "number": 3,
+          "level": "B2",
+          "pdfPage": 40
+        },
+        {
+          "number": 4,
+          "level": "B2",
+          "pdfPage": 40
+        },
+        {
+          "number": 5,
+          "level": "B2",
+          "pdfPage": 40
+        },
+        {
+          "number": 6,
+          "level": "C1",
+          "pdfPage": 40
+        },
+        {
+          "number": 7,
+          "level": "B2",
+          "pdfPage": 41
+        },
+        {
+          "number": 8,
+          "level": "C1",
+          "pdfPage": 41
+        },
+        {
+          "number": 9,
+          "level": "B2",
+          "pdfPage": 41
+        },
+        {
+          "number": 10,
+          "level": "C1",
+          "pdfPage": 41
+        },
+        {
+          "number": 11,
+          "level": "C1",
+          "pdfPage": 41
+        },
+        {
+          "number": 12,
+          "level": "B2",
+          "pdfPage": 42
+        },
+        {
+          "number": 13,
+          "level": "B2",
+          "pdfPage": 42
+        },
+        {
+          "number": 14,
+          "level": "C1",
+          "pdfPage": 42
+        },
+        {
+          "number": 15,
+          "level": "C1",
+          "pdfPage": 42
+        }
+      ]
+    },
+    {
+      "chapter": 15,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 43
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 44
+        },
+        {
+          "number": 3,
+          "level": "B2",
+          "pdfPage": 44
+        },
+        {
+          "number": 4,
+          "level": "C1",
+          "pdfPage": 44
+        },
+        {
+          "number": 5,
+          "level": "C1",
+          "pdfPage": 45
+        },
+        {
+          "number": 6,
+          "level": "C1",
+          "pdfPage": 45
+        },
+        {
+          "number": 7,
+          "level": "B2",
+          "pdfPage": 45
+        },
+        {
+          "number": 8,
+          "level": "C1",
+          "pdfPage": 45
+        },
+        {
+          "number": 9,
+          "level": "C1",
+          "pdfPage": 46
+        },
+        {
+          "number": 10,
+          "level": "C1",
+          "pdfPage": 46
+        },
+        {
+          "number": 11,
+          "level": "C1",
+          "pdfPage": 46
+        }
+      ]
+    },
+    {
+      "chapter": 16,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 48
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 48
+        },
+        {
+          "number": 3,
+          "level": "B2",
+          "pdfPage": 48
+        },
+        {
+          "number": 4,
+          "level": "B2",
+          "pdfPage": 48
+        },
+        {
+          "number": 5,
+          "level": "B2",
+          "pdfPage": 49
+        },
+        {
+          "number": 6,
+          "level": "B2",
+          "pdfPage": 50
+        },
+        {
+          "number": 7,
+          "level": "B2",
+          "pdfPage": 50
+        },
+        {
+          "number": 8,
+          "level": "B2",
+          "pdfPage": 50
+        }
+      ]
+    },
+    {
+      "chapter": 17,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "C1",
+          "pdfPage": 51
+        },
+        {
+          "number": 2,
+          "level": "C1",
+          "pdfPage": 52
+        },
+        {
+          "number": 3,
+          "level": "C1",
+          "pdfPage": 52
+        },
+        {
+          "number": 4,
+          "level": "C1",
+          "pdfPage": 52
+        },
+        {
+          "number": 5,
+          "level": "C1",
+          "pdfPage": 52
+        },
+        {
+          "number": 6,
+          "level": "C1",
+          "pdfPage": 52
+        }
+      ]
+    },
+    {
+      "chapter": 18,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "C1",
+          "pdfPage": 53
+        },
+        {
+          "number": 2,
+          "level": "C1",
+          "pdfPage": 54
+        },
+        {
+          "number": 3,
+          "level": "C1",
+          "pdfPage": 54
+        },
+        {
+          "number": 4,
+          "level": "C1",
+          "pdfPage": 54
+        },
+        {
+          "number": 5,
+          "level": "C1",
+          "pdfPage": 54
+        },
+        {
+          "number": 6,
+          "level": "C1",
+          "pdfPage": 54
+        },
+        {
+          "number": 7,
+          "level": "C1",
+          "pdfPage": 54
+        }
+      ]
+    },
+    {
+      "chapter": 19,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "C1",
+          "pdfPage": 55
+        },
+        {
+          "number": 2,
+          "level": "C1",
+          "pdfPage": 56
+        },
+        {
+          "number": 3,
+          "level": "C1",
+          "pdfPage": 56
+        },
+        {
+          "number": 4,
+          "level": "C1",
+          "pdfPage": 56
+        },
+        {
+          "number": 5,
+          "level": "C1",
+          "pdfPage": 56
+        },
+        {
+          "number": 6,
+          "level": "C1",
+          "pdfPage": 56
+        }
+      ]
+    },
+    {
+      "chapter": 20,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 59
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 60
+        },
+        {
+          "number": 3,
+          "level": "B2",
+          "pdfPage": 60
+        },
+        {
+          "number": 4,
+          "level": "B2",
+          "pdfPage": 60
+        }
+      ]
+    },
+    {
+      "chapter": 21,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 62
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 62
+        },
+        {
+          "number": 3,
+          "level": "B2",
+          "pdfPage": 62
+        },
+        {
+          "number": 4,
+          "level": "B2",
+          "pdfPage": 62
+        }
+      ]
+    },
+    {
+      "chapter": 22,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 64
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 64
+        },
+        {
+          "number": 3,
+          "level": "B2",
+          "pdfPage": 64
+        },
+        {
+          "number": 4,
+          "level": "B2",
+          "pdfPage": 64
+        }
+      ]
+    },
+    {
+      "chapter": 23,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 65
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 66
+        },
+        {
+          "number": 3,
+          "level": "B2",
+          "pdfPage": 66
+        },
+        {
+          "number": 4,
+          "level": "B2",
+          "pdfPage": 66
+        },
+        {
+          "number": 5,
+          "level": "B2",
+          "pdfPage": 66
+        },
+        {
+          "number": 6,
+          "level": "B2",
+          "pdfPage": 66
+        }
+      ]
+    },
+    {
+      "chapter": 24,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 67
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 68
+        },
+        {
+          "number": 3,
+          "level": "B2",
+          "pdfPage": 68
+        },
+        {
+          "number": 4,
+          "level": "B2",
+          "pdfPage": 68
+        },
+        {
+          "number": 5,
+          "level": "B2",
+          "pdfPage": 68
+        },
+        {
+          "number": 6,
+          "level": "B2",
+          "pdfPage": 68
+        }
+      ]
+    },
+    {
+      "chapter": 25,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 70
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 70
+        },
+        {
+          "number": 3,
+          "level": "B2",
+          "pdfPage": 70
+        },
+        {
+          "number": 4,
+          "level": "B2",
+          "pdfPage": 70
+        },
+        {
+          "number": 5,
+          "level": "B2",
+          "pdfPage": 70
+        }
+      ]
+    },
+    {
+      "chapter": 26,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "C1",
+          "pdfPage": 72
+        },
+        {
+          "number": 2,
+          "level": "C1",
+          "pdfPage": 72
+        },
+        {
+          "number": 3,
+          "level": "C1",
+          "pdfPage": 72
+        },
+        {
+          "number": 4,
+          "level": "C1",
+          "pdfPage": 72
+        }
+      ]
+    },
+    {
+      "chapter": 27,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 74
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 74
+        },
+        {
+          "number": 3,
+          "level": "C1",
+          "pdfPage": 74
+        }
+      ]
+    },
+    {
+      "chapter": 28,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "C1",
+          "pdfPage": 76
+        },
+        {
+          "number": 2,
+          "level": "C1",
+          "pdfPage": 76
+        },
+        {
+          "number": 3,
+          "level": "C1",
+          "pdfPage": 76
+        },
+        {
+          "number": 4,
+          "level": "C1",
+          "pdfPage": 76
+        },
+        {
+          "number": 5,
+          "level": "C1",
+          "pdfPage": 76
+        }
+      ]
+    },
+    {
+      "chapter": 29,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "C1",
+          "pdfPage": 78
+        },
+        {
+          "number": 2,
+          "level": "C1",
+          "pdfPage": 78
+        },
+        {
+          "number": 3,
+          "level": "C1",
+          "pdfPage": 78
+        }
+      ]
+    },
+    {
+      "chapter": 30,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "C1",
+          "pdfPage": 80
+        },
+        {
+          "number": 2,
+          "level": "C1",
+          "pdfPage": 80
+        },
+        {
+          "number": 3,
+          "level": "C1",
+          "pdfPage": 80
+        }
+      ]
+    },
+    {
+      "chapter": 31,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 84
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 84
+        },
+        {
+          "number": 3,
+          "level": "B2",
+          "pdfPage": 84
+        },
+        {
+          "number": 4,
+          "level": "B2",
+          "pdfPage": 84
+        },
+        {
+          "number": 5,
+          "level": "C1",
+          "pdfPage": 84
+        }
+      ]
+    },
+    {
+      "chapter": 32,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "C1",
+          "pdfPage": 85
+        },
+        {
+          "number": 2,
+          "level": "C1",
+          "pdfPage": 86
+        },
+        {
+          "number": 3,
+          "level": "C1",
+          "pdfPage": 86
+        },
+        {
+          "number": 4,
+          "level": "C1",
+          "pdfPage": 86
+        },
+        {
+          "number": 5,
+          "level": "C1",
+          "pdfPage": 86
+        }
+      ]
+    },
+    {
+      "chapter": 33,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 88
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 88
+        },
+        {
+          "number": 3,
+          "level": "B2",
+          "pdfPage": 88
+        },
+        {
+          "number": 4,
+          "level": "B2",
+          "pdfPage": 88
+        },
+        {
+          "number": 5,
+          "level": "B2",
+          "pdfPage": 88
+        }
+      ]
+    },
+    {
+      "chapter": 34,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 90
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 90
+        },
+        {
+          "number": 3,
+          "level": "B2",
+          "pdfPage": 90
+        },
+        {
+          "number": 4,
+          "level": "B2",
+          "pdfPage": 91
+        },
+        {
+          "number": 5,
+          "level": "B2",
+          "pdfPage": 91
+        },
+        {
+          "number": 6,
+          "level": "B2",
+          "pdfPage": 91
+        },
+        {
+          "number": 7,
+          "level": "B2",
+          "pdfPage": 92
+        },
+        {
+          "number": 8,
+          "level": "B2",
+          "pdfPage": 92
+        },
+        {
+          "number": 9,
+          "level": "B2",
+          "pdfPage": 92
+        },
+        {
+          "number": 10,
+          "level": "B2",
+          "pdfPage": 92
+        }
+      ]
+    },
+    {
+      "chapter": 35,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 94
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 94
+        },
+        {
+          "number": 3,
+          "level": "B2",
+          "pdfPage": 94
+        }
+      ]
+    },
+    {
+      "chapter": 36,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 96
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 96
+        },
+        {
+          "number": 3,
+          "level": "B2",
+          "pdfPage": 96
+        },
+        {
+          "number": 4,
+          "level": "B2",
+          "pdfPage": 96
+        },
+        {
+          "number": 5,
+          "level": "B2",
+          "pdfPage": 96
+        }
+      ]
+    },
+    {
+      "chapter": 37,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 98
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 98
+        },
+        {
+          "number": 3,
+          "level": "B2",
+          "pdfPage": 98
+        },
+        {
+          "number": 4,
+          "level": "C1",
+          "pdfPage": 98
+        },
+        {
+          "number": 5,
+          "level": "C1",
+          "pdfPage": 98
+        }
+      ]
+    },
+    {
+      "chapter": 38,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 99
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 99
+        },
+        {
+          "number": 3,
+          "level": "B2",
+          "pdfPage": 100
+        },
+        {
+          "number": 4,
+          "level": "B2",
+          "pdfPage": 100
+        },
+        {
+          "number": 5,
+          "level": "B2",
+          "pdfPage": 100
+        }
+      ]
+    },
+    {
+      "chapter": 39,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 101
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 102
+        },
+        {
+          "number": 3,
+          "level": "B2",
+          "pdfPage": 102
+        },
+        {
+          "number": 4,
+          "level": "C1",
+          "pdfPage": 102
+        },
+        {
+          "number": 5,
+          "level": "C1",
+          "pdfPage": 102
+        },
+        {
+          "number": 6,
+          "level": "C1",
+          "pdfPage": 102
+        }
+      ]
+    },
+    {
+      "chapter": 40,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "C1",
+          "pdfPage": 103
+        },
+        {
+          "number": 2,
+          "level": "C1",
+          "pdfPage": 104
+        }
+      ]
+    },
+    {
+      "chapter": 41,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 108
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 109
+        },
+        {
+          "number": 3,
+          "level": "B2",
+          "pdfPage": 109
+        },
+        {
+          "number": 4,
+          "level": "B2",
+          "pdfPage": 109
+        },
+        {
+          "number": 5,
+          "level": "B2",
+          "pdfPage": 109
+        },
+        {
+          "number": 6,
+          "level": "B2",
+          "pdfPage": 110
+        },
+        {
+          "number": 7,
+          "level": "B2",
+          "pdfPage": 110
+        }
+      ]
+    },
+    {
+      "chapter": 42,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 111
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 112
+        },
+        {
+          "number": 3,
+          "level": "B2",
+          "pdfPage": 112
+        },
+        {
+          "number": 4,
+          "level": "B2",
+          "pdfPage": 112
+        },
+        {
+          "number": 5,
+          "level": "B2",
+          "pdfPage": 112
+        },
+        {
+          "number": 6,
+          "level": "B2",
+          "pdfPage": 112
+        }
+      ]
+    },
+    {
+      "chapter": 43,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "C1",
+          "pdfPage": 113
+        },
+        {
+          "number": 2,
+          "level": "C1",
+          "pdfPage": 114
+        },
+        {
+          "number": 3,
+          "level": "C1",
+          "pdfPage": 114
+        },
+        {
+          "number": 4,
+          "level": "C1",
+          "pdfPage": 114
+        },
+        {
+          "number": 5,
+          "level": "C1",
+          "pdfPage": 114
+        },
+        {
+          "number": 6,
+          "level": "C1",
+          "pdfPage": 114
+        }
+      ]
+    },
+    {
+      "chapter": 44,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 115
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 116
+        },
+        {
+          "number": 3,
+          "level": "B2",
+          "pdfPage": 116
+        },
+        {
+          "number": 4,
+          "level": "B2",
+          "pdfPage": 116
+        },
+        {
+          "number": 5,
+          "level": "B2",
+          "pdfPage": 116
+        }
+      ]
+    },
+    {
+      "chapter": 45,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 118
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 118
+        },
+        {
+          "number": 3,
+          "level": "B2",
+          "pdfPage": 118
+        },
+        {
+          "number": 4,
+          "level": "B2",
+          "pdfPage": 118
+        },
+        {
+          "number": 5,
+          "level": "B2",
+          "pdfPage": 118
+        },
+        {
+          "number": 6,
+          "level": "C1",
+          "pdfPage": 119
+        },
+        {
+          "number": 7,
+          "level": "C1",
+          "pdfPage": 119
+        },
+        {
+          "number": 8,
+          "level": "C1",
+          "pdfPage": 119
+        },
+        {
+          "number": 9,
+          "level": "C1",
+          "pdfPage": 119
+        },
+        {
+          "number": 10,
+          "level": "C1",
+          "pdfPage": 119
+        },
+        {
+          "number": 11,
+          "level": "C1",
+          "pdfPage": 120
+        },
+        {
+          "number": 12,
+          "level": "C1",
+          "pdfPage": 120
+        }
+      ]
+    },
+    {
+      "chapter": 46,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "C1",
+          "pdfPage": 122
+        },
+        {
+          "number": 2,
+          "level": "C1",
+          "pdfPage": 122
+        },
+        {
+          "number": 3,
+          "level": "C1",
+          "pdfPage": 122
+        },
+        {
+          "number": 4,
+          "level": "C1",
+          "pdfPage": 122
+        }
+      ]
+    },
+    {
+      "chapter": 47,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 123
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 124
+        },
+        {
+          "number": 3,
+          "level": "B2",
+          "pdfPage": 124
+        },
+        {
+          "number": 4,
+          "level": "B2",
+          "pdfPage": 124
+        },
+        {
+          "number": 5,
+          "level": "B2",
+          "pdfPage": 124
+        }
+      ]
+    },
+    {
+      "chapter": 48,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 125
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 126
+        },
+        {
+          "number": 3,
+          "level": "B2",
+          "pdfPage": 126
+        },
+        {
+          "number": 4,
+          "level": "B2",
+          "pdfPage": 126
+        },
+        {
+          "number": 5,
+          "level": "B2",
+          "pdfPage": 126
+        }
+      ]
+    },
+    {
+      "chapter": 49,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 128
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 128
+        },
+        {
+          "number": 3,
+          "level": "B2",
+          "pdfPage": 128
+        },
+        {
+          "number": 4,
+          "level": "B2",
+          "pdfPage": 128
+        },
+        {
+          "number": 5,
+          "level": "B2",
+          "pdfPage": 129
+        },
+        {
+          "number": 6,
+          "level": "B2",
+          "pdfPage": 129
+        },
+        {
+          "number": 7,
+          "level": "B2",
+          "pdfPage": 129
+        },
+        {
+          "number": 8,
+          "level": "B2",
+          "pdfPage": 129
+        },
+        {
+          "number": 9,
+          "level": "B2",
+          "pdfPage": 130
+        },
+        {
+          "number": 10,
+          "level": "B2",
+          "pdfPage": 130
+        },
+        {
+          "number": 11,
+          "level": "C1",
+          "pdfPage": 130
+        },
+        {
+          "number": 12,
+          "level": "C1",
+          "pdfPage": 130
+        }
+      ]
+    },
+    {
+      "chapter": 50,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 131
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 132
+        },
+        {
+          "number": 3,
+          "level": "B2",
+          "pdfPage": 132
+        },
+        {
+          "number": 4,
+          "level": "B2",
+          "pdfPage": 132
+        },
+        {
+          "number": 5,
+          "level": "B2",
+          "pdfPage": 132
+        }
+      ]
+    },
+    {
+      "chapter": 51,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 134
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 134
+        },
+        {
+          "number": 3,
+          "level": "B2",
+          "pdfPage": 134
+        },
+        {
+          "number": 4,
+          "level": "B2",
+          "pdfPage": 134
+        }
+      ]
+    },
+    {
+      "chapter": 52,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 135
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 136
+        },
+        {
+          "number": 3,
+          "level": "B2",
+          "pdfPage": 136
+        },
+        {
+          "number": 4,
+          "level": "B2",
+          "pdfPage": 136
+        },
+        {
+          "number": 5,
+          "level": "B2",
+          "pdfPage": 136
+        },
+        {
+          "number": 6,
+          "level": "B2",
+          "pdfPage": 136
+        }
+      ]
+    },
+    {
+      "chapter": 53,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 137
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 138
+        },
+        {
+          "number": 3,
+          "level": "C1",
+          "pdfPage": 138
+        },
+        {
+          "number": 4,
+          "level": "C1",
+          "pdfPage": 138
+        },
+        {
+          "number": 5,
+          "level": "C1",
+          "pdfPage": 138
+        }
+      ]
+    },
+    {
+      "chapter": 54,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 139
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 140
+        },
+        {
+          "number": 3,
+          "level": "B2",
+          "pdfPage": 140
+        },
+        {
+          "number": 4,
+          "level": "B2",
+          "pdfPage": 140
+        },
+        {
+          "number": 5,
+          "level": "B2",
+          "pdfPage": 140
+        }
+      ]
+    },
+    {
+      "chapter": 55,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 144
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 144
+        },
+        {
+          "number": 3,
+          "level": "B2",
+          "pdfPage": 144
+        }
+      ]
+    },
+    {
+      "chapter": 56,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "C1",
+          "pdfPage": 146
+        },
+        {
+          "number": 2,
+          "level": "C1",
+          "pdfPage": 146
+        },
+        {
+          "number": 3,
+          "level": "C1",
+          "pdfPage": 146
+        },
+        {
+          "number": 4,
+          "level": "C1",
+          "pdfPage": 146
+        },
+        {
+          "number": 5,
+          "level": "C1",
+          "pdfPage": 146
+        }
+      ]
+    },
+    {
+      "chapter": 57,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 148
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 148
+        },
+        {
+          "number": 3,
+          "level": "B2",
+          "pdfPage": 148
+        },
+        {
+          "number": 4,
+          "level": "B2",
+          "pdfPage": 149
+        },
+        {
+          "number": 5,
+          "level": "B2",
+          "pdfPage": 149
+        },
+        {
+          "number": 6,
+          "level": "B2",
+          "pdfPage": 149
+        },
+        {
+          "number": 7,
+          "level": "B2",
+          "pdfPage": 149
+        },
+        {
+          "number": 8,
+          "level": "B2",
+          "pdfPage": 150
+        },
+        {
+          "number": 9,
+          "level": "C1",
+          "pdfPage": 150
+        },
+        {
+          "number": 10,
+          "level": "C1",
+          "pdfPage": 150
+        },
+        {
+          "number": 11,
+          "level": "C1",
+          "pdfPage": 150
+        }
+      ]
+    },
+    {
+      "chapter": 58,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 151
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 152
+        },
+        {
+          "number": 3,
+          "level": "B2",
+          "pdfPage": 152
+        },
+        {
+          "number": 4,
+          "level": "B2",
+          "pdfPage": 152
+        },
+        {
+          "number": 5,
+          "level": "B2",
+          "pdfPage": 152
+        },
+        {
+          "number": 6,
+          "level": "B2",
+          "pdfPage": 152
+        },
+        {
+          "number": 7,
+          "level": "B2",
+          "pdfPage": 152
+        }
+      ]
+    },
+    {
+      "chapter": 59,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 155
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 156
+        },
+        {
+          "number": 3,
+          "level": "B2",
+          "pdfPage": 156
+        },
+        {
+          "number": 4,
+          "level": "B2",
+          "pdfPage": 156
+        },
+        {
+          "number": 5,
+          "level": "B2",
+          "pdfPage": 156
+        }
+      ]
+    },
+    {
+      "chapter": 60,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 157
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 158
+        },
+        {
+          "number": 3,
+          "level": "B2",
+          "pdfPage": 158
+        },
+        {
+          "number": 4,
+          "level": "B2",
+          "pdfPage": 158
+        }
+      ]
+    },
+    {
+      "chapter": 61,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "C1",
+          "pdfPage": 159
+        },
+        {
+          "number": 2,
+          "level": "C1",
+          "pdfPage": 160
+        },
+        {
+          "number": 3,
+          "level": "C1",
+          "pdfPage": 160
+        },
+        {
+          "number": 4,
+          "level": "C1",
+          "pdfPage": 160
+        },
+        {
+          "number": 5,
+          "level": "C1",
+          "pdfPage": 160
+        }
+      ]
+    },
+    {
+      "chapter": 62,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 161
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 162
+        },
+        {
+          "number": 3,
+          "level": "B2",
+          "pdfPage": 162
+        },
+        {
+          "number": 4,
+          "level": "B2",
+          "pdfPage": 162
+        },
+        {
+          "number": 5,
+          "level": "B2",
+          "pdfPage": 162
+        }
+      ]
+    },
+    {
+      "chapter": 63,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 164
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 164
+        },
+        {
+          "number": 3,
+          "level": "C1",
+          "pdfPage": 164
+        },
+        {
+          "number": 4,
+          "level": "C1",
+          "pdfPage": 164
+        },
+        {
+          "number": 5,
+          "level": "C1",
+          "pdfPage": 164
+        }
+      ]
+    },
+    {
+      "chapter": 64,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 165
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 166
+        },
+        {
+          "number": 3,
+          "level": "B2",
+          "pdfPage": 166
+        },
+        {
+          "number": 4,
+          "level": "C1",
+          "pdfPage": 166
+        },
+        {
+          "number": 5,
+          "level": "C1",
+          "pdfPage": 166
+        },
+        {
+          "number": 6,
+          "level": "C1",
+          "pdfPage": 166
+        },
+        {
+          "number": 7,
+          "level": "C1",
+          "pdfPage": 166
+        }
+      ]
+    },
+    {
+      "chapter": 65,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 168
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 168
+        },
+        {
+          "number": 3,
+          "level": "B2",
+          "pdfPage": 168
+        },
+        {
+          "number": 4,
+          "level": "C1",
+          "pdfPage": 168
+        },
+        {
+          "number": 5,
+          "level": "C1",
+          "pdfPage": 168
+        }
+      ]
+    },
+    {
+      "chapter": 66,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 169
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 169
+        },
+        {
+          "number": 3,
+          "level": "B2",
+          "pdfPage": 170
+        },
+        {
+          "number": 4,
+          "level": "C1",
+          "pdfPage": 170
+        },
+        {
+          "number": 5,
+          "level": "C1",
+          "pdfPage": 170
+        }
+      ]
+    },
+    {
+      "chapter": 67,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 172
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 172
+        },
+        {
+          "number": 3,
+          "level": "C1",
+          "pdfPage": 172
+        },
+        {
+          "number": 4,
+          "level": "C1",
+          "pdfPage": 172
+        },
+        {
+          "number": 5,
+          "level": "C1",
+          "pdfPage": 172
+        }
+      ]
+    },
+    {
+      "chapter": 68,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 173
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 174
+        },
+        {
+          "number": 3,
+          "level": "B2",
+          "pdfPage": 174
+        },
+        {
+          "number": 4,
+          "level": "B2",
+          "pdfPage": 174
+        },
+        {
+          "number": 5,
+          "level": "B2",
+          "pdfPage": 174
+        },
+        {
+          "number": 6,
+          "level": "C1",
+          "pdfPage": 174
+        }
+      ]
+    },
+    {
+      "chapter": 69,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 175
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 175
+        },
+        {
+          "number": 3,
+          "level": "B2",
+          "pdfPage": 176
+        },
+        {
+          "number": 4,
+          "level": "B2",
+          "pdfPage": 176
+        }
+      ]
+    },
+    {
+      "chapter": 70,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 177
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 178
+        },
+        {
+          "number": 3,
+          "level": "B2",
+          "pdfPage": 178
+        },
+        {
+          "number": 4,
+          "level": "B2",
+          "pdfPage": 178
+        }
+      ]
+    },
+    {
+      "chapter": 71,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 179
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 180
+        },
+        {
+          "number": 3,
+          "level": "B2",
+          "pdfPage": 180
+        },
+        {
+          "number": 4,
+          "level": "B2",
+          "pdfPage": 180
+        },
+        {
+          "number": 5,
+          "level": "C1",
+          "pdfPage": 180
+        },
+        {
+          "number": 6,
+          "level": "C1",
+          "pdfPage": 180
+        }
+      ]
+    },
+    {
+      "chapter": 72,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 181
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 182
+        },
+        {
+          "number": 3,
+          "level": "B2",
+          "pdfPage": 182
+        },
+        {
+          "number": 4,
+          "level": "B2",
+          "pdfPage": 182
+        },
+        {
+          "number": 5,
+          "level": "B2",
+          "pdfPage": 182
+        },
+        {
+          "number": 6,
+          "level": "C1",
+          "pdfPage": 182
+        }
+      ]
+    },
+    {
+      "chapter": 73,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 186
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 186
+        },
+        {
+          "number": 3,
+          "level": "B2",
+          "pdfPage": 186
+        },
+        {
+          "number": 4,
+          "level": "C1",
+          "pdfPage": 186
+        },
+        {
+          "number": 5,
+          "level": "C1",
+          "pdfPage": 186
+        }
+      ]
+    },
+    {
+      "chapter": 74,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 188
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 188
+        },
+        {
+          "number": 3,
+          "level": "B2",
+          "pdfPage": 188
+        },
+        {
+          "number": 4,
+          "level": "B2",
+          "pdfPage": 188
+        }
+      ]
+    },
+    {
+      "chapter": 75,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 190
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 190
+        },
+        {
+          "number": 3,
+          "level": "B2",
+          "pdfPage": 190
+        },
+        {
+          "number": 4,
+          "level": "B2",
+          "pdfPage": 190
+        },
+        {
+          "number": 5,
+          "level": "B2",
+          "pdfPage": 190
+        }
+      ]
+    },
+    {
+      "chapter": 76,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 192
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 192
+        },
+        {
+          "number": 3,
+          "level": "B2",
+          "pdfPage": 192
+        },
+        {
+          "number": 4,
+          "level": "B2",
+          "pdfPage": 192
+        }
+      ]
+    },
+    {
+      "chapter": 77,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 194
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 194
+        },
+        {
+          "number": 3,
+          "level": "B2",
+          "pdfPage": 194
+        },
+        {
+          "number": 4,
+          "level": "B2",
+          "pdfPage": 194
+        },
+        {
+          "number": 5,
+          "level": "B2",
+          "pdfPage": 194
+        }
+      ]
+    },
+    {
+      "chapter": 78,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 195
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 196
+        },
+        {
+          "number": 3,
+          "level": "B2",
+          "pdfPage": 196
+        },
+        {
+          "number": 4,
+          "level": "B2",
+          "pdfPage": 196
+        },
+        {
+          "number": 5,
+          "level": "B2",
+          "pdfPage": 196
+        }
+      ]
+    },
+    {
+      "chapter": 79,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "C1",
+          "pdfPage": 198
+        },
+        {
+          "number": 2,
+          "level": "C1",
+          "pdfPage": 198
+        },
+        {
+          "number": 3,
+          "level": "C1",
+          "pdfPage": 198
+        },
+        {
+          "number": 4,
+          "level": "C1",
+          "pdfPage": 199
+        },
+        {
+          "number": 5,
+          "level": "C1",
+          "pdfPage": 199
+        },
+        {
+          "number": 6,
+          "level": "C1",
+          "pdfPage": 199
+        },
+        {
+          "number": 7,
+          "level": "C1",
+          "pdfPage": 200
+        },
+        {
+          "number": 8,
+          "level": "C1",
+          "pdfPage": 200
+        }
+      ]
+    },
+    {
+      "chapter": 80,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 202
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 202
+        },
+        {
+          "number": 3,
+          "level": "B2",
+          "pdfPage": 203
+        },
+        {
+          "number": 4,
+          "level": "B2",
+          "pdfPage": 203
+        },
+        {
+          "number": 5,
+          "level": "B2",
+          "pdfPage": 203
+        },
+        {
+          "number": 6,
+          "level": "B2",
+          "pdfPage": 203
+        },
+        {
+          "number": 7,
+          "level": "B2",
+          "pdfPage": 204
+        }
+      ]
+    },
+    {
+      "chapter": 81,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 207
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 207
+        },
+        {
+          "number": 3,
+          "level": "B2",
+          "pdfPage": 207
+        },
+        {
+          "number": 4,
+          "level": "B2",
+          "pdfPage": 208
+        },
+        {
+          "number": 5,
+          "level": "B2",
+          "pdfPage": 208
+        },
+        {
+          "number": 6,
+          "level": "B2",
+          "pdfPage": 208
+        }
+      ]
+    },
+    {
+      "chapter": 82,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "C1",
+          "pdfPage": 210
+        },
+        {
+          "number": 2,
+          "level": "C1",
+          "pdfPage": 210
+        },
+        {
+          "number": 3,
+          "level": "C1",
+          "pdfPage": 210
+        },
+        {
+          "number": 4,
+          "level": "C1",
+          "pdfPage": 210
+        },
+        {
+          "number": 5,
+          "level": "C1",
+          "pdfPage": 210
+        },
+        {
+          "number": 6,
+          "level": "C1",
+          "pdfPage": 210
+        },
+        {
+          "number": 7,
+          "level": "C1",
+          "pdfPage": 211
+        },
+        {
+          "number": 8,
+          "level": "C1",
+          "pdfPage": 211
+        },
+        {
+          "number": 9,
+          "level": "C1",
+          "pdfPage": 211
+        },
+        {
+          "number": 10,
+          "level": "C1",
+          "pdfPage": 211
+        },
+        {
+          "number": 11,
+          "level": "C1",
+          "pdfPage": 212
+        }
+      ]
+    },
+    {
+      "chapter": 83,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "C1",
+          "pdfPage": 214
+        },
+        {
+          "number": 2,
+          "level": "C1",
+          "pdfPage": 215
+        },
+        {
+          "number": 3,
+          "level": "C1",
+          "pdfPage": 215
+        },
+        {
+          "number": 4,
+          "level": "C1",
+          "pdfPage": 216
+        },
+        {
+          "number": 5,
+          "level": "C1",
+          "pdfPage": 216
+        },
+        {
+          "number": 6,
+          "level": "C1",
+          "pdfPage": 216
+        }
+      ]
+    },
+    {
+      "chapter": 84,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "C1",
+          "pdfPage": 218
+        },
+        {
+          "number": 2,
+          "level": "C1",
+          "pdfPage": 218
+        },
+        {
+          "number": 3,
+          "level": "C1",
+          "pdfPage": 218
+        },
+        {
+          "number": 4,
+          "level": "C1",
+          "pdfPage": 218
+        }
+      ]
+    },
+    {
+      "chapter": 85,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "C1",
+          "pdfPage": 219
+        },
+        {
+          "number": 2,
+          "level": "C1",
+          "pdfPage": 220
+        },
+        {
+          "number": 3,
+          "level": "C1",
+          "pdfPage": 220
+        },
+        {
+          "number": 4,
+          "level": "C1",
+          "pdfPage": 220
+        }
+      ]
+    },
+    {
+      "chapter": 86,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "C1",
+          "pdfPage": 222
+        },
+        {
+          "number": 2,
+          "level": "C1",
+          "pdfPage": 222
+        },
+        {
+          "number": 3,
+          "level": "C1",
+          "pdfPage": 222
+        },
+        {
+          "number": 4,
+          "level": "C1",
+          "pdfPage": 222
+        }
+      ]
+    },
+    {
+      "chapter": 87,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "B2",
+          "pdfPage": 226
+        },
+        {
+          "number": 2,
+          "level": "B2",
+          "pdfPage": 226
+        },
+        {
+          "number": 3,
+          "level": "B2",
+          "pdfPage": 226
+        },
+        {
+          "number": 4,
+          "level": "B2",
+          "pdfPage": 226
+        },
+        {
+          "number": 5,
+          "level": "B2",
+          "pdfPage": 226
+        },
+        {
+          "number": 6,
+          "level": "B2",
+          "pdfPage": 226
+        }
+      ]
+    },
+    {
+      "chapter": 88,
+      "exercises": [
+        {
+          "number": 1,
+          "level": "C1",
+          "pdfPage": 228
+        },
+        {
+          "number": 2,
+          "level": "C1",
+          "pdfPage": 228
+        },
+        {
+          "number": 3,
+          "level": "C1",
+          "pdfPage": 228
+        },
+        {
+          "number": 4,
+          "level": "C1",
+          "pdfPage": 228
+        },
+        {
+          "number": 5,
+          "level": "C1",
+          "pdfPage": 228
+        }
+      ]
+    }
+  ]
+}

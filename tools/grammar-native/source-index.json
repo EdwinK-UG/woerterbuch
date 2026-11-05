@@ -1,0 +1,2099 @@
+{
+  "source": {
+    "title": "Grammatik aktiv B2–C1 – Üben, Hören, Sprechen",
+    "authors": [
+      "Friederike Jin",
+      "Ute Voß"
+    ],
+    "sha256": "65ce70ab638e5c5beda36f6c67ace9008e82c316428ffd888c1c2db7dc5c5395",
+    "pdfPages": 306,
+    "printedOffset": 3,
+    "audioIncluded": false
+  },
+  "chapters": [
+    {
+      "sourceChapter": 1,
+      "title": "Verbposition in einfachen Sätzen",
+      "group": "Wortpositionen im Satz",
+      "diagram": "sentence",
+      "levels": [
+        "B2",
+        "C1"
+      ],
+      "printed": [
+        10,
+        13
+      ],
+      "pdf": [
+        7,
+        10
+      ],
+      "ids": {
+        "B2": 86,
+        "C1": 401
+      }
+    },
+    {
+      "sourceChapter": 2,
+      "title": "Verbposition in Satzverbindungen",
+      "group": "Wortpositionen im Satz",
+      "diagram": "sentence",
+      "levels": [
+        "B2"
+      ],
+      "printed": [
+        14,
+        15
+      ],
+      "pdf": [
+        11,
+        12
+      ],
+      "ids": {
+        "B2": 87
+      }
+    },
+    {
+      "sourceChapter": 3,
+      "title": "Position von Dativ- und Akkusativobjekt",
+      "group": "Wortpositionen im Satz",
+      "diagram": "sentence",
+      "levels": [
+        "B2"
+      ],
+      "printed": [
+        16,
+        17
+      ],
+      "pdf": [
+        13,
+        14
+      ],
+      "ids": {
+        "B2": 88
+      }
+    },
+    {
+      "sourceChapter": 4,
+      "title": "Position der Angaben im Satz",
+      "group": "Wortpositionen im Satz",
+      "diagram": "sentence",
+      "levels": [
+        "B2"
+      ],
+      "printed": [
+        18,
+        19
+      ],
+      "pdf": [
+        15,
+        16
+      ],
+      "ids": {
+        "B2": 89
+      }
+    },
+    {
+      "sourceChapter": 5,
+      "title": "Informationen direkt zum Verb",
+      "group": "Wortpositionen im Satz",
+      "diagram": "sentence",
+      "levels": [
+        "B2"
+      ],
+      "printed": [
+        20,
+        21
+      ],
+      "pdf": [
+        17,
+        18
+      ],
+      "ids": {
+        "B2": 90
+      }
+    },
+    {
+      "sourceChapter": 6,
+      "title": "Position von nicht",
+      "group": "Wortpositionen im Satz",
+      "diagram": "sentence",
+      "levels": [
+        "B2"
+      ],
+      "printed": [
+        22,
+        23
+      ],
+      "pdf": [
+        19,
+        20
+      ],
+      "ids": {
+        "B2": 91
+      }
+    },
+    {
+      "sourceChapter": 7,
+      "title": "Position von auch und Fokuspartikeln",
+      "group": "Wortpositionen im Satz",
+      "diagram": "sentence",
+      "levels": [
+        "C1"
+      ],
+      "printed": [
+        24,
+        25
+      ],
+      "pdf": [
+        21,
+        22
+      ],
+      "ids": {
+        "C1": 407
+      }
+    },
+    {
+      "sourceChapter": 8,
+      "title": "Informationsverteilung im Satz",
+      "group": "Wortpositionen im Satz",
+      "diagram": "sentence",
+      "levels": [
+        "C1"
+      ],
+      "printed": [
+        26,
+        27
+      ],
+      "pdf": [
+        23,
+        24
+      ],
+      "ids": {
+        "C1": 408
+      }
+    },
+    {
+      "sourceChapter": 9,
+      "title": "Konjunktiv II der Gegenwart: Formen",
+      "group": "Konjunktiv II",
+      "diagram": "possibility",
+      "levels": [
+        "B2"
+      ],
+      "printed": [
+        30,
+        31
+      ],
+      "pdf": [
+        27,
+        28
+      ],
+      "ids": {
+        "B2": 94
+      }
+    },
+    {
+      "sourceChapter": 10,
+      "title": "Konjunktiv II der Vergangenheit: Formen",
+      "group": "Konjunktiv II",
+      "diagram": "possibility",
+      "levels": [
+        "B2",
+        "C1"
+      ],
+      "printed": [
+        32,
+        33
+      ],
+      "pdf": [
+        29,
+        30
+      ],
+      "ids": {
+        "B2": 95,
+        "C1": 410
+      }
+    },
+    {
+      "sourceChapter": 11,
+      "title": "Höflichkeit, Vorschläge, Ratschläge und Vorwürfe",
+      "group": "Konjunktiv II",
+      "diagram": "possibility",
+      "levels": [
+        "B2"
+      ],
+      "printed": [
+        34,
+        35
+      ],
+      "pdf": [
+        31,
+        32
+      ],
+      "ids": {
+        "B2": 96
+      }
+    },
+    {
+      "sourceChapter": 12,
+      "title": "Wünsche, irreale Wünsche und irreale Bedingungen",
+      "group": "Konjunktiv II",
+      "diagram": "possibility",
+      "levels": [
+        "B2",
+        "C1"
+      ],
+      "printed": [
+        36,
+        37
+      ],
+      "pdf": [
+        33,
+        34
+      ],
+      "ids": {
+        "B2": 97,
+        "C1": 412
+      }
+    },
+    {
+      "sourceChapter": 13,
+      "title": "Irreale Vergleiche und irreale Folgen",
+      "group": "Konjunktiv II",
+      "diagram": "possibility",
+      "levels": [
+        "B2",
+        "C1"
+      ],
+      "printed": [
+        38,
+        39
+      ],
+      "pdf": [
+        35,
+        36
+      ],
+      "ids": {
+        "B2": 98,
+        "C1": 413
+      }
+    },
+    {
+      "sourceChapter": 14,
+      "title": "Passiv in allen Zeiten",
+      "group": "Passiv",
+      "diagram": "passive",
+      "levels": [
+        "B2",
+        "C1"
+      ],
+      "printed": [
+        42,
+        45
+      ],
+      "pdf": [
+        39,
+        42
+      ],
+      "ids": {
+        "B2": 99,
+        "C1": 414
+      }
+    },
+    {
+      "sourceChapter": 15,
+      "title": "Passiv mit Modalverben in allen Zeiten",
+      "group": "Passiv",
+      "diagram": "passive",
+      "levels": [
+        "B2",
+        "C1"
+      ],
+      "printed": [
+        46,
+        49
+      ],
+      "pdf": [
+        43,
+        46
+      ],
+      "ids": {
+        "B2": 100,
+        "C1": 415
+      }
+    },
+    {
+      "sourceChapter": 16,
+      "title": "Alternativen zum Passiv",
+      "group": "Passiv",
+      "diagram": "passive",
+      "levels": [
+        "B2"
+      ],
+      "printed": [
+        50,
+        53
+      ],
+      "pdf": [
+        47,
+        50
+      ],
+      "ids": {
+        "B2": 105
+      }
+    },
+    {
+      "sourceChapter": 17,
+      "title": "Formen mit Passivbedeutung",
+      "group": "Passiv",
+      "diagram": "passive",
+      "levels": [
+        "C1"
+      ],
+      "printed": [
+        54,
+        55
+      ],
+      "pdf": [
+        51,
+        52
+      ],
+      "ids": {
+        "C1": 417
+      }
+    },
+    {
+      "sourceChapter": 18,
+      "title": "Passivsätze ohne Subjekt",
+      "group": "Passiv",
+      "diagram": "passive",
+      "levels": [
+        "C1"
+      ],
+      "printed": [
+        56,
+        57
+      ],
+      "pdf": [
+        53,
+        54
+      ],
+      "ids": {
+        "C1": 418
+      }
+    },
+    {
+      "sourceChapter": 19,
+      "title": "Wann ist Passiv möglich, wann nicht?",
+      "group": "Passiv",
+      "diagram": "passive",
+      "levels": [
+        "C1"
+      ],
+      "printed": [
+        58,
+        59
+      ],
+      "pdf": [
+        55,
+        56
+      ],
+      "ids": {
+        "C1": 419
+      }
+    },
+    {
+      "sourceChapter": 20,
+      "title": "Wechselpräpositionen",
+      "group": "Präpositionen",
+      "diagram": "position",
+      "levels": [
+        "B2"
+      ],
+      "printed": [
+        62,
+        63
+      ],
+      "pdf": [
+        59,
+        60
+      ],
+      "ids": {
+        "B2": 109
+      }
+    },
+    {
+      "sourceChapter": 21,
+      "title": "Oft gebrauchte lokale Präpositionen",
+      "group": "Präpositionen",
+      "diagram": "position",
+      "levels": [
+        "B2"
+      ],
+      "printed": [
+        64,
+        65
+      ],
+      "pdf": [
+        61,
+        62
+      ],
+      "ids": {
+        "B2": 110
+      }
+    },
+    {
+      "sourceChapter": 22,
+      "title": "Weitere lokale Präpositionen",
+      "group": "Präpositionen",
+      "diagram": "position",
+      "levels": [
+        "B2"
+      ],
+      "printed": [
+        66,
+        67
+      ],
+      "pdf": [
+        63,
+        64
+      ],
+      "ids": {
+        "B2": 111
+      }
+    },
+    {
+      "sourceChapter": 23,
+      "title": "Die wichtigsten temporalen Präpositionen",
+      "group": "Präpositionen",
+      "diagram": "position",
+      "levels": [
+        "B2"
+      ],
+      "printed": [
+        68,
+        69
+      ],
+      "pdf": [
+        65,
+        66
+      ],
+      "ids": {
+        "B2": 112
+      }
+    },
+    {
+      "sourceChapter": 24,
+      "title": "Weitere temporale Präpositionen",
+      "group": "Präpositionen",
+      "diagram": "position",
+      "levels": [
+        "B2"
+      ],
+      "printed": [
+        70,
+        71
+      ],
+      "pdf": [
+        67,
+        68
+      ],
+      "ids": {
+        "B2": 113
+      }
+    },
+    {
+      "sourceChapter": 25,
+      "title": "Kausale Präpositionen",
+      "group": "Präpositionen",
+      "diagram": "position",
+      "levels": [
+        "B2"
+      ],
+      "printed": [
+        72,
+        73
+      ],
+      "pdf": [
+        69,
+        70
+      ],
+      "ids": {
+        "B2": 114
+      }
+    },
+    {
+      "sourceChapter": 26,
+      "title": "Präpositionen der Redewiedergabe und Referenz",
+      "group": "Präpositionen",
+      "diagram": "position",
+      "levels": [
+        "C1"
+      ],
+      "printed": [
+        74,
+        75
+      ],
+      "pdf": [
+        71,
+        72
+      ],
+      "ids": {
+        "C1": 426
+      }
+    },
+    {
+      "sourceChapter": 27,
+      "title": "Präpositionen mit verschiedenen Positionen",
+      "group": "Präpositionen",
+      "diagram": "position",
+      "levels": [
+        "B2",
+        "C1"
+      ],
+      "printed": [
+        76,
+        77
+      ],
+      "pdf": [
+        73,
+        74
+      ],
+      "ids": {
+        "B2": 116,
+        "C1": 427
+      }
+    },
+    {
+      "sourceChapter": 28,
+      "title": "„Sprechende“ Präpositionen",
+      "group": "Präpositionen",
+      "diagram": "position",
+      "levels": [
+        "C1"
+      ],
+      "printed": [
+        78,
+        79
+      ],
+      "pdf": [
+        75,
+        76
+      ],
+      "ids": {
+        "C1": 428
+      }
+    },
+    {
+      "sourceChapter": 29,
+      "title": "Bedeutungen von in, an, auf, über, unter, vor",
+      "group": "Präpositionen",
+      "diagram": "position",
+      "levels": [
+        "C1"
+      ],
+      "printed": [
+        80,
+        81
+      ],
+      "pdf": [
+        77,
+        78
+      ],
+      "ids": {
+        "C1": 429
+      }
+    },
+    {
+      "sourceChapter": 30,
+      "title": "Bedeutungen von um, bei, von, nach, aus, mit, zu",
+      "group": "Präpositionen",
+      "diagram": "position",
+      "levels": [
+        "C1"
+      ],
+      "printed": [
+        82,
+        83
+      ],
+      "pdf": [
+        79,
+        80
+      ],
+      "ids": {
+        "C1": 430
+      }
+    },
+    {
+      "sourceChapter": 31,
+      "title": "Verben mit Nominativ, Akkusativ und Dativ",
+      "group": "Ergänzungen",
+      "diagram": "valency",
+      "levels": [
+        "B2",
+        "C1"
+      ],
+      "printed": [
+        86,
+        87
+      ],
+      "pdf": [
+        83,
+        84
+      ],
+      "ids": {
+        "B2": 120,
+        "C1": 431
+      }
+    },
+    {
+      "sourceChapter": 32,
+      "title": "Verben mit Genitiv",
+      "group": "Ergänzungen",
+      "diagram": "valency",
+      "levels": [
+        "C1"
+      ],
+      "printed": [
+        88,
+        89
+      ],
+      "pdf": [
+        85,
+        86
+      ],
+      "ids": {
+        "C1": 432
+      }
+    },
+    {
+      "sourceChapter": 33,
+      "title": "Verben, Nomen und Adjektive mit Präpositionen",
+      "group": "Ergänzungen",
+      "diagram": "valency",
+      "levels": [
+        "B2"
+      ],
+      "printed": [
+        90,
+        91
+      ],
+      "pdf": [
+        87,
+        88
+      ],
+      "ids": {
+        "B2": 122
+      }
+    },
+    {
+      "sourceChapter": 34,
+      "title": "Verben, Adjektive und Nomen mit festen Präpositionen mit Akkusativ",
+      "group": "Ergänzungen",
+      "diagram": "valency",
+      "levels": [
+        "B2"
+      ],
+      "printed": [
+        92,
+        95
+      ],
+      "pdf": [
+        89,
+        92
+      ],
+      "ids": {
+        "B2": 123
+      }
+    },
+    {
+      "sourceChapter": 35,
+      "title": "Verben, Adjektive und Nomen mit festen Präpositionen mit Dativ",
+      "group": "Ergänzungen",
+      "diagram": "valency",
+      "levels": [
+        "B2"
+      ],
+      "printed": [
+        96,
+        97
+      ],
+      "pdf": [
+        93,
+        94
+      ],
+      "ids": {
+        "B2": 124
+      }
+    },
+    {
+      "sourceChapter": 36,
+      "title": "Bildung der Vergangenheitszeiten",
+      "group": "Zeiten",
+      "diagram": "timeline",
+      "levels": [
+        "B2"
+      ],
+      "printed": [
+        98,
+        99
+      ],
+      "pdf": [
+        95,
+        96
+      ],
+      "ids": {
+        "B2": 125
+      }
+    },
+    {
+      "sourceChapter": 37,
+      "title": "Besondere Perfektformen: Modalverben und sehen, hören, lassen",
+      "group": "Zeiten",
+      "diagram": "timeline",
+      "levels": [
+        "B2",
+        "C1"
+      ],
+      "printed": [
+        100,
+        101
+      ],
+      "pdf": [
+        97,
+        98
+      ],
+      "ids": {
+        "B2": 126,
+        "C1": 437
+      }
+    },
+    {
+      "sourceChapter": 38,
+      "title": "Gebrauch von Zeiten der Vergangenheit",
+      "group": "Zeiten",
+      "diagram": "timeline",
+      "levels": [
+        "B2"
+      ],
+      "printed": [
+        102,
+        103
+      ],
+      "pdf": [
+        99,
+        100
+      ],
+      "ids": {
+        "B2": 127
+      }
+    },
+    {
+      "sourceChapter": 39,
+      "title": "Vermutung und Zukunft mit dem Futur",
+      "group": "Zeiten",
+      "diagram": "timeline",
+      "levels": [
+        "B2",
+        "C1"
+      ],
+      "printed": [
+        104,
+        105
+      ],
+      "pdf": [
+        101,
+        102
+      ],
+      "ids": {
+        "B2": 128,
+        "C1": 439
+      }
+    },
+    {
+      "sourceChapter": 40,
+      "title": "Überblick über die Zeiten im Deutschen",
+      "group": "Zeiten",
+      "diagram": "timeline",
+      "levels": [
+        "C1"
+      ],
+      "printed": [
+        106,
+        107
+      ],
+      "pdf": [
+        103,
+        104
+      ],
+      "ids": {
+        "C1": 440
+      }
+    },
+    {
+      "sourceChapter": 41,
+      "title": "Modalverben in der Grundbedeutung",
+      "group": "Modalverben und Verbpräfixe",
+      "diagram": "modality",
+      "levels": [
+        "B2"
+      ],
+      "printed": [
+        110,
+        113
+      ],
+      "pdf": [
+        107,
+        110
+      ],
+      "ids": {
+        "B2": 130
+      }
+    },
+    {
+      "sourceChapter": 42,
+      "title": "Modalverben: Vermutungen über die Gegenwart",
+      "group": "Modalverben und Verbpräfixe",
+      "diagram": "modality",
+      "levels": [
+        "B2"
+      ],
+      "printed": [
+        114,
+        115
+      ],
+      "pdf": [
+        111,
+        112
+      ],
+      "ids": {
+        "B2": 131
+      }
+    },
+    {
+      "sourceChapter": 43,
+      "title": "Modalverben: Vermutungen über die Vergangenheit",
+      "group": "Modalverben und Verbpräfixe",
+      "diagram": "modality",
+      "levels": [
+        "C1"
+      ],
+      "printed": [
+        116,
+        117
+      ],
+      "pdf": [
+        113,
+        114
+      ],
+      "ids": {
+        "C1": 443
+      }
+    },
+    {
+      "sourceChapter": 44,
+      "title": "Das Verb lassen",
+      "group": "Modalverben und Verbpräfixe",
+      "diagram": "modality",
+      "levels": [
+        "B2"
+      ],
+      "printed": [
+        118,
+        119
+      ],
+      "pdf": [
+        115,
+        116
+      ],
+      "ids": {
+        "B2": 133
+      }
+    },
+    {
+      "sourceChapter": 45,
+      "title": "Trennbare und untrennbare Verben 1",
+      "group": "Modalverben und Verbpräfixe",
+      "diagram": "modality",
+      "levels": [
+        "B2",
+        "C1"
+      ],
+      "printed": [
+        120,
+        123
+      ],
+      "pdf": [
+        117,
+        120
+      ],
+      "ids": {
+        "B2": 134,
+        "C1": 445
+      }
+    },
+    {
+      "sourceChapter": 46,
+      "title": "Trennbare und untrennbare Verben 2",
+      "group": "Modalverben und Verbpräfixe",
+      "diagram": "modality",
+      "levels": [
+        "C1"
+      ],
+      "printed": [
+        124,
+        125
+      ],
+      "pdf": [
+        121,
+        122
+      ],
+      "ids": {
+        "C1": 446
+      }
+    },
+    {
+      "sourceChapter": 47,
+      "title": "Genusregeln",
+      "group": "Nomen, Artikel und Pronomen",
+      "diagram": "noun",
+      "levels": [
+        "B2"
+      ],
+      "printed": [
+        126,
+        127
+      ],
+      "pdf": [
+        123,
+        124
+      ],
+      "ids": {
+        "B2": 136
+      }
+    },
+    {
+      "sourceChapter": 48,
+      "title": "Artikelgebrauch",
+      "group": "Nomen, Artikel und Pronomen",
+      "diagram": "noun",
+      "levels": [
+        "B2"
+      ],
+      "printed": [
+        128,
+        129
+      ],
+      "pdf": [
+        125,
+        126
+      ],
+      "ids": {
+        "B2": 137
+      }
+    },
+    {
+      "sourceChapter": 49,
+      "title": "Genitiv",
+      "group": "Nomen, Artikel und Pronomen",
+      "diagram": "noun",
+      "levels": [
+        "B2",
+        "C1"
+      ],
+      "printed": [
+        130,
+        133
+      ],
+      "pdf": [
+        127,
+        130
+      ],
+      "ids": {
+        "B2": 138,
+        "C1": 449
+      }
+    },
+    {
+      "sourceChapter": 50,
+      "title": "n-Deklination",
+      "group": "Nomen, Artikel und Pronomen",
+      "diagram": "noun",
+      "levels": [
+        "B2"
+      ],
+      "printed": [
+        134,
+        135
+      ],
+      "pdf": [
+        131,
+        132
+      ],
+      "ids": {
+        "B2": 139
+      }
+    },
+    {
+      "sourceChapter": 51,
+      "title": "Drei Deklinationen",
+      "group": "Nomen, Artikel und Pronomen",
+      "diagram": "noun",
+      "levels": [
+        "B2"
+      ],
+      "printed": [
+        136,
+        137
+      ],
+      "pdf": [
+        133,
+        134
+      ],
+      "ids": {
+        "B2": 140
+      }
+    },
+    {
+      "sourceChapter": 52,
+      "title": "Deklination der Indefinit- und Possessivpronomen",
+      "group": "Nomen, Artikel und Pronomen",
+      "diagram": "noun",
+      "levels": [
+        "B2"
+      ],
+      "printed": [
+        138,
+        139
+      ],
+      "pdf": [
+        135,
+        136
+      ],
+      "ids": {
+        "B2": 141
+      }
+    },
+    {
+      "sourceChapter": 53,
+      "title": "Indefinitpronomen für Menschen",
+      "group": "Nomen, Artikel und Pronomen",
+      "diagram": "noun",
+      "levels": [
+        "B2",
+        "C1"
+      ],
+      "printed": [
+        140,
+        141
+      ],
+      "pdf": [
+        137,
+        138
+      ],
+      "ids": {
+        "B2": 142,
+        "C1": 453
+      }
+    },
+    {
+      "sourceChapter": 54,
+      "title": "Indefinitpronomen für Menschen und Dinge",
+      "group": "Nomen, Artikel und Pronomen",
+      "diagram": "noun",
+      "levels": [
+        "B2"
+      ],
+      "printed": [
+        142,
+        143
+      ],
+      "pdf": [
+        139,
+        140
+      ],
+      "ids": {
+        "B2": 143
+      }
+    },
+    {
+      "sourceChapter": 55,
+      "title": "Adjektivdeklination",
+      "group": "Adjektive",
+      "diagram": "adjective",
+      "levels": [
+        "B2"
+      ],
+      "printed": [
+        146,
+        147
+      ],
+      "pdf": [
+        143,
+        144
+      ],
+      "ids": {
+        "B2": 144
+      }
+    },
+    {
+      "sourceChapter": 56,
+      "title": "Artikelwörter und Adjektivdeklination",
+      "group": "Adjektive",
+      "diagram": "adjective",
+      "levels": [
+        "C1"
+      ],
+      "printed": [
+        148,
+        149
+      ],
+      "pdf": [
+        145,
+        146
+      ],
+      "ids": {
+        "C1": 456
+      }
+    },
+    {
+      "sourceChapter": 57,
+      "title": "Komparation",
+      "group": "Adjektive",
+      "diagram": "adjective",
+      "levels": [
+        "B2",
+        "C1"
+      ],
+      "printed": [
+        150,
+        153
+      ],
+      "pdf": [
+        147,
+        150
+      ],
+      "ids": {
+        "B2": 146,
+        "C1": 457
+      }
+    },
+    {
+      "sourceChapter": 58,
+      "title": "Partizip I und II als Adjektiv",
+      "group": "Adjektive",
+      "diagram": "adjective",
+      "levels": [
+        "B2"
+      ],
+      "printed": [
+        154,
+        155
+      ],
+      "pdf": [
+        151,
+        152
+      ],
+      "ids": {
+        "B2": 147
+      }
+    },
+    {
+      "sourceChapter": 59,
+      "title": "Indirekte Rede und Konjunktiv I",
+      "group": "Indirekte Rede",
+      "diagram": "speech",
+      "levels": [
+        "B2"
+      ],
+      "printed": [
+        158,
+        159
+      ],
+      "pdf": [
+        155,
+        156
+      ],
+      "ids": {
+        "B2": 148
+      }
+    },
+    {
+      "sourceChapter": 60,
+      "title": "Indirekte Rede: Vergangenheit",
+      "group": "Indirekte Rede",
+      "diagram": "speech",
+      "levels": [
+        "B2"
+      ],
+      "printed": [
+        160,
+        161
+      ],
+      "pdf": [
+        157,
+        158
+      ],
+      "ids": {
+        "B2": 149
+      }
+    },
+    {
+      "sourceChapter": 61,
+      "title": "Wiedergabe von Aufforderungen, Gerüchten und Selbstaussagen",
+      "group": "Indirekte Rede",
+      "diagram": "speech",
+      "levels": [
+        "C1"
+      ],
+      "printed": [
+        162,
+        163
+      ],
+      "pdf": [
+        159,
+        160
+      ],
+      "ids": {
+        "C1": 461
+      }
+    },
+    {
+      "sourceChapter": 62,
+      "title": "Temporale Nebensätze",
+      "group": "Nebensätze",
+      "diagram": "connections",
+      "levels": [
+        "B2"
+      ],
+      "printed": [
+        164,
+        165
+      ],
+      "pdf": [
+        161,
+        162
+      ],
+      "ids": {
+        "B2": 151
+      }
+    },
+    {
+      "sourceChapter": 63,
+      "title": "Kausale und konzessive Nebensätze",
+      "group": "Nebensätze",
+      "diagram": "connections",
+      "levels": [
+        "B2",
+        "C1"
+      ],
+      "printed": [
+        166,
+        167
+      ],
+      "pdf": [
+        163,
+        164
+      ],
+      "ids": {
+        "B2": 152,
+        "C1": 463
+      }
+    },
+    {
+      "sourceChapter": 64,
+      "title": "Konsekutive Nebensätze",
+      "group": "Nebensätze",
+      "diagram": "connections",
+      "levels": [
+        "B2",
+        "C1"
+      ],
+      "printed": [
+        168,
+        169
+      ],
+      "pdf": [
+        165,
+        166
+      ],
+      "ids": {
+        "B2": 153,
+        "C1": 464
+      }
+    },
+    {
+      "sourceChapter": 65,
+      "title": "Konditionale und adversative Nebensätze",
+      "group": "Nebensätze",
+      "diagram": "connections",
+      "levels": [
+        "B2",
+        "C1"
+      ],
+      "printed": [
+        170,
+        171
+      ],
+      "pdf": [
+        167,
+        168
+      ],
+      "ids": {
+        "B2": 154,
+        "C1": 465
+      }
+    },
+    {
+      "sourceChapter": 66,
+      "title": "Modale Nebensätze: Methode",
+      "group": "Nebensätze",
+      "diagram": "connections",
+      "levels": [
+        "B2",
+        "C1"
+      ],
+      "printed": [
+        172,
+        173
+      ],
+      "pdf": [
+        169,
+        170
+      ],
+      "ids": {
+        "B2": 155,
+        "C1": 466
+      }
+    },
+    {
+      "sourceChapter": 67,
+      "title": "Infinitiv mit und ohne zu",
+      "group": "Nebensätze",
+      "diagram": "connections",
+      "levels": [
+        "B2",
+        "C1"
+      ],
+      "printed": [
+        174,
+        175
+      ],
+      "pdf": [
+        171,
+        172
+      ],
+      "ids": {
+        "B2": 156,
+        "C1": 467
+      }
+    },
+    {
+      "sourceChapter": 68,
+      "title": "Nebensatz mit dass und Infinitiv mit zu",
+      "group": "Nebensätze",
+      "diagram": "connections",
+      "levels": [
+        "B2",
+        "C1"
+      ],
+      "printed": [
+        176,
+        177
+      ],
+      "pdf": [
+        173,
+        174
+      ],
+      "ids": {
+        "B2": 157,
+        "C1": 468
+      }
+    },
+    {
+      "sourceChapter": 69,
+      "title": "Finale und modale Infinitiv- und Nebensätze",
+      "group": "Nebensätze",
+      "diagram": "connections",
+      "levels": [
+        "B2"
+      ],
+      "printed": [
+        178,
+        179
+      ],
+      "pdf": [
+        175,
+        176
+      ],
+      "ids": {
+        "B2": 158
+      }
+    },
+    {
+      "sourceChapter": 70,
+      "title": "Relativpronomen im Nominativ, Akkusativ und Dativ",
+      "group": "Nebensätze",
+      "diagram": "connections",
+      "levels": [
+        "B2"
+      ],
+      "printed": [
+        180,
+        181
+      ],
+      "pdf": [
+        177,
+        178
+      ],
+      "ids": {
+        "B2": 159
+      }
+    },
+    {
+      "sourceChapter": 71,
+      "title": "Relativpronomen im Genitiv",
+      "group": "Nebensätze",
+      "diagram": "connections",
+      "levels": [
+        "B2",
+        "C1"
+      ],
+      "printed": [
+        182,
+        183
+      ],
+      "pdf": [
+        179,
+        180
+      ],
+      "ids": {
+        "B2": 160,
+        "C1": 471
+      }
+    },
+    {
+      "sourceChapter": 72,
+      "title": "Relativpronomen mit w- und als",
+      "group": "Nebensätze",
+      "diagram": "connections",
+      "levels": [
+        "B2",
+        "C1"
+      ],
+      "printed": [
+        184,
+        185
+      ],
+      "pdf": [
+        181,
+        182
+      ],
+      "ids": {
+        "B2": 161,
+        "C1": 472
+      }
+    },
+    {
+      "sourceChapter": 73,
+      "title": "Doppelkonnektoren",
+      "group": "Wörter und Wortverbindungen",
+      "diagram": "wordlinks",
+      "levels": [
+        "B2",
+        "C1"
+      ],
+      "printed": [
+        188,
+        189
+      ],
+      "pdf": [
+        185,
+        186
+      ],
+      "ids": {
+        "B2": 162,
+        "C1": 473
+      }
+    },
+    {
+      "sourceChapter": 74,
+      "title": "Negationswörter",
+      "group": "Wörter und Wortverbindungen",
+      "diagram": "wordlinks",
+      "levels": [
+        "B2"
+      ],
+      "printed": [
+        190,
+        191
+      ],
+      "pdf": [
+        187,
+        188
+      ],
+      "ids": {
+        "B2": 163
+      }
+    },
+    {
+      "sourceChapter": 75,
+      "title": "Irgend…",
+      "group": "Wörter und Wortverbindungen",
+      "diagram": "wordlinks",
+      "levels": [
+        "B2"
+      ],
+      "printed": [
+        192,
+        193
+      ],
+      "pdf": [
+        189,
+        190
+      ],
+      "ids": {
+        "B2": 164
+      }
+    },
+    {
+      "sourceChapter": 76,
+      "title": "Position und Direktion",
+      "group": "Wörter und Wortverbindungen",
+      "diagram": "wordlinks",
+      "levels": [
+        "B2"
+      ],
+      "printed": [
+        194,
+        195
+      ],
+      "pdf": [
+        191,
+        192
+      ],
+      "ids": {
+        "B2": 165
+      }
+    },
+    {
+      "sourceChapter": 77,
+      "title": "Es",
+      "group": "Wörter und Wortverbindungen",
+      "diagram": "wordlinks",
+      "levels": [
+        "B2"
+      ],
+      "printed": [
+        196,
+        197
+      ],
+      "pdf": [
+        193,
+        194
+      ],
+      "ids": {
+        "B2": 166
+      }
+    },
+    {
+      "sourceChapter": 78,
+      "title": "Funktionsverbgefüge 1",
+      "group": "Wörter und Wortverbindungen",
+      "diagram": "wordlinks",
+      "levels": [
+        "B2"
+      ],
+      "printed": [
+        198,
+        199
+      ],
+      "pdf": [
+        195,
+        196
+      ],
+      "ids": {
+        "B2": 167
+      }
+    },
+    {
+      "sourceChapter": 79,
+      "title": "Funktionsverbgefüge 2",
+      "group": "Wörter und Wortverbindungen",
+      "diagram": "wordlinks",
+      "levels": [
+        "C1"
+      ],
+      "printed": [
+        200,
+        203
+      ],
+      "pdf": [
+        197,
+        200
+      ],
+      "ids": {
+        "C1": 479
+      }
+    },
+    {
+      "sourceChapter": 80,
+      "title": "Wörter mit da-",
+      "group": "Wörter und Wortverbindungen",
+      "diagram": "wordlinks",
+      "levels": [
+        "B2"
+      ],
+      "printed": [
+        204,
+        207
+      ],
+      "pdf": [
+        201,
+        204
+      ],
+      "ids": {
+        "B2": 169
+      }
+    },
+    {
+      "sourceChapter": 81,
+      "title": "Modalpartikeln",
+      "group": "Wörter und Wortverbindungen",
+      "diagram": "wordlinks",
+      "levels": [
+        "B2"
+      ],
+      "printed": [
+        208,
+        211
+      ],
+      "pdf": [
+        205,
+        208
+      ],
+      "ids": {
+        "B2": 170
+      }
+    },
+    {
+      "sourceChapter": 82,
+      "title": "Nominalisierung",
+      "group": "Sätze umformen",
+      "diagram": "transform",
+      "levels": [
+        "C1"
+      ],
+      "printed": [
+        212,
+        215
+      ],
+      "pdf": [
+        209,
+        212
+      ],
+      "ids": {
+        "C1": 482
+      }
+    },
+    {
+      "sourceChapter": 83,
+      "title": "Links- und Rechtsattribute",
+      "group": "Sätze umformen",
+      "diagram": "transform",
+      "levels": [
+        "C1"
+      ],
+      "printed": [
+        216,
+        219
+      ],
+      "pdf": [
+        213,
+        216
+      ],
+      "ids": {
+        "C1": 483
+      }
+    },
+    {
+      "sourceChapter": 84,
+      "title": "Präposition – Adverb – Konnektor: temporal",
+      "group": "Sätze umformen",
+      "diagram": "transform",
+      "levels": [
+        "C1"
+      ],
+      "printed": [
+        220,
+        221
+      ],
+      "pdf": [
+        217,
+        218
+      ],
+      "ids": {
+        "C1": 484
+      }
+    },
+    {
+      "sourceChapter": 85,
+      "title": "Präposition – Adverb – Konnektor: kausal, konsekutiv, konzessiv, adversativ",
+      "group": "Sätze umformen",
+      "diagram": "transform",
+      "levels": [
+        "C1"
+      ],
+      "printed": [
+        222,
+        223
+      ],
+      "pdf": [
+        219,
+        220
+      ],
+      "ids": {
+        "C1": 485
+      }
+    },
+    {
+      "sourceChapter": 86,
+      "title": "Präposition – Adverb – Konnektor: modal, konditional, final",
+      "group": "Sätze umformen",
+      "diagram": "transform",
+      "levels": [
+        "C1"
+      ],
+      "printed": [
+        224,
+        225
+      ],
+      "pdf": [
+        221,
+        222
+      ],
+      "ids": {
+        "C1": 486
+      }
+    },
+    {
+      "sourceChapter": 87,
+      "title": "Kommaregeln",
+      "group": "Schreiben und Sprechen",
+      "diagram": "communication",
+      "levels": [
+        "B2"
+      ],
+      "printed": [
+        228,
+        229
+      ],
+      "pdf": [
+        225,
+        226
+      ],
+      "ids": {
+        "B2": 176
+      }
+    },
+    {
+      "sourceChapter": 88,
+      "title": "Besondere Formen der mündlichen Sprache",
+      "group": "Schreiben und Sprechen",
+      "diagram": "communication",
+      "levels": [
+        "C1"
+      ],
+      "printed": [
+        230,
+        231
+      ],
+      "pdf": [
+        227,
+        228
+      ],
+      "ids": {
+        "C1": 488
+      }
+    }
+  ],
+  "partners": [
+    {
+      "id": 1,
+      "title": "Wortpositionen: gemeinsam eine Rede halten",
+      "printed": [
+        28,
+        29
+      ],
+      "pdf": [
+        25,
+        26
+      ],
+      "ids": {
+        "B2": 601,
+        "C1": 621
+      }
+    },
+    {
+      "id": 2,
+      "title": "Irreale Bedingungen: Ratespiel",
+      "printed": [
+        40,
+        41
+      ],
+      "pdf": [
+        37,
+        38
+      ],
+      "ids": {
+        "B2": 602,
+        "C1": 622
+      }
+    },
+    {
+      "id": 3,
+      "title": "Passiv: Wechselspiele",
+      "printed": [
+        60,
+        61
+      ],
+      "pdf": [
+        57,
+        58
+      ],
+      "ids": {
+        "B2": 603,
+        "C1": 623
+      }
+    },
+    {
+      "id": 4,
+      "title": "Präpositionen: fünf in einer Reihe",
+      "printed": [
+        84,
+        85
+      ],
+      "pdf": [
+        81,
+        82
+      ],
+      "ids": {
+        "B2": 604,
+        "C1": 624
+      }
+    },
+    {
+      "id": 5,
+      "title": "Zeiten: gemeinsam eine Geschichte erzählen",
+      "printed": [
+        108,
+        109
+      ],
+      "pdf": [
+        105,
+        106
+      ],
+      "ids": {
+        "B2": 605,
+        "C1": 625
+      }
+    },
+    {
+      "id": 6,
+      "title": "Deklinationen: Würfelspiel",
+      "printed": [
+        144,
+        145
+      ],
+      "pdf": [
+        141,
+        142
+      ],
+      "ids": {
+        "B2": 606,
+        "C1": 626
+      }
+    },
+    {
+      "id": 7,
+      "title": "Adjektivendungen: Bildbeschreibung",
+      "printed": [
+        156,
+        157
+      ],
+      "pdf": [
+        153,
+        154
+      ],
+      "ids": {
+        "B2": 607,
+        "C1": 627
+      }
+    },
+    {
+      "id": 8,
+      "title": "Relativsätze: gemeinsam einen Kriminalfall lösen",
+      "printed": [
+        186,
+        187
+      ],
+      "pdf": [
+        183,
+        184
+      ],
+      "ids": {
+        "B2": 608,
+        "C1": 628
+      }
+    },
+    {
+      "id": 9,
+      "title": "Sätze umformen: Wechselspiele",
+      "printed": [
+        226,
+        227
+      ],
+      "pdf": [
+        223,
+        224
+      ],
+      "ids": {
+        "C1": 629
+      }
+    }
+  ],
+  "references": [
+    {
+      "id": 180,
+      "title": "Begriffe und Synonyme",
+      "pdf": [
+        5,
+        6
+      ],
+      "printed": [
+        8,
+        9
+      ]
+    },
+    {
+      "id": 181,
+      "title": "Wortpositionen im Satz: Gesamtschema",
+      "pdf": [
+        242,
+        242
+      ],
+      "printed": [
+        245,
+        245
+      ]
+    },
+    {
+      "id": 182,
+      "title": "Präpositionen mit Akkusativ, Dativ und Genitiv",
+      "pdf": [
+        243,
+        243
+      ],
+      "printed": [
+        246,
+        246
+      ]
+    },
+    {
+      "id": 183,
+      "title": "Verben, Adjektive und Nomen: nach Präpositionen",
+      "pdf": [
+        244,
+        248
+      ],
+      "printed": [
+        247,
+        251
+      ]
+    },
+    {
+      "id": 184,
+      "title": "Verben, Adjektive und Nomen: alphabetisch",
+      "pdf": [
+        249,
+        251
+      ],
+      "printed": [
+        252,
+        254
+      ]
+    },
+    {
+      "id": 185,
+      "title": "Dativ, Genitiv und zwei Akkusative",
+      "pdf": [
+        252,
+        254
+      ],
+      "printed": [
+        255,
+        257
+      ]
+    },
+    {
+      "id": 186,
+      "title": "Unregelmäßige Verben: nach Vokalen",
+      "pdf": [
+        255,
+        257
+      ],
+      "printed": [
+        258,
+        260
+      ]
+    },
+    {
+      "id": 187,
+      "title": "Unregelmäßige Verben: alphabetisch",
+      "pdf": [
+        258,
+        261
+      ],
+      "printed": [
+        261,
+        264
+      ]
+    }
+  ],
+  "trainingPdfPages": [
+    229,
+    241
+  ],
+  "answerPdfPages": [
+    262,
+    306
+  ],
+  "missingFromProvidedFile": [
+    "Register, listed at printed page 310; the supplied PDF ends at printed page 309."
+  ],
+  "partnerAnswerRanges": [
+    {
+      "partner": 7,
+      "start": [
+        289,
+        0.863446
+      ],
+      "end": [
+        290,
+        0.0472
+      ]
+    },
+    {
+      "partner": 8,
+      "start": [
+        298,
+        0.119538
+      ],
+      "end": [
+        298,
+        0.2187
+      ]
+    }
+  ]
+}

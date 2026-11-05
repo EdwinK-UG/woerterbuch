@@ -20,6 +20,7 @@ const files = [
   "js/email-verification.js",
   "grammatik/catalog.js",
   "grammatik/grammatik.js",
+  "grammatik/illustrations.js",
 ];
 let index = read("index.html");
 for (const file of ["core.bin", "defs.bin"]) {
