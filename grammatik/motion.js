@@ -31,7 +31,7 @@ const labelStrip = label => {
   const top = lines.length > 1 ? 296 : 311;
   return `<g class="gm-label"><rect x="55" y="${top}" width="410" height="${lines.length * 19 + 16}" rx="12" fill="var(--card)"/><text x="260" y="${top + 23}" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-size="15" fill="var(--fg)">${lines.map((l, i) => `<tspan x="260" dy="${i ? 19 : 0}">${esc(l)}</tspan>`).join('')}</text></g>`;
 };
-const chipSVG = (c, i, f, cls) => `<g class="gm-chip ${cls || ''}" data-i="${i}" style="transform:${tr(f)}" role="button" tabindex="-1" aria-label="${esc(c.t)}"><rect x="${-c.w / 2}" y="-17" width="${c.w}" height="34" rx="11" class="${c.hl ? 'hl' : ''}"/><text y="5.5" text-anchor="middle">${esc(c.t)}</text></g>`;
+const chipSVG = (c, i, f, cls, extra) => `<g class="gm-chip ${cls || ''}" data-i="${i}" style="transform:${tr(f)}" role="button" tabindex="-1" aria-label="${esc(c.t)}"><rect x="${-c.w / 2}" y="-17" width="${c.w}" height="34" rx="11" class="${c.hl ? 'hl' : ''}"/><text y="5.5" text-anchor="middle">${esc(c.t)}</text>${extra || ''}</g>`;
 const badge = (x, y, t, cls) => `<g class="gm-tag ${cls || ''}" transform="translate(${x} ${y})"><rect x="${-(t.length * 3.6 + 9)}" y="-10" width="${t.length * 7.2 + 18}" height="20" rx="10"/><text y="4" text-anchor="middle">${esc(t)}</text></g>`;
 
 
@@ -238,6 +238,193 @@ STORIES.passive = {
   }
 };
 
+
+/* Word order on rails: the sentence is a train. Waggons roll in, the verb waggons drop into their gaps, the station says "Ende". */
+const TRAIN_KINDS = ['token-path', 'verb-cluster', 'clause-end', 'clause-zero', 'clause-compare', 'tekamolo'];
+const normW = t => String(t).toLowerCase().replace(/[.,!?…:;"„“]/g, ' ').replace(/\s+/g, ' ').trim();
+function trainList(scene) {
+  const c = chunks(scene.bubble);
+  if (Array.isArray(scene.tokens) && scene.tokens.length >= 2 && scene.tokens.length <= 7) {
+    const marked = new Set(c.filter(x => x.hl).flatMap(x => normW(x.t).split(' ')));
+    return scene.tokens.map(t => ({ t: String(t), hl: !!normW(t) && normW(t).split(' ').every(w => marked.has(w)) }));
+  }
+  return c.length >= 2 && c.length <= 7 ? c.map(x => ({ t: x.t, hl: !!x.hl })) : null;
+}
+const TRAIN = {
+  cls: 'gm-hidechips',
+  plan(scene) {
+    const list = trainList(scene); if (!list) return null;
+    const chips = list.map(x => ({ t: x.t, hl: x.hl, w: chipW(x.t), role: x.hl ? 'k' : 'o' }));
+    const gap = 16, total = chips.reduce((a, x) => a + x.w, 0) + gap * (chips.length - 1), k = Math.min(1, 400 / total); if (k < .55) return null;
+    let cur = 232 - total * k / 2; const Y = 244;
+    chips.forEach(x => { x.fx = cur + x.w * k / 2; cur += (x.w + gap) * k; });
+    const hover = chips.map((x, i) => ({ x: x.fx, y: 96 + (jig(i, 4) - .5) * 14, r: (jig(i, 3) - .5) * 14, s: k * .92 }));
+    const frames = [0, 1, 2].map(st => chips.map((x, i) => (st === 2 ? { x: x.fx, y: Y, r: 0, s: k } : x.role === 'o' ? (st === 1 ? { x: x.fx, y: Y, r: 0, s: k } : { x: x.fx - 540, y: Y, r: 0, s: k }) : (st === 1 ? hover[i] : { ...hover[i], y: -50 }))));
+    return { n: 3, dur: [900, 2000, 2400], chips, frames, loose: looseRows(chips, k, [48, 96], 11), Y, k, game: true };
+  },
+  draw(K, scene, p) {
+    const wag = (c, i) => chipSVG(c, i, p.frames[2][i], 'r-' + c.role, `<circle class="wh" cx="${-c.w * .27}" cy="22" r="6.5"/><circle class="wh" cx="${c.w * .27}" cy="22" r="6.5"/>` + (i < p.chips.length - 1 ? `<path class="cp" d="M${c.w / 2} 6h16"/>` : ''));
+    return K.sky() + `<path d="M0 268H520" stroke="var(--ink)" stroke-width="4" opacity=".55"/><path d="M0 281H520" stroke="var(--wood)" stroke-width="7" stroke-dasharray="6 11" opacity=".75"/>`
+      + `<g class="gm-station"><rect x="468" y="212" width="46" height="56" rx="4" fill="var(--card)" stroke="var(--wood)" stroke-width="3"/><path d="M462 214L491 190L520 214Z" fill="var(--die)"/><rect x="484" y="238" width="14" height="30" rx="3" fill="var(--wood)"/><path d="M491 190V162" stroke="var(--ink)" stroke-width="3"/><path class="gm-flag" d="M491 162l22 7-22 7Z" fill="var(--sun)"/></g>`
+      + badge(491, 146, 'Ende', 'on t-end')
+      + p.chips.map((c, i) => (c.role === 'k' ? `<g class="gm-gap g-${i}"><rect x="${c.fx - c.w * p.k / 2 - 3}" y="${p.Y - 21}" width="${c.w * p.k + 6}" height="42" rx="12"/></g>` : '')).join('')
+      + p.chips.map(wag).join('')
+      + p.chips.map((c, i) => badge(c.fx, 296, String(i + 1), 't-' + i)).join('')
+      + `<g class="gm-hero" transform="translate(452 270)"><g class="gm-hop">${K.person({ x: 0, y: 1, s: .34, skin: 4, hair: 'bun', shirt: 'var(--die)', armR: 'wave', armL: 'hip', face: 'open' })}</g></g>`
+      + p.chips.map((c, i) => `<g class="gm-slot" data-i="${i}" role="button" tabindex="-1" aria-label="${i + 1}"><rect x="${c.fx - c.w * p.k / 2 - 4}" y="${p.Y - 22}" width="${c.w * p.k + 8}" height="44" rx="13"/></g>`).join('')
+      + labelStrip(scene.label);
+  },
+  apply(svg, p, i) {
+    svg.querySelectorAll('.gm-chip').forEach((el, k) => { el.style.transform = tr(p.frames[i][k]); el.classList.toggle('set', i >= 1); });
+    svg.querySelectorAll('.gm-gap').forEach(el => el.classList.toggle('on', i === 1));
+    p.chips.forEach((c, k) => svg.querySelectorAll('.t-' + k).forEach(el => el.classList.toggle('on', c.role === 'o' ? i >= 1 : i >= 2)));
+    svg.querySelectorAll('.gm-hero').forEach(el => el.classList.toggle('on', i >= 2)); svg.classList.toggle('gm-wow', i >= 2);
+  },
+  resetGame(svg) { svg.querySelectorAll('.gm-gap,.gm-hero').forEach(el => el.classList.remove('on')); svg.querySelectorAll('[class*="t-"]').forEach(el => { if (el.classList.contains('gm-tag') && !el.classList.contains('t-end')) el.classList.remove('on'); }); svg.classList.remove('gm-wow'); },
+  place(svg, p, k) { svg.querySelectorAll('.t-' + k).forEach(el => el.classList.add('on')); },
+  finish(svg) { svg.querySelectorAll('.gm-hero').forEach(el => el.classList.add('on')); svg.classList.add('gm-wow'); },
+  win: ['Well done! The train is in the right order.', 'Geschafft! Der Zug steht in der richtigen Reihenfolge.']
+};
+TRAIN_KINDS.forEach(k => { STORIES[k] = TRAIN; });
+
+/* der / die / das: three friendly word-eating monsters. Each word is fed to the monster that wears its article. */
+const ART = ['var(--der,#2563eb)', 'var(--die,#e11d48)', 'var(--das,#0f9d6b)'], MONX = [100, 260, 420];
+STORIES.gender = {
+  cls: 'gm-hidechips',
+  plan(scene) {
+    const words = scene.words || [['der', 'Apfel'], ['die', 'Banane'], ['das', 'Haus']];
+    if (!Array.isArray(words) || words.length !== 3 || words.some(w => !Array.isArray(w) || w.length < 2)) return null;
+    const chips = words.map(([a, w]) => ({ t: String(w), w: chipW(w), art: String(a), hl: false, role: 'w' }));
+    const loose = looseRows(chips, 1, [46, 92], 9);
+    return { n: 4, dur: [1100, 1500, 1500, 1700], chips, frames: range(4).map(st => chips.map((c, i) => (i < st ? { x: MONX[i], y: 190, r: 0, s: .5 } : loose[i]))), game: true };
+  },
+  draw(K, scene, p) {
+    const mon = (c, i) => { const x = MONX[i], col = ART[i]; return `<g class="gm-mon m-${i}"><ellipse cx="${x}" cy="304" rx="62" ry="9" fill="var(--ink)" opacity=".12"/><rect x="${x - 60}" y="178" width="120" height="124" rx="34" fill="${col}"/><ellipse cx="${x}" cy="182" rx="38" ry="12" fill="var(--ink)"/><ellipse cx="${x}" cy="180" rx="38" ry="9" fill="#000" opacity=".35"/><g class="gm-eyes"><circle cx="${x - 20}" cy="214" r="10" fill="#fff"/><circle cx="${x + 20}" cy="214" r="10" fill="#fff"/><circle class="gm-pupil" cx="${x - 18}" cy="216" r="4.5" fill="var(--ink)"/><circle class="gm-pupil" cx="${x + 22}" cy="216" r="4.5" fill="var(--ink)"/></g><text class="art" x="${x}" y="262" text-anchor="middle">${esc(c.art)}</text><text class="bw" x="${x}" y="286" text-anchor="middle">${esc(c.t)}</text></g>`; };
+    return K.grad() + p.chips.map(mon).join('')
+      + p.chips.map((c, i) => chipSVG(c, i, p.frames[3][i], 'set')).join('')
+      + p.chips.map((c, i) => `<g class="gm-slot" data-i="${i}" role="button" tabindex="-1" aria-label="${esc(c.art)}"><rect x="${MONX[i] - 64}" y="170" width="128" height="138" rx="34"/></g>`).join('')
+      + (scene.bubble ? `<g class="gm-say on">${K.bubble(260, 40, scene.bubble, { tail: 'c', w: 440 })}</g>` : '') + labelStrip(scene.label);
+  },
+  apply(svg, p, i) {
+    svg.querySelectorAll('.gm-chip').forEach((el, k) => { el.style.transform = tr(p.frames[i][k]); el.classList.toggle('set', k < i); });
+    svg.querySelectorAll('.gm-mon').forEach((el, k) => { el.classList.toggle('full', k < i); if (i === k + 1) { el.classList.remove('chomp'); void el.getBoundingClientRect(); el.classList.add('chomp'); } else el.classList.remove('chomp'); });
+    svg.querySelectorAll('.gm-say').forEach(el => el.classList.toggle('on', i === 0 || i === p.n - 1));
+  },
+  resetGame(svg) { svg.querySelectorAll('.gm-mon').forEach(el => el.classList.remove('full', 'chomp')); },
+  place(svg, p, k) { const el = svg.querySelectorAll('.gm-mon')[k]; el.classList.add('full'); el.classList.remove('chomp'); void el.getBoundingClientRect(); el.classList.add('chomp'); },
+  at: (p, i, k) => ({ x: MONX[k], y: 190, r: 0, s: .5 }),
+  win: ['Well done! Every word has its article.', 'Geschafft! Jedes Wort hat seinen Artikel.']
+};
+
+/* Time spans: a walk along a road from the beginning to the end; the bracket above is the span the preposition talks about. */
+STORIES['time-span'] = {
+  plan(scene) {
+    const t = scene.tokens; let labels;
+    if (Array.isArray(t) && t.length === 3) labels = t.map(String);
+    else { const hl = chunks(scene.bubble).filter(x => x.hl); if (!hl.length) return null; labels = ['Beginn', hl.map(x => x.t.replace(/[.,!?…]+$/, '')).join(' · '), 'Ende']; }
+    return { n: 4, dur: [900, 1300, 3000, 1800], labels, X0: 86, X1: 434 };
+  },
+  draw(K, scene, p) {
+    const pill = (x, y, t, cls, col) => { const w = chipW(t); return `<g class="gm-pill ${cls}" transform="translate(${x} ${y})"><rect x="${-w / 2}" y="-16" width="${w}" height="32" rx="16" fill="${col}"/><text y="5" text-anchor="middle">${esc(t)}</text></g>`; };
+    const flag = (x, col, cls) => `<g class="gm-fl ${cls}"><path d="M${x} 292V226" stroke="var(--ink)" stroke-width="4" stroke-linecap="round"/><path d="M${x} 226l30 10-30 10Z" fill="${col}"/></g>`;
+    const mid = (p.X0 + p.X1) / 2, [a, b, c] = p.labels;
+    return K.sky() + `<path d="M0 292H520V320H0Z" fill="var(--metal)" opacity=".55"/><path d="M0 306H520" stroke="var(--card)" stroke-width="3" stroke-dasharray="22 18" opacity=".8"/>`
+      + flag(p.X0, 'var(--akk)', 'f0') + flag(p.X1, 'var(--die)', 'f1') + pill(p.X0 + 6, 206, a, 'f0', 'var(--akk)') + pill(p.X1 + 6, 206, c, 'f1', 'var(--die)')
+      + `<path class="gm-span" d="M${p.X0} 176V162H${p.X1}V176" fill="none" stroke="var(--ac)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" pathLength="1"/>` + pill(mid, 140, b, 'span', 'var(--ac)')
+      + `<g class="gm-walker" style="transform:translate(${p.X1}px,296px)"><g class="gm-p">${K.person({ x: 0, y: 1, s: .4, skin: 3, hair: 'curly', shirt: 'var(--nom)', armR: 'wave', armL: 'down', face: 'open' })}</g></g>`
+      + (scene.bubble ? `<g class="gm-say">${K.bubble(260, 40, scene.bubble, { tail: 'c', w: 440 })}</g>` : '') + labelStrip(scene.label);
+  },
+  apply(svg, p, i) {
+    const w = svg.querySelector('.gm-walker'), on = (sel, v) => svg.querySelectorAll(sel).forEach(el => el.classList.toggle('on', v));
+    w.style.transform = `translate(${i >= 2 ? p.X1 : p.X0}px,296px)`; w.classList.toggle('on', i >= 1);
+    on('.f0', i >= 1); on('.gm-span', i >= 2); on('.span', i >= 2); on('.f1', i >= 3); on('.gm-say', i >= 3);
+  }
+};
+
+/* Certainty: how sure am I? A gauge with the modal verbs from "very sure" (muss) to "possible" (kann / könnte / mag). */
+const CERT = [['kann / könnte / mag', /k[öo]nnt|\bkann\b|\bmag\b|\bk[öo]nnen\b/i], ['dürfte', /d[üu]rft/i], ['müsste', /m[üu]sst/i], ['muss', /\bmuss\b|\bm[üu]ssen\b/i]];
+const polar = (r, deg) => [260 + r * Math.sin(deg * Math.PI / 180), 232 - r * Math.cos(deg * Math.PI / 180)];
+STORIES.certainty = {
+  plan(scene) {
+    const hl = chunks(scene.bubble).filter(x => x.hl).map(x => x.t).join(' ');
+    let z = CERT.findIndex((q, i) => i !== 0 && q[1].test(hl)); if (z < 0 && CERT[0][1].test(hl)) z = 0;
+    return { n: 3, dur: [1100, 1700, 2200], zone: z, game: false };
+  },
+  draw(K, scene, p) {
+    const sector = i => { const a0 = -90 + i * 45 + 1.5, a1 = -90 + (i + 1) * 45 - 1.5, [x0, y0] = polar(132, a0), [x1, y1] = polar(132, a1), [x2, y2] = polar(66, a1), [x3, y3] = polar(66, a0); return `<path class="gm-zone-arc z-${i}" d="M${x0} ${y0}A132 132 0 0 1 ${x1} ${y1}L${x2} ${y2}A66 66 0 0 0 ${x3} ${y3}Z" fill="var(--ac)" opacity="${[.28, .5, .72, 1][i]}"/>`; };
+    const ws = CERT.map(q => chipW(q[0]) - 8), tot = ws.reduce((a, b) => a + b, 0) + 10 * 3; let x = 260 - tot / 2;
+    const pills = CERT.map((q, i) => { const w = ws[i], cx = x + w / 2; x += w + 10; return `<g class="gm-zone z-${i}" data-z="${i}" role="button" tabindex="0" aria-label="${esc(q[0])}"><rect x="${cx - w / 2}" y="246" width="${w}" height="28" rx="14"/><text x="${cx}" y="265" text-anchor="middle">${esc(q[0])}</text></g>`; }).join('');
+    const target = p.zone >= 0 ? -67.5 + 45 * p.zone : 0;
+    return K.grad() + range(4).map(sector).join('') + `<g transform="translate(260 232)"><g class="gm-needle" style="transform:rotate(${target}deg)"><path d="M-6 0L0-112L6 0Z" fill="var(--ink)"/></g><circle r="10" fill="var(--ink)"/><circle r="4" fill="var(--card)"/></g>`
+      + `<text class="gm-end" x="104" y="232" text-anchor="middle">?</text><text class="gm-end" x="416" y="232" text-anchor="middle">!</text>` + pills
+      + (scene.bubble ? `<g class="gm-say on">${K.bubble(260, 44, scene.bubble, { tail: 'c', w: 440 })}</g>` : '') + labelStrip(scene.label);
+  },
+  needle(svg, z) { const n = svg.querySelector('.gm-needle'); n.style.transform = `rotate(${z < 0 ? 0 : -67.5 + 45 * z}deg)`; svg.querySelectorAll('.gm-zone').forEach(el => el.classList.toggle('on', +el.dataset.z === z)); svg.querySelectorAll('.gm-zone-arc').forEach(el => el.classList.toggle('on', +el.dataset.z === z || el.classList.contains('z-' + z))); },
+  apply(svg, p, i) { STORIES.certainty.needle(svg, i === 0 ? -9 : i === 1 ? 3.6 : p.zone); if (i === 0) svg.querySelector('.gm-needle').style.transform = 'rotate(-86deg)'; if (i === 1) svg.querySelector('.gm-needle').style.transform = 'rotate(86deg)'; svg.querySelectorAll('.gm-zone').forEach(el => el.classList.toggle('on', i === 2 && +el.dataset.z === p.zone)); },
+  tap(svg, p, e) { const z = e.target.closest && e.target.closest('.gm-zone'); if (z) STORIES.certainty.needle(svg, +z.dataset.z); }
+};
+
+/* Cause and effect: the highlighted part is what sets something off, the rest is what follows. */
+STORIES.cause = {
+  cls: 'gm-hidechips',
+  plan(scene) {
+    const c = chunks(scene.bubble), pairs = [], used = new Set();
+    c.forEach((x, i) => { if (!x.hl) return; const e = c[i + 1] && !c[i + 1].hl && !used.has(i + 1) ? i + 1 : c[i - 1] && !c[i - 1].hl && !used.has(i - 1) ? i - 1 : -1; if (e >= 0) { used.add(e); pairs.push([i, e]); } });
+    if (!pairs.length || pairs.length > 3) return null;
+    const ys = pairs.length === 1 ? [140] : pairs.length === 2 ? [100, 176] : [84, 140, 196], chips = [], rows = [];
+    pairs.forEach(([ci, ei], r) => {
+      const a = { t: c[ci].t, w: chipW(c[ci].t), hl: true, role: 'cause' }, b = { t: c[ei].t, w: chipW(c[ei].t), hl: false, role: 'effect' };
+      const total = a.w + 74 + b.w, k = Math.min(1, 450 / total); let x = 250 - total * k / 2;
+      a.fx = x + a.w * k / 2; x += (a.w + 74) * k; b.fx = x + b.w * k / 2; a.k = b.k = k; a.y = b.y = ys[r]; a.bx = (a.fx + a.w * k / 2 + b.fx - b.w * k / 2) / 2;
+      chips.push(a, b); rows.push({ a: chips.length - 2, b: chips.length - 1 });
+    });
+    const frames = [0, 1, 2].map(st => chips.map(x => (x.role === 'cause' ? (st >= 1 ? { x: x.fx, y: x.y, r: 0, s: x.k } : { x: x.fx, y: x.y - 46, r: -6, s: x.k * .8 }) : (st >= 2 ? { x: x.fx, y: x.y, r: 0, s: x.k } : { x: x.fx + 70, y: x.y, r: 4, s: x.k * .8 }))));
+    return { n: 3, dur: [900, 1500, 2600], chips, rows, frames };
+  },
+  draw(K, scene, p) {
+    const calm = K.person({ x: 0, y: 1, s: .5, skin: 1, hair: 'long', shirt: 'var(--nom)', face: 'flat', armL: 'down', armR: 'down' }), shock = K.person({ x: 0, y: 1, s: .5, skin: 1, hair: 'long', shirt: 'var(--nom)', face: 'o', armL: 'up', armR: 'up' });
+    return K.room() + p.rows.map(r => `<g class="gm-bolt" transform="translate(${p.chips[r.a].bx} ${p.chips[r.a].y})"><path d="M2-17L-9 3H-1L-5 18L10-5H2L7-17Z" fill="var(--sun)" stroke="var(--ink)" stroke-width="2" stroke-linejoin="round"/></g>`).join('')
+      + `<g transform="translate(452 330)"><g class="gm-calm">${calm}</g><g class="gm-shock">${shock}</g></g>`
+      + p.chips.map((c, i) => chipSVG(c, i, p.frames[2][i], 'r-' + c.role)).join('') + labelStrip(scene.label);
+  },
+  apply(svg, p, i) {
+    svg.querySelectorAll('.gm-chip').forEach((el, k) => { el.style.transform = tr(p.frames[i][k]); el.classList.toggle('set', p.chips[k].role === 'cause' ? i >= 1 : i >= 2); });
+    svg.classList.toggle('gm-hit', i >= 2); svg.classList.toggle('gm-wow', i >= 2);
+  }
+};
+
+/* Word parts: little bricks that snap together into one word (prefix, ge / zu, stem). */
+STORIES.prefix = {
+  cls: 'gm-hidechips',
+  plan(scene) {
+    const parts = scene.parts; if (!Array.isArray(parts) || parts.length !== 3) return null;
+    const chips = parts.map((t, i) => ({ t: String(t), w: Math.max(52, chipW(t) + 10), hl: false, role: 'b' + i }));
+    const form = chunks(scene.bubble).filter(x => x.hl).map(x => normW(x.t)).join('|'), plainParts = parts.map(normW);
+    const gap1 = form.includes(plainParts[0] + ' ' + plainParts[1]) ? 22 : 3;
+    const total = chips.reduce((a, x) => a + x.w, 0) + gap1 + 3, k = Math.min(1.6, 470 / total); let cur = 260 - total * k / 2;
+    chips.forEach((x, i) => { x.fx = cur + x.w * k / 2; cur += (x.w + (i === 0 ? gap1 : 3)) * k; });
+    const loose = looseRows(chips, k, [50, 98], 13);
+    return { n: 4, dur: [1000, 1400, 1400, 2200], chips, k, Y: 232 - 17 * k, loose, frames: range(4).map(st => chips.map((x, i) => (i < st ? { x: x.fx, y: 232 - 17 * k, r: 0, s: k } : loose[i]))), game: true };
+  },
+  draw(K, scene, p) {
+    const stud = c => `<rect class="stud" x="${-c.w / 2 + 9}" y="-23" width="13" height="7" rx="2.5"/><rect class="stud" x="${c.w / 2 - 22}" y="-23" width="13" height="7" rx="2.5"/>`;
+    return K.grad() + `<rect x="0" y="236" width="520" height="124" fill="var(--wood)" opacity=".28"/><rect x="0" y="232" width="520" height="8" fill="var(--wood)" opacity=".55"/>`
+      + p.chips.map((c, i) => chipSVG(c, i, p.frames[3][i], 'b' + i + ' set', stud(c))).join('')
+      + p.chips.map((c, i) => `<g class="gm-slot" data-i="${i}" role="button" tabindex="-1" aria-label="${i + 1}"><rect x="${c.fx - c.w * p.k / 2 - 3}" y="${p.Y - 22 * p.k}" width="${c.w * p.k + 6}" height="${44 * p.k}" rx="11"/></g>`).join('')
+      + p.chips.map((c, i) => badge(c.fx, 236 + 28, String(i + 1), 't-' + i)).join('')
+      + (scene.bubble ? `<g class="gm-say on">${K.bubble(260, 150, scene.bubble, { tail: 'c', w: 440 })}</g>` : '') + labelStrip(scene.label);
+  },
+  apply(svg, p, i) {
+    svg.querySelectorAll('.gm-chip').forEach((el, k) => { el.style.transform = tr(p.frames[i][k]); el.classList.toggle('set', true); el.classList.toggle('in', k < i); });
+    p.chips.forEach((c, k) => svg.querySelectorAll('.t-' + k).forEach(el => el.classList.toggle('on', k < i)));
+    svg.querySelectorAll('.gm-say').forEach(el => el.classList.toggle('on', i === p.n - 1));
+  },
+  resetGame(svg) { svg.querySelectorAll('.gm-chip').forEach(el => el.classList.remove('in')); svg.querySelectorAll('.gm-tag').forEach(el => el.classList.remove('on')); svg.querySelectorAll('.gm-say').forEach(el => el.classList.remove('on')); },
+  place(svg, p, k) { svg.querySelectorAll('.t-' + k).forEach(el => el.classList.add('on')); svg.querySelectorAll('.gm-chip')[k].classList.add('in'); },
+  finish(svg) { svg.querySelectorAll('.gm-say').forEach(el => el.classList.add('on')); },
+  win: ['Well done! The word is complete.', 'Geschafft! Das Wort ist vollständig.']
+};
+
 /* ---------- 3. the life layer: every picture gets a little movement ---------- */
 function life(K, scene, orig) {
   const K2 = Object.create(K);
@@ -251,7 +438,7 @@ function life(K, scene, orig) {
 function story(K, scene, st, p) {
   const alt = scene.alt || scene.bubble || scene.label || '';
   const svg = K.svg(st.draw(K, scene, p), alt);
-  return svg.replace('<svg ', `<svg class="gm gm-${esc(scene.kind)} gm-story" data-gm="${esc(scene.kind)}" data-steps="${p.n}" data-scene="${esc(JSON.stringify(scene))}" `);
+  return svg.replace('<svg ', `<svg class="${['gm', 'gm-' + esc(scene.kind), 'gm-story', st.cls].filter(Boolean).join(' ')}" data-gm="${esc(scene.kind)}" data-steps="${p.n}" data-scene="${esc(JSON.stringify(scene))}" `);
 }
 let ORIG = null, LAST_K = null;
 // the one entry point: markup for a scene (a story when there is one for its kind, the life layer otherwise)
@@ -295,7 +482,7 @@ function mountOne(svg, opt) {
   ctl.startGame = () => {
     ctl.stop(); ctl.game = { sel: -1, placed: new Set(), filled: new Set(), p }; svg.classList.remove('gm-done'); svg.classList.add('gm-game'); bar.classList.add('gaming');
     ctl.set(0, true);
-    svg.querySelectorAll('.gm-chip').forEach((el, k) => { el.style.transform = tr(p.frames[0][k]); el.classList.remove('set', 'sel'); el.setAttribute('tabindex', '0'); });
+    svg.querySelectorAll('.gm-chip').forEach((el, k) => { el.style.transform = tr((p.loose || p.frames[0])[k]); el.classList.remove('set', 'sel', 'in'); el.setAttribute('tabindex', '0'); });
     svg.querySelectorAll('.gm-slot').forEach(el => { el.classList.remove('done'); el.setAttribute('tabindex', '0'); });
     if (st.resetGame) st.resetGame(svg, p);
   };
@@ -317,7 +504,7 @@ function mountOne(svg, opt) {
   // playing with the picture
   const say = t => { const h = bar.querySelector('.gm-hint'); if (h) h.textContent = t || ''; };
   const act = e => {
-    if (!ctl.game) return;
+    if (!ctl.game) { if (st.tap) { ctl.stop(); st.tap(svg, p, e, ctl); } return; }
     const chip = e.target.closest('.gm-chip'), slot = e.target.closest('.gm-slot'), g = ctl.game;
     if (chip) {
       const k = +chip.dataset.i; if (g.placed.has(k)) return;
@@ -418,6 +605,25 @@ function css() {
 .gm-doer{transition:opacity .7s}.gm-passiv .gm-doer{opacity:.28;filter:grayscale(1)}
 .gm-crowd{transform-box:fill-box;transform-origin:50% 100%;transition:transform .7s cubic-bezier(.3,1.4,.5,1)}.gm-passiv .gm-crowd{transform:scale(1.14)}
 .gm-flow{animation:gm-march 1.2s linear infinite}@keyframes gm-march{to{stroke-dashoffset:-12}}.gm-flow,.gm-flow2{transition:opacity .5s}.gm-passiv .gm-flow,.gm-passiv .gm-flow2{opacity:.25}
+
+.gm-hidechips .gm-chip{opacity:0}.gm-hidechips .gm-chip.set{opacity:1}.gm-game .gm-chip{opacity:1}
+.gm-chip circle.wh{fill:var(--ink)}.gm-chip path.cp{stroke:var(--ink);stroke-width:4;opacity:.6;fill:none}
+.gm-gap{opacity:0;transition:opacity .4s}.gm-gap.on{opacity:1}.gm-gap rect{fill:none;stroke:var(--ac);stroke-width:2.5;stroke-dasharray:6 5}
+.gm-flag{transform-box:fill-box;transform-origin:0 50%;animation:gm-flagw 1.6s ease-in-out infinite}@keyframes gm-flagw{50%{transform:skewY(-9deg) scaleX(.88)}}
+.gm-gender .gm-chip{transition:transform .95s cubic-bezier(.3,1.35,.4,1) var(--d,0s),opacity .3s .7s}.gm-gender .gm-chip.set{opacity:0}.gm-game.gm-gender .gm-chip{opacity:1}.gm-game.gm-gender .gm-chip.set{opacity:0}
+.gm-mon .art{font:800 30px Inter,system-ui,sans-serif;fill:#fff}.gm-mon .bw{font:700 15px Inter,system-ui,sans-serif;fill:#fff;opacity:0;transition:opacity .4s .6s}.gm-mon.full .bw{opacity:1}
+.gm-mon{transform-box:fill-box;transform-origin:50% 100%}.gm-mon.chomp{animation:gm-chomp .6s .55s}@keyframes gm-chomp{0%,100%{transform:none}35%{transform:scale(1.09,.9)}65%{transform:scale(.96,1.06)}}
+.gm-pill{opacity:0;transition:opacity .5s}.gm-pill.on{opacity:1}.gm-pill text{font:700 14px Inter,system-ui,sans-serif;fill:#fff}
+.gm-fl{opacity:0;transition:opacity .4s}.gm-fl.on{opacity:1}
+.gm-span{stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset 2.6s linear .2s}.gm-span.on{stroke-dashoffset:0}
+.gm-walker{opacity:0;transition:transform 2.8s ease-in-out .2s,opacity .4s}.gm-walker.on{opacity:1}
+.gm-needle{transform-origin:0 0;transition:transform 1.1s cubic-bezier(.3,1.5,.5,1)}
+.gm-zone{cursor:pointer;outline:none}.gm-zone rect{fill:var(--card);stroke:var(--line);stroke-width:1.6}.gm-zone text{font:700 13px Inter,system-ui,sans-serif;fill:var(--ink);pointer-events:none}.gm-zone.on rect{fill:var(--ac);stroke:var(--ac)}.gm-zone.on text{fill:#fff}.gm-zone:focus-visible rect{stroke:var(--die);stroke-width:3}
+.gm-end{font:800 22px Inter,system-ui,sans-serif;fill:var(--mut)}.gm-zone-arc{transition:filter .4s}.gm-zone-arc.on{filter:drop-shadow(0 0 5px var(--ac))}
+.gm-bolt{opacity:.22;transition:opacity .3s}.gm-hit .gm-bolt{opacity:1}.gm-hit .gm-bolt path{transform-box:fill-box;transform-origin:center;animation:gm-zap .8s ease-out}@keyframes gm-zap{0%{scale:.3}50%{scale:1.45}100%{scale:1}}
+.gm-calm,.gm-shock{transition:opacity .4s}.gm-shock{opacity:0}.gm-hit .gm-shock{opacity:1}.gm-hit .gm-calm{opacity:0}
+.gm-chip rect.stud{stroke:none}.gm-chip.b0 rect,.gm-chip.b0 rect.stud{fill:var(--ac)}.gm-chip.b1 rect,.gm-chip.b1 rect.stud{fill:var(--dat)}.gm-chip.b2 rect,.gm-chip.b2 rect.stud{fill:var(--akk)}
+.gm-chip.b0 text,.gm-chip.b1 text,.gm-chip.b2 text{fill:#fff}.gm-chip.b0 rect,.gm-chip.b1 rect,.gm-chip.b2 rect{stroke:none}.gm-chip.in rect:not(.stud){filter:drop-shadow(0 2px 0 rgba(0,0,0,.22))}
 @media(prefers-reduced-motion:reduce){.gm *,.gm{animation:none!important}.gm-chip,.gm-post,.gm-arch,.gm-hero,.gm-tag{transition:none!important}}`;
   document.head.appendChild(s);
 }

@@ -21,6 +21,14 @@ const SCENES = {
   pastWish: { kind: "past-wish", bubble: "Wäre ich doch zu Hause *geblieben*!", label: "hätte / wäre + Partizip II", alt: "x" },
   conditional: { kind: "conditional", bubble: "Wenn ich Geld *hätte*, *würde* ich reisen.", label: "", alt: "x" },
   passive: { kind: "passive", bubble: "Die Gruppe *wird informiert*.", label: "Die Handlung im Mittelpunkt", alt: "x" },
+  tokenPath: { kind: "token-path", bubble: "Sie haben lange *darauf gewartet*.", label: "Vor dem zweiten Verbteil", alt: "x", tokens: ["Sie", "haben", "darauf", "gewartet"] },
+  clauseEnd: { kind: "clause-end", bubble: "*Wenn er kommt*, frage ich ihn.", label: "Der ganze Nebensatz besetzt Position 1", alt: "x" },
+  verbCluster: { kind: "verb-cluster", bubble: "…, weil er *hätte kommen sollen*.", label: "Hilfsverb vor der Infinitivgruppe", alt: "x" },
+  gender: { kind: "gender", bubble: "*Der*, *die* oder *das*?", label: "Das Genus gehört zum Wort.", alt: "x" },
+  timeSpan: { kind: "time-span", bubble: "*Seit drei Jahren* in Frankfurt.", label: "Vom Beginn bis jetzt", alt: "x", tokens: ["Beginn", "seit drei Jahren", "jetzt"] },
+  certainty: { kind: "certainty", bubble: "Er *könnte* im Stau stecken.", label: "Wie sicher bin ich?", alt: "x" },
+  cause: { kind: "cause", bubble: "*Aus Wut* schreiben. *Vor Wut* rot werden.", label: "Ursachen unterscheiden", alt: "x" },
+  prefix: { kind: "prefix", bubble: "mitkommen → *mitzukommen*.", label: "Präfix, zu und Verbstamm", alt: "x", parts: ["mit", "zu", "kommen"] },
 };
 for (const rel of ["in", "auf", "an", "über", "unter", "vor", "hinter", "neben", "zwischen"]) SCENES["spatial-" + rel] = { kind: "spatial", bubble: "", label: "Wo? · Wohin?", alt: "x", relation: rel };
 
@@ -54,7 +62,7 @@ test("the loose words never overlap each other", () => {
 test("every story builds markup that carries its scene, escapes lesson text and never throws", () => {
   for (const [name, scene] of Object.entries(SCENES)) {
     const html = M.html(kit(), scene, {});
-    assert.match(html, /^<svg class="gm gm-[a-z-]+ gm-story" data-gm="[a-z-]+" data-steps="\d+" data-scene="/, name);
+    assert.match(html, /^<svg class="gm gm-[a-z-]+ gm-story( gm-hidechips)?" data-gm="[a-z-]+" data-steps="\d+" data-scene="/, name);
     assert.match(html, /viewBox="0 0 520 360"/, name);
     assert.doesNotMatch(html, /undefined|NaN/, name);
   }
@@ -148,6 +156,79 @@ test("pictures inside graded exercises are not turned into explainers or games",
   assert.equal(doc.querySelectorAll("#ex .gm-story, #ex .gm-bar").length, 0, "no controller, no game bar in an exercise");
   assert.ok(doc.querySelector("#ex svg.gm-life"), "the exercise picture is still drawn (with the life layer only)");
   assert.equal(doc.querySelectorAll("#learn .gm-bar").length, 1, "the same picture in the lesson text is an explainer");
+});
+
+test("word-order trains: the highlighted words are the ones that drop into gaps, in sentence order", () => {
+  const p = M.plan(SCENES.tokenPath);
+  assert.deepEqual(p.chips.map((c) => c.role), ["o", "o", "k", "k"], "tokens are matched word by word, so 'Sie' is not confused with a highlighted word that contains the same letters");
+  assert.deepEqual(M.plan({ kind: "token-path", bubble: "Er *hatte* nämlich den Bus *verpasst*.", tokens: ["Er", "hatte", "den Bus", "verpasst"] }).chips.map((c) => c.role), ["o", "k", "o", "k"]);
+  assert.deepEqual(M.plan(SCENES.clauseEnd).chips.map((c) => c.t), ["Wenn er kommt,", "frage ich ihn."], "without tokens the sentence's own word groups become the waggons");
+  assert.ok(p.frames[0].every((f, i) => p.chips[i].role === "k" || f.x < 0), "at first the waggons are still off to the left");
+  assert.ok(p.frames[1].every((f, i) => p.chips[i].role === "o" || f.y < p.Y - 60), "then the verbs hover above their gaps");
+  assert.deepEqual(p.frames[2].map((f) => f.y), p.chips.map(() => p.Y), "finally every waggon stands on the track");
+  assert.equal(M.plan({ kind: "token-path", bubble: "Nur ein Stück." }), null, "one word group is not a train");
+  assert.equal(M.plan({ kind: "clause-end", bubble: "a *b* c *d* e *f* g *h*." }), null, "too long a sentence falls back to the plain picture");
+});
+
+test("der / die / das: each word goes to its own monster, and a wrong monster is refused", () => {
+  const { w, M: m } = page(), fig = w.document.getElementById("f");
+  fig.innerHTML = m.html(kit(), SCENES.gender, {});
+  const [ctl] = m.mount(fig, { auto: false }), svg = fig.querySelector("svg"), click = (el) => el.dispatchEvent(new w.MouseEvent("click", { bubbles: true }));
+  assert.equal(ctl.plan.chips.map((c) => c.art).join(), "der,die,das");
+  ctl.set(2, true); assert.equal(svg.querySelectorAll(".gm-mon.full").length, 2, "two monsters have eaten a word after step 2");
+  fig.querySelector(".gm-b-game").click();
+  const chip = (i) => svg.querySelectorAll(".gm-chip")[i], slot = (i) => svg.querySelectorAll(".gm-slot")[i];
+  click(chip(0)); click(slot(2)); assert.equal(ctl.game.placed.size, 0, "Apfel does not belong to the das monster");
+  click(slot(0)); assert.equal(ctl.game.placed.size, 1);
+  for (const i of [1, 2]) { click(chip(i)); click(slot(i)); }
+  assert.ok(svg.classList.contains("gm-done"));
+  assert.equal(M.plan({ kind: "gender", words: [["der", "A"], ["die", "B"]] }), null, "exactly three words are needed");
+  assert.equal(M.plan({ kind: "gender", words: [["der", "Hund"], ["die", "Katze"], ["das", "Pferd"]] }).chips[2].t, "Pferd", "the lesson can supply its own words");
+});
+
+test("time spans use the lesson's three labels, or the highlighted words in the middle", () => {
+  assert.deepEqual(M.plan(SCENES.timeSpan).labels, ["Beginn", "seit drei Jahren", "jetzt"]);
+  assert.deepEqual(M.plan({ kind: "time-span", bubble: "*Seit Montag*." }).labels, ["Beginn", "Seit Montag", "Ende"]);
+  assert.equal(M.plan({ kind: "time-span", bubble: "Ohne Markierung." }), null);
+});
+
+test("the certainty gauge points at the modal verb of the sentence and can be played with", () => {
+  const zone = (b) => M.plan({ kind: "certainty", bubble: b }).zone;
+  assert.equal(zone("Er *muss* gleich da sein."), 3);
+  assert.equal(zone("Er *müsste* gleich da sein."), 2);
+  assert.equal(zone("Er *dürfte* gleich da sein."), 1);
+  assert.equal(zone("Er *könnte* im Stau stecken."), 0);
+  assert.equal(zone("Sie *könnte* Lust auf Sport *gehabt haben*."), 0);
+  assert.equal(zone("Er ist da."), -1, "no modal found: the needle rests in the middle");
+  const { w, M: m } = page(), fig = w.document.getElementById("f");
+  fig.innerHTML = m.html(kit(), SCENES.certainty, {});
+  m.mount(fig, { auto: false }); const svg = fig.querySelector("svg");
+  assert.match(svg.querySelector(".gm-needle").style.transform, /-67\.5deg/, "it ends on the sure-to-possible zone of könnte");
+  svg.querySelector('.gm-zone[data-z="3"]').dispatchEvent(new w.MouseEvent("click", { bubbles: true }));
+  assert.match(svg.querySelector(".gm-needle").style.transform, /67\.5deg/, "tapping a verb swings the needle to it");
+  assert.ok(svg.querySelector('.gm-zone[data-z="3"]').classList.contains("on"));
+});
+
+test("cause and effect pairs each highlighted cause with the words next to it", () => {
+  const p = M.plan(SCENES.cause);
+  assert.deepEqual(p.chips.map((c) => c.t + ":" + c.role), ["Aus Wut:cause", "schreiben.:effect", "Vor Wut:cause", "rot werden.:effect"]);
+  assert.deepEqual(M.plan({ kind: "cause", bubble: "Sie ärgert sich *über den Lärm*." }).chips.map((c) => c.role), ["cause", "effect"], "when the cause comes last, the effect is the words before it");
+  assert.equal(M.plan({ kind: "cause", bubble: "Kein Ursache markiert." }), null);
+  assert.ok(p.chips.every((c) => c.fx > 0 && c.fx < 520));
+});
+
+test("word bricks: parts snap together in order, and a separate first word keeps a gap", () => {
+  const joined = M.plan(SCENES.prefix), split = M.plan({ kind: "prefix", bubble: "bekommen → *zu bekommen*.", parts: ["zu", "be", "kommen"] });
+  const gapOf = (p) => p.chips[1].fx - p.chips[1].w * p.k / 2 - (p.chips[0].fx + p.chips[0].w * p.k / 2);
+  assert.ok(gapOf(joined) < 6 && gapOf(split) > 15, "mitzukommen is one word, 'zu bekommen' is two");
+  assert.deepEqual(joined.frames[2].map((f, i) => f.x === joined.chips[i].fx), [true, true, false], "after step 2 the first two bricks have snapped on");
+  assert.equal(M.plan({ kind: "prefix", parts: ["a", "b"] }), null);
+  const { w, M: m } = page(), fig = w.document.getElementById("f");
+  fig.innerHTML = m.html(kit(), SCENES.prefix, {});
+  const [ctl] = m.mount(fig, { auto: false }), svg = fig.querySelector("svg"), click = (el) => el.dispatchEvent(new w.MouseEvent("click", { bubbles: true }));
+  fig.querySelector(".gm-b-game").click();
+  for (const i of [2, 0, 1]) { click(svg.querySelectorAll(".gm-chip")[i]); click(svg.querySelectorAll(".gm-slot")[i]); }
+  assert.ok(svg.classList.contains("gm-done"), "bricks may be placed in any order, as long as each lands in its own place");
 });
 
 test("the life layer moves any picture that has no story of its own, without changing what it shows", () => {
