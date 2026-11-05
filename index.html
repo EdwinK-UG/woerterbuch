@@ -403,7 +403,7 @@ kbd{font:600 .66rem Inter,system-ui,sans-serif;padding:.1rem .35rem;border-radiu
 <script src="config.js?v=bce20ec90cdd"></script>
 <script src="js/email-verification.js?v=dc82e0086602"></script>
 <script src="js/pages.js?v=4bdfd342abbf"></script>
-<script src="js/course-counts.js?v=9a1d19b2a7b5"></script>
+<script src="js/course-counts.js?v=6249eb512997"></script>
 <script src="js/study-sync.js?v=9de759f82df1"></script>
 <script src="js/game-i18n.js?v=9cb89f5a1bfd"></script>
 <script src="js/game-messages.js?v=f0e0633452ab"></script>
@@ -581,9 +581,9 @@ function scriptFile(src){
 }
 function loadGram(){
   if(!gramP)gramP=(async()=>{
-    if(typeof LESSON_EXERCISES==='undefined')await scriptFile('grammatik/catalog.js?v=7ca2e966dfae');
-    if(!window.GRAM_ART)await scriptFile('grammatik/illustrations.js?v=b17fb8eacabf');
-    if(!window.GRAM)await scriptFile('grammatik/grammatik.js?v=8104cd64c348');
+    if(typeof LESSON_EXERCISES==='undefined')await scriptFile('grammatik/catalog.js?v=3a069506a6a6');
+    if(!window.GRAM_ART)await scriptFile('grammatik/illustrations.js?v=8301b7b27e25');
+    if(!window.GRAM)await scriptFile('grammatik/grammatik.js?v=ae0a4ab4cc2e');
   })().catch(e=>{gramP=null;throw e});
   return gramP;
 }
