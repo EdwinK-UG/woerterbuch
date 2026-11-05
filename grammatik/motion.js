@@ -31,7 +31,7 @@ const labelStrip = label => {
   const top = lines.length > 1 ? 296 : 311;
   return `<g class="gm-label"><rect x="55" y="${top}" width="410" height="${lines.length * 19 + 16}" rx="12" fill="var(--card)"/><text x="260" y="${top + 23}" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-size="15" fill="var(--fg)">${lines.map((l, i) => `<tspan x="260" dy="${i ? 19 : 0}">${esc(l)}</tspan>`).join('')}</text></g>`;
 };
-const chipSVG = (c, i, f, cls, extra) => `<g class="gm-chip ${cls || ''}" data-i="${i}" style="transform:${tr(f)}" role="button" tabindex="-1" aria-label="${esc(c.t)}"><rect x="${-c.w / 2}" y="-17" width="${c.w}" height="34" rx="11" class="${c.hl ? 'hl' : ''}"/><text y="5.5" text-anchor="middle">${esc(c.t)}</text>${extra || ''}</g>`;
+const chipSVG = (c, i, f, cls, extra) => `<g class="gm-chip ${cls || ''}" data-i="${i}" style="transform:${tr(f)}" role="button" tabindex="-1" aria-label="${esc(c.t)}"><rect x="${-c.w / 2}" y="-17" width="${c.w}" height="34" rx="11" class="${c.hl ? 'hl' : ''}"/><text y="5.5" text-anchor="middle">${c.html || esc(c.t)}</text>${extra || ''}</g>`;
 const badge = (x, y, t, cls) => `<g class="gm-tag ${cls || ''}" transform="translate(${x} ${y})"><rect x="${-(t.length * 3.6 + 9)}" y="-10" width="${t.length * 7.2 + 18}" height="20" rx="10"/><text y="4" text-anchor="middle">${esc(t)}</text></g>`;
 
 
@@ -425,6 +425,115 @@ STORIES.prefix = {
   win: ['Well done! The word is complete.', 'Geschafft! Das Wort ist vollständig.']
 };
 
+
+/* Word forms: a word goes into the transformer and comes out as its new form; the letters (or words) that changed light up. */
+function formSegs(a, b) {
+  const seg = (str, i, j) => [{ t: str.slice(0, i) }, { t: str.slice(i, str.length - j), chg: true }, { t: str.slice(str.length - j) }].filter(x => x.t);
+  const wa = a.split(/\s+/), wb = b.split(/\s+/);
+  if (wa.length === 1 && wb.length === 1) {
+    let i = 0; while (i < a.length && i < b.length && a[i].toLowerCase() === b[i].toLowerCase()) i++;
+    let j = 0; while (j < a.length - i && j < b.length - i && a[a.length - 1 - j].toLowerCase() === b[b.length - 1 - j].toLowerCase()) j++;
+    return [seg(a, i, j), seg(b, i, j)];
+  }
+  const A = wa.map(x => x.toLowerCase()), B = wb.map(x => x.toLowerCase()), dp = Array.from({ length: A.length + 1 }, () => new Array(B.length + 1).fill(0));
+  for (let i = A.length - 1; i >= 0; i--) for (let j = B.length - 1; j >= 0; j--) dp[i][j] = A[i] === B[j] ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+  const ka = new Set(), kb = new Set(); let i = 0, j = 0;
+  while (i < A.length && j < B.length) { if (A[i] === B[j]) { ka.add(i); kb.add(j); i++; j++; } else if (dp[i + 1][j] >= dp[i][j + 1]) i++; else j++; }
+  const join = (ws, keep) => { const out = []; ws.forEach((w, k) => { const chg = !keep.has(k), last = out[out.length - 1]; if (last && !!last.chg === chg) last.t += ' ' + w; else out.push({ t: (out.length ? ' ' : '') + w, chg: chg || undefined }); }); return out; };
+  return [join(wa, ka), join(wb, kb)];
+}
+STORIES.forms = {
+  cls: 'gm-hidechips',
+  plan(scene) {
+    const parts = String(scene.bubble || '').replace(/\*/g, '').replace(/[.!]+$/, '').split(/\s*(?:→|↔)\s*/).map(x => x.trim()).filter(Boolean);
+    if (parts.length < 2 || parts.length > 3) return null;
+    const segs = parts.map((t, i) => (i === 0 ? formSegs(parts[0], parts[1])[0] : formSegs(parts[i - 1], parts[i])[1]));
+    const chips = parts.map((t, i) => ({ t, w: Math.round(t.length * 9.4 + 34), hl: false, role: 'f', html: segs[i].map(g => `<tspan${g.chg ? ` class="chg${i === 0 ? ' o' : ''}"` : ''}>${esc(g.t)}</tspan>`).join('') }));
+    const gap = 92, total = chips.reduce((a, c) => a + c.w, 0) + gap * (chips.length - 1), k = Math.min(1.7, 490 / total); if (k < .5) return null;
+    let cur = 260 - total * k / 2; const Y = 168;
+    chips.forEach(c => { c.fx = cur + c.w * k / 2; cur += (c.w + gap) * k; });
+    const n = chips.length + 1;
+    return { n, dur: [900].concat(range(chips.length - 1).map(() => 2000), [1800]), chips, k, Y, gap,
+      frames: range(n).map(st => chips.map((c, i) => (i <= st ? { x: c.fx, y: Y, r: 0, s: k } : { x: c.fx - 46 * k, y: Y + 34, r: -4, s: k * .5 }))) };
+  },
+  draw(K, scene, p) {
+    const gs = Math.max(1, Math.min(1.6, p.k / 1.1)), gear = (x, i) => `<g class="gm-gear g-${i}" transform="translate(${x} ${p.Y - 2}) scale(${gs.toFixed(2)})"><g class="gm-cog a"><circle r="17" fill="var(--card)" stroke="var(--mut)" stroke-width="7" stroke-dasharray="6 5.4"/><circle r="9" fill="none" stroke="var(--mut)" stroke-width="3"/></g><g class="gm-cog b" transform="translate(21 17)"><circle r="11" fill="var(--card)" stroke="var(--ac)" stroke-width="5" stroke-dasharray="4 4.4"/><circle r="4" fill="var(--ac)"/></g><path d="M-30 38H30m-9-8l9 8-9 8" stroke="var(--ac)" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g>`;
+    const gears = p.chips.slice(1).map((c, i) => gear((p.chips[i].fx + p.chips[i].w * p.k / 2 + c.fx - c.w * p.k / 2) / 2, i + 1)).join('');
+    return K.grad() + `<rect x="0" y="236" width="520" height="124" fill="var(--wood)" opacity=".18"/>` + gears
+      + p.chips.map((c, i) => chipSVG(c, i, p.frames[p.n - 1][i], 'f' + i)).join('')
+      + `<g class="gm-hero" transform="translate(486 332)"><g class="gm-hop">${K.person({ x: 0, y: 1, s: .46, skin: 2, hair: 'white', glasses: true, shirt: 'var(--dat)', armR: 'wave', armL: 'hip', face: 'open' })}</g></g>`
+      + labelStrip(scene.label);
+  },
+  apply(svg, p, i) {
+    svg.querySelectorAll('.gm-chip').forEach((el, k) => { el.style.transform = tr(p.frames[i][k]); el.style.setProperty('--d', (k === i && i > 0 ? 0.55 : 0) + 's'); el.classList.toggle('set', k <= i); });
+    svg.querySelectorAll('.gm-gear').forEach((el, k) => { el.classList.toggle('run', i === k + 1); el.classList.toggle('on', i >= k + 1); });
+    svg.classList.toggle('gm-wow', i >= p.n - 1); svg.querySelectorAll('.gm-hero').forEach(el => el.classList.toggle('on', i >= p.n - 1));
+  }
+};
+
+/* Prepositions that stand before, after or around a noun: the preposition is the bread, the noun group is the filling. */
+function adRows(scene) {
+  let rows = scene.rows;
+  if (!rows) {
+    const c = chunks(scene.bubble);
+    if (c.length >= 3 && c[0].hl && c[1].t === '/' && c[2].hl) {
+      const a = c[0].t.replace(/[.,!?…]+$/, '').split(' '), b = c[2].t.replace(/[.,!?…]+$/, '').split(' ');
+      if (a.length > 1 && b.length > 1) rows = [[a[0], a.slice(1).join(' '), ''], ['', b.slice(0, -1).join(' '), b[b.length - 1]]];
+    }
+  }
+  return Array.isArray(rows) && rows.length === 2 && rows.every(r => Array.isArray(r) && r.length === 3 && String(r[1] || '').trim()) ? rows.map(r => r.map(x => String(x || '').trim())) : null;
+}
+STORIES.adposition = {
+  cls: 'gm-hidechips',
+  plan(scene) {
+    const rows = adRows(scene); if (!rows) return null;
+    const chips = [], ys = [124, 212];
+    rows.forEach((r, ri) => ['pre', 'mid', 'post'].forEach((role, k) => { if (r[k]) chips.push({ t: r[k], w: chipW(r[k]) + 6, hl: false, role, row: ri }); }));
+    const tot = ri => chips.filter(c => c.row === ri).reduce((a, c) => a + c.w + 10, -10), k = Math.min(1.3, 470 / Math.max(tot(0), tot(1)));
+    [0, 1].forEach(ri => { let cur = 260 - tot(ri) * k / 2; chips.filter(c => c.row === ri).forEach(c => { c.fx = cur + c.w * k / 2; cur += (c.w + 10) * k; c.fy = ys[ri]; }); });
+    const stepOf = c => (c.role === 'mid' ? 0 : c.row + 1);
+    const frames = range(3).map(st => chips.map(c => (stepOf(c) <= st ? { x: c.fx, y: c.fy, r: 0, s: k } : { x: c.fx + (c.role === 'pre' ? -40 : 40) * k, y: c.fy - 56, r: c.role === 'pre' ? -8 : 8, s: k * .9 })));
+    return { n: 3, dur: [1000, 1800, 2600], chips, k, rows, ys, frames, loose: looseRows(chips, k, [46, 84], 17), stepOf, game: true,
+      tags: rows.map(r => (r[0] && r[2] ? 'davor + danach' : r[0] ? 'davor' : 'danach')) };
+  },
+  draw(K, scene, p) {
+    return K.grad() + `<rect x="0" y="270" width="520" height="90" fill="var(--wood)" opacity=".16"/>`
+      + p.chips.map((c, i) => chipSVG(c, i, p.frames[2][i], 'r-' + c.role + ' set')).join('')
+      + p.ys.map((y, ri) => badge(260, y + 36, p.tags[ri], 'ad t-r' + ri)).join('')
+      + p.chips.map((c, i) => `<g class="gm-slot" data-i="${i}" role="button" tabindex="-1" aria-label="${esc(c.role)}"><rect x="${c.fx - c.w * p.k / 2 - 3}" y="${c.fy - 21 * p.k}" width="${c.w * p.k + 6}" height="${42 * p.k}" rx="13"/></g>`).join('')
+      + (scene.bubble ? `<g class="gm-say on">${K.bubble(260, 40, scene.bubble, { tail: 'c', w: 440 })}</g>` : '') + labelStrip(scene.label);
+  },
+  apply(svg, p, i) {
+    svg.querySelectorAll('.gm-chip').forEach((el, k) => { el.style.transform = tr(p.frames[i][k]); el.classList.toggle('set', p.stepOf(p.chips[k]) <= i); });
+    svg.querySelectorAll('.t-r0').forEach(el => el.classList.toggle('on', i >= 1)); svg.querySelectorAll('.t-r1').forEach(el => el.classList.toggle('on', i >= 2));
+    svg.querySelectorAll('.gm-say').forEach(el => el.classList.toggle('on', i === p.n - 1));
+  },
+  resetGame(svg) { svg.querySelectorAll('.gm-tag,.gm-say').forEach(el => el.classList.remove('on')); },
+  place(svg, p, k) { const r = p.chips[k].row; if (p.chips.every((c, i) => c.row !== r || svg.querySelectorAll('.gm-chip')[i].classList.contains('set') || i === k)) svg.querySelectorAll('.t-r' + r).forEach(el => el.classList.add('on')); },
+  finish(svg) { svg.querySelectorAll('.gm-say').forEach(el => el.classList.add('on')); svg.querySelectorAll('.gm-tag').forEach(el => el.classList.add('on')); },
+  win: ['Well done! Every preposition hugs its noun group.', 'Geschafft! Jede Präposition umschließt ihre Nomengruppe.']
+};
+
+/* Time words: the calendar page is torn off and the time expression lands on a sticky note while the clock runs. */
+STORIES.calendar = {
+  plan(scene) {
+    const hl = chunks(scene.bubble).filter(x => x.hl).map(x => x.t.replace(/[.,!?…]+$/, ''));
+    const phrase = (hl.length ? hl.join(' · ') : String(scene.bubble || '').replace(/\*/g, '').trim()).trim();
+    if (!phrase) return null;
+    const words = phrase.split(' '), lines = ['']; words.forEach(w => { const i = lines.length - 1; if (lines[i] && (lines[i] + ' ' + w).length > 21 && lines.length < 3) lines.push(w); else lines[i] += (lines[i] ? ' ' : '') + w; });
+    return { n: 3, dur: [1000, 1500, 2600], lines };
+  },
+  draw(K, scene, p) {
+    const dots = range(20).map(i => `<circle cx="${128 + (i % 5) * 66}" cy="${180 + Math.floor(i / 5) * 24}" r="6" fill="var(--line)"/>`).join('');
+    const lines = p.lines, fs = lines.length > 2 ? 15 : 18;
+    return K.room() + `<g class="gm-cal"><rect x="85" y="86" width="350" height="190" rx="18" fill="var(--card)" stroke="var(--line)" stroke-width="3"/><path d="M85 140h350" stroke="var(--ac)" stroke-width="3"/><rect x="85" y="86" width="350" height="54" rx="18" fill="var(--ac)" opacity=".16"/><path d="M146 72v28m229-28v28" stroke="var(--wood)" stroke-width="9" stroke-linecap="round"/>${dots}</g>`
+      + `<g class="gm-page"><rect x="85" y="86" width="350" height="190" rx="18" fill="var(--card)" stroke="var(--line)" stroke-width="3"/><rect x="85" y="86" width="350" height="54" rx="18" fill="var(--ac)"/><path d="M146 72v28m229-28v28" stroke="var(--wood)" stroke-width="9" stroke-linecap="round"/><path d="M120 176h280M120 204h280M120 232h200" stroke="var(--line)" stroke-width="5" stroke-linecap="round"/></g>`
+      + `<g class="gm-note"><rect x="-96" y="-${14 + lines.length * 13}" width="192" height="${28 + lines.length * 26}" rx="6" fill="var(--sun)"/><rect x="-24" y="-${22 + lines.length * 13}" width="48" height="14" rx="3" fill="var(--card)" opacity=".7"/><text text-anchor="middle" font-size="${fs}" y="${-(lines.length - 1) * 11 + 6}">${lines.map((l, i) => `<tspan x="0" dy="${i ? 24 : 0}">${esc(l)}</tspan>`).join('')}</text></g>`
+      + `<g class="gm-clock" transform="translate(50 52)"><circle r="30" fill="var(--card)" stroke="var(--ac)" stroke-width="4"/><circle r="3" fill="var(--ink)"/><path class="gm-hand h" d="M0 0V-14" stroke="var(--ink)" stroke-width="4" stroke-linecap="round"/><path class="gm-hand m" d="M0 0V-22" stroke="var(--ac)" stroke-width="3" stroke-linecap="round"/></g>` + labelStrip(scene.label);
+  },
+  apply(svg, p, i) { svg.classList.toggle('gm-flip', i >= 1); svg.classList.toggle('gm-stick', i >= 2); }
+};
+
 /* ---------- 3. the life layer: every picture gets a little movement ---------- */
 function life(K, scene, orig) {
   const K2 = Object.create(K);
@@ -624,6 +733,16 @@ function css() {
 .gm-calm,.gm-shock{transition:opacity .4s}.gm-shock{opacity:0}.gm-hit .gm-shock{opacity:1}.gm-hit .gm-calm{opacity:0}
 .gm-chip rect.stud{stroke:none}.gm-chip.b0 rect,.gm-chip.b0 rect.stud{fill:var(--ac)}.gm-chip.b1 rect,.gm-chip.b1 rect.stud{fill:var(--dat)}.gm-chip.b2 rect,.gm-chip.b2 rect.stud{fill:var(--akk)}
 .gm-chip.b0 text,.gm-chip.b1 text,.gm-chip.b2 text{fill:#fff}.gm-chip.b0 rect,.gm-chip.b1 rect,.gm-chip.b2 rect{stroke:none}.gm-chip.in rect:not(.stud){filter:drop-shadow(0 2px 0 rgba(0,0,0,.22))}
+
+.gm-forms .gm-chip text{font-size:17px}.gm-forms .gm-chip text .chg{fill:var(--ac);font-weight:800}.gm-forms .gm-chip text .chg.o{fill:var(--nom)}
+.gm-wow .chg{animation:gm-hl 1.2s ease-in-out infinite}
+.gm-gear{opacity:0;transition:opacity .4s}.gm-gear.on{opacity:1}.gm-cog{transform-box:fill-box;transform-origin:center}.gm-gear.run .gm-cog.a{animation:gm-spin 1.2s linear infinite}.gm-gear.run .gm-cog.b{animation:gm-spin 1.2s linear infinite reverse}
+.gm-chip.r-pre rect,.gm-chip.r-post rect{fill:var(--sun);stroke:var(--wood);stroke-width:2.2}.gm-chip.r-pre text,.gm-chip.r-post text{fill:#2a2f38}
+.gm-chip.r-mid rect{fill:var(--akk-s);stroke:var(--akk);stroke-width:2.2}.gm-chip.r-mid text{fill:var(--akk)}
+.gm-page{transform-box:fill-box;transform-origin:50% 0;transition:transform .9s cubic-bezier(.6,0,.4,1),opacity .6s .5s}.gm-flip .gm-page{transform:scaleY(.02) translateY(-30px);opacity:0}
+.gm-note{transform:translate(260px,60px) rotate(-14deg);opacity:0;transition:transform .8s cubic-bezier(.3,1.5,.5,1),opacity .4s}.gm-stick .gm-note{transform:translate(260px,196px) rotate(-3deg);opacity:1}
+.gm-note text{font-family:Inter,system-ui,sans-serif;font-weight:800;fill:#2a2f38}
+.gm-clock .gm-hand{transform-box:fill-box;transform-origin:50% 100%}.gm-flip .gm-hand.m{animation:gm-tick 2.4s linear infinite}.gm-flip .gm-hand.h{animation:gm-tick 28.8s linear infinite}@keyframes gm-tick{to{transform:rotate(360deg)}}
 @media(prefers-reduced-motion:reduce){.gm *,.gm{animation:none!important}.gm-chip,.gm-post,.gm-arch,.gm-hero,.gm-tag{transition:none!important}}`;
   document.head.appendChild(s);
 }
