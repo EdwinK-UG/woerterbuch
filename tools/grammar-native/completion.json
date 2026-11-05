@@ -1,0 +1,31 @@
+{
+  "chapters": 88,
+  "units": 122,
+  "sourceGroups": 499,
+  "partners": 9,
+  "writtenActivities": 36,
+  "references": 8,
+  "referenceRows": {
+    "180": 71,
+    "181": 8,
+    "182": 67,
+    "183": 238,
+    "184": 330,
+    "185": 99,
+    "186": 113,
+    "187": 144
+  },
+  "contentRelease": "native-complete-20261105",
+  "implementationCommit": "dac34c08bdddc5326b6e1293983ad5644d32e4f2",
+  "submittedQuestionRows": 6710,
+  "gradedAnswerPoints": 7972,
+  "exerciseGroups": 921,
+  "siteTests": 66,
+  "workerTests": 14,
+  "lessonBundleCount": 263,
+  "lessonBundleSha256": "9490153fd2fadb25920e7988d158afa3f1754ef016812b79b311e017869542c7",
+  "protectedFunctionVersion": 6,
+  "protectedFunctionSha256": "0b650d32415c20290fb4a823324597b68ceef6f01d904eb96a7043714fd86fd7",
+  "jwtVerification": true,
+  "audioTracksIncluded": false
+}
