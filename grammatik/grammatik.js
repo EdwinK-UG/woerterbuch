@@ -1166,14 +1166,14 @@ async function loadChapter(n) {
   try { return await loading; } finally { if (lessonLoads.get(n) === loading) lessonLoads.delete(n); }
 }
 /* "Video ansehen": the lesson as a narrated animation (grammatik/watch.js, loaded on first use) */
-const WATCH_LEVELS = ['A1'];   // levels that have the video button; widen when more lessons are checked
+const WATCH_LEVELS = ['A1', 'B2', 'C1'];   // levels that have the video button; widen when more lessons are checked
 const hasWatch = c => !c.vocab && !isRef(c.n) && WATCH_LEVELS.includes(c.level) && !!c.understand?.length;
 const watchBtn = c => (hasWatch(c) ? `<button class="btn sm" data-watch="${c.n}">${icn('play')} Video ansehen</button>` : '');
 async function openWatch(n) {
   const c = CH[n]; if (!c || !hasWatch(c)) return;
   try { await window.loadWatch(); } catch (e) { if (typeof toast === 'function') toast('Das Video konnte nicht geladen werden. Bitte prüfe die Internetverbindung.'); return; }
   const art = document.querySelector('.gr-art svg');
-  window.WATCH.open(c, { art: art ? art.outerHTML : '', number: gNo(c.n), onExercises: () => jump('grs-u') });
+  window.WATCH.open(c, { art: art ? art.outerHTML : '', draw: scene => window.GRAM_ART.draw(K, scene), number: gNo(c.n), onExercises: () => jump('grs-u') });
 }
 function jump(anchor) {
   const el = anchor && $(anchor); if (!el) return;
