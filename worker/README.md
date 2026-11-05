@@ -4,7 +4,7 @@ This folder brings the previously separate Worker into version control. It conta
 
 ## Verify locally
 
-From this folder run `npm test` with Node 18 or later and Python 3. The tests use a disposable SQLite database and fake Auth, AI and mail services. They exercise simultaneous generation, quotas, review visibility, correction reports and late-confirmation mail retries. Hosted D1, Workers AI and SMTP delivery still need a staging check.
+From this folder run `npm test` with Node 24 (see `.nvmrc` in the repository root) and Python 3. The tests use a disposable SQLite database and fake Auth, AI and mail services. They exercise simultaneous generation, quotas, review visibility, correction reports and late-confirmation mail retries. Hosted D1, Workers AI and SMTP delivery still need a staging check.
 
 ## Configure staging
 

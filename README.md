@@ -8,7 +8,7 @@ The browser runs plain JavaScript. GitHub Pages serves the files. Supabase provi
 
 ## Develop and verify
 
-Use Node 18 or later and Python 3. Node 24 is selected in CI.
+Use Node 24 and Python 3. Node 24 is what CI runs, and the `.nvmrc` file pins it (`nvm use` picks it up). Older versions can fail: Node 18.8, for example, cannot read the JSON import syntax in `worker/src/english.js`, so the syntax test fails there. Check with `node --version` before running `npm run check`.
 
 ```sh
 npm ci --ignore-scripts
