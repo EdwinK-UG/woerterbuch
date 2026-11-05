@@ -583,8 +583,9 @@ function loadGram(){
   if(!gramP)gramP=(async()=>{
     if(typeof LESSON_EXERCISES==='undefined')await scriptFile('grammatik/catalog.js?v=be7606c39729');
     if(!window.GRAM_ART)await scriptFile('grammatik/illustrations.js?v=990e867b0dec');
-    if(!window.GRAM_MOTION)await scriptFile('grammatik/motion.js?v=cf2eeb2d66c4');   // lets the scene pictures move; must load after illustrations.js
-    if(!window.GRAM)await scriptFile('grammatik/grammatik.js?v=338863df098c');
+    // Illustrations stay static. Authored films opt in per private lesson;
+    // the old picture-type motion wrapper is retained only in its review prototype.
+    if(!window.GRAM)await scriptFile('grammatik/grammatik.js?v=e5d14d8e5a3a');
   })().catch(e=>{gramP=null;throw e});
   return gramP;
 }
@@ -594,6 +595,15 @@ function loadWatch(){
   if(window.WATCH)return Promise.resolve();
   if(!watchP)watchP=scriptFile('grammatik/watch.js?v=d62b602fb0cb').catch(e=>{watchP=null;throw e});
   return watchP;
+}
+let filmP=null;
+function loadFilm(){
+  if(window.GRAM_FILM)return Promise.resolve();
+  if(!filmP){
+    const css=document.createElement('link');css.rel='stylesheet';css.href='grammatik/film.css?v=a162e00a9ca4';document.head.append(css);
+    filmP=scriptFile('grammatik/film.js?v=199ae2552e3a').catch(e=>{css.remove();filmP=null;throw e;});
+  }
+  return filmP;
 }
 function openGram(arg,m){
   m=m||'g'; const name=m==='v'?'Der Wortschatz':'Die Grammatik';

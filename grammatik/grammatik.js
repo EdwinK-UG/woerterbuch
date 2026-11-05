@@ -1167,10 +1167,17 @@ async function loadChapter(n) {
 }
 /* "Video ansehen": the lesson as a narrated animation (grammatik/watch.js, loaded on first use) */
 const WATCH_LEVELS = ['A1', 'B2', 'C1'];   // levels that have the video button; widen when more lessons are checked
-const hasWatch = c => !c.vocab && !isRef(c.n) && WATCH_LEVELS.includes(c.level) && !!c.understand?.length;
-const watchBtn = c => (hasWatch(c) ? `<button class="btn sm" data-watch="${c.n}">${icn('play')} Video ansehen</button>` : '');
+const hasWatch = c => !c.vocab && !isRef(c.n) && WATCH_LEVELS.includes(c.level) && !!c.understand?.length && (c.level === 'A1' || !!c.film);
+const watchBtn = c => (hasWatch(c) ? `<button class="btn sm" data-watch="${c.n}">${icn('play')} ${c.film ? 'Animation ansehen' : 'Video ansehen'}</button>` : '');
+const filmTheme = () => ({accent:getComputedStyle(document.documentElement).getPropertyValue('--ac').trim(),brand:window.KONTO?.org()?.name || 'Deutschklinik'});
+let lessonFilm=null;
 async function openWatch(n) {
   const c = CH[n]; if (!c || !hasWatch(c)) return;
+  if(c.film){
+    try { await window.loadFilm(); if(cur!==c)return; window.GRAM_FILM.open(c.film,{...filmTheme(),onExercises:()=>{window.GRAM_FILM.close();jump('grs-u');}}); }
+    catch(e){ if(typeof toast==='function')toast('Die Animation konnte nicht geladen werden.'); }
+    return;
+  }
   try { await window.loadWatch(); } catch (e) { if (typeof toast === 'function') toast('Das Video konnte nicht geladen werden. Bitte prüfe die Internetverbindung.'); return; }
   const art = document.querySelector('.gr-art svg');
   window.WATCH.open(c, { art: art ? art.outerHTML : '', draw: scene => window.GRAM_ART.draw(K, scene), number: gNo(c.n), onExercises: () => jump('grs-u') });
@@ -1199,6 +1206,7 @@ async function chapter(n, anchor) {
   pull().then(() => { if (cur === CH[n] && onCh(n)) { refreshBadges(); sync(); } });
 }
 function render(c) {
+  lessonFilm?.dispose();lessonFilm=null;
   cur = c;
   if (c.vocab) { renderVocab(c); return; }
   for (const x of c.exercises) if (x.gen) x.items = x.gen();
@@ -1215,7 +1223,7 @@ function render(c) {
      <figure class="gr-art">${typeof c.art === 'function' ? c.art(K) : c.scene ? window.GRAM_ART.draw(K,c.scene) : ART[c.art] ? ART[c.art]() : ''}<figcaption><span>${fmt(c.hero)}</span>${sayBtn(c.hero)}</figcaption></figure>
    </div>
    <nav class="gr-toc"><a href="#grs-v" data-jump>${icn('lightbulb')} Verstehen</a>${hasExamples?`<a href="#grs-b" data-jump>${icn('quote')} Beispiele</a>`:''}<a href="#grs-u" data-jump>${icn('pencil')} Üben</a>${hasSpeak?`<a href="#grs-s" data-jump>${icn('mic')} Sprechen</a>`:''}${secAllBtn()}</nav>
-   <section class="gr-sec" id="grs-v"><h2><span class="gr-sn">1</span>Verstehen</h2>${blocks}</section>
+   <section class="gr-sec" id="grs-v"><h2><span class="gr-sn">1</span>Verstehen</h2>${c.film?'<div class="gf-inline" data-film-host></div>':''}${blocks}</section>
    ${hasExamples?`<section class="gr-sec" id="grs-b"><h2><span class="gr-sn">2</span>Beispiele</h2>
      <div class="gr-legend"><span class="n">Nominativ – wer?</span><span class="d">Dativ – wem?</span><span class="a">Akkusativ – was?</span></div>
      <ul class="gr-exs">${c.examples.map(s => `<li><span class="s">${fmt(s)}</span>${sayBtn(s)}</li>`).join('')}</ul>
@@ -1228,6 +1236,11 @@ function render(c) {
    ${hasSpeak?`<section class="gr-sec" id="grs-s"><h2><span class="gr-sn">${hasExamples?4:3}</span>Sprechen</h2>${speakHTML(c.speak)}</section>`:''}
   </article>`;
   wire(c); icons();
+  if(c.film){
+    const host=document.querySelector('[data-film-host]');
+    window.loadFilm().then(()=>{if(host.isConnected&&cur===c)lessonFilm=window.GRAM_FILM.mount(host,c.film,{...filmTheme(),onExercises:()=>jump('grs-u')});})
+      .catch(()=>{if(host.isConnected)host.textContent='Die Animation konnte nicht geladen werden. Du kannst die Erklärungen und Übungen darunter weiter nutzen.';});
+  }
 }
 const secAllBtn = () => `<button class="gr-secall" data-secall="1" title="Alle Abschnitte zu- oder aufklappen">${icn('chevrons-down-up')}<span>Alles zuklappen</span></button>`;
 function secToggleAll(btn) {
