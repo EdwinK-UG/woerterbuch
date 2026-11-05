@@ -1,7 +1,7 @@
 // Run every private native task through the actual submit handler without publishing lesson bodies.
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict'),{JSDOM}=require('jsdom');
 const root=path.resolve(__dirname,'../..'),dir=path.join(root,'.local/grammar-native/chapters');
-let count=0,groups=0;
+let count=0,groups=0,points=0;
 for(const file of fs.readdirSync(dir).filter(n=>/\.json$/.test(n)).sort()){
  const authored=JSON.parse(fs.readFileSync(path.join(dir,file)));let lesson;require('node:vm').runInNewContext(fs.readFileSync(path.join(root,'.local/lessons/k'+authored.n+'.js'),'utf8'),{GRAM:{add:c=>lesson=c}});const dom=new JSDOM('<main id="view"></main>',{url:'https://native.test/',runScripts:'outside-only'}),w=dom.window;
  try{
@@ -19,8 +19,8 @@ for(const file of fs.readdirSync(dir).filter(n=>/\.json$/.test(n)).sort()){
     else if(x.type==='order'){let rest=it.ok[0];while(rest){const tile=[...el.querySelectorAll('.gr-pool .gr-tile')].filter(t=>rest===t.textContent||rest.startsWith(t.textContent+' ')).sort((a,b)=>b.textContent.length-a.textContent.length)[0];assert.ok(tile,x.id+' item '+(i+1)+' cannot be built');tile.click();rest=rest.slice(tile.textContent.length).trim()}assert.equal(el.querySelector('.gr-pool').children.length,0)}
     else throw new Error('Verifier not yet implemented for '+x.type);
    });
-   box.querySelector('[data-act=check]').click();const attempt=w.GRAM._test.attempts().at(-1);assert.equal(attempt?.ex,x.id);assert.equal(attempt.score,x.items.length,x.id+' rejects its answer key');assert.equal(attempt.total,x.items.length);assert.equal(attempt.uid,'native-check');groups++;count+=x.items.length;
+   box.querySelector('[data-act=check]').click();const attempt=w.GRAM._test.attempts().at(-1);assert.equal(attempt?.ex,x.id);const total=x.perGap?x.items.reduce((n,it)=>n+(it.match(x.type==='fill'?/\[\[/g:/\(\(/g)||[]).length,0):x.items.length;assert.equal(attempt.score,total,x.id+' rejects its answer key');assert.equal(attempt.total,total);points+=total;assert.equal(attempt.uid,'native-check');groups++;count+=x.items.length;
   }
  }finally{dom.window.close()}
 }
-console.log(`Verified ${groups} native exercise groups and ${count} submitted questions through the real grading UI.`);
+console.log(`Verified ${groups} native exercise groups and ${count} submitted questions (${points} answer points) through the real grading UI.`);
