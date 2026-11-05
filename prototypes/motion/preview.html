@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Motion prototype – Deutschklinik</title>
+<style id="page-css">
+:root{--bg:#f6f4ef;--panel:#fffdf8;--card:#fff;--fg:#20242b;--mut:#6b7482;--line:#e7e2d7;--line2:#efeadf;--ac:#1f6feb;--ac-salt:#e9f1ff;--warn:#e4860a;--die:#e11d48;--der:#2563eb;--das:#0f9d6b}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1319;--panel:#141a22;--card:#171e27;--fg:#e8ecf2;--mut:#9aa6b4;--line:#242d39;--line2:#1d2531;--ac:#6ea8fe;--ac-salt:#17273f}}
+body{margin:0;font:16px/1.5 Inter,system-ui,sans-serif;background:var(--bg,#f6f4ef);color:var(--fg,#20242b)}
+.mp{max-width:1180px;margin:0 auto;padding:18px 16px 60px}
+.mp h1{font:700 1.5rem Fraunces,Georgia,serif;margin:.2rem 0}
+.mp .bar{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin:.6rem 0 1rem}
+.mp input,.mp button,.mp select{font:600 .95rem Inter,sans-serif;padding:.5rem .8rem;border-radius:10px;border:1px solid var(--line,#ddd);background:var(--card,#fff);color:var(--fg,#222)}
+.mp button{cursor:pointer}
+.mp .pair{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:0 0 22px;padding:12px;border:1px solid var(--line,#ddd);border-radius:16px;background:var(--card,#fff)}
+.mp .pair h3{grid-column:1/-1;margin:0;font:700 .95rem Inter,sans-serif}
+.mp .pair h3 small{color:var(--mut,#667);font-weight:500}
+.mp .pair figure{margin:0;border-radius:12px;overflow:hidden;border:1px solid var(--line,#ddd)}
+.mp .pair figure svg{width:100%;height:auto;display:block}
+.mp .pair .cap{font-size:.8rem;color:var(--mut,#667);margin:.3rem 0 0}
+.mp pre{white-space:pre-wrap;font-size:.75rem;color:var(--mut,#667)}
+@media(max-width:760px){.mp .pair{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="mp">
+  <h1>Scene pictures: static vs. motion</h1>
+  <p class="cap">Local test page. Reads private lessons from <code>.local/lessons</code> and the drawing kit from <code>grammatik/grammatik.js</code>. Not part of the live site.</p>
+  <div class="bar">
+    <button id="prev">◀</button><input id="n" type="number" value="86" min="1" max="999" style="width:5.5rem"><button id="next">▶</button>
+    <label><input type="checkbox" id="motion" checked> show motion version</label><button id="video">▶ Play lesson as video</button>
+    <span id="msg" role="status"></span>
+  </div>
+  <div id="out"></div>
+</div>
+<script>
+const H=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let K=null,CUR=null,LESSON=null;
+window.GRAM={add:c=>{CUR=c;}};
+const $=id=>document.getElementById(id);
+function grab(src,startMarker,open,close){const s=src.indexOf(startMarker);if(s<0)throw new Error('marker not found: '+startMarker);let i=src.indexOf(open,s),d=0,j=i;for(;j<src.length;j++){if(src[j]===open)d++;else if(src[j]===close){d--;if(!d)break;}}return src.slice(i,j+1);}
+async function boot(){
+  const src=await (await fetch('../../grammatik/grammatik.js')).text();
+  // theme CSS exactly as the lesson pages use it
+  const cssStart=src.indexOf('const CSS = `')+13,cssEnd=src.indexOf('`;',cssStart);
+  const st=document.createElement('style');st.textContent=src.slice(cssStart,cssEnd);document.head.prepend(st);
+  K=new Function('H','const K='+grab(src,'const K = {','{','}')+';return K;')(H);
+  await new Promise(r=>{const s=document.createElement('script');s.src='../../grammatik/illustrations.js';s.onload=r;document.head.appendChild(s);});
+  await new Promise(r=>{const s=document.createElement('script');s.src='../../grammatik/watch.js?'+Date.now();s.onload=r;s.onerror=r;document.head.appendChild(s);});
+  await new Promise(r=>{const s=document.createElement('script');s.src='../../grammatik/motion.js?'+Date.now();s.onload=r;s.onerror=r;document.head.appendChild(s);});
+  $('msg').textContent=window.GRAM_MOTION?'motion module loaded':'no motion module yet';
+  show(+($('n').value));
+}
+function load(n){return new Promise((res,rej)=>{CUR=null;const s=document.createElement('script');s.src='../../.local/lessons/k'+n+'.js?'+Date.now();s.onload=()=>CUR?res(CUR):rej(new Error('empty'));s.onerror=()=>rej(new Error('not found'));document.head.appendChild(s);});}
+function scenesOf(c){const out=[];if(c.scene)out.push({where:'Lesson hero',scene:c.scene});(c.understand||[]).forEach((b,i)=>{if(b.scene)out.push({where:'Block '+(i+1)+' · '+(b.type||'')+' · '+(b.title||''),scene:b.scene,block:b});(b.items||[]).forEach((it,k)=>{if(it&&it.scene&&b.type==='scenes')out.push({where:'Block '+(i+1)+' item '+(k+1)+' · '+(it.title||''),scene:it.scene,block:it});});});return out;}
+async function show(n){
+  const out=$('out');out.innerHTML='';
+  let c;try{c=await load(n);}catch(e){$('msg').textContent='Lesson '+n+': '+e.message;return;}
+  LESSON=c;$('msg').textContent='Lesson '+n+' · '+c.level+' · '+c.title;
+  for(const it of scenesOf(c)){
+    const d=document.createElement('div');d.className='pair';
+    let a='',b='';
+    try{a=(window.GRAM_MOTION&&window.GRAM_MOTION.original||window.GRAM_ART.draw)(K,it.scene);}catch(e){a='<pre>'+H(e.message)+'</pre>';}
+    const hasM=window.GRAM_MOTION&&window.GRAM_MOTION.has(it.scene.kind);
+    if($('motion').checked&&window.GRAM_MOTION){try{b=window.GRAM_MOTION.html(K,it.scene,{block:it.block});}catch(e){b='<pre>'+H(e.stack||e.message)+'</pre>';}}
+    d.innerHTML=`<h3>${H(it.where)} <small>· kind: ${H(it.scene.kind)}${hasM?' · bespoke motion':window.GRAM_MOTION?' · generic motion':''}</small></h3><div><figure>${a}</figure><p class="cap">current picture</p></div><div><figure class="gm-host">${b}</figure><p class="cap">${b?'motion version':'—'}</p></div>`;
+    out.appendChild(d);
+  }
+  if(window.GRAM_MOTION&&window.GRAM_MOTION.mount)window.GRAM_MOTION.mount(out);
+}
+$('video').onclick=()=>{if(!LESSON||!window.WATCH)return;WATCH.open(LESSON,{draw:s=>window.GRAM_ART.draw(K,s),number:LESSON.n,onExercises(){WATCH.close();}});};
+$('prev').onclick=()=>{$('n').value=+$('n').value-1;show(+$('n').value);};
+$('next').onclick=()=>{$('n').value=+$('n').value+1;show(+$('n').value);};
+$('n').onchange=()=>show(+$('n').value);
+$('motion').onchange=()=>show(+$('n').value);
+boot().catch(e=>{$('msg').textContent='Setup failed: '+e.message;console.error(e);});
+</script>
+</body>
+</html>

@@ -31,8 +31,18 @@ function gridRowSay(row, head) {
   return (label ? endP(label) + ' ' : '') + parts.map(endP).join(' ');
 }
 const SKIPPED = ['conj', 'table', 'machine', 'html', 'reflist', 'dialog'];   // blocks that need their own scenes later
-function blockScene(b) {
-  const T = plain(b.title || ''), pre = i => (i ? '' : T ? T + '. ' : '');
+// levels whose lesson pictures are played as animated explainers ("story" scenes); the others keep the table-only scenes for now
+const STORY_LEVELS = ['B2', 'C1'];
+// a lesson picture (grammatik/motion.js) with its narration: the sentence, then the lesson's own caption
+function storyScene(scene, title, lines) {
+  if (!scene || !scene.kind) return null;
+  const own = (lines || []).map(x => spoken(x || '')).filter(Boolean);
+  const parts = own.length ? own : [plain(scene.bubble) || plain(scene.alt), plain(scene.label)].filter(Boolean).map(spoken);
+  if (!parts.length) return null;
+  return { type: 'story', label: title || 'Bild', title, data: { scene }, steps: parts.map((t, i) => ({ say: (i || !title ? '' : title + '. ') + endP(t) })) };
+}
+function blockScene(b, noTitle) {
+  const T = plain(b.title || ''), pre = i => (i || noTitle ? '' : T ? T + '. ' : '');
   const mk = (type, label, steps) => ({ type, label: label || T || 'Szene', title: T, data: b, steps });
   switch (b.type) {
     case 'slots': {
@@ -72,7 +82,12 @@ function script(c) {
   S.push({ type: 'title', label: 'Start', title: plain(c.title), data: { kicker: c.kicker, intro: c.intro, hero: c.hero },
     steps: [{ say: endP(plain(c.title)) + ' ' + spoken(c.kicker) }, { say: spoken(c.intro) }, { say: spoken(c.hero) }] });
   const skipped = [];
-  (c.understand || []).forEach(b => { const sc = blockScene(b); if (sc) S.push(sc); else skipped.push(b.type); });
+  const stories = STORY_LEVELS.includes(c.level);
+  (c.understand || []).forEach(b => {
+    if (stories && b.type === 'scenes') { (b.items || []).forEach(it => { const st = storyScene(it.scene, plain(it.title || b.title || ''), [it.example, it.explain]); if (st) S.push(st); }); return; }
+    const st = stories && b.scene ? storyScene(b.scene, plain(b.title || ''), []) : null; if (st) S.push(st);
+    const sc = blockScene(b, !!st); if (sc) S.push(sc); else if (!st) skipped.push(b.type);
+  });
   if ((c.examples || []).length) S.push({ type: 'examples', label: 'Beispiele', title: 'Beispiele', data: { items: c.examples },
     steps: c.examples.map((e, i) => ({ say: (i ? '' : 'Beispiele. ') + spoken(e) })) });
   const merks = (c.understand || []).filter(b => b.type === 'merk');
@@ -86,7 +101,7 @@ function script(c) {
 }
 const stats = scenes => { const chars = scenes.reduce((a, s) => a + s.steps.reduce((b, t) => b + t.say.length, 0), 0); return { scenes: scenes.length, steps: scenes.reduce((a, s) => a + s.steps.length, 0), chars, minutes: Math.round(chars / 14 / 6) / 10, skipped: scenes.skipped || [] }; };
 
-if (typeof module !== 'undefined' && module.exports) { module.exports = { script, stats, plain, spoken }; }
+if (typeof module !== 'undefined' && module.exports) { module.exports = { script, stats, plain, spoken, STORY_LEVELS }; }
 if (typeof document === 'undefined') return;
 
 /* ---------- 2. player ---------- */
@@ -129,6 +144,7 @@ function css() {
 .w-kick{margin:0 0 .6rem;font:italic clamp(1rem,2.2vw,1.35rem) Newsreader,Georgia,serif;color:var(--mut,#6b7482)}
 .w-intro,.w-hero{margin:.5rem 0 0;opacity:0;transform:translateY(10px);transition:opacity .6s,transform .6s}.w-intro.on,.w-hero.on{opacity:1;transform:none}
 .w-intro{font:400 clamp(.92rem,1.9vw,1.2rem)/1.55 Newsreader,Georgia,serif}.w-hero{font:600 clamp(1.1rem,2.6vw,1.7rem)/1.4 Fraunces,Georgia,serif}
+.w-story{margin:0 auto;width:min(100%,560px)}.w-story svg{width:100%;height:auto;display:block;border-radius:14px}
 .w-art{margin:0}.w-art svg{width:100%;height:auto;border-radius:14px;display:block}
 /* sentence chips (slots) */
 .w-slots{display:flex;flex-wrap:wrap;justify-content:center;gap:clamp(6px,1.4vw,14px);min-height:5.5rem;align-items:flex-start}
@@ -247,6 +263,13 @@ const V = {
     const li = [...body.querySelectorAll('li')];
     return i => li.forEach((e, k) => { e.classList.toggle('on', k <= i); e.classList.toggle('cur', k === i); });
   },
+  // an animated lesson picture; it plays through while the first sentence is read, and stays on its last frame for the rest
+  story(body, sc, ctx) {
+    const M = root.GRAM_MOTION, pic = ctx.draw ? ctx.draw(sc.data.scene) : '';
+    body.innerHTML = `<h3 class="w-h">${esc(sc.title)}</h3>${pic ? `<figure class="w-story">${pic}</figure>` : ''}`;
+    const fig = body.querySelector('.w-story'), ctl = fig && M && M.mount ? M.mount(fig, { bar: false, auto: false })[0] : null;
+    return i => { if (!ctl) return; if (i === 0 && !reduced()) ctl.play(0); else { ctl.stop(); ctl.set(ctl.plan.n - 1); } };
+  },
   outro(body, sc, ctx) {
     body.innerHTML = `<div class="w-outro"><h3 class="w-h">${L('Your turn!', 'Jetzt bist du dran!')}</h3>${sc.data.merk ? `<div class="w-merk"><small>${L('Key rule', 'Merksatz')}</small><p>${rich(sc.data.merk)}</p></div>` : ''}<button class="w-btn pri" data-go>${L('Go to the exercises', 'Zu den Übungen')} (${sc.data.n})</button></div>`;
     const m = body.querySelector('.w-merk'); body.querySelector('[data-go]').onclick = () => ctx.exercises();
@@ -288,7 +311,7 @@ function open(c, opt) {
   document.body.appendChild(ov);
   const prevOverflow = document.body.style.overflow; document.body.style.overflow = 'hidden';
   const q = s => ov.querySelector(s), body = q('.w-body'), cap = q('.w-cap'), playBtn = q('[data-a=play]'), dots = [...ov.querySelectorAll('.w-dot')];
-  const ctx = { art: opt.art || '', eyebrow: `${L('Chapter', 'Kapitel')} ${chNo} · ${c.group || ''} · ${c.level || ''}`, exercises: () => { close(); opt.onExercises && opt.onExercises(); } };
+  const ctx = { art: opt.art || '', draw: opt.draw || null, eyebrow: `${L('Chapter', 'Kapitel')} ${chNo} · ${c.group || ''} · ${c.level || ''}`, exercises: () => { close(); opt.onExercises && opt.onExercises(); } };
 
   let capWords = [];
   const capHTML = text => { capWords = []; let out = '', last = 0; text.replace(/\S+/g, (w, off) => { out += esc(text.slice(last, off)) + `<span>${esc(w)}</span>`; capWords.push(off); last = off + w.length; return w; }); return out; };

@@ -65,3 +65,38 @@ test("stray punctuation and symbols are cleaned before anything is voiced", () =
   assert.equal(said[5], "Merke dir: Merkwort: FUDOG.");
   for (const line of said) assert.doesNotMatch(line, /[?!][.,]|\s[.,;:!?]|\.\.|[=+/]/, line);
 });
+
+const b2 = {
+  n: 86, level: "B2", group: "Wortstellung", title: "Verbposition", kicker: "Ich möchte ans Meer fahren.", intro: "Das Verb steht auf <b>Position 2</b>.", hero: "Ich {v:möchte} ans Meer {v:fahren}.",
+  understand: [
+    { type: "grid", title: "Die Satzbrücke", head: ["", "Position 2"], rows: [["Modalverb", "Sie kann Gitarre spielen."]], foot: "Fertig.",
+      scene: { kind: "bridge", bubble: "Ich *möchte* ans Meer *fahren*.", label: "Position 2 · Mittelfeld · Ende", alt: "Ich möchte ans Meer fahren." } },
+    { type: "scenes", title: "Verben und ihre Partner", items: [
+      { title: "Nur ein Subjekt", example: "Er lacht.", explain: "Das Subjekt ist die einzige Ergänzung.", scene: { kind: "valency", bubble: "", label: "", alt: "Er lacht.", verb: "lacht", roles: [{ case: "N", text: "Er" }] } },
+      { title: "Ohne Bild", example: "Sie singt.", explain: "", scene: null },
+    ] },
+    { type: "note", title: "Achtung", text: "Nicht {e:aber}.", scene: { kind: "wish", bubble: "", label: "", alt: "Ein Wunsch." } },
+  ],
+  examples: [], exercises: [],
+};
+
+test("B2 pictures become animated story scenes that are narrated from the lesson's own words", () => {
+  const scenes = script(b2);
+  assert.deepEqual(scenes.map((s) => s.type), ["title", "story", "grid", "story", "story", "note", "outro"]);
+  const story = scenes[1];
+  assert.equal(story.data.scene.kind, "bridge");
+  assert.equal(story.steps[0].say, "Die Satzbrücke. Ich möchte ans Meer fahren.");
+  assert.equal(story.steps[1].say, "Position 2, Mittelfeld, Ende.");
+  assert.doesNotMatch(scenes[2].steps[0].say, /^Die Satzbrücke/, "the table after a picture does not repeat the title");
+  const item = scenes[3];
+  assert.equal(item.steps[0].say, "Nur ein Subjekt. Er lacht.");
+  assert.equal(item.steps[1].say, "Das Subjekt ist die einzige Ergänzung.");
+  assert.equal(scenes[4].data.scene.kind, "wish", "the note's picture comes before the note itself");
+  for (const scene of scenes) for (const step of scene.steps) assert.ok(step.say.length > 0 && !/[{}<>*]/.test(step.say), step.say);
+});
+
+test("levels without story scenes keep exactly the scenes they had", () => {
+  const a1 = { ...b2, level: "A1" };
+  assert.ok(!script(a1).some((s) => s.type === "story"));
+  assert.deepEqual(script(a1).skipped, ["scenes"]);
+});
