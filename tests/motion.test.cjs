@@ -29,6 +29,9 @@ const SCENES = {
   certainty: { kind: "certainty", bubble: "Er *könnte* im Stau stecken.", label: "Wie sicher bin ich?", alt: "x" },
   cause: { kind: "cause", bubble: "*Aus Wut* schreiben. *Vor Wut* rot werden.", label: "Ursachen unterscheiden", alt: "x" },
   prefix: { kind: "prefix", bubble: "mitkommen → *mitzukommen*.", label: "Präfix, zu und Verbstamm", alt: "x", parts: ["mit", "zu", "kommen"] },
+  forms: { kind: "forms", bubble: "machen → machte", label: "Regelmäßige und veränderte Stämme", alt: "x" },
+  adposition: { kind: "adposition", bubble: "*In der Sonne*, *vor Ärger*.", label: "Zwei Pläne", alt: "x", rows: [["in", "der Sonne", ""], ["", "meiner Mutter", "zuliebe"]] },
+  calendar: { kind: "calendar", bubble: "*Am Montag um 18 Uhr*.", label: "Wann?", alt: "x" },
 };
 for (const rel of ["in", "auf", "an", "über", "unter", "vor", "hinter", "neben", "zwischen"]) SCENES["spatial-" + rel] = { kind: "spatial", bubble: "", label: "Wo? · Wohin?", alt: "x", relation: rel };
 
@@ -229,6 +232,52 @@ test("word bricks: parts snap together in order, and a separate first word keeps
   fig.querySelector(".gm-b-game").click();
   for (const i of [2, 0, 1]) { click(svg.querySelectorAll(".gm-chip")[i]); click(svg.querySelectorAll(".gm-slot")[i]); }
   assert.ok(svg.classList.contains("gm-done"), "bricks may be placed in any order, as long as each lands in its own place");
+});
+
+test("word forms: the letters or words that change are marked, and a chain of forms is shown step by step", () => {
+  const p = M.plan(SCENES.forms), tsp = (c) => c.html.replace(/<\/?tspan[^>]*>/g, "|");
+  assert.match(p.chips[0].html, /mach<\/tspan><tspan class="chg o">en<\/tspan>/, "the old ending is marked");
+  assert.match(p.chips[1].html, /mach<\/tspan><tspan class="chg">te<\/tspan>/, "the new ending is marked");
+  const ph = M.plan({ kind: "forms", bubble: "wäre erledigt worden ↔ hätte erledigt werden müssen" });
+  assert.match(ph.chips[0].html, /<tspan class="chg o">wäre<\/tspan>/); assert.doesNotMatch(ph.chips[0].html, /chg[^>]*>[^<]*erledigt/, "a word that stays the same is not marked");
+  assert.match(ph.chips[1].html, /chg">hätte<\/tspan>/);
+  assert.equal(p.n, 3, "start, transformation, highlight");
+  assert.equal(M.plan({ kind: "forms", bubble: "Das *ließe* sich machen." }), null, "no arrow, no transformation");
+  assert.equal(M.plan({ kind: "forms", bubble: "a → b → c → d" }), null);
+  const three = M.plan({ kind: "forms", bubble: "hätte → arbeiten → müssen" });
+  assert.equal(three.n, 4); assert.ok(three.frames[1][2].s < three.frames[1][0].s, "the third form has not arrived at step 1");
+  assert.equal(tsp({ html: "<tspan>a</tspan>" }), "|a|");
+});
+
+test("prepositions as bread: rows come from the lesson, or from a 'before / after' pair of word groups", () => {
+  const p = M.plan(SCENES.adposition);
+  assert.deepEqual(p.chips.map((c) => c.role + ":" + c.t), ["pre:in", "mid:der Sonne", "mid:meiner Mutter", "post:zuliebe"]);
+  assert.deepEqual(p.tags, ["davor", "danach"]);
+  assert.deepEqual(M.plan({ kind: "adposition", rows: [["von", "zu Hause", "aus"], ["um", "das Kind", "herum"]] }).tags, ["davor + danach", "davor + danach"]);
+  const d = M.plan({ kind: "adposition", bubble: "*Nach seiner Meinung* / *seiner Meinung nach*." });
+  assert.deepEqual(d.chips.map((c) => c.role + ":" + c.t), ["pre:Nach", "mid:seiner Meinung", "mid:seiner Meinung", "post:nach"]);
+  assert.equal(M.plan({ kind: "adposition", bubble: "Ohne Zeilen." }), null);
+  assert.equal(M.plan({ kind: "adposition", rows: [["a", "", ""], ["", "b", ""]] }), null, "every row needs a noun group in the middle");
+  assert.ok(p.frames[0].every((f, i) => p.chips[i].role === "mid" || f.y < p.chips[i].fy - 40), "at first only the noun groups stand there, the prepositions hover");
+  const { w, M: m } = page(), fig = w.document.getElementById("f"), click = (el) => el.dispatchEvent(new w.MouseEvent("click", { bubbles: true }));
+  fig.innerHTML = m.html(kit(), SCENES.adposition, {});
+  const [ctl] = m.mount(fig, { auto: false }), svg = fig.querySelector("svg");
+  fig.querySelector(".gm-b-game").click();
+  for (const i of [0, 1, 2, 3]) { click(svg.querySelectorAll(".gm-chip")[i]); click(svg.querySelectorAll(".gm-slot")[i]); }
+  assert.ok(svg.classList.contains("gm-done"));
+});
+
+test("the calendar note carries the highlighted time words, or the whole line when nothing is highlighted", () => {
+  assert.deepEqual(M.plan(SCENES.calendar).lines, ["Am Montag um 18 Uhr"]);
+  assert.deepEqual(M.plan({ kind: "calendar", bubble: "*Im Sommer*, *im Jahre 2025*." }).lines, ["Im Sommer · im Jahre", "2025"]);
+  assert.deepEqual(M.plan({ kind: "calendar", bubble: "Morgen gehe ich weg." }).lines, ["Morgen gehe ich weg."]);
+  assert.equal(M.plan({ kind: "calendar", bubble: "" }), null);
+  const { w, M: m } = page(), fig = w.document.getElementById("f");
+  fig.innerHTML = m.html(kit(), SCENES.calendar, {});
+  const [ctl] = m.mount(fig, { auto: false }), svg = fig.querySelector("svg");
+  ctl.set(0, true); assert.ok(!svg.classList.contains("gm-flip") && !svg.classList.contains("gm-stick"));
+  ctl.set(1, true); assert.ok(svg.classList.contains("gm-flip") && !svg.classList.contains("gm-stick"));
+  ctl.set(2, true); assert.ok(svg.classList.contains("gm-stick"));
 });
 
 test("the life layer moves any picture that has no story of its own, without changing what it shows", () => {
