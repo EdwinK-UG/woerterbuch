@@ -1545,7 +1545,8 @@
       "group": "Wörter und Wortverbindungen",
       "diagram": "wordlinks",
       "levels": [
-        "B2"
+        "B2",
+        "C1"
       ],
       "printed": [
         192,
@@ -1556,7 +1557,8 @@
         190
       ],
       "ids": {
-        "B2": 164
+        "B2": 164,
+        "C1": 475
       }
     },
     {
@@ -1785,7 +1787,8 @@
       "group": "Schreiben und Sprechen",
       "diagram": "communication",
       "levels": [
-        "B2"
+        "B2",
+        "C1"
       ],
       "printed": [
         228,
@@ -1796,7 +1799,8 @@
         226
       ],
       "ids": {
-        "B2": 176
+        "B2": 176,
+        "C1": 487
       }
     },
     {
