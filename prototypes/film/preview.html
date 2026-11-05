@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="de">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Grammatik in Bewegung · Deutschklinik</title>
+<link rel="stylesheet" href="../../grammatik/film.css">
+<style>
+:root{color-scheme:light;--ac:#315eaf}*{box-sizing:border-box}body{margin:0;background:#eeeae1;color:#263147;font:16px/1.6 system-ui,sans-serif}.studio{max-width:1320px;margin:auto;padding:38px 24px 80px}.studio-header{display:flex;align-items:end;justify-content:space-between;gap:25px;margin-bottom:28px}.studio-header h1{font:500 clamp(32px,5vw,58px)/1.1 Georgia,serif;margin:5px 0 12px;letter-spacing:-.025em}.studio-header p{margin:0;color:#657186}.studio .eyebrow{font-size:12px;letter-spacing:.17em;text-transform:uppercase}.studio-controls{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:24px 0}.studio-controls select,.studio-controls button{max-width:100%;min-height:44px;padding:10px 14px;border-radius:13px;border:1px solid #d7d3c9;background:#fffdf8;color:#263147;font:inherit}.studio-controls select{min-width:0;flex:1}.studio-controls button{cursor:pointer}.studio-status{font-size:14px;color:#657186}.studio footer{margin:28px 0;font-size:14px;color:#657186;max-width:850px}@media(max-width:640px){.studio{padding:25px 10px}.studio-header{padding:0 10px;display:block}.studio-header p{font-size:14px}.studio-controls{padding:0 10px}.studio-controls select{width:100%;flex-basis:100%}}
+</style></head>
+<body><main class="studio"><header class="studio-header"><div><p class="eyebrow">Deutschklinik / Filmstudio</p><h1>Grammatik, die sich bewegt.</h1><p>Beobachten. Verändern. Verstehen.</p></div><p>Lokale Arbeitsfassung<br>B2 · C1</p></header><div class="studio-controls"><select id="lesson" aria-label="Animation auswählen"></select><button id="fullscreen" type="button">Groß ansehen ↗</button></div><p id="status" class="studio-status" role="status">Storyboards werden geladen …</p><div id="player"></div><footer>Die Animation beginnt erst mit „Abspielen“. Unter „Jetzt du“ kannst du Zusammenhänge selbst verändern. Ein Sprechplan, Untertitel und einzelne Bilder lassen sich unter „Stimme & Video“ exportieren. Die Sprachdateien werden lokal eingebunden.</footer></main>
+<script src="../../grammatik/film.js"></script>
+<script>
+'use strict';
+const select=document.getElementById('lesson'),status=document.getElementById('status'),host=document.getElementById('player');let current=null,player=null,pending=null,loadId=0;
+window.GRAM={add:c=>{pending=c;}};
+async function show(n){
+ const request=++loadId;player?.dispose();status.textContent='Animation wird geladen …';pending=null;
+ try{await new Promise((resolve,reject)=>{const script=document.createElement('script');script.src='../../.local/animation-lessons/k'+Number(n)+'.js';script.onload=()=>{script.remove();resolve();};script.onerror=()=>{script.remove();reject(Error('Die private Filmlektion fehlt.'));};document.head.append(script);});
+ if(request!==loadId)return;current=pending;if(!current?.film)throw Error('Keine geprüfte Filmfassung vorhanden.');player=GRAM_FILM.mount(host,current.film,{production:true});const t=player.timeline;
+ status.textContent=current.level+' · '+current.film.scenes.length+' Szenen · '+Math.ceil(t.duration/60)+' Minuten · ohne Sprachaufnahme';
+ }catch(e){if(request===loadId)status.textContent=e.message;}
+}
+select.onchange=()=>show(select.value);document.getElementById('fullscreen').onclick=()=>{if(current?.film)GRAM_FILM.open(current.film,{production:true});};
+(async()=>{if(!['127.0.0.1','localhost','::1'].includes(location.hostname))throw Error('Diese Vorschau ist ausschließlich für den lokalen Server vorgesehen.');const res=await fetch('../../.local/animation-lessons/index.json');if(!res.ok)throw Error('Zuerst node tools/build-film-lessons.cjs ausführen.');const rows=await res.json();rows.forEach(r=>{const o=document.createElement('option');o.value=r.n;o.textContent=r.level+' · '+r.title;select.append(o);});select.value=109;await show(select.value);})().catch(e=>{status.textContent=e.message;});
+</script></body></html>
