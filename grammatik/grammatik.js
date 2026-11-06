@@ -1120,6 +1120,7 @@ async function progressView(m) {
 let lessonEpoch = 0;
 const lessonLoads = new Map();
 function clearLessons() {
+  window.C1_VOCAB?.leave();
   lessonEpoch++;
   lessonLoads.clear();
   for (const n of Object.keys(CH)) delete CH[n];
@@ -1207,7 +1208,9 @@ async function chapter(n, anchor) {
 }
 function render(c) {
   lessonFilm?.dispose();lessonFilm=null;
+  window.C1_VOCAB?.leave();
   cur = c;
+  if (c.vocabularyVersion === 2) { renderVocabularyStudio(c); return; }
   if (c.vocab) { renderVocab(c); return; }
   for (const x of c.exercises) if (x.gen) x.items = x.gen();
   if (c.speak && c.speak.gen) c.speak.items = c.speak.gen(); const info = chInfo(c.n), pr = chapterProgress(c);
@@ -1254,6 +1257,25 @@ function progHTML(pr) {
 }
 
 /* ---------- Wortschatz topics: word cards, dictionary sheet (DE/EN), forms, examples ---------- */
+function renderVocabularyStudio(c) {
+  const epoch=lessonEpoch, user=acct()?.id;
+  const valid=()=>cur===c && epoch===lessonEpoch && acct()?.id===user && allowed(c.n);
+  V().innerHTML='<div class="loading"><div class="spin"></div>Wortwelt wird geöffnet …</div>';
+  window.loadVocabulary().then(()=>{
+    if(!valid())return;
+    window.C1_VOCAB.mount(V(),c,{
+      pass:PASS,best:id=>best(c.n,id),toast:t=>typeof toast==='function'&&toast(t),say:t=>talk(t),
+      record:a=>{if(valid()){record(a);bestCache=null;}},
+      cards:entries=>{if(valid()&&typeof createVocabularyDeck==='function')return createVocabularyDeck(c,entries)},
+      game:ids=>{
+        if(!valid()||!ids.length)return;
+        const k='gd_gset_solo';let st={};try{st=JSON.parse(localStorage.getItem(k)||'{}')||{}}catch{}
+        Object.assign(st,{src:'gram',id:String(c.n),title:c.title,wordIds:ids,n:Math.min(20,ids.length)});
+        localStorage.setItem(k,JSON.stringify(st));location.hash='#/play/solo';
+      }
+    });
+  }).catch(()=>{if(valid())V().innerHTML='<div class="empty"><p>Die Wortwelt konnte nicht geladen werden.</p><button class="btn" onclick="GRAM.refresh()">Erneut versuchen</button></div>'});
+}
 const VPOS = { n: 'Nomen', v: 'Verb', adj: 'Adjektiv', adv: 'Adverb', w: 'Fragewort', intj: 'Gruß', num: 'Zahl', prep: 'Präposition', pron: 'Pronomen', conj: 'Konjunktion' };
 const vlabel = x => (x.ar ? x.ar + ' ' : '') + x.w;
 function vsub(x) {
@@ -1691,6 +1713,7 @@ function reset(x, ue) {
 }
 function refreshBadges() {
   if (!cur) return;
+  if(cur.vocabularyVersion===2){window.C1_VOCAB?.refresh?.();return;}
   cur.exercises.forEach(x => { const b = $('ueb-' + x.id); if (b) b.innerHTML = badgeHTML(x); });
   const p = $('grprog'); if (p) p.innerHTML = progHTML(chapterProgress(cur));
   icons();
@@ -1754,7 +1777,7 @@ function view(arg, m) {
   if (isV(n) !== (m === 'v')) { location.replace(hashOf(n) + (anchor ? '/' + anchor : '')); return; }
   chapter(n, anchor);
 }
-function leave() { closePop(); cur = null; }
+function leave() { window.C1_VOCAB?.leave();closePop(); cur = null; }
 document.addEventListener('click', onClick);
 document.addEventListener('toggle', e => { const d = e.target; if (d && d.classList && d.classList.contains('gr-acc')) { const st = tocState(); st[d.dataset.k] = d.open ? 1 : 0; tocSave(st); } }, true);
 document.addEventListener('input', e => { const t = e.target; if (!t.closest || !t.closest('.gr-ue')) return; const S = cur && exState[t.closest('.gr-ue').dataset.ex]; if (S && S.shown) return; if (t.classList.contains('gr-fill')) t.classList.remove('right', 'wrong'); const it = t.closest('.gr-it'); if (it) clearMark(t); });
@@ -1794,9 +1817,11 @@ function toQuestions(x, it) {
   }
   return null;
 }
-async function quiz(n, count) {
+async function quiz(n, count, wordIds) {
   if (!READY[n] || !allowed(n)) return [];
+  const user=acct()?.id,epoch=lessonEpoch;
   const c = await loadChapter(n), pool = [];
+  if(c.vocabularyVersion===2){await window.loadVocabulary();if(!allowed(n)||acct()?.id!==user||epoch!==lessonEpoch)return [];return window.C1_VOCAB.questions(c,wordIds,count||10);}
   for (const x of c.exercises) { if (x.type === 'free' || x.quiz === false) continue; for (const it of (x.gen ? x.gen() : x.items)) { const q = toQuestions(x, it); if (q && q.o !== undefined ? q.c >= 0 || q.t === 'order' : q) pool.push(q); } }
   // a fair mix: shuffle, but spread the exercise types
   return shuffle(pool).slice(0, count || 10);
@@ -1808,7 +1833,7 @@ const chapterList = () => { const all = GROUPS.flatMap(g => g.ch.filter(c => REA
 function practice(kind) {
   if (!cur) return; const k = 'gd_gset_' + kind;
   let st = {}; try { st = JSON.parse(localStorage.getItem(k) || '{}') || {}; } catch (e) {}
-  Object.assign(st, { src: 'gram', id: String(cur.n), title: cur.title }); try { localStorage.setItem(k, JSON.stringify(st)); } catch (e) {}
+  delete st.wordIds;Object.assign(st, { src: 'gram', id: String(cur.n), title: cur.title }); try { localStorage.setItem(k, JSON.stringify(st)); } catch (e) {}
   location.hash = '#/play/' + kind;
 }
 
