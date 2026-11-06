@@ -52,6 +52,6 @@ function privacyPage() {
     <h2>${ui("Export or request deletion", "Export oder Löschanfrage")}</h2>
     <p>${ui("Sign in and open your account to download your saved work and practice history. For account deletion, data-protection or school-sharing questions, contact us at <a href=\"mailto:support@deutschklinik.com\">support@deutschklinik.com</a>.", "Melde dich an und öffne dein Konto, um gespeicherte Daten und Übungshistorie herunterzuladen. Bei Fragen zur Kontolöschung, zum Datenschutz oder zur Weitergabe an Schulen erreichst du uns unter <a href=\"mailto:support@deutschklinik.com\">support@deutschklinik.com</a>.")}</p>
     <h2>${ui("Content sources", "Inhaltsquellen")}</h2>
-    <p>${ui("The dictionary identifies Langenscheidt as its source. Vocabulary lessons identify Wiktionary and Tatoeba and link to their sources. AI entries carry a separate label.", "Das Wörterbuch nennt Langenscheidt als Quelle. Wortschatz-Themen nennen Wiktionary und Tatoeba und verlinken ihre Quellen. KI-Einträge sind gesondert gekennzeichnet.")}</p>
+    <p>${ui("Vocabulary lessons identify Wiktionary and Tatoeba and link to their sources. AI entries carry a separate label.", "Wortschatz-Themen nennen Wiktionary und Tatoeba und verlinken ihre Quellen. KI-Einträge sind gesondert gekennzeichnet.")}</p>
   </article>`;
 }
