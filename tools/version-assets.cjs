@@ -25,6 +25,9 @@ const files = [
   "grammatik/watch.js",
   "grammatik/film.js",
   "grammatik/film.css",
+  "grammatik/vocabulary.js",
+  "grammatik/vocabulary-art.js",
+  "grammatik/vocabulary.css",
 ];
 let index = read("index.html");
 for (const file of ["core.bin", "defs.bin"]) {

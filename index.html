@@ -590,15 +590,31 @@ function scriptFile(src){
 }
 function loadGram(){
   if(!gramP)gramP=(async()=>{
-    if(typeof LESSON_EXERCISES==='undefined')await scriptFile('grammatik/catalog.js?v=be7606c39729');
+    if(typeof LESSON_EXERCISES==='undefined')await scriptFile('grammatik/catalog.js?v=e2b395490044');
     if(!window.GRAM_ART)await scriptFile('grammatik/illustrations.js?v=990e867b0dec');
     // Illustrations stay static. Authored films opt in per private lesson;
     // the old picture-type motion wrapper is retained only in its review prototype.
-    if(!window.GRAM)await scriptFile('grammatik/grammatik.js?v=e5d14d8e5a3a');
+    if(!window.GRAM)await scriptFile('grammatik/grammatik.js?v=ec705b6c7016');
   })().catch(e=>{gramP=null;throw e});
   return gramP;
 }
-/* the narrated "Video ansehen" player: loaded only when a learner presses the button */
+/* Native C1 vocabulary: load its renderer and illustrations only when needed. */
+let vocabularyP=null;
+function loadVocabulary(){
+  if(!vocabularyP)vocabularyP=(async()=>{
+    await new Promise((resolve,reject)=>{
+      let link=document.querySelector('link[data-c1-vocabulary]');
+      if(link?.sheet){resolve();return}
+      if(!link){link=document.createElement('link');link.rel='stylesheet';link.href='grammatik/vocabulary.css?v=727ed6b5db11';link.dataset.c1Vocabulary='1'}
+      link.onload=resolve;link.onerror=()=>{link.remove();reject(new Error('Vocabulary stylesheet unavailable'))};
+      if(!link.isConnected)document.head.appendChild(link);
+    });
+    if(!window.C1_ART)await scriptFile('grammatik/vocabulary-art.js?v=78e66bc4822b');
+    if(!window.C1_VOCAB)await scriptFile('grammatik/vocabulary.js?v=1d22df008584');
+  })().catch(e=>{vocabularyP=null;throw e});
+  return vocabularyP;
+}
+/* The narrated "Video ansehen" player loads only when a learner presses the button. */
 let watchP=null;
 function loadWatch(){
   if(window.WATCH)return Promise.resolve();
@@ -1441,6 +1457,27 @@ function viewDecks(){
 }
 function delDeck(id){if(confirm('Stapel löschen?')){delete decks[id];saveDecks();route()}}
 /* ---------- STUDY ---------- */
+function createVocabularyDeck(chapter,entries){
+  if(!requireFeature('cards')||!entries.length)return;
+  try{assertWritable()}catch(e){toast(e.message);return}
+  const name=`C1 Wortwelt · ${chapter.title}`;
+  let id=Object.keys(decks).find(k=>decks[k].name===name&&decks[k].vocabularyVersion===2);
+  if(!id){id=uid();decks[id]={name,cards:{},created:now(),vocabularyVersion:2,chapter:chapter.n}}
+  let added=0;
+  for(const entry of entries){const key='@c1/'+entry.id;if(!decks[id].cards[key]){decks[id].cards[key]={...newCard(),vocabulary:entry};added++}}
+  saveDecks();toast(added?`${added} Wörter als Lernkarten gespeichert.`:'Diese Wörter sind bereits im Stapel.');go('study/'+id);
+}
+async function renderVocabularyCard(d,c,w,q){
+  const session=SESS,user=window.ACCT?.user?.()?.id;
+  V().innerHTML='<div class="loading"><div class="spin"></div>Wortkarte wird geöffnet …</div>';
+  try{await loadVocabulary()}catch{if(SESS===session)V().innerHTML='<p>Wortkarte konnte nicht geladen werden. Bitte erneut öffnen.</p>';return}
+  if(SESS!==session||!location.hash.startsWith('#/study/')||decks[session.id]!==d||window.ACCT?.user?.()?.id!==user)return;
+  const left=q.nw.length+q.lr.length+q.rv.length;SESS.start=SESS.start||left;
+  const pct=Math.round(100*Math.max(0,SESS.start-left)/Math.max(1,SESS.start));
+  const top=`<div class="sthead"><a class="btn sm" href="#/decks">${ic('arrow-left')} ${esc(d.name)}</a><div class="stcount"><span class="n">${q.nw.length}</span><span class="l">${q.lr.length}</span><span class="r">${q.rv.length}</span></div></div><div class="stbar"><i style="width:${pct}%"></i></div>`;
+  const card=window.C1_VOCAB.cardHTML(c.vocabulary,SESS.revealed);
+  V().innerHTML=`<div class="study">${top}${SESS.revealed?`<div class="flashcard back">${card}</div><div class="grades">${[['Nochmal','again'],['Schwer','hard'],['Gut','good'],['Einfach','easy']].map(([text,cls],i)=>`<button class="grade g-${cls}" onclick="ans(${i})"><span>${text}</span><small>${nextIvLabel(c,i)}</small><kbd>${i+1}</kbd></button>`).join('')}</div>`:`<button class="flashcard front" onclick="reveal()">${card}<span class="tap">${ic('rotate-ccw')} Antwort zeigen <kbd>Leertaste</kbd></span></button>`}</div>`;
+}
 let SESS=null;
 function viewStudy(id){
   const d=decks[id]; if(!d){go('decks');return}
@@ -1457,6 +1494,7 @@ function renderCard(){
   SESS.queue=q.all;
   if(!SESS.queue.length){viewStudy(SESS.id);return}
   const w=SESS.queue[0]; const e=E[WIDX.get(w)]; const c=d.cards[w];
+  if(c.vocabulary?.version===2){renderVocabularyCard(d,c,w,q);return}
   const total=Object.keys(d.cards).length, left=q.nw.length+q.lr.length+q.rv.length;
   SESS.start=SESS.start||left; const pct=Math.round(100*Math.max(0,SESS.start-left)/Math.max(1,SESS.start));
   const pos=e.ps&&POSL[e.ps]?`<span class="pos">${POSL[e.ps]}</span>`:'';
@@ -2346,11 +2384,16 @@ async function wikiExact(w){
 }
 const withTimeout=(p,ms,d)=>Promise.race([p.catch(()=>d),new Promise(r=>setTimeout(()=>r(d),ms))]);
 async function buildQs(s){
-  if(s.src==='gram'){ await loadGram(); const qs=await GRAM.quiz(+s.id,s.n||10), f=s.speed||1;
+  if(s.src==='gram'){ await loadGram(); const qs=await GRAM.quiz(+s.id,s.n||10,s.wordIds), f=s.speed||1;
     qs.forEach(q=>{q.dur=Math.round((DUR[q.t]||20)*f)}); if(s.dbl&&qs.length)qs[qs.length-1].dbl=1; return qs }
   if(s.src==='quiz'){ const qz=(prefs.quizzes||{})[s.id]; if(!qz)return []; const f=s.speed||1;
     return qz.qs.map(q=>{const x=JSON.parse(JSON.stringify(q)); if(x.t==='order'){x.sol=x.items.slice();x.o=shuffle(x.items);delete x.items}
       x.dur=Math.round((x.dur||DUR[x.t]||20)*f); return x}).filter(q=>q.p) }
+  if(s.src==='deck'){
+    const owner=window.ACCT?.user?.()?.id||'',deck=decks[s.id],cards=Object.values((deck||{}).cards||{}),native=cards.filter(c=>c.vocabulary?.version===2).map(c=>c.vocabulary);
+    if(native.length){await loadVocabulary();if((window.ACCT?.user?.()?.id||'')!==owner||decks[s.id]!==deck)return [];const all=native.concat(poolFor(s).map(i=>({id:'dict-'+i,term:E[i].w,article:E[i].ar||'',pos:E[i].ps,en:[qGloss(E[i])],examples:[]})));
+      const qs=window.C1_VOCAB.questions({words:all},null,s.n||10);qs.forEach(q=>q.dur=Math.round((DUR[q.t]||20)*(s.speed||1)));if(s.dbl&&qs.length)qs[qs.length-1].dbl=1;return qs}
+  }
   const pool=poolFor(s); if(pool.length<2)return [];
   const types=(s.types||[]).filter(t=>t!=='img'&&GEN[t]), out=[], used=new Set(), n=s.n||10;
   let imgQs=[];
@@ -2382,7 +2425,7 @@ function judge(q,v,tsec){
   if(q.t==='poll')return {ok:null,pts:0};
   if(v==null||v==='')return {ok:false,pts:0};
   let ok=false, frac=1;
-  if(q.t==='type')ok=(q.ans||[]).some(a=>sameAns(v,a));
+  if(q.t==='type')ok=q.nativeVocabulary&&window.C1_VOCAB?window.C1_VOCAB.grade(q,v):(q.ans||[]).some(a=>sameAns(v,a));
   else if(q.t==='order')ok=Array.isArray(v)&&v.length===q.o.length&&v.map(i=>q.o[i]).join('\u0001')===q.sol.join('\u0001');
   else if(q.t==='slider'){const r=(q.max-q.min)||1, d=Math.abs(+v-q.c); ok=d<=r*.1; frac=d<=r*.01?1:Math.max(.3,1-d/(r*.1))}
   else ok=+v===q.c;
@@ -2504,7 +2547,7 @@ function qHead(q,n,total){
 }
 function qCard(q){
   return `<div class="gq">${q.img?`<img class="gqimg" src="${A(q.img)}" alt="" referrerpolicy="no-referrer">`:''}
-    ${q.sub?`<div class="gqsub">${H(q.sub)}</div>`:''}<div class="gqp ${q.t==='art'?'huge':''}">${H(q.p)}</div></div>`;
+    ${q.sub?`<div class="gqsub">${H(q.sub)}</div>`:''}<div class="gqp ${q.t==='art'?'huge':''}">${H(q.p)}</div>${q.source&&window.C1_VOCAB?`<details class="vw-question-source"><summary>Belegquelle</summary>${window.C1_VOCAB.sourceHTML(q.source)}</details>`:''}</div>`;
 }
 const isChoice=q=>['mc','gap','tf','art','img','poll'].includes(q.t);
 // the answer area a player touches (solo and on the phone)
@@ -3061,7 +3104,7 @@ function srcOptions(cur,kind){
   const o=(v,l)=>`<option value="${A(v)}" ${v===cur?'selected':''}>${H(l)}</option>`;
   let h=`<optgroup label="${gt("Alle Wörter")}">${o('all:1',gt("Häufige Wörter (leicht)"))}${o('all:2',gt("Mehr Wörter (mittel)"))}${o('all:3',gt("Großer Wortschatz (schwer)"))}</optgroup>`;
   const ls=Object.keys(lists); if(ls.length)h+=`<optgroup label="${gt("Meine Listen")}">${ls.map(id=>o('list:'+id,`${lists[id].name} (${lists[id].words.length})`)).join('')}</optgroup>`;
-  const ds=Object.keys(decks); if(ds.length)h+=`<optgroup label="${gt("Meine Kartenstapel")}">${ds.map(id=>o('deck:'+id,decks[id].name)).join('')}</optgroup>`;
+  const ds=Object.keys(decks).filter(id=>kind==='quiz'||!Object.values(decks[id].cards||{}).some(c=>c.vocabulary?.version===2)); if(ds.length)h+=`<optgroup label="${gt("Meine Kartenstapel")}">${ds.map(id=>o('deck:'+id,decks[id].name)).join('')}</optgroup>`;
   if(kind==='quiz'){const qz=Object.keys(QZ()); if(qz.length)h+=`<optgroup label="${gt("Eigene Quizze")}">${qz.map(id=>o('quiz:'+id,QZ()[id].title||gt("Mein Quiz"))).join('')}</optgroup>`}
   h+=`<optgroup label="${gt("Themen")}">${CATS.map(c=>o('cat:'+c.id,`${c.emoji} ${c.label}`)).join('')}</optgroup>`;
   return h;
@@ -3098,15 +3141,15 @@ function viewSetup(kind){   // kind: solo | host | memory | blitz
     srcSel.insertAdjacentHTML('beforeend',Object.keys(by).map(g=>`<optgroup label="${/^Wortschatz/.test(g)?'':gt("Grammatik · ")}${H(g)}">${by[g].map(c=>`<option value="gram:${c.n}">${c.ref?'':c.no+'. '}${H(c.title)}</option>`).join('')}</optgroup>`).join(''));
     if(cur.startsWith('gram:'))srcSel.value=cur; syncQ() }).catch(()=>{});
   f.onsubmit=ev=>{ev.preventDefault(); AU.wake();
-    const [src,id]=srcSel.value.split(':'); s.src=src; if(src==='all'){s.lvl=+id;delete s.id}else s.id=id;
+    const [src,id]=srcSel.value.split(':'); if(src!==s.src||id!==String(s.id))delete s.wordIds;s.src=src; if(src==='all'){s.lvl=+id;delete s.id}else s.id=id;
     if(quizzy){s.types=[...f.querySelectorAll('.gchk input[type=checkbox][value]:checked')].map(x=>x.value); if(!s.types.length&&src!=='quiz'&&src!=='gram'){toast(gt("Wähle mindestens einen Fragetyp"));return} s.dbl=$('gdbl').checked?1:0}
     if(src==='quiz')s.title=(QZ()[id]||{}).title;
-    if(src==='gram')s.title=gt("Grammatik: ")+((window.GRAM&&GRAM.list().find(c=>String(c.n)===id))||{}).title;
+    if(src==='gram'){const chapter=(window.GRAM&&GRAM.list().find(c=>String(c.n)===id))||{};s.title=(chapter.vocab?gt('Wortschatz: '):gt('Grammatik: '))+(chapter.title||'')}
     LS.set('gd_gset_'+kind,s); start(kind,s)};
 }
 async function start(kind,s){
-  const hash=location.hash;
-  if(s.src!=='quiz'&&s.src!=='gram'){
+  const hash=location.hash,cards=s.src==='deck'?Object.values(decks[s.id]?.cards||{}):[],nativeOnly=(kind==='solo'||kind==='host')&&cards.length&&cards.every(c=>c.vocabulary?.version===2);
+  if(s.src!=='quiz'&&s.src!=='gram'&&!nativeOnly){
     try{await (kind==='blitz'?ensureCore():ensureDefinitions())}catch{toast(gt("Wörterbuch konnte nicht geladen werden. Bitte erneut starten."));return}
     if(hash!==location.hash)return;
   }
