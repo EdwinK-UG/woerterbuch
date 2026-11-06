@@ -9,7 +9,7 @@ const clamp = x => Math.max(0, Math.min(1, x));
 const ease = x => { x = clamp(x); return x*x*(3-2*x); };
 const mix = (a,b,t) => a+(b-a)*t;
 const COLORS = {agent:'#315eaf', patient:'#a64c3f', recipient:'#167465', verb:'#7950a0', focus:'#95650a', ending:'#315eaf', neutral:'#455163'};
-const VISUALS = ['space','handoff','focus','quote','ending','nominal','clause','perspective','transform'];
+const VISUALS = ['space','handoff','focus','quote','ending','nominal','clause','perspective','transform','slots','timeline','scale','link','group','imagine','route'];
 const text = (s,x,y,size=28,fill='#263147',extra='') => `<text x="${x}" y="${y}" font-size="${size}" fill="${fill}" ${extra}>${E(s)}</text>`;
 const rect = (x,y,w,h,fill,rx=20,extra='') => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${rx}" fill="${fill}" ${extra}/>`;
 function lines(s,max) {
@@ -196,6 +196,133 @@ function illustration(s,p) {
     out+=`<path d="M222 213Q290 178 338 220" stroke="#aeb8bd" stroke-width="3" fill="none" stroke-dasharray="8 8"/>`;
     const noun=art.noun||'das Lesen';out+=`<g transform="translate(${mix(195,402,q)} ${mix(210,231,q)}) scale(${mix(.45,1,q)})">${rect(-90,-76,180,151,'#eee1c9',18,'stroke="#c8af86" stroke-width="2"')}${rect(-90,-84,87,23,'#dfc89f',8)}${rect(-72,-49,143,91,'#fffdf8',8)}${text(noun,-58,-8,Math.min(26,132/(noun.length*.55)))}${text('WER? · WAS?',-58,23,16,'#657186')}</g>`;
     out+=text(art.label||'Der Vorgang wird zur Nomengruppe.',52,425,24);
+    return out;
+  }
+  if(s.visual==='slots') {
+    // Topological sentence fields; the two verb pillars form the bracket. Changed cells light up.
+    const names=art.fields||['Vorfeld','Position 2','Mittelfeld','Satzende','Nachfeld'],A=art.a||[],B=art.b||A,pillars=art.pillars||[1,3];
+    const cols=[[24,100],[132,88],[228,150],[386,88],[482,76]],mid=i=>cols[i][0]+cols[i][1]/2;
+    out=`<ellipse cx="290" cy="372" rx="262" ry="40" fill="#eae6db"/>`;
+    if(!art.noBracket&&pillars.length===2){const a=mid(pillars[0]),b=mid(pillars[1]);out+=`<path d="M${a} 148Q${(a+b)/2} ${mix(118,64,q)} ${b} 148" fill="none" stroke="#7950a0" stroke-width="5" stroke-linecap="round" opacity=".6"/>`+text(art.bracket||'Satzklammer',(a+b)/2,mix(126,92,q),16,'#7950a0','text-anchor="middle" font-weight="700" letter-spacing="1"');}
+    cols.forEach(([x,w],i)=>{
+      const pillar=pillars.includes(i),a=A[i]||'',b=B[i]||'',lit=(a!==b||art.hot===i)&&p>.3;
+      out+=rect(x,150,w,196,pillar?(lit?'#eadcf5':'#efebf3'):(lit?'#fbefcf':'#fffdf8'),14,`stroke="${pillar?'#7950a0':lit?'#b28b36':'#dcd8cd'}" stroke-width="${lit?3:2}"`);
+      out+=text(names[i],x+w/2,174,Math.min(14,(w-8)/Math.max(1,[...names[i]].length*.56)),pillar?'#7950a0':'#657186','text-anchor="middle" font-weight="700"');
+      const cell=(v,o)=>{if(!v)return '';const long=Math.max(...String(v).split(/\s+/).map(x=>[...x].length)),size=Math.min(22,(w-14)/(long*.56));
+        return `<g opacity="${o}">`+lines(v,Math.max(3,Math.floor((w-14)/(size*.56)))).slice(0,6).map((l,j)=>text(l,x+8,210+j*size*1.3,size,pillar?'#5b3a7a':'#263147',pillar?'font-weight="700"':'')).join('')+'</g>';};
+      out+=a===b?cell(a,1):cell(a,(1-clamp(p*2)).toFixed(2))+cell(b,clamp(p*2-.6).toFixed(2));
+    });
+    out+=text(art.footer||'Die Felder ordnen den Satz.',40,425,24);
+    return out;
+  }
+  if(s.visual==='timeline') {
+    // A time axis: events as pinned cards, an optional span and a relation arrow drawn with the beat.
+    const ev=art.events||[],X=v=>48+clamp(v)*452,y0=318;
+    out=`<path d="M36 ${y0}H522" stroke="#263147" stroke-width="3"/><path d="M528 ${y0}l-15-8v16z" fill="#263147"/>`;
+    if(art.span){const a=X(art.span[0]),b=X(art.span[1]);out+=rect(a,y0-11,Math.max(4,mix(0,b-a,art.spanGrow===false?1:q)),22,'#d9e3f2',11,`stroke="${ac}" stroke-width="2"`);}
+    if(Number.isFinite(art.now)){const x=X(art.now);out+=`<path d="M${x} ${y0+10}l-10 18h20z" fill="${ac}"/>`+text(art.nowLabel||'jetzt',x-22,y0+52,17,ac,'font-weight="700"');}
+    ev.forEach((e,i)=>{
+      const x=X(e.at),w=Math.min(190,Math.max(86,[...e.text].length*9.6+26)),cx=Math.max(20,Math.min(540-w,x-w/2)),cy=i%2?118:200,o=e.late?clamp(p*2-.4):1,hot=(art.focus===i||e.late)&&p>.3;
+      out+=`<g opacity="${o.toFixed(2)}"><path d="M${x} ${cy+58}V${y0}" stroke="${hot?ac:'#b9b4a8'}" stroke-width="2" stroke-dasharray="4 5"/><circle cx="${x}" cy="${y0}" r="${hot?10:7}" fill="${hot?ac:'#8b8f99'}"/>`;
+      out+=rect(cx,cy,w,58,hot?'#eef2fa':'#fffdf8',12,`stroke="${hot?ac:'#dcd8cd'}" stroke-width="2"`)+lines(e.text,Math.floor((w-16)/9.6)).slice(0,2).map((l,j)=>text(l,cx+10,cy+(e.text.length*9.6+26>w?24:35)+j*21,17,'#263147')).join('')+'</g>';
+    });
+    if(art.arrow&&ev[art.arrow[0]]&&ev[art.arrow[1]]){
+      const a=X(ev[art.arrow[0]].at),b=X(ev[art.arrow[1]].at),len=Math.abs(b-a)*1.25+20;
+      out+=`<path d="M${a} ${y0-14}Q${(a+b)/2} ${y0-76} ${b} ${y0-14}" fill="none" stroke="${ac}" stroke-width="3" stroke-dasharray="${len.toFixed(1)}" stroke-dashoffset="${(len*(1-q)).toFixed(1)}"/>`;
+      if(art.arrowLabel)out+=`<g opacity="${clamp(p*2-.8).toFixed(2)}">${text(art.arrowLabel,(a+b)/2,y0-22,16,ac,'text-anchor="middle" font-weight="700"')}</g>`;
+    }
+    if(art.label)out+=text(art.label,52,75,27,ac,'font-weight="700"');
+    out+=text(art.footer||'Die Zeitachse zeigt die Reihenfolge.',40,425,23);
+    return out;
+  }
+  if(s.visual==='scale') {
+    // A gauge: authored stops from left to right, the needle moves from source to target.
+    const items=art.items||['möglich','wahrscheinlich','sicher'],n=items.length,cx=290,cy=318,r=188;
+    const ang=i=>Math.PI*(1-i/Math.max(1,n-1)),pos=mix(art.source??0,art.target??n-1,q),now=Math.round(pos);
+    out=`<path d="M${cx-r} ${cy}A${r} ${r} 0 0 1 ${cx+r} ${cy}" fill="none" stroke="#e3ddd0" stroke-width="24" stroke-linecap="round"/>`;
+    items.forEach((v,i)=>{const a=ang(i),x=cx+Math.cos(a)*r,y=cy-Math.sin(a)*r,lx=cx+Math.cos(a)*(r+30),ly=cy-Math.sin(a)*(r+30)+6,hot=i===now&&p>.2;
+      out+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${hot?15:10}" fill="${hot?ac:'#a7a9ae'}" stroke="#fffdf8" stroke-width="3"/>`;
+      out+=text(v,lx.toFixed(1),ly.toFixed(1),Math.min(21,150/Math.max(1,[...v].length*.56)),hot?ac:'#566174',`text-anchor="${Math.cos(a)>.35?'start':Math.cos(a)<-.35?'end':'middle'}" font-weight="${hot?700:500}"`);});
+    const a=Math.PI*(1-pos/Math.max(1,n-1));
+    out+=`<path d="M${cx} ${cy}L${(cx+Math.cos(a)*(r-38)).toFixed(1)} ${(cy-Math.sin(a)*(r-38)).toFixed(1)}" stroke="#263147" stroke-width="7" stroke-linecap="round"/><circle cx="${cx}" cy="${cy}" r="17" fill="#263147"/>`;
+    if(art.ends)out+=text(art.ends[0],cx-r-16,cy+46,16,'#657186')+text(art.ends[1],cx+r+16,cy+46,16,'#657186','text-anchor="end"');
+    if(art.label)out+=text(art.label,40,52,25,ac,'font-weight="700"');
+    out+=text(art.footer||'Die Wahl verändert die Stärke der Aussage.',40,425,23);
+    return out;
+  }
+  if(s.visual==='link') {
+    // Two propositions and the logical relation between them; the connector arrives with the beat.
+    const kind=art.kind||'cause',lc=COLORS[art.leftRole||'agent'],rc=COLORS[art.rightRole||'patient'],ro=.35+.65*clamp(p*1.8);
+    const card=(x,v,c,o,tag)=>`<g opacity="${o.toFixed(2)}">`+rect(x,152,222,140,'#fffdf8',18,`stroke="${c}" stroke-width="3"`)+(tag?text(tag,x+14,180,14,c,'font-weight="700" letter-spacing="1"'):'')+lines(v,17).slice(0,4).map((l,j)=>text(l,x+14,(tag?208:192)+j*25,20,'#263147')).join('')+'</g>';
+    out=`<ellipse cx="290" cy="372" rx="250" ry="40" fill="#eae6db"/>`+card(24,art.left||'',lc,1,art.leftTag)+card(334,art.right||'',rc,ro,art.rightTag);
+    const len=70,dash=`stroke-dasharray="${len}" stroke-dashoffset="${(len*(1-q)).toFixed(1)}"`;
+    if(kind==='contrast'||kind==='alternative')out+=`<path d="M252 206H322M252 240H322" stroke="${ac}" stroke-width="4" ${dash}/><path d="M322 206l-11-7v14zM252 240l11-7v14z" fill="${ac}" opacity="${q.toFixed(2)}"/>`;
+    else out+=`<path d="M250 222H322" stroke="${ac}" stroke-width="5" stroke-linecap="round" ${dash}/><path d="M330 222l-15-9v18z" fill="${ac}" opacity="${q.toFixed(2)}"/>`;
+    const ix=290,iy=330,icon={
+      cause:`<path d="M${ix+4} ${iy-24}L${ix-12} ${iy+3}H${ix+2}L${ix-6} ${iy+26}L${ix+14} ${iy-4}H${ix}Z" fill="#d7ad56" stroke="#a1792b" stroke-width="2"/>`,
+      condition:`<path d="M${ix} ${iy-24}L${ix+24} ${iy}L${ix} ${iy+24}L${ix-24} ${iy}Z" fill="#e7e9f4" stroke="#7950a0" stroke-width="3"/>${text('?',ix-6,iy+8,22,'#7950a0','font-weight="700"')}`,
+      concession:`<path d="M${ix-30} ${iy+20}H${ix+30}M${ix-18} ${iy+20}V${iy-2}M${ix+18} ${iy+20}V${iy-2}M${ix-24} ${iy-2}H${ix+24}" stroke="#a64c3f" stroke-width="5"/><path d="M${ix-42} ${iy+6}Q${ix} ${iy-52} ${ix+42} ${iy+6}" fill="none" stroke="${ac}" stroke-width="3"/>`,
+      purpose:`<circle cx="${ix}" cy="${iy}" r="24" fill="#fffdf8" stroke="#a64c3f" stroke-width="4"/><circle cx="${ix}" cy="${iy}" r="13" fill="none" stroke="#a64c3f" stroke-width="4"/><circle cx="${ix}" cy="${iy}" r="4" fill="#a64c3f"/>`,
+      means:`<circle cx="${ix}" cy="${iy}" r="15" fill="none" stroke="#167465" stroke-width="9" stroke-dasharray="7 5"/><circle cx="${ix}" cy="${iy}" r="5" fill="#167465"/>`,
+      time:`<circle cx="${ix}" cy="${iy}" r="23" fill="#fffdf8" stroke="#315eaf" stroke-width="4"/><path d="M${ix} ${iy-14}V${iy}L${ix+11} ${iy+7}" stroke="#315eaf" stroke-width="4" fill="none" stroke-linecap="round"/>`,
+      contrast:`<path d="M${ix-26} ${iy}H${ix+26}" stroke="#95650a" stroke-width="4"/><circle cx="${ix-26}" cy="${iy}" r="9" fill="#315eaf"/><circle cx="${ix+26}" cy="${iy}" r="9" fill="#a64c3f"/>`,
+      alternative:`<path d="M${ix} ${iy+22}V${iy}L${ix-22} ${iy-20}M${ix} ${iy}L${ix+22} ${iy-20}" stroke="#7950a0" stroke-width="5" fill="none" stroke-linecap="round"/>`,
+      addition:`<path d="M${ix-18} ${iy}H${ix+18}M${ix} ${iy-18}V${iy+18}" stroke="#167465" stroke-width="7" stroke-linecap="round"/>`,
+      result:`<path d="M${ix-24} ${iy-14}H${ix+6}V${iy-26}L${ix+28} ${iy}L${ix+6} ${iy+26}V${iy+14}H${ix-24}Z" fill="#f1e1d8" stroke="#a64c3f" stroke-width="3"/>`
+    }[kind]||'';
+    out+=`<g opacity="${clamp(p*1.6).toFixed(2)}">${icon}</g>`;
+    if(art.word){const w=Math.max(96,[...art.word].length*13+34);out+=`<g opacity="${clamp(p*2).toFixed(2)}" transform="translate(0 ${mix(-34,0,q).toFixed(1)})">${rect(290-w/2,88,w,46,'#263147',23)}${text(art.word,290,119,22,'#fffdf8','text-anchor="middle" font-weight="700"')}</g>`;}
+    out+=text(art.footer||'Die Verbindung zeigt die Beziehung.',40,425,23);
+    return out;
+  }
+  if(s.visual==='route') {
+    // An authored place and an authored movement relative to it: to / at / from / along / through / around.
+    const kind=art.kind||'room',mode=art.mode||'to',name=art.place||'';
+    out=`<ellipse cx="290" cy="360" rx="262" ry="52" fill="#eae6db"/>`;
+    if(kind==='room')out+=`<path d="M226 168L312 112L398 168Z" fill="#c9a77f"/>`+rect(236,168,152,170,'#f1dfb9',4,'stroke="#b39472" stroke-width="2"')+rect(292,262,40,76,'#b39472',3)+rect(250,190,124,30,'#fffdf8',6)+text(name,312,211,Math.min(18,116/Math.max(1,[...name].length*.56)),'#6b4f2e','text-anchor="middle" font-weight="700"');
+    else if(kind==='surface')out+=`<path d="M176 300L276 248H470L392 300Z" fill="#e0e6d6" stroke="#9daf92" stroke-width="3"/><path d="M176 300H392V312H176Z" fill="#c2cdb7"/>`+text(name,300,285,18,'#4f6146','text-anchor="middle" font-weight="700"');
+    else if(kind==='water')out+=`<path d="M330 360Q360 220 540 200V372H330Z" fill="#cfe3f0"/><path d="M350 300q20-10 40 0t40 0t40 0M370 250q20-10 40 0t40 0t40 0" stroke="#7fa9c7" stroke-width="3" fill="none"/><path d="M300 372Q320 260 345 230L330 372Z" fill="#efe1bd"/>`+text(name,440,345,18,'#2f5f80','text-anchor="middle" font-weight="700"');
+    else if(kind==='person')out+=`<path d="M246 196L318 146L390 196Z" fill="#a64c3f" opacity=".8"/>`+rect(256,196,124,128,'#fbe9df',4,'stroke="#c88a76" stroke-width="2"')+rect(300,262,36,62,'#c88a76',3)+person(352,270,.55,'#167465')+text(name,318,180,Math.min(18,110/Math.max(1,[...name].length*.56)),'#fffdf8','text-anchor="middle" font-weight="700"');
+    else if(kind==='city')out+=[[230,200,40,138],[274,160,46,178],[324,214,38,124],[366,178,44,160]].map(([x,y,w,h])=>rect(x,y,w,h,'#d8dde8',3,'stroke="#9aa5b8" stroke-width="2"')).join('')+text(name,320,365,19,'#3b4a66','text-anchor="middle" font-weight="700"');
+    else if(kind==='river')out+=`<path d="M300 70Q250 200 330 360H392Q312 200 352 70Z" fill="#cfe3f0" stroke="#7fa9c7" stroke-width="2"/>`+text(name,370,90,18,'#2f5f80','font-weight="700"');
+    const P={to:[[52,330],[300,310]],at:[[300,310],[300,310]],from:[[300,310],[520,336]],along:[[248,120],[268,352]],through:[[60,260],[540,262]],around:[[312,236],[312,236]]}[mode]||[[52,330],[300,310]];
+    let x=mix(P[0][0],P[1][0],q),y=mix(P[0][1],P[1][1],q);
+    if(mode==='around'){const a=q*Math.PI*2;x=312+Math.cos(a)*190;y=262+Math.sin(a)*86;}
+    if(mode==='at'){x+=Math.sin(q*Math.PI*2)*10;}
+    if(Number.isFinite(art.x)){x=art.x;y=art.y??y;}
+    out+=`<path d="M${P[0][0]} ${P[0][1]+40}${mode==='around'?'m-30 0':''}L${P[1][0]} ${P[1][1]+40}" stroke="${ac}" stroke-width="3" stroke-dasharray="7 8" opacity="${mode==='at'||mode==='around'||Number.isFinite(art.x)?0:.45}"/>`;
+    out+=person(x,y-40,.62,ac,q*Math.PI*6);
+    // Inside a room: a translucent front wall shows that the person is in the space.
+    if(kind==='room'&&(mode==='at'||(mode==='to'&&q>.85)||(mode==='from'&&q<.15)))out+=rect(236,226,152,112,'#f1dfb9',4,'opacity=".55"');
+    if(art.label)out+=text(art.label,40,60,26,ac,'font-weight="700"');
+    out+=text(art.footer||'',40,430,23);
+    return out;
+  }
+  if(s.visual==='imagine') {
+    // Reality stays solid; the imagined situation grows as a thought cloud. Authored text only.
+    out=`<ellipse cx="290" cy="372" rx="250" ry="40" fill="#eae6db"/>`+person(118,292,1.05,'#315eaf',0);
+    if(art.real){out+=rect(196,262,330,86,'#fffdf8',16,'stroke="#9aa1ab" stroke-width="2"')+text(art.realTag||'WIRKLICHKEIT',214,288,14,'#657186','font-weight="700" letter-spacing="1.5"')+lines(art.real,26).slice(0,2).map((l,j)=>text(l,214,316+j*24,20,'#263147')).join('');}
+    const k=mix(.35,1,q),cx=352,cy=150;
+    out+=`<g opacity="${(.25+.75*clamp(p*1.6)).toFixed(2)}" transform="translate(${cx} ${cy}) scale(${k.toFixed(3)})">`;
+    for(const [x,y,r] of [[-118,8,46],[-62,-38,58],[8,-52,64],[82,-30,56],[132,12,44],[64,38,58],[-22,40,60],[-96,40,42]])out+=`<circle cx="${x}" cy="${y}" r="${r}" fill="#f3eefb" stroke="#b9a5d6" stroke-width="2.5" stroke-dasharray="6 6"/>`;
+    out+=`<ellipse cx="6" cy="-4" rx="150" ry="62" fill="#f3eefb"/>`+text(art.dreamTag||'VORSTELLUNG',-118,-30,14,'#7950a0','font-weight="700" letter-spacing="1.5"')+lines(art.dream||'',24).slice(0,3).map((l,j)=>text(l,-118,0+j*25,21,'#3d2a5c')).join('')+'</g>';
+    out+=`<g opacity="${clamp(p*2).toFixed(2)}"><circle cx="190" cy="218" r="7" fill="#f3eefb" stroke="#b9a5d6" stroke-width="2"/><circle cx="206" cy="200" r="10" fill="#f3eefb" stroke="#b9a5d6" stroke-width="2"/></g>`;
+    out+=text(art.footer||'Vorgestellt, nicht wirklich.',40,425,23);
+    return out;
+  }
+  if(s.visual==='group') {
+    // Sorting: authored items move into authored groups; nothing is classified by the renderer.
+    const groups=art.groups||[],items=art.items||[],n=Math.max(1,groups.length),gap=14,bw=(520-gap*(n-1))/n,pal=['#315eaf','#a64c3f','#167465','#7950a0'];
+    out=`<ellipse cx="290" cy="380" rx="262" ry="34" fill="#eae6db"/>`;
+    groups.forEach((g,i)=>{const x=30+i*(bw+gap),c=pal[i%4];out+=rect(x,236,bw,148,'#fffdf8',16,`stroke="${c}" stroke-width="2.5" stroke-dasharray="${p>.5?'0':'7 6'}"`)+text(g,x+bw/2,410,Math.min(20,(bw-8)/Math.max(1,[...g].length*.56)),c,'text-anchor="middle" font-weight="700"');});
+    let rx=30,ry=96;const count=new Array(n).fill(0);
+    items.forEach((it,i)=>{
+      const size=Math.min(19,(bw-14)/Math.max(1,[...it.text].length*.56)),w=Math.min(bw-6,[...it.text].length*size*.56+22);
+      if(rx+w>550){rx=30;ry+=52;}const sx=rx,sy=ry;rx+=w+10;
+      const g=Math.max(0,Math.min(n-1,it.g??0)),k=count[g]++,ex=30+g*(bw+gap)+(bw-w)/2,ey=248+k*42,qi=ease(clamp(p*1.7-i*.08));
+      out+=`<g transform="translate(${mix(sx,ex,qi).toFixed(1)} ${mix(sy,ey,qi).toFixed(1)})">${rect(0,0,w,34,'#fffdf8',10,`stroke="${qi>.5?pal[g%4]:'#9da3ad'}" stroke-width="2"`)}${text(it.text,11,23,size,qi>.5?pal[g%4]:'#263147','font-weight="600"')}</g>`;
+    });
+    if(art.label)out+=text(art.label,32,62,24,ac,'font-weight="700"');
     return out;
   }
   // Clause frames: an embedded group opens and closes a matching boundary.
