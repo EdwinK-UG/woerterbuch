@@ -82,7 +82,10 @@ self.addEventListener('fetch', e => {
     })());return;
   }
 
-  if (req.mode === 'navigate') {
+  // Only the app's own start page is the offline shell; other pages (such as the course pages in
+  // lernen/) load normally and must never replace the saved shell.
+  const start = new URL(SCOPE).pathname;
+  if (req.mode === 'navigate' && (u.pathname === start || u.pathname === start + 'index.html')) {
     e.respondWith((async () => {
       const c = await caches.open(SHELL);
       const net = fetch(req).then(r => { if (r.ok) e.waitUntil(c.put(SCOPE, r.clone())); return r; });

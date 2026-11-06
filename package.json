@@ -3,10 +3,11 @@
   "private": true,
   "scripts": {
     "test": "node --test tests/*.test.cjs",
-    "assets": "node tools/build-course-catalog.cjs && node tools/version-assets.cjs",
+    "assets": "node tools/build-course-catalog.cjs && node tools/build-public-pages.cjs && node tools/version-assets.cjs",
+    "pages": "node tools/build-public-pages.cjs",
     "lessons:bundle": "node tools/build-course-catalog.cjs --check --require-private && node tools/build-lesson-bundle.cjs",
     "dictionary:correct": "node tools/correct-dictionary.cjs && node tools/version-assets.cjs",
-    "check": "npm test && npm --prefix worker test && node tools/build-course-catalog.cjs --check && node tools/correct-dictionary.cjs --check && node tools/build-dictionary-fingerprints.cjs --check && node tools/version-assets.cjs --check"
+    "check": "npm test && npm --prefix worker test && node tools/build-course-catalog.cjs --check && node tools/build-public-pages.cjs --check && node tools/correct-dictionary.cjs --check && node tools/build-dictionary-fingerprints.cjs --check && node tools/version-assets.cjs --check"
   },
   "devDependencies": {
     "jsdom": "22.1.0",
