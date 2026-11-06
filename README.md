@@ -73,7 +73,7 @@ Run `npm run check`, review the site at phone and tablet widths, apply validated
 
 Generate vocabulary from private reviewed inputs using `tools/vocabulary/README.md`. The authoring backup delivered with this review preserves the selected inputs and example corpus. A restored copy rebuilt all 52 vocabulary topics byte for byte after three existing English sentence choices were pinned in the family topic.
 
-The dictionary identifies Langenscheidt as its source. Confirm redistribution permissions before expanding publication. Keep Wiktionary, Tatoeba and image/audio attribution with generated lessons. Fluency, translation quality and level suitability need editorial review.
+The current dictionary text is due to be replaced with openly licensed sources. Do not expand its publication (for example as search-indexed word pages) before then. Keep Wiktionary, Tatoeba and image/audio attribution with generated lessons. Fluency, translation quality and level suitability need editorial review.
 
 The service worker caches the page shell. The dictionary search page offers an explicit offline download. Lessons require an online account and a current enrolment check. The release deletes the old public lesson cache. A signed-in account's pending saves stay in its own local cache after sign-out. Browser storage can be cleared or evicted, so synchronize before moving devices.
 

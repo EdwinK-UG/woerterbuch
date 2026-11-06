@@ -83,7 +83,6 @@ h1.page{font-family:Fraunces,serif;font-weight:600;font-size:1.7rem;letter-spaci
 .art{font-family:Fraunces,serif;font-weight:600;font-size:1.15rem;padding:.12rem .55rem;border-radius:.5rem;align-self:center}
 .art.der{color:var(--der);background:var(--der-s)} .art.die{color:var(--die);background:var(--die-s)} .art.das{color:var(--das);background:var(--das-s)}
 .pos{font-size:.7rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--mut);border:1px solid var(--line);padding:.18rem .45rem;border-radius:.4rem;align-self:center}
-.pg{margin-left:auto;align-self:center;color:var(--faint);font-size:.72rem;font-weight:600}
 .def{font-family:Newsreader,serif;font-size:1.12rem;line-height:1.62;margin:.85rem 0 0;color:var(--fg)}
 .def b{font-weight:600;color:var(--fg)}
 .def i.g{font-style:italic;color:var(--die);font-size:.96em}
@@ -402,7 +401,7 @@ kbd{font:600 .66rem Inter,system-ui,sans-serif;padding:.1rem .35rem;border-radiu
 
 <script src="config.js?v=bce20ec90cdd"></script>
 <script src="js/email-verification.js?v=dc82e0086602"></script>
-<script src="js/pages.js?v=4bdfd342abbf"></script>
+<script src="js/pages.js?v=6ce2364e41e8"></script>
 <script src="js/course-counts.js?v=62cb83e2a6b4"></script>
 <script src="js/study-sync.js?v=9de759f82df1"></script>
 <script src="js/game-i18n.js?v=9cb89f5a1bfd"></script>
@@ -410,7 +409,7 @@ kbd{font:600 .66rem Inter,system-ui,sans-serif;padding:.1rem .35rem;border-radiu
 <script src="js/render-safety.js?v=cbceea56a80a"></script>
 <script src="js/dictionary-english.js?v=422aef8ffb62" data-curated="content/dictionary-english.json?v=1c4818c1b1d7"></script>
 <script src="js/site-design.js?v=9d77298c1e68"></script>
-<script id="data" type="application/octet-stream" data-src="core.bin?v=4c9f34b8d0dd" data-defs="defs.bin?v=5e525dc56850"></script>
+<script id="data" type="application/octet-stream" data-src="core.bin?v=a5de3128d438" data-defs="defs.bin?v=5e525dc56850"></script>
 <script>
 "use strict";
 /* ---------- storage helpers (safe) ---------- */
@@ -662,7 +661,7 @@ function viewHome(){
     <div class="topic-gallery">${gallery.map(topicArt).join('')}</div>
     <details class="topic-more" id="dictionary-topics"><summary>${ui('All topics','Alle Themen')} · ${CATS.length}</summary><div class="cgrid">${CATS.map(cardCat).join('')}</div></details>
     ${wd?`<div class="dictionary-daily"><a href="#/w/${encodeURIComponent(wd.w)}"><span class="eyebrow">${ui('A word for today','Dein Wort für heute')}</span><strong>${wd.ar?`<span class="art ${wd.ar}">${wd.ar}</span>`:''}${sylHTML(wd.sy)} ${ic('arrow-up-right')}</strong></a><button class="iconbtn" aria-label="${ui('Hear today’s word','Heutiges Wort anhören')}" onclick="say(${wd.i},this)">${ic('volume-2')}</button></div>`:''}
-    <details class="dictionary-foot"><summary>${ui('Offline dictionary & sources','Offline-Wörterbuch & Quellen')}</summary><p><button class="btn sm" onclick="downloadDictionary(this)">${ui('Save for offline use','Offline speichern')}</button></p><p class="src">Langenscheidt Großwörterbuch Deutsch als Fremdsprache · ${NMAIN.toLocaleString()} ${ui('headwords','Stichwörter')}</p></details>`;
+    <details class="dictionary-foot"><summary>${ui('Offline dictionary','Offline-Wörterbuch')}</summary><p><button class="btn sm" onclick="downloadDictionary(this)">${ui('Save for offline use','Offline speichern')}</button></p><p class="src">${NMAIN.toLocaleString()} ${ui('headwords','Stichwörter')}</p></details>`;
   if(searchText){q.value=searchText;render()}
 }
 /* word of the day: a core-vocabulary word, the same for everyone on a given day */
@@ -758,11 +757,11 @@ function entryHTML(e){
     <div class="top">
       <h1 class="hw">${sylHTML(e.sy)}</h1>${art}${pos}
       <button class="iconbtn say" title="Aussprache anhören" aria-label="Aussprache anhören" onclick="say(${e.i},this)">🔊</button>
-      ${e.ai?`<span class="aibadge" title="Mit KI erstellt – nicht aus dem Langenscheidt">${ic('sparkles')} KI-Eintrag</span>`:`<span class="pg">S. ${e.pg}</span>`}
+      ${e.ai?`<span class="aibadge" title="Mit KI erstellt">${ic('sparkles')} KI-Eintrag</span>`:''}
     </div>
     <div class="wimg" id="wimg"></div>
     <div class="def">${fmtDef(e)}</div>
-    ${e.ai?`<p class="ainotice">${ic('info')} Dieser Eintrag wurde mit KI erstellt, weil das Wort im Langenscheidt fehlt. Die Beispielsätze sind echte Sätze aus Zeitungen und Wikipedia (Leipzig Corpora Collection).</p>`:''}
+    ${e.ai?`<p class="ainotice">${ic('info')} Dieser Eintrag wurde mit KI erstellt, weil das Wort im Wörterbuch fehlt. Die Beispielsätze sind echte Sätze aus Zeitungen und Wikipedia (Leipzig Corpora Collection).</p>`:''}
     <div class="acts">
       <button class="btn primary" onclick="quickCard(${e.i})">${ui('⚡ Study as a card','⚡ Als Karte lernen')}</button>
       <button class="btn" onclick="openAdd(${e.i})">${ui('＋ Add to list','＋ Zur Liste')}</button>
