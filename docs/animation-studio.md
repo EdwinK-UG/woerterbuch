@@ -6,7 +6,11 @@ This replaces picture-type guessing with explicitly authored teaching films. The
 
 Eight storyboards, 84 scenes: B2 chapters 88 (object order), 91 (negation), 99 (passive), 109 (two-way prepositions), 144 (adjective endings), 148 (reported speech), and C1 chapters 482 (nominalisation), 487 (commas). Each scene has original examples, explicit token roles, a meaningful visual transition, a text alternative, a takeaway and authored German narration. Selected checkpoints give explanatory feedback. The location, negation and reported-speech studios have user-controlled visual transformations; the adjective studio has 80 manually specified paradigm cells.
 
-These are eight authored films, **not completed animation coverage of all 114 B2/C1 chapters**. Other B2/C1 chapters keep their written lessons and graded exercises. Their automatic legacy “video” button is hidden until an authored `film` is present. A1 keeps its existing player.
+These eight are released. A second authoring pass (November 2026) adds authored storyboards for the other 106 B2/C1 chapters (430 scenes), so every B2/C1 chapter now has a private storyboard; those 106 are **review copies, not yet released** in the protected lesson bundle. Until a chapter's enriched lesson body is deployed, its legacy “video” button stays hidden. A1 keeps its existing player.
+
+The new storyboards live in `.local/animation-scripts/b2-NN.cjs` and `c1-NN.cjs` (gitignored); `all.cjs` merges them with `stories.cjs`, and `lint.cjs` checks structure and layout (token rows, group sizes, label lengths). Build them with `node tools/build-film-lessons.cjs .local/lessons .local/animation-scripts/all.cjs .local/animation-lessons`.
+
+Seven picture families were added to the renderer for concepts the first nine could not show honestly: `slots` (topological sentence fields with configurable bracket pillars), `timeline` (events, span, now-marker, relation arrow), `scale` (an ordered gauge, e.g. certainty or degree), `link` (two propositions and their logical relation: cause, result, condition, concession, purpose, means, time, contrast, alternative, addition), `group` (authored items sorted into authored groups), `imagine` (reality card vs. thought cloud for Konjunktiv II) and `route` (to / at / from / along / through / around a room, surface, water, person, city or river). Like the others, they draw only authored data.
 
 ## Private data and local preview
 
@@ -55,7 +59,7 @@ Use `--start 8 --seconds 36` for a sample and `--frames-only` to render without 
 
 ## Review gates before release
 
-The eight scripts have been checked against the current lesson concepts, with original examples rather than source-page crops. The comma explanation uses the 2024 official rules. A German-language editorial pass and a final viewing with the chosen recorded voice should still precede publication. Diagrams simplify spatial relationships and use objects schematically; the written lesson remains the detailed reference.
+The eight released scripts have been checked against the current lesson concepts, with original examples rather than source-page crops. The 106 newer review copies were written from each chapter's full outline by one author and have not had an independent grammar or native-speaker review. The comma explanation uses the 2024 official rules. A German-language editorial pass and a final viewing with the chosen recorded voice should still precede publication. Diagrams simplify spatial relationships and use objects schematically; the written lesson remains the detailed reference.
 
 Tests cover deterministic timing, audio-clock behaviour, subtitle clipping, validation, escaping, native interactions and source preservation. Browser checks cover the local preview, desktop and 390-pixel mobile layout. No iPhone/Safari hardware test, full screen-reader audit or low-end-device performance benchmark has been claimed.
 
