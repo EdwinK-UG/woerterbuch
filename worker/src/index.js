@@ -210,8 +210,8 @@ async function route(req, env, ctx) {
     try {
       let out;
       for (const model of [
-        "@cf/meta/llama-3.1-8b-instruct-fp8",
         "@cf/mistralai/mistral-small-3.1-24b-instruct",
+        "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
       ]) {
         try {
           out = await env.AI.run(model, {
