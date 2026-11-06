@@ -1,0 +1,11 @@
+User-agent: *
+Disallow: /docs/
+Disallow: /prototypes/
+Disallow: /supabase/
+Disallow: /tests/
+Disallow: /tools/
+Disallow: /worker/
+Disallow: /HANDOFF.html
+Disallow: /*.md$
+
+Sitemap: https://deutschklinik.com/sitemap.xml

@@ -79,8 +79,18 @@ test("offline shell survives while legacy lesson caches and public chapter URLs 
   await get("grammatik/grammatik.js?v=test");
   await get("grammatik/catalog.js?v=test");
   assert.equal((await get("grammatik/k201.js?v=test")).status, 410);
+  await get("", "navigate");
+  // a course page is left to the browser and never stored as the offline start page
+  let handled = false;
+  events.fetch({
+    request: { url: scope + "lernen/grammatik/b2/", method: "GET", mode: "navigate" },
+    respondWith: () => (handled = true),
+    waitUntil: () => {},
+  });
+  assert.equal(handled, false);
   offline = true;
-  assert.ok((await (await get("", "navigate")).text()).includes(scope));
+  assert.equal(await (await get("", "navigate")).text(), "fixture " + scope);
+  assert.equal(await (await get("index.html", "navigate")).text(), "fixture " + scope);
   assert.equal((await get("grammatik/k201.js?v=test")).status, 410);
   assert.ok(
     (await (await get("grammatik/grammatik.js?v=test")).text()).includes(

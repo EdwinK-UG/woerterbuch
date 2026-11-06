@@ -24,6 +24,8 @@ The automated tests run in a simulated browser, local PostgreSQL via PGlite, and
 
 After changing JavaScript or lesson content, run `npm run assets` before committing. It generates the exercise catalog and content-based asset versions. CI detects stale generated files.
 
+Search engines cannot index the app's `#/` addresses, so `tools/build-public-pages.cjs` (part of `npm run assets`) writes static course pages to `lernen/` and lists them in `sitemap.xml`. Each chapter page shows the public title, level and exercise count plus a summary from `content/public-pages.json`, and links into the app. It reads no private lesson text. When you add a chapter, add its summary there; until then the page uses a short default. `robots.txt` keeps tooling and documentation folders out of search results.
+
 ## Find the code
 
 | File or folder | Responsibility |

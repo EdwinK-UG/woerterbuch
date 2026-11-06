@@ -14,7 +14,8 @@ test("every site script and executable inline block parses", () => {
   const html = fs.readFileSync("index.html", "utf8");
   assert.equal((html.match(/<!doctype html>/gi) || []).length, 1);
   for (const match of html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/g)) {
-    if (!/\bsrc=|application\/octet-stream/.test(match[1])) {
+    if (/application\/ld\+json/.test(match[1])) JSON.parse(match[2]);
+    else if (!/\bsrc=|application\/octet-stream/.test(match[1])) {
       new vm.Script(match[2], { filename: "index.html inline script" });
     }
   }

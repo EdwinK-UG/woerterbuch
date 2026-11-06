@@ -239,7 +239,7 @@ function applyBrand() {
   setBrandIcon(colour,school&&okUrl(o.logo_url)?o.logo_url:null);
   const footer=document.querySelector('.site-footer');
   if(footer){const contact=school&&/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(o.contact_email||'')?'mailto:'+o.contact_email:school?'#/schule/'+o.id:'mailto:support@deutschklinik.com';
-    const markup=`${school?`<a class="school-footer-name" href="#/schule/${o.id}">${esc(o.name)}</a>`:''}<a href="#/privacy">${T('Privacy','Datenschutz')}</a><a href="${esc(contact)}">${school?T('School help','Hilfe der Schule'):T('Support','Hilfe')}</a>${school?`<small class="powered-by">${T('Powered by','Mit')} <a href="https://deutschklinik.com/" target="_blank" rel="noopener">Deutschklinik</a></small>`:''}`;
+    const markup=`${school?`<a class="school-footer-name" href="#/schule/${o.id}">${esc(o.name)}</a>`:`<a href="lernen/">${T('Course overview','Kursübersicht')}</a>`}<a href="#/privacy">${T('Privacy','Datenschutz')}</a><a href="${esc(contact)}">${school?T('School help','Hilfe der Schule'):T('Support','Hilfe')}</a>${school?`<small class="powered-by">${T('Powered by','Mit')} <a href="https://deutschklinik.com/" target="_blank" rel="noopener">Deutschklinik</a></small>`:''}`;
     if(footer.dataset.identity!==markup){footer.innerHTML=markup;footer.dataset.identity=markup;}
   }
   if(window.updatePageMetadata)updatePageMetadata();icons();
