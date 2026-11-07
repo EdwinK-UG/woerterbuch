@@ -2,6 +2,7 @@ import {drainVerification,verificationWake,verificationHook} from './email-verif
 import { handleWelcome, welcomeHook, drainMail } from "./welcome.js";
 import { sendCourseInvitation, previewCourseInvitation, courseInvitationStatus, sendSiteInvitation, requestLiveClass } from "./invitations.js";
 import { english } from "./english.js";
+import { filmAudioList, filmAudioClip } from "./film-audio.js";
 import {
   authenticated,
   reserve,
@@ -70,6 +71,8 @@ async function route(req, env, ctx) {
   if(url.pathname==="/hooks/email-verification")return verificationHook(req,env,h);
   if(url.pathname==="/email-verification/send"){if(!ALLOWED.includes(origin))return json({error:"Forbidden"},403,h);return verificationWake(req,env,h);}
   if (url.pathname === "/hooks/welcome") return welcomeHook(req, env, h);
+  // audio elements send no Origin; the signature in the link is the permission
+  if (url.pathname === "/film-audio/clip") return filmAudioClip(req, env, h);
   if (req.method === "OPTIONS") {
     return new Response(null, {
       headers: {
@@ -83,6 +86,10 @@ async function route(req, env, ctx) {
   if (url.pathname === "/correction") {
     if (!ALLOWED.includes(origin)) return json({ error: "Forbidden" }, 403, h);
     return correction(req, url, env, h);
+  }
+  if (url.pathname === "/film-audio") {
+    if (!ALLOWED.includes(origin)) return json({ error: "Forbidden" }, 403, h);
+    return filmAudioList(req, env, h);
   }
   if (url.pathname === "/english") {
     if (!ALLOWED.includes(origin)) return json({error:'Forbidden'},403,h);

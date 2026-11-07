@@ -40,6 +40,23 @@ test('an imported recording controls playback time and is revoked on disposal',a
  assert.equal(p.timeline.duration,13);h.querySelector('[data-play]').click();const tick=()=>{const [id,fn]=pending.entries().next().value;pending.delete(id);fn(999999);};tick();instances.at(-1).currentTime=3;tick();assert.equal(+h.querySelector('input[type=range]').value,3,'wall clock must not outrun the recording');
  p.dispose();assert.equal(pending.size,0);assert.deepEqual(revoked,['blob:local-voice']);d.window.close();
 });
+test('recordings from a manifest are used only while their text matches, and are not revoked',async()=>{
+ const d=dom(),w=d.window,instances=[],revoked=[],pending=new Map();let frameId=0;
+ w.URL.revokeObjectURL=u=>revoked.push(u);w.requestAnimationFrame=fn=>{pending.set(++frameId,fn);return frameId;};w.cancelAnimationFrame=id=>pending.delete(id);
+ w.Audio=class {constructor(src){this.currentTime=0;this.src=src;instances.push(this);}play(){return Promise.resolve();}pause(){}removeAttribute(){}load(){}};
+ const [first,second]=Film.compile(fixture()).cues;
+ const audio={[first.id]:{url:'clips/'+first.id+'.mp3',seconds:6,say:first.say},[second.id]:{url:'clips/old.mp3',seconds:9,say:second.say+' (old text)'},'unknown--1':{url:'clips/x.mp3',seconds:2,say:'x'}};
+ const h=w.document.getElementById('host'),p=w.GRAM_FILM.mount(h,fixture(),{audio});
+ assert.equal(p.recorded,1,'a clip whose text changed must fall back to the silent cue');assert.equal(p.timeline.duration,13);
+ h.querySelector('[data-play]').click();const [id,fn]=pending.entries().next().value;pending.delete(id);fn(0);
+ assert.equal(instances.at(-1).src,'clips/'+first.id+'.mp3');
+ p.dispose();assert.deepEqual(revoked,[],'clips owned by the page must not be revoked');d.window.close();
+});
+test('film recording tool reads clip length from MP3 frames',()=>{
+ const {mp3Seconds}=require('../tools/film-audio.cjs'),frame=Buffer.alloc(417);frame.set([0xff,0xfb,0x90,0x00]);
+ const mp3=Buffer.concat([Buffer.from([0x49,0x44,0x33,4,0,0,0,0,0,0]),...Array(38).fill(frame)]);
+ assert.equal(mp3Seconds(mp3),Math.round(38*1152/44100*1000)/1000);assert.equal(mp3Seconds(Buffer.from('not audio')),0);
+});
 test('private film build preserves exercises and refuses to overwrite a linked source directory',()=>{
  const {build}=require('../tools/build-film-lessons.cjs'),tmp=fs.mkdtempSync(path.join(os.tmpdir(),'dk-film-'));
  try{const src=path.join(tmp,'source'),dst=path.join(tmp,'out');fs.mkdirSync(src);const lesson={n:1,level:'B2',understand:[],exercises:[{id:'existing',type:'type',items:[{q:'a',ok:['b']}]}]};fs.writeFileSync(path.join(src,'k1.js'),'GRAM.add({...'+JSON.stringify(lesson)+',answer:()=>GRAM.kit.answer});');const story=fixture();story.n=1;const scripts=path.join(tmp,'stories.cjs');fs.writeFileSync(scripts,'module.exports='+JSON.stringify({1:story})+';');

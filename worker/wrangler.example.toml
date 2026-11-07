@@ -23,3 +23,7 @@ binding = "DB"
 database_name = "dictionary-staging-example"
 database_id = "REPLACE_WITH_STAGING_D1_ID"
 # Add [images] binding = "IMAGES" only if image transformations are provisioned.
+# Recorded film narration: a private bucket plus the secret FILM_AUDIO_SIGNING_KEY (at least 32 characters).
+[[r2_buckets]]
+binding = "FILM_AUDIO"
+bucket_name = "dictionary-staging-film-audio"

@@ -1172,10 +1172,26 @@ const hasWatch = c => !c.vocab && !isRef(c.n) && WATCH_LEVELS.includes(c.level) 
 const watchBtn = c => (hasWatch(c) ? `<button class="btn sm" data-watch="${c.n}">${icn('play')} ${c.film ? 'Animation ansehen' : 'Video ansehen'}</button>` : '');
 const filmTheme = () => ({accent:getComputedStyle(document.documentElement).getPropertyValue('--ac').trim(),brand:window.KONTO?.org()?.name || 'Deutschklinik'});
 let lessonFilm=null;
+/* Recorded narration (Worker /film-audio, same enrolment rule as the lesson). Its links last 12 hours, so a list is
+   reused for 6. Any failure, or a line whose text differs from the film, plays silently with captions. */
+const filmAudioLists=new Map();
+window.addEventListener('acct:in',()=>filmAudioLists.clear());window.addEventListener('acct:out',()=>filmAudioLists.clear());
+function filmAudio(n){
+  const hit=filmAudioLists.get(n);if(hit&&Date.now()-hit.at<6*3600e3)return hit.list;
+  const list=(async()=>{
+    const token=await ACCT.token();
+    const r=await fetch(APP_CONFIG.workerUrl+'/film-audio?chapter='+encodeURIComponent(n),{headers:{Authorization:'Bearer '+token},cache:'no-store'});
+    if(!r.ok)return null;   // not recorded yet or not enrolled: silent
+    const d=await r.json();return Object.fromEntries((d.cues||[]).map(c=>[c.id,{url:c.url,seconds:c.seconds,say:c.say}]));
+  })().catch(()=>{filmAudioLists.delete(n);return null;});   // network trouble: try again next time
+  filmAudioLists.set(n,{at:Date.now(),list});return list;
+}
+// a slow answer must not hold up the film: after 4 seconds it starts without the recording
+const filmWithAudio=n=>Promise.all([window.loadFilm(),Promise.race([filmAudio(n),new Promise(r=>setTimeout(()=>r(null),4000))])]).then(([,audio])=>audio);
 async function openWatch(n) {
   const c = CH[n]; if (!c || !hasWatch(c)) return;
   if(c.film){
-    try { await window.loadFilm(); if(cur!==c)return; window.GRAM_FILM.open(c.film,{...filmTheme(),onExercises:()=>{window.GRAM_FILM.close();jump('grs-u');}}); }
+    try { const audio=await filmWithAudio(n); if(cur!==c)return; window.GRAM_FILM.open(c.film,{...filmTheme(),audio,onExercises:()=>{window.GRAM_FILM.close();jump('grs-u');}}); }
     catch(e){ if(typeof toast==='function')toast('Die Animation konnte nicht geladen werden.'); }
     return;
   }
@@ -1241,7 +1257,7 @@ function render(c) {
   wire(c); icons();
   if(c.film){
     const host=document.querySelector('[data-film-host]');
-    window.loadFilm().then(()=>{if(host.isConnected&&cur===c)lessonFilm=window.GRAM_FILM.mount(host,c.film,{...filmTheme(),onExercises:()=>jump('grs-u')});})
+    filmWithAudio(c.n).then(audio=>{if(host.isConnected&&cur===c)lessonFilm=window.GRAM_FILM.mount(host,c.film,{...filmTheme(),audio,onExercises:()=>jump('grs-u')});})
       .catch(()=>{if(host.isConnected)host.textContent='Die Animation konnte nicht geladen werden. Du kannst die Erklärungen und Übungen darunter weiter nutzen.';});
   }
 }

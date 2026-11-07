@@ -11,13 +11,19 @@
 'use strict';
 const select=document.getElementById('lesson'),status=document.getElementById('status'),host=document.getElementById('player');let current=null,player=null,pending=null,loadId=0;
 window.GRAM={add:c=>{pending=c;}};
+// ?audio=film-audio-theo compares another voice's recordings (any folder under .local made with FILM_AUDIO_DIR)
+const AUDIO=(q=>/^[a-z0-9-]+$/.test(q||'')?q:'film-audio')(new URLSearchParams(location.search).get('audio'));
 async function show(n){
  const request=++loadId;player?.dispose();status.textContent='Animation wird geladen …';pending=null;
  try{await new Promise((resolve,reject)=>{const script=document.createElement('script');script.src='../../.local/animation-lessons/k'+Number(n)+'.js';script.onload=()=>{script.remove();resolve();};script.onerror=()=>{script.remove();reject(Error('Die private Filmlektion fehlt.'));};document.head.append(script);});
- if(request!==loadId)return;current=pending;if(!current?.film)throw Error('Keine geprüfte Filmfassung vorhanden.');player=GRAM_FILM.mount(host,current.film,{production:true});const t=player.timeline;
- status.textContent=current.level+' · '+current.film.scenes.length+' Szenen · '+Math.ceil(t.duration/60)+' Minuten · ohne Sprachaufnahme';
+ if(request!==loadId)return;current=pending;if(!current?.film)throw Error('Keine geprüfte Filmfassung vorhanden.');
+ // recordings made by tools/film-audio.cjs (private, in .local/film-audio)
+ const dir='../../.local/'+AUDIO+'/k'+Number(n)+'/',rec=await fetch(dir+'manifest.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).catch(()=>null);if(request!==loadId)return;
+ const audio=rec?Object.fromEntries(rec.cues.map(c=>[c.id,{url:dir+c.file,seconds:c.seconds,say:c.say}])):null;
+ player=GRAM_FILM.mount(host,current.film,{production:true,audio});const t=player.timeline,lines=t.cues.length;
+ status.textContent=current.level+' · '+current.film.scenes.length+' Szenen · '+Math.ceil(t.duration/60)+' Minuten · '+(player.recorded?'Sprachaufnahme: '+player.recorded+' von '+lines+' Zeilen':'ohne Sprachaufnahme');
  }catch(e){if(request===loadId)status.textContent=e.message;}
 }
 select.onchange=()=>show(select.value);document.getElementById('fullscreen').onclick=()=>{if(current?.film)GRAM_FILM.open(current.film,{production:true});};
-(async()=>{if(!['127.0.0.1','localhost','::1'].includes(location.hostname))throw Error('Diese Vorschau ist ausschließlich für den lokalen Server vorgesehen.');const res=await fetch('../../.local/animation-lessons/index.json');if(!res.ok)throw Error('Zuerst node tools/build-film-lessons.cjs ausführen.');const rows=await res.json();rows.forEach(r=>{const o=document.createElement('option');o.value=r.n;o.textContent=r.level+' · '+r.title;select.append(o);});select.value=109;await show(select.value);})().catch(e=>{status.textContent=e.message;});
+(async()=>{if(!['127.0.0.1','localhost','::1'].includes(location.hostname))throw Error('Diese Vorschau ist ausschließlich für den lokalen Server vorgesehen.');const res=await fetch('../../.local/animation-lessons/index.json');if(!res.ok)throw Error('Zuerst node tools/build-film-lessons.cjs ausführen.');const rows=await res.json();rows.forEach(r=>{const o=document.createElement('option');o.value=r.n;o.textContent=r.level+' · '+r.title;select.append(o);});select.value=109;if(!select.value)select.selectedIndex=0;await show(select.value);})().catch(e=>{status.textContent=e.message;});
 </script></body></html>

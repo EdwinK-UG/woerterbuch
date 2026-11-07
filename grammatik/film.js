@@ -401,7 +401,10 @@ function download(name,data,type='application/json') {
   const blob=new Blob([data],{type}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 function mount(host,story,opt={}) {
-  validate(story);const disposables=[],clips=new Map(),durations={};let timeline=compile(story),recordingPlan=null,time=0,playing=false,raf=0,clock=0,offset=0,rate=1,audio=null,audioId='',lastCue='',disposed=false;
+  validate(story);const disposables=[],clips=new Map(),durations={};
+  // opt.audio: {cueId: {url, seconds, say}} from a recording manifest. A clip is used only while its text still matches the cue.
+  for(const c of compile(story).cues){const a=opt.audio?.[c.id];if(a&&typeof a.url==='string'&&a.say===c.say&&a.seconds>0){clips.set(c.id,{url:a.url,given:true});durations[c.id]=a.seconds;}}
+  let timeline=compile(story,durations),recordingPlan=null,time=0,playing=false,raf=0,clock=0,offset=0,rate=1,audio=null,audioId='',lastCue='',disposed=false;
   const media=root.matchMedia?.('(prefers-reduced-motion: reduce)'),compact=root.matchMedia?.('(max-width: 640px)');
   let reduce=!!media?.matches;
   host.classList.add('gf');host.lang='de';
@@ -414,7 +417,9 @@ function mount(host,story,opt={}) {
   $('.gf-chapters').innerHTML=story.scenes.map((s,i)=>`<button type="button" data-scene="${i}"><span>${String(i+1).padStart(2,'0')}</span>${E(s.title)}</button>`).join('');
   const theme=()=>({compact:!!compact?.matches,accent:opt.accent,brand:opt.brand});
   const on=(el,event,fn)=>{el.addEventListener(event,fn);disposables.push(()=>el.removeEventListener(event,fn));};
-  function clearAudio(){if(audio){audio.pause();audio.removeAttribute('src');audio.load();audio=null;}audioId='';}
+  // One audio element for every clip: Safari on iPhone lets an element keep playing after the first tap, not a new one per line.
+  let voice=null;
+  function clearAudio(){if(audio){audio.onended=audio.onerror=null;audio.pause();audio.removeAttribute('src');audio.load();audio=null;}audioId='';}
   function stop(){playing=false;cancelAnimationFrame(raf);clearAudio();$('[data-play]').textContent='Abspielen';}
   function question(s) {
     const area=$('.gf-question');area.replaceChildren();
@@ -467,7 +472,9 @@ function mount(host,story,opt={}) {
     if(!host.isConnected){dispose();return;}
     const state=at(timeline,time),cue=state.cue,clip=clips.get(cue.id);
     if(clip){
-      if(audioId!==cue.id){clearAudio();audio=new Audio(clip.url);audioId=cue.id;audio.playbackRate=rate;audio.currentTime=Math.max(0,time-cue.start);audio.onended=()=>{time=cue.end;clearAudio();clock=performance.now();offset=time;};audio.onerror=()=>{stop();status.textContent='Diese Sprachdatei konnte nicht abgespielt werden.';};audio.play().catch(()=>{stop();status.textContent='Bitte Wiedergabe erneut starten, um Audio zu erlauben.';});}
+      if(audioId!==cue.id){clearAudio();audio=voice||(voice=new Audio());audio.preload='auto';audio.src=clip.url;audioId=cue.id;
+        // fetch the next recorded line while this one plays
+        const next=timeline.cues[timeline.cues.indexOf(cue)+1],ahead=next&&clips.get(next.id);if(ahead?.given&&!ahead.warm){ahead.warm=true;fetch(ahead.url).catch(()=>{ahead.warm=false;});}audio.playbackRate=rate;audio.currentTime=Math.max(0,time-cue.start);audio.onended=()=>{time=cue.end;clearAudio();clock=performance.now();offset=time;};audio.onerror=()=>{stop();status.textContent='Diese Sprachdatei konnte nicht abgespielt werden.';};audio.play().catch(()=>{stop();status.textContent='Bitte Wiedergabe erneut starten, um Audio zu erlauben.';});}
       if(audio)time=cue.start+Math.min(cue.seconds,audio.currentTime);
     } else {
       if(audio)clearAudio();time=Math.min(cue.end,offset+(now-clock)/1000*rate);
@@ -475,7 +482,7 @@ function mount(host,story,opt={}) {
     }
     draw();if(time>=timeline.duration){stop();return;}raf=requestAnimationFrame(tick);
   }
-  on($('[data-play]'),'click',()=>{if(playing){stop();return;}if(time>=timeline.duration)time=0;playing=true;clock=performance.now();offset=time;$('[data-play]').textContent='Pause';raf=requestAnimationFrame(tick);});
+  on($('[data-play]'),'click',()=>{if(playing){stop();return;}if(time>=timeline.duration)time=0;playing=true;clock=performance.now();offset=time;$('[data-play]').textContent='Pause';tick(performance.now());});   // first frame inside the tap, so the sound may start
   on($('[data-prev]'),'click',()=>{const c=at(timeline,time).cue,i=timeline.cues.indexOf(c);seek(timeline.cues[Math.max(0,i-1)].start);});
   on($('[data-next]'),'click',()=>{const c=at(timeline,time).cue,i=timeline.cues.indexOf(c);seek(timeline.cues[Math.min(timeline.cues.length-1,i+1)].start);});
   on(range,'input',()=>seek(+range.value));
@@ -502,17 +509,17 @@ function mount(host,story,opt={}) {
       const url=URL.createObjectURL(file),probe=new Audio();probe.preload='metadata';
       try{
         const duration=await new Promise((resolve,reject)=>{const timeout=setTimeout(()=>reject(Error('Audio metadata timeout')),5000);probe.onloadedmetadata=()=>{clearTimeout(timeout);Number.isFinite(probe.duration)&&probe.duration>0?resolve(probe.duration):reject(Error('Invalid duration'));};probe.onerror=()=>{clearTimeout(timeout);reject(Error('Unreadable audio'));};probe.src=url;});
-        if(disposed){URL.revokeObjectURL(url);continue;}const old=clips.get(id);if(old)URL.revokeObjectURL(old.url);clips.set(id,{url});durations[id]=duration;accepted.push(id);
+        if(disposed){URL.revokeObjectURL(url);continue;}const old=clips.get(id);if(old&&!old.given)URL.revokeObjectURL(old.url);clips.set(id,{url});durations[id]=duration;accepted.push(id);
       }catch{URL.revokeObjectURL(url);rejected.push(file.name);}finally{probe.removeAttribute('src');probe.load();}
     }
     timeline=compile(story,durations);time=0;lastCue='';draw();status.textContent=accepted.length+' Sprachdatei(en) geladen.'+(rejected.length?' Nicht zugeordnet: '+rejected.join(', '):'');
   });
   let observer;
-  function dispose(){if(disposed)return;disposed=true;stop();observer?.disconnect();disposables.forEach(f=>f());clips.forEach(c=>URL.revokeObjectURL(c.url));host.replaceChildren();mounted.delete(controller);opt.onDispose?.();}
+  function dispose(){if(disposed)return;disposed=true;stop();observer?.disconnect();disposables.forEach(f=>f());clips.forEach(c=>{if(!c.given)URL.revokeObjectURL(c.url);});host.replaceChildren();mounted.delete(controller);opt.onDispose?.();}
   // Only watch ancestors of this player, never scan the complete document after mutations.
   observer=new MutationObserver(()=>{if(!host.isConnected)dispose();});for(let parent=host.parentNode;parent;parent=parent.parentNode)observer.observe(parent,{childList:true});
   if(opt.close)on($('[data-close]'),'click',opt.close);
-  const controller={dispose,pause:stop,seek,get timeline(){return timeline;}};mounted.add(controller);draw();return controller;
+  const controller={dispose,pause:stop,seek,get timeline(){return timeline;},get recorded(){return clips.size;}};mounted.add(controller);draw();return controller;
 }
 function open(story,opt={}) {
   mounted.forEach(p=>p.pause());if(active)active();const previous=document.activeElement,scroll=document.body.style.overflow;

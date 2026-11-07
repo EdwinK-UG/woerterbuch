@@ -477,3 +477,68 @@ test('verification mail is branded, uses a non-login confirmation capability, an
   const bad=await verificationHook(new Request('https://worker.example.invalid/',{method:'POST',headers:{Authorization:'Bearer wrong'},body:JSON.stringify({user_id:job.user_id})}),env,{});assert.equal(bad.status,403);
  }finally{globalThis.fetch=old;}
 });
+import { signClip, LINK_SECONDS } from "../src/film-audio.js";
+test('film narration follows the lesson rule and plays only through signed, short-lived links', async () => {
+  const sha = (c) => c.repeat(64), bytes = new TextEncoder().encode('ID3fake-mp3-bytes');
+  const files = new Map([
+    ['k487/manifest.json', JSON.stringify({ chapter: 487, level: 'C1', cues: [{ id: 'a--1', say: 'Hallo.', seconds: 1.5, key: 'k487/' + sha('a') + '.mp3' }, { id: 'x--1', say: 'Fremd.', seconds: 1, key: 'k100/' + sha('b') + '.mp3' }] })],
+    ['k100/manifest.json', JSON.stringify({ chapter: 100, level: 'B2', cues: [{ id: 'b--1', say: 'Servus.', seconds: 2, key: 'k100/' + sha('b') + '.mp3' }] })],
+    ['k487/' + sha('a') + '.mp3', bytes],
+  ]);
+  const object = (key, range) => {
+    const data = files.get(key); if (data === undefined) return null;
+    const buf = typeof data === 'string' ? new TextEncoder().encode(data) : data;
+    const m = /bytes=(\d+)-(\d*)/.exec(range?.get?.('Range') || ''), start = m ? +m[1] : 0, end = m && m[2] ? +m[2] : buf.length - 1;
+    return { size: buf.length, httpEtag: '"etag"', range: m ? { offset: start, length: end - start + 1 } : undefined,
+      body: buf.slice(start, end + 1), json: async () => JSON.parse(new TextDecoder().decode(buf)) };
+  };
+  const FILM_AUDIO = { get: async (k, o) => object(k, o?.range), head: async (k) => object(k) };
+  const env = { FILM_AUDIO, FILM_AUDIO_SIGNING_KEY: 'test-signing-key-that-is-long-enough-123', SUPABASE_URL: 'https://auth.invalid', SUPABASE_PUBLISHABLE_KEY: 'fixture', ALLOWED_ORIGINS: 'https://deutschklinik.com' };
+  const people = { learnerB2: { role: 'learner', unlocked: ['B2'] }, founder: { role: 'founder', unlocked: [] } };
+  const old = globalThis.fetch;
+  globalThis.fetch = async (url, init) => {
+    const who = String(init.headers.Authorization).slice(7), p = new URL(url).pathname;
+    if (p === '/auth/v1/user') return who in people ? Response.json({ id: who }) : new Response('{}', { status: 401 });
+    if (p === '/rest/v1/profiles') return Response.json([people[new URL(url).searchParams.get('user_id').slice(3)]]);
+    throw Error(p);
+  };
+  const site = { Origin: 'https://deutschklinik.com' };
+  const list = (chapter, who, e = env, headers = site) => worker.fetch(new Request('https://w.invalid/film-audio?chapter=' + chapter, { headers: { ...headers, ...(who ? { Authorization: 'Bearer ' + who } : {}) } }), e, {});
+  const clip = (url, headers = {}) => worker.fetch(new Request(url, { headers }), env, {});
+  try {
+    assert.equal((await list(487, 'founder', { ...env, FILM_AUDIO: undefined })).status, 404);    // not set up yet: films stay silent
+    assert.equal((await list(487, 'founder', { ...env, FILM_AUDIO_SIGNING_KEY: 'short' })).status, 404);
+    assert.equal((await list(487, 'founder', env, {})).status, 403);                               // only from the site
+    assert.equal((await list(487, null)).status, 401);
+    assert.equal((await list(487, 'stranger')).status, 401);
+    assert.equal((await list(487, 'learnerB2')).status, 403);                                      // B2 learner, C1 film
+    assert.equal((await list(999, 'founder')).status, 404);
+    assert.equal((await list('../k1', 'founder')).status, 400);
+    const ok = await list(487, 'founder'), body = await ok.json();
+    assert.equal(ok.status, 200); assert.equal(ok.headers.get('Cache-Control'), 'private, no-store');
+    assert.deepEqual(body.cues.map((c) => c.id), ['a--1']);                                        // a key from another film is dropped
+    assert.equal((await list(100, 'learnerB2')).status, 200);
+    const url = body.cues[0].url;
+    assert.ok(url.startsWith('https://w.invalid/film-audio/clip?k=k487%2F'));
+    const full = await clip(url);                                                                  // no Origin needed for <audio>
+    assert.equal(full.status, 200); assert.equal(full.headers.get('Content-Type'), 'audio/mpeg');
+    assert.deepEqual(new Uint8Array(await full.arrayBuffer()), bytes);
+    const part = await clip(url, { Range: 'bytes=3-6' });
+    assert.equal(part.status, 206); assert.equal(part.headers.get('Content-Range'), 'bytes 3-6/' + bytes.length);
+    assert.equal(new TextDecoder().decode(await part.arrayBuffer()), 'fake');
+    const u = new URL(url), e = +u.searchParams.get('e'), k = u.searchParams.get('k');
+    const forged = new URL(url); forged.searchParams.set('k', 'k100/' + sha('b') + '.mp3');
+    assert.equal((await clip(forged.href)).status, 403);                                           // the signature binds the clip
+    const later = new URL(url); later.searchParams.set('e', String(e + 60));
+    assert.equal((await clip(later.href)).status, 403);                                            // and its expiry
+    const past = Math.floor(Date.now() / 1000) - 5, expired = new URL(url);
+    expired.searchParams.set('e', String(past)); expired.searchParams.set('s', await signClip(env, k, past));
+    assert.equal((await clip(expired.href)).status, 403);
+    const far = Math.floor(Date.now() / 1000) + LINK_SECONDS * 10, tooLong = new URL(url);
+    tooLong.searchParams.set('e', String(far)); tooLong.searchParams.set('s', await signClip(env, k, far));
+    assert.equal((await clip(tooLong.href)).status, 403);
+    const sneaky = new URL(url); sneaky.searchParams.set('k', 'k487/../secret.mp3');
+    assert.equal((await clip(sneaky.href)).status, 400);
+    assert.equal((await clip(url.replace(/s=[^&]+/, 's=' + 'A'.repeat(43)))).status, 403);
+  } finally { globalThis.fetch = old; }
+});
