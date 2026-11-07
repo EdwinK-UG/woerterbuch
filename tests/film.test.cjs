@@ -36,7 +36,7 @@ test('an imported recording controls playback time and is revoked on disposal',a
  w.URL.createObjectURL=()=> 'blob:local-voice';w.URL.revokeObjectURL=u=>revoked.push(u);
  w.requestAnimationFrame=fn=>{pending.set(++frameId,fn);return frameId;};w.cancelAnimationFrame=id=>pending.delete(id);
  w.Audio=class {constructor(src){this.currentTime=0;this.duration=6;instances.push(this);if(src)this.src=src;}set src(v){this._src=v;setTimeout(()=>this.onloadedmetadata?.(),0);}get src(){return this._src;}play(){return Promise.resolve();}pause(){this.paused=true;}removeAttribute(){this._src='';}load(){}};
- const h=w.document.getElementById('host'),p=w.GRAM_FILM.mount(h,fixture(),{production:true}),input=h.querySelector('[data-audio]');Object.defineProperty(input,'files',{value:[{name:'location--1.mp3'}]});input.dispatchEvent(new w.Event('change'));await new Promise(r=>setTimeout(r,20));
+ const h=w.document.getElementById('host'),p=w.GRAM_FILM.mount(h,fixture(),{production:true}),input=h.querySelector('[data-audio]');Object.defineProperty(input,'files',{value:[{name:'recording-plan.json',text:async()=>JSON.stringify(Film.manifest(Film.compile(fixture())))},{name:'location--1.mp3'}]});input.dispatchEvent(new w.Event('change'));await new Promise(r=>setTimeout(r,20));
  assert.equal(p.timeline.duration,13);h.querySelector('[data-play]').click();const tick=()=>{const [id,fn]=pending.entries().next().value;pending.delete(id);fn(999999);};tick();instances.at(-1).currentTime=3;tick();assert.equal(+h.querySelector('input[type=range]').value,3,'wall clock must not outrun the recording');
  p.dispose();assert.equal(pending.size,0);assert.deepEqual(revoked,['blob:local-voice']);d.window.close();
 });
@@ -47,9 +47,23 @@ test('private film build preserves exercises and refuses to overwrite a linked s
  const linked=path.join(tmp,'linked');fs.symlinkSync(src,linked);assert.throws(()=>build(src,scripts,linked),/symlink/);assert.throws(()=>build(src,scripts,src),/separate/);
  }finally{fs.rmSync(tmp,{recursive:true,force:true});}
 });
+test('an old script is rejected before audio decoding even when the MP3 filename is unchanged',async()=>{
+ const d=dom(),w=d.window,h=w.document.getElementById('host'),p=w.GRAM_FILM.mount(h,fixture(),{production:true});
+ w.URL.createObjectURL=()=>{throw Error('Stale recordings must not be decoded.');};
+ const old=Film.manifest(Film.compile(fixture()));old.cues[0].say+=' Alter Text.';
+ const input=h.querySelector('[data-audio]');Object.defineProperty(input,'files',{value:[{name:'recording-plan.json',text:async()=>JSON.stringify(old)},{name:'location--1.mp3'}]});input.dispatchEvent(new w.Event('change'));await new Promise(r=>setTimeout(r,10));
+ assert.match(h.querySelector('.gf-status').textContent,/Sprechplan passt nicht/);assert.equal(p.timeline.duration,12);p.dispose();d.window.close();
+});
+test('an ordinary authored scene can be explored without a separate variant or quiz',()=>{
+ const f=fixture();delete f.scenes[0].variants;delete f.scenes[0].quiz;
+ const d=dom(),h=d.window.document.getElementById('host'),p=d.window.GRAM_FILM.mount(h,f);
+ const slider=h.querySelector('[aria-label="Veränderung untersuchen"]');assert.ok(slider);
+ const first=h.querySelector('svg').outerHTML;slider.value=1;slider.dispatchEvent(new d.window.Event('input'));assert.notEqual(h.querySelector('svg').outerHTML,first);assert.match(h.querySelector('.gf-caption').textContent,/spatial phrase/);
+ p.dispose();d.window.close();
+});
 test('added picture families render escaped, deterministic SVG at every stage, on desktop and phone',()=>{
  const tok=[{id:'a',text:'<b>Ich</b>',role:'agent'},{id:'v',text:'komme',role:'verb'}];
- const arts={slots:{a:['Ich','komme','','mit',''],b:['','Kommst','du','mit?',''],fields:['V','2','M','E','N']},timeline:{label:'<x>',events:[{text:'früher',at:.2},{text:'jetzt',at:.8,late:true}],now:.8,span:[.2,.8],arrow:[0,1],arrowLabel:'danach'},scale:{items:['kann','muss'],source:0,target:1,ends:['a','b']},link:{kind:'concession',word:'obwohl',left:'Es regnet.',right:'Wir gehen.'},group:{label:'Sortieren',groups:['A','B'],items:[{text:'x',g:0},{text:'y',g:1}]},imagine:{real:'Kein Geld.',dream:'Wenn ich Geld hätte …'},route:{kind:'room',place:'Supermarkt',mode:'to',label:'Wohin?'}};
+ const arts={slots:{a:['Ich','komme','','mit',''],b:['','Kommst','du','mit?',''],fields:['V','2','M','E','N']},timeline:{label:'<x>',events:[{text:'früher',at:.2},{text:'jetzt',at:.8,late:true}],now:.8,span:[.2,.8],arrow:[0,1],arrowLabel:'danach'},scale:{items:['kann','muss'],source:0,target:1,ends:['a','b']},link:{kind:'concession',word:'obwohl',left:'Es regnet.',right:'Wir gehen.'},group:{label:'Sortieren',groups:['A','B'],items:[{text:'x',g:0},{text:'y',g:1}]},imagine:{real:'Kein Geld.',dream:'Wenn ich Geld hätte …'},route:{kind:'room',place:'Supermarkt',mode:'to',label:'Wohin?'},painting:{phase:'action'}};
  const story={version:1,id:'families',title:'Families',level:'C1',scenes:Object.entries(arts).map(([visual,art])=>({id:'s-'+visual,title:visual,visual,alt:visual,art,from:tok,to:tok,beats:[{say:'Beobachten.',seconds:4,stage:0},{say:'Verändern.',seconds:4,stage:1}]}))};
  const t=Film.compile(story);
  for(const scene of story.scenes)for(const stage of [0,.5,1])for(const compact of [false,true]){

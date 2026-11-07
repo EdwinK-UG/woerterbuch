@@ -2,13 +2,11 @@
 
 This replaces picture-type guessing with explicitly authored teaching films. The public player reads film metadata from protected lesson bodies. The eight initial films are delivered by the authenticated `lessons` Edge Function, with JWT verification and the existing enrolment checks enabled.
 
-## What is finished
+## Authored coverage
 
-Eight storyboards, 84 scenes: B2 chapters 88 (object order), 91 (negation), 99 (passive), 109 (two-way prepositions), 144 (adjective endings), 148 (reported speech), and C1 chapters 482 (nominalisation), 487 (commas). Each scene has original examples, explicit token roles, a meaningful visual transition, a text alternative, a takeaway and authored German narration. Selected checkpoints give explanatory feedback. The location, negation and reported-speech studios have user-controlled visual transformations; the adjective studio has 80 manually specified paradigm cells.
+All 114 B2/C1 grammar chapters have authored films: 514 scenes and 1,542 narrated beats. The initial eight detailed films cover B2 chapters 88, 91, 99, 109, 144, 148 and C1 chapters 482, 487. The remaining 106 films extend the same renderer to all other B2/C1 chapters. The protected complete lesson archive, rather than an old authoring directory, is the release source of truth.
 
-These eight are released. A second authoring pass (November 2026) adds authored storyboards for the other 106 B2/C1 chapters (430 scenes), so every B2/C1 chapter now has a private storyboard; those 106 are **review copies, not yet released** in the protected lesson bundle. Until a chapter's enriched lesson body is deployed, its legacy “video” button stays hidden. A1 keeps its existing player.
-
-The new storyboards live in `.local/animation-scripts/b2-NN.cjs` and `c1-NN.cjs` (gitignored); `all.cjs` merges them with `stories.cjs`, and `lint.cjs` checks structure and layout (token rows, group sizes, label lengths). Build them with `node tools/build-film-lessons.cjs .local/lessons .local/animation-scripts/all.cjs .local/animation-lessons`.
+The November narration pass preserves every scene ID and beat count. It refines 209 spoken beats in 81 chapters, preserving the other 1,333 texts exactly. Read `docs/film-narration.md` before recording. Historical scripts in `.local/animation-scripts/` may predate these revisions; rebuilding from those drafts without the narration edits would restore old text.
 
 Seven picture families were added to the renderer for concepts the first nine could not show honestly: `slots` (topological sentence fields with configurable bracket pillars), `timeline` (events, span, now-marker, relation arrow), `scale` (an ordered gauge, e.g. certainty or degree), `link` (two propositions and their logical relation: cause, result, condition, concession, purpose, means, time, contrast, alternative, addition), `group` (authored items sorted into authored groups), `imagine` (reality card vs. thought cloud for Konjunktiv II) and `route` (to / at / from / along / through / around a room, surface, water, person, city or river). Like the others, they draw only authored data.
 
@@ -35,9 +33,9 @@ node tools/package-film-preview.cjs .local/animation-scripts/stories.cjs /ABSOLU
 
 `compile(story, durations)` creates one timeline. `frame(timeline, seconds)` is a pure SVG frame renderer used by the player, scrubbing, experiments and offline export. It does not use CSS animation, browser voices, grammatical string guesses or independent illustration timers.
 
-Each scene has three narrated beats. A beat declares text, a planned duration and a semantic stage. Movement happens at the start of the relevant beat, then holds while the explanation continues. Export the speaking plan under “Stimme & Video”; it supplies German text and filenames such as `space-park-location--1.mp3`.
+The current films each use three narrated beats per scene. The renderer also supports other authored counts. A beat declares text, a planned duration and a semantic stage. After a short opening breath, the relevant change moves, then holds while the explanation continues. The takeaway appears with the final beat. Scenes can also be explored with a keyboard-accessible transformation slider, without changing graded exercise results. Export the speaking plan under “Stimme & Video”; it supplies German text and filenames such as `space-park-location--1.mp3`.
 
-Make recordings with the voice service of your choice, then import the audio files into the studio. Each clip's measured duration replaces the corresponding planned duration. During that cue, the audio element's `currentTime` is the playback clock. The visible animation pauses with the recording and seeks through the same timeline. The files remain local; the application sends no audio or text to ElevenLabs and spends no API credits.
+Make recordings with the voice service of your choice, then import the audio files into the studio together with their matching JSON speaking plan. A filename alone cannot establish that a recording still matches the script. Each clip's measured duration replaces the corresponding planned duration. During that cue, the audio element's `currentTime` is the playback clock. The visible animation pauses with the recording and seeks through the same timeline. The files remain local; the application sends no audio or text to ElevenLabs and spends no API credits.
 
 This provides cue-level synchronisation. It does not perform word-level forced alignment or lip sync. A voice actor should record one cue per file and avoid long silence at the start. Re-export the speaking plan and subtitles after loading the final voice files, since the total length changes.
 
@@ -53,13 +51,13 @@ node tools/render-film.cjs \
   --ffmpeg /ABSOLUTE/TOOLS/node_modules/ffmpeg-static/ffmpeg
 ```
 
-The exporter uses the same SVG frames as the player and produces a silent 1920×1080 MP4, subtitle VTT, narration manifest, storyboard JSON and poster SVG. Add `--audio /ABSOLUTE/CLIPS` for a narrated MP4; all cue files must be present. Mixed input audio formats are converted before concatenation. Existing output directories are refused to prevent accidental overwrites.
+The exporter uses the same SVG frames as the player and produces a silent 1920×1080 MP4, subtitle VTT, narration manifest, storyboard JSON and poster SVG. Add `--audio /ABSOLUTE/CLIPS --manifest /ABSOLUTE/recording-plan.json` for a narrated MP4; all cue files must be present and their plan must match the current cue IDs and exact texts. Mixed input audio formats are converted before concatenation. Existing output directories are refused to prevent accidental overwrites.
 
 Use `--start 8 --seconds 36` for a sample and `--frames-only` to render without ffmpeg. `--portrait` uses the mobile composition. `--width`, `--fps` and `--font` allow controlled production output. The exporter selects common local font files when available; a comma-separated `--font` list gives explicit control and avoids expensive system-font discovery on every frame. Use fonts licensed for your intended video distribution.
 
 ## Review gates before release
 
-The eight released scripts have been checked against the current lesson concepts, with original examples rather than source-page crops. The 106 newer review copies were written from each chapter's full outline by one author and have not had an independent grammar or native-speaker review. The comma explanation uses the 2024 official rules. A German-language editorial pass and a final viewing with the chosen recorded voice should still precede publication. Diagrams simplify spatial relationships and use objects schematically; the written lesson remains the detailed reference.
+The films use authored examples rather than source-page crops. The November spoken-language pass checks script clarity and the relation between script and diagram; it is not an independent native-speaker audit of every grammar claim. The comma explanation uses the 2024 official rules. A German-language editorial pass and a final viewing with the chosen recorded voice should still precede publication. Diagrams simplify spatial relationships and use objects schematically; the written lesson remains the detailed reference.
 
 Tests cover deterministic timing, audio-clock behaviour, subtitle clipping, validation, escaping, native interactions and source preservation. Browser checks cover the local preview, desktop and 390-pixel mobile layout. No iPhone/Safari hardware test, full screen-reader audit or low-end-device performance benchmark has been claimed.
 

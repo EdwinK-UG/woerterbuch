@@ -626,7 +626,7 @@ function loadFilm(){
   if(window.GRAM_FILM)return Promise.resolve();
   if(!filmP){
     const css=document.createElement('link');css.rel='stylesheet';css.href='grammatik/film.css?v=a162e00a9ca4';document.head.append(css);
-    filmP=scriptFile('grammatik/film.js?v=ed69b9501099').catch(e=>{css.remove();filmP=null;throw e;});
+    filmP=scriptFile('grammatik/film.js?v=7b6de50c6b58').catch(e=>{css.remove();filmP=null;throw e;});
   }
   return filmP;
 }

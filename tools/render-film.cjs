@@ -10,6 +10,9 @@ function main(a){
  if(!a.lesson||!a.out)throw Error('Use --lesson PRIVATE_LESSON.js --out NEW_OUTPUT_DIRECTORY [--audio DIRECTORY] [--ffmpeg PATH] [--resvg PATH]');
  const dest=path.resolve(a.out);if(fs.existsSync(dest))throw Error('Choose a new output directory; existing files are never overwritten.');
  let lesson;vm.runInNewContext(fs.readFileSync(a.lesson,'utf8'),{GRAM:{add:c=>{lesson=c;}}},{timeout:3000});if(!lesson?.film)throw Error('This private lesson has no authored film.');
+ const baseTimeline=Film.compile(lesson.film);
+ if(a.cue&&!baseTimeline.cues.some(c=>c.id===a.cue))throw Error('Unknown narration cue: '+a.cue);
+ if(a.cue&&(a.start!=null||a.seconds!=null))throw Error('Use --cue or an export interval, not both.');
  const Resvg=require(a.resvg||'@resvg/resvg-js').Resvg,ffmpeg=a.ffmpeg||'ffmpeg',fps=Number(a.fps||30),width=Number(a.width||(a.portrait?1080:1920));
  const commonFonts=[
   '/System/Library/Fonts/Supplemental/Arial.ttf','/System/Library/Fonts/Supplemental/Arial Bold.ttf','/System/Library/Fonts/Supplemental/Arial Italic.ttf','/System/Library/Fonts/Supplemental/Georgia.ttf','/System/Library/Fonts/Supplemental/Georgia Italic.ttf',
@@ -20,7 +23,11 @@ function main(a){
  if(!Number.isInteger(fps)||fps<1||fps>60||!Number.isInteger(width)||width<320||width>3840)throw Error('Invalid frame rate or width.');
  const durations={},audioPCM={};
  if(a.audio){
-  const input=fs.readdirSync(a.audio);for(const cue of Film.compile(lesson.film).cues){
+  const planPath=a.manifest||path.join(a.audio,'recording-plan.json');
+  if(!fs.existsSync(planPath))throw Error('A matching recording plan is required. Use --manifest PLAN.json or put recording-plan.json beside the audio.');
+  const plan=JSON.parse(fs.readFileSync(planPath,'utf8'));
+  if(Film.compile(lesson.film).cues.some(c=>!Film.recordingMatches(c,plan)))throw Error('Recording plan text or cue IDs do not match this lesson.');
+  const input=fs.readdirSync(a.audio);for(const cue of baseTimeline.cues.filter(c=>!a.cue||c.id===a.cue)){
    const f=input.find(f=>f.replace(/\.[^.]+$/,'')===cue.id&&/\.(wav|mp3|m4a|ogg)$/i.test(f));if(!f)throw Error('Missing narration clip: '+cue.id);
    // Decode first: container duration can include encoder delay/padding. Sample
    // counts keep the rendered timeline and concatenated voice track identical.
@@ -29,7 +36,7 @@ function main(a){
    audioPCM[cue.id]=result.stdout;durations[cue.id]=result.stdout.length/(48000*2);
   }
  }
- const timeline=Film.compile(lesson.film,durations),start=Number(a.start||0),end=a.seconds?Math.min(timeline.duration,start+Number(a.seconds)):timeline.duration;
+ const timeline=Film.compile(lesson.film,durations),selected=a.cue?timeline.cues.find(c=>c.id===a.cue):null,start=selected?selected.start:Number(a.start||0),end=selected?selected.end:a.seconds?Math.min(timeline.duration,start+Number(a.seconds)):timeline.duration;
  if(!Number.isFinite(start)||!Number.isFinite(end)||start<0||end<=start||end>timeline.duration)throw Error('Invalid export interval.');
  fs.mkdirSync(dest,{recursive:true});
  fs.writeFileSync(path.join(dest,'narration.json'),JSON.stringify(Film.manifest(timeline),null,2));fs.writeFileSync(path.join(dest,'captions.vtt'),Film.vtt(timeline,{start,end}));
@@ -48,7 +55,7 @@ function main(a){
   if(encoder){encoder.stdin.end();await new Promise((resolve,reject)=>{encoder.once('close',code=>code===0?resolve():reject(Error('ffmpeg exited '+code)));encoder.once('error',reject);});}
   if(a.audio&&!a['frames-only']){
    // Encode each cue separately before concatenating: mixed source formats/rates are supported.
-   const tracks=[];for(const cue of timeline.cues){
+   const tracks=[];for(const cue of timeline.cues.filter(c=>!a.cue||c.id===a.cue)){
     const track=path.join(dest,cue.id+'.wav'),data=audioPCM[cue.id],header=Buffer.alloc(44);
     header.write('RIFF',0);header.writeUInt32LE(36+data.length,4);header.write('WAVEfmt ',8);header.writeUInt32LE(16,16);header.writeUInt16LE(1,20);header.writeUInt16LE(1,22);header.writeUInt32LE(48000,24);header.writeUInt32LE(96000,28);header.writeUInt16LE(2,32);header.writeUInt16LE(16,34);header.write('data',36);header.writeUInt32LE(data.length,40);
     fs.writeFileSync(track,Buffer.concat([header,data]));tracks.push(track);
@@ -56,9 +63,9 @@ function main(a){
    // Generated filenames use authored ids restricted by storyboard validation.
    const list=path.join(dest,'audio-list.txt');fs.writeFileSync(list,tracks.map(p=>"file '"+p.replace(/'/g,"'\\''")+"'").join('\n'));
    const concat=cp.spawnSync(ffmpeg,['-hide_banner','-loglevel','error','-y','-f','concat','-safe','0','-i',list,'-c:a','pcm_s16le',path.join(dest,'voice.wav')]);if(concat.status!==0)throw Error('Audio concatenation failed.');
-   const mux=cp.spawnSync(ffmpeg,['-hide_banner','-loglevel','error','-y','-i',path.join(dest,'silent.mp4'),'-ss',String(start),'-i',path.join(dest,'voice.wav'),'-t',String(end-start),'-map','0:v:0','-map','1:a:0','-c:v','copy','-c:a','aac','-movflags','+faststart',path.join(dest,'narrated.mp4')]);if(mux.status!==0)throw Error('Audio mux failed.');
+   const mux=cp.spawnSync(ffmpeg,['-hide_banner','-loglevel','error','-y','-i',path.join(dest,'silent.mp4'),'-ss',String(selected?0:start),'-i',path.join(dest,'voice.wav'),'-t',String(end-start),'-map','0:v:0','-map','1:a:0','-c:v','copy','-c:a','aac','-movflags','+faststart',path.join(dest,'narrated.mp4')]);if(mux.status!==0)throw Error('Audio mux failed.');
   }
-  fs.writeFileSync(path.join(dest,'export.json'),JSON.stringify({story:lesson.film.id,start,end,fps,width,height,frames:count,narrated:!!a.audio},null,2));
+  fs.writeFileSync(path.join(dest,'export.json'),JSON.stringify({story:lesson.film.id,cue:a.cue||null,start,end,fps,width,height,frames:count,narrated:!!a.audio},null,2));
   console.log('Exported '+count+' deterministic frames ('+width+'×'+height+').');
  };return write();
 }

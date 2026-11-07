@@ -9,7 +9,7 @@ const clamp = x => Math.max(0, Math.min(1, x));
 const ease = x => { x = clamp(x); return x*x*(3-2*x); };
 const mix = (a,b,t) => a+(b-a)*t;
 const COLORS = {agent:'#315eaf', patient:'#a64c3f', recipient:'#167465', verb:'#7950a0', focus:'#95650a', ending:'#315eaf', neutral:'#455163'};
-const VISUALS = ['space','handoff','focus','quote','ending','nominal','clause','perspective','transform','slots','timeline','scale','link','group','imagine','route'];
+const VISUALS = ['space','handoff','focus','quote','ending','nominal','clause','perspective','transform','slots','timeline','scale','link','group','imagine','route','painting'];
 const text = (s,x,y,size=28,fill='#263147',extra='') => `<text x="${x}" y="${y}" font-size="${size}" fill="${fill}" ${extra}>${E(s)}</text>`;
 const rect = (x,y,w,h,fill,rx=20,extra='') => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${rx}" fill="${fill}" ${extra}/>`;
 function lines(s,max) {
@@ -26,6 +26,7 @@ function validate(story) {
   for (const s of story.scenes) {
     if (!/^[a-z0-9][a-z0-9-]*$/.test(s.id||'') || ids.has(s.id)) throw Error('Scene ids must be unique and safe for local audio filenames.'); ids.add(s.id);
     if (!VISUALS.includes(s.visual) || !s.title || !s.alt) throw Error('Every scene needs a supported visual, title and text alternative: '+s.id);
+    if((s.visual==='painting'||s.art?.picture==='painting')&&!['action','result'].includes(s.art?.phase))throw Error('Painting scenes require an authored action/result phase: '+s.id);
     if (!s.beats?.length) throw Error('Every scene needs authored narration: '+s.id);
     let previous=-1;
     for (const b of s.beats) {
@@ -55,9 +56,11 @@ function compile(story, durations={}) {
 function at(timeline, seconds) {
   const t=Math.max(0, Math.min(timeline.duration, Number(seconds)||0));
   const cue=timeline.cues.find(c=>t<c.end)||timeline.cues.at(-1);
-  // Narration begins, then the relevant change happens over the next 2.8 s.
+  // Let the opening words establish the change before moving the picture.
+  // Movement takes only part of the cue; leave a still frame to understand it.
   // Audio clips replace cue lengths; video, scrubbing and lesson interactions use this same function.
-  const p=ease((t-cue.start)/Math.min(2.8,cue.seconds*.65));
+  const lead=Math.min(.4,cue.seconds*.12),move=Math.min(2.2,cue.seconds*.55);
+  const p=ease((t-cue.start-lead)/move);
   return {time:t,cue,scene:timeline.story.scenes[cue.scene],stage:mix(cue.previous,cue.stage,p)};
 }
 function tokenLayout(tokens,width,font=29) {
@@ -78,9 +81,9 @@ function tokens(s,p,x,y,width,compact) {
   }
   const rowGap=Math.max(165,a.height+52), toY=y+rowGap;
   let out=text(s.fromLabel||'AUSGANGSPUNKT',x,y-25,18,'#657186','letter-spacing="2" font-weight="700"');
-  out+=text(s.toLabel||'NEUE PERSPEKTIVE',x,toY-25,18,'#657186','letter-spacing="2" font-weight="700"');
+  out+=`<g opacity="${clamp(p*2)}">${text(s.toLabel||'NEUE PERSPEKTIVE',x,toY-25,18,'#657186','letter-spacing="2" font-weight="700"')}</g>`;
   // Ghost source preserves the comparison without rereading a second animated sentence.
-  for(const v of Object.values(a.items))out+=rect(x+v.x,y+v.y,v.w,62,'#e9e7e1',14)+text(v.t.text,x+v.x+16,y+v.y+39,compact?29:30,'#7b8087');
+  for(const v of Object.values(a.items))out+=`<g opacity="${clamp(p)*.68}">${rect(x+v.x,y+v.y,v.w,62,'#e9e7e1',14)}${text(v.t.text,x+v.x+16,y+v.y+39,compact?29:30,'#7b8087')}</g>`;
   const ids=[...new Set([...Object.keys(a.items),...Object.keys(b.items)])];
   for(const id of ids){
     const src=a.items[id],dst=b.items[id],v=dst||src;
@@ -106,6 +109,25 @@ function bubble(label,x,y,w=220) {
 function illustration(s,p) {
   const art=s.art||{},q=ease(p),ac=art.color||'#315eaf';
   let out=`<ellipse cx="280" cy="365" rx="235" ry="49" fill="#eae6db"/>`;
+  if(s.visual==='painting'||(s.visual==='timeline'&&art.picture==='painting')){
+    // Authored contrast: the child doing the painting vs. the finished picture.
+    // The small time axis retains simultaneity/result information from the original diagram.
+    const result=art.phase==='result',x=result?175:285,y=112,w=result?260:205,h=result?196:172;
+    out=rect(22,30,516,350,'#eee8da',30)+`<ellipse cx="280" cy="371" rx="235" ry="24" fill="#ded6c4"/>`;
+    if(result)out+=`<path d="M${x+35} ${y}L${x+w/2} ${y-39}L${x+w-35} ${y}" fill="none" stroke="#8e826c" stroke-width="3"/>`;
+    else out+=`<path d="M${x+30} ${y+h-5}L${x+3} 362M${x+w-30} ${y+h-5}L${x+w-3} 362M${x-12} ${y+h+12}H${x+w+12}" stroke="#aa8053" stroke-width="9" stroke-linecap="round"/>`;
+    out+=rect(x-9,y-9,w+18,h+18,'#bf996d',9)+rect(x,y,w,h,'#fffdf8',3);
+    out+=`<circle cx="${x+w*.73}" cy="${y+h*.25}" r="${h*.13}" fill="#e9bc65"/><path d="M${x+7} ${y+h-9}L${x+w*.37} ${y+h*.42}L${x+w*.61} ${y+h*.77}L${x+w*.77} ${y+h*.56}L${x+w-7} ${y+h-9}Z" fill="#90afa0"/>`;
+    out+=`<path d="M${x+14} ${y+h*.82}Q${x+w*.3} ${y+h*.67} ${x+w*.49} ${y+h*.85}T${x+w-14} ${y+h*.8}" fill="none" stroke="#598879" stroke-width="7" stroke-linecap="round" stroke-dasharray="${result?500:mix(34,220,q)} 500"/>`;
+    if(!result){
+      out+=person(180,291,1.04,'#c37858',0);
+      out+=`<path d="M198 290Q235 257 272 239" fill="none" stroke="#dca685" stroke-width="12" stroke-linecap="round"/><path d="M267 241L${mix(300,329,q)} ${mix(227,251,q)}" stroke="#8b6743" stroke-width="5" stroke-linecap="round"/><ellipse cx="${mix(301,330,q)}" cy="${mix(226,250,q)}" rx="7" ry="4" fill="#598879"/>`;
+      out+=text('das Kind malt',36,74,25,'#263147','font-weight="700"');
+    }else out+=text('das fertige Bild',42,74,25,'#263147','font-weight="700"');
+    const now=result?470:285;out+=`<path d="M60 418H510" stroke="#b1aa9a" stroke-width="3"/><path d="M110 418H${result?330:mix(220,330,q)}" stroke="${result?'#a64c3f':ac}" stroke-width="9" stroke-linecap="round"/><path d="M${now} 399V430" stroke="#263147" stroke-width="2"/>`+text('jetzt',now,456,20,'#566174','text-anchor="middle"');
+    out+=text(result?'Die Handlung ist schon abgeschlossen.':'Die Handlung läuft gerade.',36,493,23,result?'#a64c3f':ac);
+    return out;
+  }
   if(s.visual==='space') {
     // Floor plane, translucent boundary, reference object, moving referent.
     const mode=art.mode||'goal',relation=art.relation||'in';
@@ -345,12 +367,15 @@ function frame(timeline,seconds,opt={}) {
   body+=paragraph(s.title,compact?38:70,compact?150:181,compact?29:46,compact?42:50,'#263147');
   if(compact) {
     body+=`<g transform="translate(162 178) scale(1.02)">${illustration(s,p)}</g>`;
-    body+=tokens(s,p,38,735,824,true);
-    body+=paragraph(s.takeaway||'',38,1090,62,24);
+    const a=tokenLayout(s.from,824,29),b=tokenLayout(s.to,824,29);
+    const comparisonHeight=JSON.stringify(s.from)===JSON.stringify(s.to)?a.height:Math.max(165,a.height+52)+b.height;
+    const tokenTop=Math.min(735,1040-comparisonHeight);
+    body+=tokens(s,p,38,tokenTop,824,true);
+    body+=`<g opacity="${opt.stage!=null||state.cue.beat===s.beats.length-1?1:0}">${paragraph(s.takeaway||'',38,1090,62,24)}</g>`;
   } else {
     body+=`<g transform="translate(52 238) scale(1.02)">${illustration(s,p)}</g>`;
     body+=tokens(s,p,700,335,830,false);
-    body+=paragraph(s.takeaway||'',700,768,57,26);
+    body+=`<g opacity="${opt.stage!=null||state.cue.beat===s.beats.length-1?1:0}">${paragraph(s.takeaway||'',700,768,57,26)}</g>`;
   }
   body+=`<path d="M${compact?38:70} ${H-40}H${W-(compact?38:70)}" stroke="#d8d2c7" stroke-width="2"/>`;
   body+=`<path d="M${compact?38:70} ${H-40}H${(compact?38:70)+(W-(compact?76:140))*state.time/timeline.duration}" stroke="${ac}" stroke-width="3"/>`;
@@ -364,7 +389,8 @@ function stamp(seconds,separator='.') {
 }
 function vtt(timeline,opt={}){const start=opt.start??0,end=opt.end??timeline.duration;return 'WEBVTT\n\n'+timeline.cues.filter(c=>c.end>start&&c.start<end).map((c,i)=>`${i+1}\n${stamp(Math.max(c.start,start)-start)} --> ${stamp(Math.min(c.end,end)-start)}\n${c.say}\n`).join('\n');}
 function manifest(timeline){return {version:1,id:timeline.story.id,title:timeline.story.title,duration:timeline.duration,language:'de',audio:'One local audio file per cue; filenames must match the cue id.',cues:timeline.cues.map(c=>({...c,audio:c.id+'.mp3'}))};}
-const API={validate,compile,at,frame,manifest,vtt,stamp,visuals:VISUALS};
+function recordingMatches(cue,plan){const entries=Array.isArray(plan?.cues)?plan.cues.filter(c=>c.id===cue.id):[];return entries.length===1&&entries[0].say===cue.say;}
+const API={validate,compile,at,frame,manifest,recordingMatches,vtt,stamp,visuals:VISUALS};
 if(typeof module!=='undefined'&&module.exports)module.exports=API;
 root.GRAM_FILM=API;
 if(!root.document)return;
@@ -375,13 +401,15 @@ function download(name,data,type='application/json') {
   const blob=new Blob([data],{type}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 function mount(host,story,opt={}) {
-  validate(story);const disposables=[],clips=new Map(),durations={};let timeline=compile(story),time=0,playing=false,raf=0,clock=0,offset=0,rate=1,audio=null,audioId='',lastCue='',disposed=false;
+  validate(story);const disposables=[],clips=new Map(),durations={};let timeline=compile(story),recordingPlan=null,time=0,playing=false,raf=0,clock=0,offset=0,rate=1,audio=null,audioId='',lastCue='',disposed=false;
   const media=root.matchMedia?.('(prefers-reduced-motion: reduce)'),compact=root.matchMedia?.('(max-width: 640px)');
   let reduce=!!media?.matches;
   host.classList.add('gf');host.lang='de';
   host.innerHTML=`<header class="gf-head"><div><p class="gf-eyebrow">${E(story.level)} · Animiertes Lernstudio</p><h2>${E(story.title)}</h2></div>${opt.close?'<button type="button" data-close aria-label="Lernstudio schließen">✕</button>':''}</header><div class="gf-view"></div><div class="gf-caption" aria-live="off"></div><div class="gf-transport"><button type="button" data-prev aria-label="Vorherige Erklärung">←</button><button type="button" class="gf-primary" data-play>Abspielen</button><button type="button" data-next aria-label="Nächste Erklärung">→</button><output class="gf-time"></output><label class="gf-speed">Tempo<select aria-label="Wiedergabetempo"><option value=".75">0,75×</option><option value="1" selected>1×</option><option value="1.25">1,25×</option><option value="1.5">1,5×</option></select></label></div><label class="gf-scrub">Filmposition<input type="range" min="0" max="${timeline.duration}" step=".05" value="0" aria-label="Filmposition"></label><div class="gf-bottom"><nav class="gf-chapters" aria-label="Szenen"></nav><section class="gf-explore"><h3>Jetzt du.</h3><div class="gf-question"></div></section></div><details class="gf-production"><summary>Stimme & Video</summary><p>Sprachaufnahmen bleiben auf deinem Gerät. Für jeden Sprechabschnitt ist eine Datei vorgesehen. Dateiname und Text stehen im Sprechplan. Die Aufnahme bestimmt die Dauer des Abschnitts.</p><label>Sprachdateien hinzufügen<input type="file" accept="audio/*" multiple data-audio></label><button type="button" data-script>Sprechplan (.json)</button><button type="button" data-subs>Untertitel (.vtt)</button><button type="button" data-frame>Bild (.svg)</button><p>MP4-Export: mit dem lokalen Filmwerkzeug. Keine Aufnahme wird hochgeladen.</p></details><p class="gf-status" role="status"></p>`;
   const $=s=>host.querySelector(s),view=$('.gf-view'),caption=$('.gf-caption'),range=$('input[type=range]'),status=$('.gf-status');
   $('.gf-production').hidden=!opt.production;
+  $('[data-audio]').accept='audio/*,.json';
+  const recordingHint=document.createElement('p');recordingHint.textContent='Wähle die MP3-Dateien zusammen mit ihrem JSON-Sprechplan. Dateinamen und genauer Text müssen zum aktuellen Film passen.';$('.gf-production').append(recordingHint);
   if(opt.onExercises){const button=document.createElement('button');button.type='button';button.textContent='Mit Aufgaben festigen';button.className='gf-to-exercises';button.onclick=opt.onExercises;$('.gf-explore').append(button);}
   $('.gf-chapters').innerHTML=story.scenes.map((s,i)=>`<button type="button" data-scene="${i}"><span>${String(i+1).padStart(2,'0')}</span>${E(s.title)}</button>`).join('');
   const theme=()=>({compact:!!compact?.matches,accent:opt.accent,brand:opt.brand});
@@ -390,13 +418,15 @@ function mount(host,story,opt={}) {
   function stop(){playing=false;cancelAnimationFrame(raf);clearAudio();$('[data-play]').textContent='Abspielen';}
   function question(s) {
     const area=$('.gf-question');area.replaceChildren();
-    if(s.variants?.length){
+    const canExplore=JSON.stringify(s.from)!==JSON.stringify(s.to)||s.beats.some(b=>b.stage!==s.beats[0].stage);
+    const variants=s.variants?.length?s.variants:!s.matrix&&canExplore?[{label:'Beispiel untersuchen',takeaway:s.takeaway}]:[];
+    if(variants.length){
       const group=document.createElement('div');group.className='gf-options';
-      const hint=document.createElement('p');hint.textContent='Wähle eine Perspektive. Mit dem Regler steuerst du die Veränderung selbst.';area.append(hint,group);
+      const hint=document.createElement('p');hint.textContent=s.variants?.length?'Wähle eine Perspektive. Mit dem Regler steuerst du die Veränderung selbst.':'Bewege den Regler. Vergleiche den Ausgangspunkt mit dem Ergebnis, in deinem Tempo.';area.append(hint,group);
       const label=document.createElement('label');label.textContent='Veränderung untersuchen';const slider=document.createElement('input');slider.type='range';slider.min=0;slider.max=1;slider.step=.01;slider.value=0;slider.setAttribute('aria-label','Veränderung untersuchen');label.append(slider);area.append(label);
-      let variant=s.variants[0];
+      let variant=variants[0];
       const show=()=>{stop();view.innerHTML=frame(timeline,time,{...theme(),scene:{...s,...variant},stage:+slider.value});caption.textContent=variant.takeaway;};
-      s.variants.forEach((v,i)=>{const button=document.createElement('button');button.type='button';button.textContent=v.label;button.setAttribute('aria-pressed',String(i===0));button.onclick=()=>{variant=v;slider.value=0;group.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));show();};group.append(button);});slider.oninput=show;
+      if(s.variants?.length)variants.forEach((v,i)=>{const button=document.createElement('button');button.type='button';button.textContent=v.label;button.setAttribute('aria-pressed',String(i===0));button.onclick=()=>{variant=v;slider.value=0;group.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));show();};group.append(button);});slider.oninput=show;
     }
     if(s.matrix){
       const box=document.createElement('div');box.className='gf-matrix';const selections=[];
@@ -411,7 +441,7 @@ function mount(host,story,opt={}) {
         output.textContent=cell.phrase+' · Adjektivendung -'+cell.ending;view.innerHTML=frame(timeline,time,{...theme(),scene:override,stage:1});caption.textContent=override.takeaway;
       };selections.forEach(e=>e.onchange=show);output.textContent=s.matrix.cells[0].phrase;
     }
-    if(!s.quiz){if(!s.variants?.length&&!s.matrix)area.innerHTML='<p>Beobachte die Veränderung. Springe dann zur nächsten Erklärung.</p>';return;}
+    if(!s.quiz){if(!variants.length&&!s.matrix)area.innerHTML='<p>Beobachte das Beispiel. Gehe dann zur nächsten Erklärung.</p>';return;}
     const p=document.createElement('p');p.textContent=s.quiz.prompt;area.append(p);
     const options=document.createElement('div');options.className='gf-options';
     const feedback=document.createElement('p');feedback.className='gf-feedback';feedback.setAttribute('role','status');
@@ -458,9 +488,17 @@ function mount(host,story,opt={}) {
   on($('[data-subs]'),'click',()=>download(story.id+'.vtt',vtt(timeline),'text/vtt'));
   on($('[data-frame]'),'click',()=>download(story.id+'-'+Math.round(time)+'.svg',frame(timeline,time,theme()),'image/svg+xml'));
   on($('[data-audio]'),'change',async e=>{
-    stop();const keys=new Set(timeline.cues.map(c=>c.id)),accepted=[],rejected=[];
-    for(const file of e.target.files){
+    stop();const keys=new Map(timeline.cues.map(c=>[c.id,c])),accepted=[],rejected=[],files=Array.from(e.target.files);
+    const plans=files.filter(f=>/\.json$/i.test(f.name));
+    if(plans.length>1){status.textContent='Bitte nur einen Sprechplan zusammen mit den Sprachdateien auswählen.';return;}
+    if(plans.length){
+      try{const candidate=JSON.parse(await plans[0].text());if(!Array.isArray(candidate.cues)||timeline.cues.some(c=>!recordingMatches(c,candidate)))throw Error('Text mismatch');recordingPlan=candidate;}
+      catch{status.textContent='Der Sprechplan passt nicht zum aktuellen Film. Bitte den genauen Text und die Abschnittsnummern prüfen.';return;}
+    }
+    if(disposed)return;
+    for(const file of files.filter(f=>!/\.json$/i.test(f.name))){
       const id=file.name.replace(/\.[^.]+$/,'');if(!keys.has(id)){rejected.push(file.name);continue;}
+      if(!recordingMatches(keys.get(id),recordingPlan)){rejected.push(file.name+' (passender Sprechplan fehlt)');continue;}
       const url=URL.createObjectURL(file),probe=new Audio();probe.preload='metadata';
       try{
         const duration=await new Promise((resolve,reject)=>{const timeout=setTimeout(()=>reject(Error('Audio metadata timeout')),5000);probe.onloadedmetadata=()=>{clearTimeout(timeout);Number.isFinite(probe.duration)&&probe.duration>0?resolve(probe.duration):reject(Error('Invalid duration'));};probe.onerror=()=>{clearTimeout(timeout);reject(Error('Unreadable audio'));};probe.src=url;});
