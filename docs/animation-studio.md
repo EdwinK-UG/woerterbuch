@@ -6,7 +6,7 @@ This replaces picture-type guessing with explicitly authored teaching films. The
 
 All 114 B2/C1 grammar chapters have authored films: 514 scenes and 1,542 narrated beats. The initial eight detailed films cover B2 chapters 88, 91, 99, 109, 144, 148 and C1 chapters 482, 487. The remaining 106 films extend the same renderer to all other B2/C1 chapters. The protected complete lesson archive, rather than an old authoring directory, is the release source of truth.
 
-The November narration pass preserves every scene ID and beat count. It refines 209 spoken beats in 81 chapters, preserving the other 1,333 texts exactly. Read `docs/film-narration.md` before recording. Historical scripts in `.local/animation-scripts/` may predate these revisions; rebuilding from those drafts without the narration edits would restore old text.
+The full November narration pass preserves every scene ID and beat count. All 1,542 lines were reviewed: 1,392 rewritten and 150 kept, for 151,689 characters. The complete `2026-11-07-narration-full/complete-lessons` archive was released as protected lesson function version 11 on 8 November. Its exact cue IDs and texts are now a recording contract: change narration only together with its matching re-recording. Historical scripts in `.local/animation-scripts/` and the earlier 209-line pass predate this release; rebuilding from those drafts would restore old text.
 
 Seven picture families were added to the renderer for concepts the first nine could not show honestly: `slots` (topological sentence fields with configurable bracket pillars), `timeline` (events, span, now-marker, relation arrow), `scale` (an ordered gauge, e.g. certainty or degree), `link` (two propositions and their logical relation: cause, result, condition, concession, purpose, means, time, contrast, alternative, addition), `group` (authored items sorted into authored groups), `imagine` (reality card vs. thought cloud for Konjunktiv II) and `route` (to / at / from / along / through / around a room, surface, water, person, city or river). Like the others, they draw only authored data.
 
@@ -38,6 +38,14 @@ The current films each use three narrated beats per scene. The renderer also sup
 Make recordings with the voice service of your choice, then import the audio files into the studio together with their matching JSON speaking plan. A filename alone cannot establish that a recording still matches the script. Each clip's measured duration replaces the corresponding planned duration. During that cue, the audio element's `currentTime` is the playback clock. The visible animation pauses with the recording and seeks through the same timeline. The files remain local; the application sends no audio or text to ElevenLabs and spends no API credits.
 
 This provides cue-level synchronisation. It does not perform word-level forced alignment or lip sync. A voice actor should record one cue per file and avoid long silence at the start. Re-export the speaking plan and subtitles after loading the final voice files, since the total length changes.
+
+## Screen layout and interactions
+
+The lesson player uses `frame(..., {player:true})`, a compact screen composition with the same authored illustrations and examples. It removes duplicated video headings, brings captions directly above the picture, and wraps long example cards. The ordinary `frame()` API and its landscape/portrait export compositions remain unchanged.
+
+A scene picker replaces the always-expanded contents list. The full list remains available under “Alle Szenen”. “Ausprobieren” pauses playback and places the perspective choices, transformation slider or adjective matrix directly with the picture. Entering the activity aligns that workspace once when necessary; slider input never scrolls the page. The selected perspective survives a responsive redraw. “Zurück zum Film” restores the exact recorded caption and playback controls without changing the cue or its audio identity.
+
+The inline heading is explicitly static so the site's general sticky-header rule cannot pull it over the navigation. A modal heading stays within its own dialog scroll area. No lesson source, beat text, ID, duration, audio manifest, Worker route or enrolment rule is modified by these layout changes. Keep the compact composition out of the video exporter unless a separate export redesign is requested.
 
 ## MP4 export
 

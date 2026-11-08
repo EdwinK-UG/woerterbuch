@@ -96,6 +96,36 @@ function tokens(s,p,x,y,width,compact) {
   }
   return out;
 }
+// Screen-only token cards wrap long examples instead of shrinking the words or
+// letting a sentence run outside its card. Exported video frames are unchanged.
+function playerTokenLayout(list,width){
+  let x=0,y=0,row=0;const items={};
+  for(const t of list||[]){
+    const w=Math.min(width,Math.max(70,[...t.text].length*30*.56+32));
+    const content=lines(t.text,Math.max(3,Math.floor((w-20)/16.8))),h=Math.max(62,22+content.length*40);
+    const labels=t.label?lines(t.label,Math.max(8,Math.floor(w/10))):[];
+    if(x+w>width&&x){y+=row+20;x=0;row=0;}
+    items[t.id]={x,y,w,h,content,labels,t};row=Math.max(row,h+labels.length*25);x+=w+12;
+  }
+  return {items,height:y+row};
+}
+function playerTokens(s,p,x,y,width){
+  const a=playerTokenLayout(s.from,width),b=playerTokenLayout(s.to,width),same=JSON.stringify(s.from)===JSON.stringify(s.to);
+  const gap=Math.max(140,a.height+40),q=ease(p);
+  const card=(v,px,py,opacity=1,ghost=false,w=v.w,h=v.h)=>{
+    const color=ghost?'#7b8087':COLORS[v.t.role||'neutral'];
+    return `<g opacity="${opacity}" transform="translate(${px} ${py})">${rect(0,0,w,h,ghost?'#e9e7e1':'#fffdf8',14,ghost?'':`stroke="${color}" stroke-width="2"`)}${v.content.map((l,i)=>text(l,16,39+i*40,30,color,'font-weight="600"')).join('')}${!ghost?v.labels.map((l,i)=>text(l,4,h+25+i*25,18,color)).join(''):''}</g>`;
+  };
+  let out=text(s.fromLabel||'BEISPIEL',x,y-25,18,'#657186','letter-spacing="2" font-weight="700"');
+  if(same)return out+Object.values(a.items).map(v=>card(v,x+v.x,y+v.y)).join('');
+  out+=`<g opacity="${clamp(p*2)}">${text(s.toLabel||'NEUE PERSPEKTIVE',x,y+gap-25,18,'#657186','letter-spacing="2" font-weight="700"')}</g>`;
+  for(const v of Object.values(a.items))out+=card(v,x+v.x,y+v.y,clamp(p)*.68,true);
+  for(const id of new Set([...Object.keys(a.items),...Object.keys(b.items)])){
+    const src=a.items[id],dst=b.items[id],v=p>.55&&dst?dst:src||dst;
+    out+=card(v,mix(x+(src||dst).x,x+(dst||src).x,q),mix(y+(src||dst).y,y+gap+(dst||src).y,q),src&&dst?1:dst?clamp(p*2):1-clamp(p*2),false,mix((src||dst).w,(dst||src).w,q),mix((src||dst).h,(dst||src).h,q));
+  }
+  return out;
+}
 function person(x,y,scale,color='#315eaf',pose=0) {
   const leg=Math.sin(pose)*12;
   return `<g transform="translate(${x} ${y}) scale(${scale})"><ellipse cx="0" cy="75" rx="29" ry="7" fill="#1d2b40" opacity=".08"/><path d="M-12 24L${-18-leg} 71M12 24L${20+leg} 71" fill="none" stroke="#263147" stroke-width="12" stroke-linecap="round"/><path d="M-22 1Q0-15 22 1L17 31H-17Z" fill="${color}"/><path d="M-18 1L${-39-leg} 22M18 1L${35+leg} -8" fill="none" stroke="#c48f70" stroke-width="10" stroke-linecap="round"/><rect x="-7" y="-25" width="14" height="20" rx="6" fill="#c48f70"/><circle cy="-43" r="24" fill="#dca685"/><path d="M-24-44Q-22-77 7-68Q28-63 25-40Q10-53-2-56Q-11-44-24-44" fill="#263147"/><circle cx="8" cy="-43" r="2.2" fill="#263147"/><path d="M5-32q8 5 12-2" fill="none" stroke="#805446" stroke-width="2" stroke-linecap="round"/></g>`;
@@ -359,6 +389,18 @@ function illustration(s,p) {
 }
 function frame(timeline,seconds,opt={}) {
   const state=at(timeline,seconds),s=opt.scene||state.scene,p=opt.stage??state.stage, compact=!!opt.compact;
+  // The lesson player has its own HTML heading and captions. Keep the artwork
+  // close to its example there; the original video/export composition stays intact.
+  if(opt.player){
+    const W=compact?900:1500,tw=compact?824:800;
+    const a=playerTokenLayout(s.from,tw),b=playerTokenLayout(s.to,tw);
+    const same=JSON.stringify(s.from)===JSON.stringify(s.to);
+    const th=same?a.height:Math.max(140,a.height+40)+b.height;
+    const y=compact?455:80,H=compact?y+th+36:Math.max(470,y+th)+32;
+    const art=`<g transform="translate(${compact?125:12} 0)">${illustration(s,p)}</g>`;
+    const accessible=s.alt+' Ausgangspunkt: '+(s.from||[]).map(t=>t.text).join(' ')+' Ergebnis: '+(s.to||[]).map(t=>t.text).join(' ');
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${E(accessible)}" font-family="Arial, Helvetica, sans-serif"><title>${E(s.title)}</title><desc>${E(accessible)}</desc>${art}${playerTokens(s,p,compact?38:680,y,tw)}</svg>`;
+  }
   const W=compact?900:1600,H=compact?1190:900,ac=/^#[0-9a-f]{6}$/i.test(opt.accent||'')?opt.accent:'#315eaf';
   let body=rect(0,0,W,H,'#f5f2ea',0);
   body+=`<circle cx="${compact?765:1390}" cy="${compact?254:155}" r="${compact?105:150}" fill="#e7e1d5" opacity=".35"/>`;
@@ -404,12 +446,12 @@ function mount(host,story,opt={}) {
   validate(story);const disposables=[],clips=new Map(),durations={};
   // opt.audio: {cueId: {url, seconds, say}} from a recording manifest. A clip is used only while its text still matches the cue.
   for(const c of compile(story).cues){const a=opt.audio?.[c.id];if(a&&typeof a.url==='string'&&a.say===c.say&&a.seconds>0){clips.set(c.id,{url:a.url,given:true});durations[c.id]=a.seconds;}}
-  let timeline=compile(story,durations),recordingPlan=null,time=0,playing=false,raf=0,clock=0,offset=0,rate=1,audio=null,audioId='',lastCue='',disposed=false;
+  let timeline=compile(story,durations),recordingPlan=null,time=0,playing=false,raf=0,clock=0,offset=0,rate=1,audio=null,audioId='',lastCue='',disposed=false,exploration=null,exploreScene=null;
   const media=root.matchMedia?.('(prefers-reduced-motion: reduce)'),compact=root.matchMedia?.('(max-width: 640px)');
   let reduce=!!media?.matches;
   host.classList.add('gf');host.lang='de';
-  host.innerHTML=`<header class="gf-head"><div><p class="gf-eyebrow">${E(story.level)} · Animiertes Lernstudio</p><h2>${E(story.title)}</h2></div>${opt.close?'<button type="button" data-close aria-label="Lernstudio schließen">✕</button>':''}</header><div class="gf-view"></div><div class="gf-caption" aria-live="off"></div><div class="gf-transport"><button type="button" data-prev aria-label="Vorherige Erklärung">←</button><button type="button" class="gf-primary" data-play>Abspielen</button><button type="button" data-next aria-label="Nächste Erklärung">→</button><output class="gf-time"></output><label class="gf-speed">Tempo<select aria-label="Wiedergabetempo"><option value=".75">0,75×</option><option value="1" selected>1×</option><option value="1.25">1,25×</option><option value="1.5">1,5×</option></select></label></div><label class="gf-scrub">Filmposition<input type="range" min="0" max="${timeline.duration}" step=".05" value="0" aria-label="Filmposition"></label><div class="gf-bottom"><nav class="gf-chapters" aria-label="Szenen"></nav><section class="gf-explore"><h3>Jetzt du.</h3><div class="gf-question"></div></section></div><details class="gf-production"><summary>Stimme & Video</summary><p>Sprachaufnahmen bleiben auf deinem Gerät. Für jeden Sprechabschnitt ist eine Datei vorgesehen. Dateiname und Text stehen im Sprechplan. Die Aufnahme bestimmt die Dauer des Abschnitts.</p><label>Sprachdateien hinzufügen<input type="file" accept="audio/*" multiple data-audio></label><button type="button" data-script>Sprechplan (.json)</button><button type="button" data-subs>Untertitel (.vtt)</button><button type="button" data-frame>Bild (.svg)</button><p>MP4-Export: mit dem lokalen Filmwerkzeug. Keine Aufnahme wird hochgeladen.</p></details><p class="gf-status" role="status"></p>`;
-  const $=s=>host.querySelector(s),view=$('.gf-view'),caption=$('.gf-caption'),range=$('input[type=range]'),status=$('.gf-status');
+  host.innerHTML=`<header class="gf-head"><div><p class="gf-eyebrow">${E(opt.brand||'Deutschklinik')} · ${E(story.level)} · Lernstudio</p><h2>${E(story.title)}</h2></div>${opt.close?'<button type="button" data-close aria-label="Lernstudio schließen">✕</button>':''}</header><div class="gf-stage"><div class="gf-scene-bar"><label class="gf-scene-picker"><span>Szene</span><select data-scene-select aria-label="Szene auswählen">${story.scenes.map((s,i)=>`<option value="${i}">${String(i+1).padStart(2,'0')} · ${E(s.title)}</option>`).join('')}</select></label><button type="button" data-explore-toggle aria-pressed="false">Ausprobieren</button></div><div class="gf-workspace"><div class="gf-manipulation" hidden></div><div class="gf-caption" aria-live="off"></div><div class="gf-view"></div></div><div class="gf-playback"><div class="gf-transport"><button type="button" data-prev aria-label="Vorherige Erklärung">←</button><button type="button" class="gf-primary" data-play>Abspielen</button><button type="button" data-next aria-label="Nächste Erklärung">→</button><output class="gf-time"></output><label class="gf-speed">Tempo<select aria-label="Wiedergabetempo"><option value=".75">0,75×</option><option value="1" selected>1×</option><option value="1.25">1,25×</option><option value="1.5">1,5×</option></select></label></div><label class="gf-scrub"><span>Filmposition</span><input type="range" min="0" max="${timeline.duration}" step=".05" value="0" aria-label="Filmposition"></label></div></div><div class="gf-bottom"><section class="gf-explore"><h3>Kurz prüfen.</h3><div class="gf-question"></div></section><details class="gf-scene-list"><summary>Alle ${story.scenes.length} Szenen</summary><nav class="gf-chapters" aria-label="Szenen"></nav></details></div><details class="gf-production"><summary>Stimme & Video</summary><p>Sprachaufnahmen bleiben auf deinem Gerät. Für jeden Sprechabschnitt ist eine Datei vorgesehen. Dateiname und Text stehen im Sprechplan. Die Aufnahme bestimmt die Dauer des Abschnitts.</p><label>Sprachdateien hinzufügen<input type="file" accept="audio/*" multiple data-audio></label><button type="button" data-script>Sprechplan (.json)</button><button type="button" data-subs>Untertitel (.vtt)</button><button type="button" data-frame>Bild (.svg)</button><p>MP4-Export: mit dem lokalen Filmwerkzeug. Keine Aufnahme wird hochgeladen.</p></details><p class="gf-status" role="status"></p>`;
+  const $=s=>host.querySelector(s),view=$('.gf-view'),caption=$('.gf-caption'),range=$('[aria-label="Filmposition"]'),status=$('.gf-status');
   $('.gf-production').hidden=!opt.production;
   $('[data-audio]').accept='audio/*,.json';
   const recordingHint=document.createElement('p');recordingHint.textContent='Wähle die MP3-Dateien zusammen mit ihrem JSON-Sprechplan. Dateinamen und genauer Text müssen zum aktuellen Film passen.';$('.gf-production').append(recordingHint);
@@ -423,14 +465,18 @@ function mount(host,story,opt={}) {
   function stop(){playing=false;cancelAnimationFrame(raf);clearAudio();$('[data-play]').textContent='Abspielen';}
   function question(s) {
     const area=$('.gf-question');area.replaceChildren();
+    $('.gf-explore').hidden=!s.quiz&&!opt.onExercises;
+    $('.gf-explore h3').hidden=!s.quiz;
+    const tools=$('.gf-manipulation');tools.replaceChildren();exploreScene=null;
     const canExplore=JSON.stringify(s.from)!==JSON.stringify(s.to)||s.beats.some(b=>b.stage!==s.beats[0].stage);
     const variants=s.variants?.length?s.variants:!s.matrix&&canExplore?[{label:'Beispiel untersuchen',takeaway:s.takeaway}]:[];
     if(variants.length){
       const group=document.createElement('div');group.className='gf-options';
-      const hint=document.createElement('p');hint.textContent=s.variants?.length?'Wähle eine Perspektive. Mit dem Regler steuerst du die Veränderung selbst.':'Bewege den Regler. Vergleiche den Ausgangspunkt mit dem Ergebnis, in deinem Tempo.';area.append(hint,group);
-      const label=document.createElement('label');label.textContent='Veränderung untersuchen';const slider=document.createElement('input');slider.type='range';slider.min=0;slider.max=1;slider.step=.01;slider.value=0;slider.setAttribute('aria-label','Veränderung untersuchen');label.append(slider);area.append(label);
+      const hint=document.createElement('p');hint.className='gf-hint';hint.textContent=s.variants?.length?'Wähle eine Perspektive. Bewege dann den Regler.':'Bewege den Regler und beobachte das Beispiel.';tools.append(hint,group);
+      const label=document.createElement('label');label.className='gf-change';label.textContent='Veränderung untersuchen';const slider=document.createElement('input');slider.type='range';slider.min=0;slider.max=1;slider.step=.01;slider.value=0;slider.setAttribute('aria-label','Veränderung untersuchen');label.append(slider);tools.append(label);
       let variant=variants[0];
-      const show=()=>{stop();view.innerHTML=frame(timeline,time,{...theme(),scene:{...s,...variant},stage:+slider.value});caption.textContent=variant.takeaway;};
+      const show=()=>{stop();exploration={scene:at(timeline,time).cue.scene,override:{...s,...variant},stage:+slider.value,caption:variant.takeaway||s.takeaway||'',label:variant.label};draw();};
+      exploreScene=show;
       if(s.variants?.length)variants.forEach((v,i)=>{const button=document.createElement('button');button.type='button';button.textContent=v.label;button.setAttribute('aria-pressed',String(i===0));button.onclick=()=>{variant=v;slider.value=0;group.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));show();};group.append(button);});slider.oninput=show;
     }
     if(s.matrix){
@@ -439,13 +485,15 @@ function mount(host,story,opt={}) {
         const label=document.createElement('label');label.textContent=name;const select=document.createElement('select');select.setAttribute('aria-label',name);
         values.forEach((v,i)=>{const o=document.createElement('option');o.value=i;o.textContent=v;select.append(o);});label.append(select);box.append(label);selections.push(select);
       }
-      const output=document.createElement('p');output.setAttribute('role','status');box.append(output);area.append(box);
+      const output=document.createElement('p');output.setAttribute('role','status');box.append(output);tools.append(box);
       const show=()=>{stop();const [mode,c,g]=selections.map(e=>+e.value),cell=s.matrix.cells.find(x=>x.mode===mode&&x.c===c&&x.g===g);
         const carrier=!cell.article?(c===3&&g<2?2:1):/^(ein|kein|mein)$/.test(cell.article)?1:0;
         const override={...s,alt:s.matrix.cases[c]+' · '+s.matrix.genders[g]+': '+cell.phrase,from:[{id:'phrase',text:cell.phrase,role:'ending'}],to:[{id:'phrase',text:cell.phrase,role:'ending'}],fromLabel:s.matrix.cases[c]+' · '+s.matrix.genders[g],toLabel:'ENDUNG -'+cell.ending.toUpperCase(),art:{items:[cell.article||'ohne Artikel','alt',cell.noun],endings:[cell.article?'Begleiter':'—','-'+cell.ending,carrier===2?'Genitiv-s':'Nomen'],carrier},takeaway:'Im gewählten Muster lautet die Form: '+cell.phrase+'.'};
-        output.textContent=cell.phrase+' · Adjektivendung -'+cell.ending;view.innerHTML=frame(timeline,time,{...theme(),scene:override,stage:1});caption.textContent=override.takeaway;
+        output.textContent=cell.phrase+' · Adjektivendung -'+cell.ending;exploration={scene:at(timeline,time).cue.scene,override,stage:1,caption:override.takeaway,label:'Endungen vergleichen'};draw();
       };selections.forEach(e=>e.onchange=show);output.textContent=s.matrix.cells[0].phrase;
+      exploreScene=show;
     }
+    $('[data-explore-toggle]').disabled=!exploreScene;
     if(!s.quiz){if(!variants.length&&!s.matrix)area.innerHTML='<p>Beobachte das Beispiel. Gehe dann zur nächsten Erklärung.</p>';return;}
     const p=document.createElement('p');p.textContent=s.quiz.prompt;area.append(p);
     const options=document.createElement('div');options.className='gf-options';
@@ -454,19 +502,29 @@ function mount(host,story,opt={}) {
     const optionsInOrder=[...s.quiz.options.slice(shift),...s.quiz.options.slice(0,shift)];
     optionsInOrder.forEach(o=>{const b=document.createElement('button');b.type='button';b.textContent=o.text;b.onclick=()=>{
       stop();options.querySelectorAll('button').forEach(x=>{x.removeAttribute('data-correct');x.setAttribute('aria-pressed','false');});b.setAttribute('data-correct',String(!!o.correct));b.setAttribute('aria-pressed','true');feedback.textContent=(o.correct?'Richtig. ':'Schau noch einmal hin. ')+o.feedback;
-      const t=timeline.cues.filter(c=>c.scene===at(timeline,time).cue.scene).at(-1);time=t.start+Math.min(3,t.seconds);draw();
+      const t=timeline.cues.filter(c=>c.scene===at(timeline,time).cue.scene).at(-1);time=t.start+Math.min(3,t.seconds);exploration=null;draw();
     };options.append(b);});area.append(options,feedback);
   }
   function draw(){
     const state=at(timeline,time),cue=state.cue;
-    view.innerHTML=frame(timeline,time,{...theme(),...(reduce?{stage:cue.stage}:{})});
-    caption.textContent=cue.say;range.value=String(time);range.max=String(timeline.duration);range.setAttribute('aria-valuetext',stamp(time).slice(3,8)+' von '+stamp(timeline.duration).slice(3,8));
+    const manual=exploration?.scene===cue.scene?exploration:null;
+    view.innerHTML=frame(timeline,time,{...theme(),player:true,...(manual?{scene:manual.override,stage:manual.stage}:reduce?{stage:cue.stage}:{})});
+    caption.textContent=manual?manual.caption:cue.say;range.value=String(time);range.max=String(timeline.duration);range.setAttribute('aria-valuetext',stamp(time).slice(3,8)+' von '+stamp(timeline.duration).slice(3,8));
+    host.classList.toggle('gf-exploring',!!manual);$('.gf-manipulation').hidden=!manual;$('.gf-playback').hidden=!!manual;
+    $('[data-explore-toggle]').textContent=manual?'Zurück zum Film':'Ausprobieren';$('[data-explore-toggle]').setAttribute('aria-pressed',String(!!manual));
+    $('[data-scene-select]').value=String(cue.scene);
     $('.gf-time').textContent=stamp(time).slice(3,8)+' / '+stamp(timeline.duration).slice(3,8);
     if(lastCue!==String(cue.scene)){
       lastCue=String(cue.scene);$('.gf-chapters').querySelectorAll('button').forEach(b=>b.setAttribute('aria-current',b.dataset.scene===lastCue?'step':'false'));question(state.scene);
     }
   }
-  function seek(t){stop();time=Math.max(0,Math.min(timeline.duration,t));draw();}
+  function seek(t){stop();exploration=null;time=Math.max(0,Math.min(timeline.duration,t));draw();}
+  function revealWorkspace(){
+    const stage=$('.gf-stage'),tools=$('.gf-scene-bar').getBoundingClientRect(),area=$('.gf-workspace').getBoundingClientRect();
+    const inset=opt.close?$('.gf-head').getBoundingClientRect().height+8:76;
+    // Align once on entering the activity, never while a pointer drags the slider.
+    if(tools.top<inset||area.bottom>root.innerHeight-12){stage.style.scrollMarginTop=inset+'px';stage.scrollIntoView?.({block:'start',inline:'nearest',behavior:'instant'});}
+  }
   function tick(now){
     if(!playing||disposed)return;
     if(!host.isConnected){dispose();return;}
@@ -486,8 +544,10 @@ function mount(host,story,opt={}) {
   on($('[data-prev]'),'click',()=>{const c=at(timeline,time).cue,i=timeline.cues.indexOf(c);seek(timeline.cues[Math.max(0,i-1)].start);});
   on($('[data-next]'),'click',()=>{const c=at(timeline,time).cue,i=timeline.cues.indexOf(c);seek(timeline.cues[Math.min(timeline.cues.length-1,i+1)].start);});
   on(range,'input',()=>seek(+range.value));
+  on($('[data-scene-select]'),'change',e=>seek(timeline.cues.find(c=>c.scene===+e.target.value).start));
+  on($('[data-explore-toggle]'),'click',()=>{if(exploration){exploration=null;draw();}else{exploreScene?.();revealWorkspace();}});
   on($('.gf-chapters'),'click',e=>{const b=e.target.closest('[data-scene]');if(b)seek(timeline.cues.find(c=>c.scene===+b.dataset.scene).start);});
-  on($('select'),'change',e=>{rate=+e.target.value;clock=performance.now();offset=time;if(audio)audio.playbackRate=rate;});
+  on($('.gf-speed select'),'change',e=>{rate=+e.target.value;clock=performance.now();offset=time;if(audio)audio.playbackRate=rate;});
   on(document,'visibilitychange',()=>{if(document.hidden)stop();});
   const resize=()=>draw();compact?.addEventListener('change',resize);disposables.push(()=>compact?.removeEventListener('change',resize));
   const motion=()=>{reduce=!!media.matches;stop();draw();};media?.addEventListener('change',motion);disposables.push(()=>media?.removeEventListener('change',motion));
@@ -512,7 +572,7 @@ function mount(host,story,opt={}) {
         if(disposed){URL.revokeObjectURL(url);continue;}const old=clips.get(id);if(old&&!old.given)URL.revokeObjectURL(old.url);clips.set(id,{url});durations[id]=duration;accepted.push(id);
       }catch{URL.revokeObjectURL(url);rejected.push(file.name);}finally{probe.removeAttribute('src');probe.load();}
     }
-    timeline=compile(story,durations);time=0;lastCue='';draw();status.textContent=accepted.length+' Sprachdatei(en) geladen.'+(rejected.length?' Nicht zugeordnet: '+rejected.join(', '):'');
+    timeline=compile(story,durations);time=0;lastCue='';exploration=null;draw();status.textContent=accepted.length+' Sprachdatei(en) geladen.'+(rejected.length?' Nicht zugeordnet: '+rejected.join(', '):'');
   });
   let observer;
   function dispose(){if(disposed)return;disposed=true;stop();observer?.disconnect();disposables.forEach(f=>f());clips.forEach(c=>{if(!c.given)URL.revokeObjectURL(c.url);});host.replaceChildren();mounted.delete(controller);opt.onDispose?.();}

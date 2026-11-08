@@ -37,7 +37,7 @@ test('an imported recording controls playback time and is revoked on disposal',a
  w.requestAnimationFrame=fn=>{pending.set(++frameId,fn);return frameId;};w.cancelAnimationFrame=id=>pending.delete(id);
  w.Audio=class {constructor(src){this.currentTime=0;this.duration=6;instances.push(this);if(src)this.src=src;}set src(v){this._src=v;setTimeout(()=>this.onloadedmetadata?.(),0);}get src(){return this._src;}play(){return Promise.resolve();}pause(){this.paused=true;}removeAttribute(){this._src='';}load(){}};
  const h=w.document.getElementById('host'),p=w.GRAM_FILM.mount(h,fixture(),{production:true}),input=h.querySelector('[data-audio]');Object.defineProperty(input,'files',{value:[{name:'recording-plan.json',text:async()=>JSON.stringify(Film.manifest(Film.compile(fixture())))},{name:'location--1.mp3'}]});input.dispatchEvent(new w.Event('change'));await new Promise(r=>setTimeout(r,20));
- assert.equal(p.timeline.duration,13);h.querySelector('[data-play]').click();const tick=()=>{const [id,fn]=pending.entries().next().value;pending.delete(id);fn(999999);};tick();instances.at(-1).currentTime=3;tick();assert.equal(+h.querySelector('input[type=range]').value,3,'wall clock must not outrun the recording');
+ assert.equal(p.timeline.duration,13);h.querySelector('[data-play]').click();const tick=()=>{const [id,fn]=pending.entries().next().value;pending.delete(id);fn(999999);};tick();instances.at(-1).currentTime=3;tick();assert.equal(+h.querySelector('[aria-label="Filmposition"]').value,3,'wall clock must not outrun the recording');
  p.dispose();assert.equal(pending.size,0);assert.deepEqual(revoked,['blob:local-voice']);d.window.close();
 });
 test('recordings from a manifest are used only while their text matches, and are not revoked',async()=>{
@@ -77,6 +77,46 @@ test('an ordinary authored scene can be explored without a separate variant or q
  const slider=h.querySelector('[aria-label="Veränderung untersuchen"]');assert.ok(slider);
  const first=h.querySelector('svg').outerHTML;slider.value=1;slider.dispatchEvent(new d.window.Event('input'));assert.notEqual(h.querySelector('svg').outerHTML,first);assert.match(h.querySelector('.gf-caption').textContent,/spatial phrase/);
  p.dispose();d.window.close();
+});
+test('exploration survives a viewport redraw and returns to the exact recorded caption',()=>{
+ const d=dom(),w=d.window,changes=new Map();
+ w.matchMedia=query=>({matches:false,addEventListener:(_,fn)=>changes.set(query,fn),removeEventListener(){}});
+ let alignments=0;w.Element.prototype.scrollIntoView=()=>{alignments++;};
+ const h=w.document.getElementById('host'),f=fixture(),before=JSON.stringify(f),p=w.GRAM_FILM.mount(h,f);
+ const toggle=h.querySelector('[data-explore-toggle]');toggle.click();
+ assert.equal(h.querySelector('.gf-manipulation').hidden,false);
+ assert.equal(h.querySelector('.gf-playback').hidden,true);
+ const slider=h.querySelector('[aria-label="Veränderung untersuchen"]');slider.value=1;slider.dispatchEvent(new w.Event('input'));
+ assert.equal(alignments,1,'align on entry, never move the page while dragging');
+ const svg=h.querySelector('svg').outerHTML,caption=h.querySelector('.gf-caption').textContent;
+ changes.get('(max-width: 640px)')();
+ assert.equal(h.querySelector('svg').outerHTML,svg,'a resize must not replace the chosen perspective');
+ assert.equal(h.querySelector('.gf-caption').textContent,caption);
+ toggle.click();assert.equal(h.querySelector('.gf-playback').hidden,false);
+ assert.equal(h.querySelector('.gf-caption').textContent,f.scenes[0].beats[0].say);
+ assert.equal(JSON.stringify(f),before,'the lesson and recording script stay immutable');p.dispose();d.window.close();
+});
+test('scene selection seeks without changing the audio playback rate',()=>{
+ const d=dom(),w=d.window,voices=[];
+ w.Audio=class{constructor(){this.currentTime=0;voices.push(this);}play(){return Promise.resolve();}pause(){}removeAttribute(){}load(){}};
+ const f=fixture(),second=structuredClone(f.scenes[0]);second.id='second';f.scenes.push(second);
+ const c=Film.compile(f).cues.find(c=>c.scene===1),h=w.document.getElementById('host');
+ const p=w.GRAM_FILM.mount(h,f,{audio:{[c.id]:{url:'second.mp3',say:c.say,seconds:c.seconds}}});
+ const select=h.querySelector('[data-scene-select]');select.value=1;select.dispatchEvent(new w.Event('change'));
+ assert.equal(+h.querySelector('[aria-label="Filmposition"]').value,c.start);
+ h.querySelector('[data-play]').click();assert.equal(voices.at(-1).playbackRate,1);
+ const speed=h.querySelector('.gf-speed select');speed.value='1.25';speed.dispatchEvent(new w.Event('change'));
+ assert.equal(voices.at(-1).playbackRate,1.25);p.dispose();d.window.close();
+});
+test('screen examples wrap without changing the original video composition',()=>{
+ const f=fixture(),sentence='Die Besucherin hat das sorgfältig vorbereitete neue Projekt gestern ihrer Kollegin vorgestellt.';
+ f.scenes[0].to=[{id:'p',text:sentence,role:'patient'}];
+ const t=Film.compile(f),exported=Film.frame(t,9),screen=Film.frame(t,9,{player:true});
+ assert.match(exported,/viewBox="0 0 1600 900"/);assert.match(exported,/Grammatik in Bewegung/);
+ assert.doesNotMatch(screen,/>Grammatik in Bewegung</);
+ const rendered=new JSDOM(screen,{contentType:'image/svg+xml'}),doc=rendered.window.document;
+ assert.ok([...doc.querySelectorAll('text')].some(t=>t.textContent==='Die Besucherin hat das sorgfältig vorbereitete'));
+ assert.equal(f.scenes[0].to[0].text,sentence);rendered.window.close();
 });
 test('added picture families render escaped, deterministic SVG at every stage, on desktop and phone',()=>{
  const tok=[{id:'a',text:'<b>Ich</b>',role:'agent'},{id:'v',text:'komme',role:'verb'}];
