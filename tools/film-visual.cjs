@@ -38,8 +38,9 @@ function resolveExample(lesson, ref, literal) {
 const cueIds = (film) => film.scenes.flatMap((s) => s.beats.map((b, i) => ({ id: s.id + "--" + (i + 1), scene: s.id })));
 
 function build(file, lessonsDir, audit) {
-  const mod = require(file)(kit), errors = [], warn = [];
-  const { lesson, sha256 } = loadLesson(lessonsDir, mod.n);
+  const exp = require(file), errors = [], warn = [];
+  const n0 = typeof exp === "function" ? exp(kit).n : exp.n, { lesson, sha256 } = loadLesson(lessonsDir, n0);
+  const mod = typeof exp === "function" ? exp(kit, lesson) : Object.assign({ n: exp.n, key: exp.key }, exp.build(kit, lesson));
   if (lesson.n !== mod.n || mod.key !== lesson.level + "-" + lesson.n) errors.push("key/lesson mismatch " + mod.key);
   const refs = {}, src = { examples: {} };
   for (const [key, ref, literal] of mod.examples || []) { try { if (refs[key]) throw Error("duplicate example key " + key); const r = resolveExample(lesson, ref, literal); src.examples[key] = { text: r.text }; delete r.text; refs[key] = r; } catch (e) { errors.push(key + ": " + e.message); } }
@@ -58,6 +59,11 @@ function build(file, lessonsDir, audit) {
       }
       if (st.pic) { for (const it of st.pic.items || []) { if (!E.KINDS.props.includes(it.k)) errors.push(cue + ": unknown picture item " + it.k); if (it.k === "figure" && !E.KINDS.people.includes(it.who)) errors.push(cue + ": unknown person " + it.who); } for (const m of st.pic.marks || []) if (!E.KINDS.marks.includes(m.k)) errors.push(cue + ": unknown picture mark " + m.k); if (!st.pic.alt) errors.push(cue + ": picture needs a text alternative (alt)"); }
       if (st.park && !["within", "into"].includes(st.park.route)) errors.push(cue + ": unknown park route");
+      { const has = (r, t) => (st.rows || []).some((row) => row.id === r && row.tiles.some((x) => x.id === t || (x.p || []).some((p) => p.id === t)));   // every bracket, arrow, chip and boundary must point at something drawn
+        for (const b of st.br || []) for (const t of b.t.slice(1)) if (!has(b.t[0], t)) errors.push(cue + ": bracket points at missing " + b.t[0] + "/" + t);
+        for (const a of st.ar || []) for (const e of [a.a, a.b]) if (!has(e[0], e[1])) errors.push(cue + ": arrow end missing " + e.join("/"));
+        for (const c of st.ch || []) if (c.at && !has(c.at[0], c.at[1])) errors.push(cue + ": chip anchor missing " + c.at.join("/"));
+        for (const d of st.bd || []) if (!has(d[0], d[1])) errors.push(cue + ": boundary anchor missing " + d[0] + "/" + d[1]); }
       out.push({ at: k.at, s: st }); keyframes++;
     });
     (scenes[c.scene] = scenes[c.scene] || { cues: {} }).cues[cue] = out;
