@@ -630,7 +630,7 @@ function loadFilm(){
   if(!filmP){
     const css=document.createElement('link');css.rel='stylesheet';css.href='grammatik/film.css?v=3cad3b5edf59';document.head.append(css);
     // the grammar stage is small and only needed with a film, so both arrive together
-    filmP=Promise.all([scriptFile('grammatik/film-props.js?v=086a47d2a797'),scriptFile('grammatik/film-stage.js?v=0e98ebbd7fa7'),scriptFile('grammatik/film.js?v=f58116a644eb')]).catch(e=>{css.remove();filmP=null;throw e;});
+    filmP=Promise.all([scriptFile('grammatik/film-props.js?v=086a47d2a797'),scriptFile('grammatik/film-stage.js?v=f51db452581a'),scriptFile('grammatik/film.js?v=f58116a644eb')]).catch(e=>{css.remove();filmP=null;throw e;});
   }
   return filmP;
 }

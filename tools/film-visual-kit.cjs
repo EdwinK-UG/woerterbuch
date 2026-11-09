@@ -47,16 +47,17 @@ function auto(lesson, spec) {
       });
       return res;
     };
-    const fromRow = (o = {}) => R("f", kf, tiles(sc.from, kf, "from"), { tag: sp.tagFrom, dim: o.dim });
-    const toRow = () => R("t", same ? kf : kt, tiles(same ? sc.from : sc.to, same ? kf : kt, same ? "from" : "to"), { tag: sp.tagTo || sp.tagFrom });
+    const fromRow = (o = {}) => R("f", kf, tiles(sc.from, kf, "from"), { tag: sp.tagFrom, dim: o.dim, frame: sp.frameFrom });
+    const toRow = () => R("t", same ? kf : kt, tiles(same ? sc.from : sc.to, same ? kf : kt, same ? "from" : "to"), { tag: sp.tagTo || sp.tagFrom, frame: sp.frameTo });
     const stateOf = (stage) => stage >= 0.5 && !same ? (sp.keep === false || sp.from === false ? [toRow()] : [fromRow({ dim: 0.5 }), toRow()]) : sp.from === false ? [] : [fromRow()];
-    let prev = stateOf(sc.beats[0].stage);
+    let prev = stateOf(sc.beats[0].stage), ctx = {};   // timelines and pictures persist across lines until a keyframe changes them (null clears)
+    const carry = (kf) => { for (const key of ["tl", "pic"]) { if (kf[key] === undefined && ctx[key]) kf[key] = ctx[key]; if (kf[key] === null) delete kf[key]; ctx[key] = kf[key]; } return kf; };
     sc.beats.forEach((b, bi) => {
       cueNo = bi + 1; const id = sc.id + "--" + (bi + 1), now = stateOf(b.stage), ex = (sp.extra || {})[bi + 1] || {};
-      const list = [S(0, prev)];
+      const list = [carry(S(0, prev))];
       const rest = (o) => { const r = Object.assign({}, o); delete r.at; delete r.rows; delete r.then; return r; };
-      if (JSON.stringify(now) !== JSON.stringify(prev) || Object.keys(ex).length) list.push(S(ex.at || 0.3, ex.rows || now, rest(ex)));
-      for (const more of ex.then || []) list.push(S(more.at, more.rows || ex.rows || now, rest(more)));
+      if (JSON.stringify(now) !== JSON.stringify(prev) || Object.keys(ex).length) list.push(carry(S(ex.at || 0.3, ex.rows || now, rest(ex))));
+      for (const more of ex.then || []) list.push(carry(S(more.at, more.rows || ex.rows || now, rest(more))));
       out.cues[id] = list; prev = list[list.length - 1].rows;
     });
     if (sp.check) out.checks[sc.id] = sp.check; else if (sc.quiz) out.checks[sc.id] = { origin: "source-quiz" };
