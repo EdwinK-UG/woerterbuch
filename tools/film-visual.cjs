@@ -63,7 +63,8 @@ function build(file, lessonsDir, audit) {
         for (const b of st.br || []) for (const t of b.t.slice(1)) if (!has(b.t[0], t)) errors.push(cue + ": bracket points at missing " + b.t[0] + "/" + t);
         for (const a of st.ar || []) for (const e of [a.a, a.b]) if (!has(e[0], e[1])) errors.push(cue + ": arrow end missing " + e.join("/"));
         for (const c of st.ch || []) if (c.at && !has(c.at[0], c.at[1])) errors.push(cue + ": chip anchor missing " + c.at.join("/"));
-        for (const d of st.bd || []) if (!has(d[0], d[1])) errors.push(cue + ": boundary anchor missing " + d[0] + "/" + d[1]); }
+        for (const d of st.bd || []) if (!has(d[0], d[1])) errors.push(cue + ": boundary anchor missing " + d[0] + "/" + d[1]);
+        if (st.tl) { const ids = new Set((st.tl.pts || []).map((q) => q.id)); for (const sp of st.tl.sp || []) { if (sp.a && !ids.has(sp.a)) errors.push(cue + ": timeline span start missing " + sp.a); if (!ids.has(sp.b) && sp.x1 == null) errors.push(cue + ": timeline span end missing " + sp.b); } for (const ar of st.tl.ar || []) if (!ids.has(ar.a) || !ids.has(ar.b)) errors.push(cue + ": timeline arrow end missing"); } }
       out.push({ at: k.at, s: st }); keyframes++;
     });
     (scenes[c.scene] = scenes[c.scene] || { cues: {} }).cues[cue] = out;
