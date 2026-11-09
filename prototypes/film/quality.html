@@ -1,0 +1,21 @@
+<!doctype html><html lang="de"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Private film layout checks</title><link rel="stylesheet" href="../../grammatik/film.css"><style>body{margin:8px;background:#f5f2ea;color:#263147;font:14px system-ui}pre{white-space:pre-wrap;overflow-wrap:anywhere}#host{width:100%}</style><h1>Film layout checks</h1><p>Loopback review only. No recordings are played. No source is changed.</p><button id="all" disabled>Check every film at this viewport</button><button id="sample" disabled>Check regression films</button><p id="status" role="status">Ready.</p><pre id="result"></pre><div id="host"></div><script src="../../grammatik/film-stage.js"></script><script src="../../grammatik/film-props.js"></script><script src="../../grammatik/film.js"></script><script>
+'use strict';
+const lessons=new Map(),visuals=new Map();window.GRAM={add:l=>lessons.set(l.n,l),filmVisual:(n,v)=>visuals.set(n,v)};
+const host=document.querySelector('#host'),status=document.querySelector('#status'),result=document.querySelector('#result');
+async function run(all){document.querySelectorAll('button').forEach(b=>b.disabled=true);let films=0,frames=0,wordOverflows=[],controlOverflows=[],errors=[];
+ try{const index=await (await fetch('/review/index.json')).json();for(const item of index.filter(x=>all||[87,89,99,109,112,147,154,165,439,482,483,487].includes(x.n))){
+   await new Promise((yes,no)=>{const s=document.createElement('script');s.src='/review/lessons/k'+item.n+'.js';s.onload=yes;s.onerror=no;document.head.append(s);});const lesson=lessons.get(item.n),visual=visuals.get(item.n);let audio={};if(item.recorded){const m=await(await fetch('/review/audio/k'+item.n+'.json')).json();audio=Object.fromEntries(m.cues.map(c=>[c.id,c]));}
+   const p=GRAM_FILM.mount(host,lesson.film,{lesson,visual,audio,close:()=>{}});
+   for(const cue of p.timeline.cues){const sc=visual.visual.scenes[lesson.film.scenes[cue.scene].id],ks=sc.cues[cue.id];
+     for(const k of ks){for(const dt of [0,.35,.8]){const time=Math.min(cue.end-.001,cue.start+k.at*cue.seconds+dt);p.seek(time);frames++;
+       const svg=host.querySelector('.gf-view svg');if(!svg){errors.push({film:item.n,cue:cue.id,error:'no SVG'});continue;}
+       const box=svg.viewBox.baseVal;for(const t of svg.querySelectorAll('text')){if(Number(t.getAttribute('opacity'))===0&&t.hasAttribute('opacity'))continue;const bb=t.getBBox(),matrix=svg.getScreenCTM().inverse().multiply(t.getScreenCTM()),pts=[[bb.x,bb.y],[bb.x+bb.width,bb.y],[bb.x,bb.y+bb.height],[bb.x+bb.width,bb.y+bb.height]].map(([x,y])=>new DOMPoint(x,y).matrixTransform(matrix)),b={x:Math.min(...pts.map(p=>p.x)),y:Math.min(...pts.map(p=>p.y)),width:Math.max(...pts.map(p=>p.x))-Math.min(...pts.map(p=>p.x)),height:Math.max(...pts.map(p=>p.y))-Math.min(...pts.map(p=>p.y))};if(b.x< -3||b.x+b.width>box.width+3||b.y< -4||b.y+b.height>box.height+4){if(wordOverflows.length<80)wordOverflows.push({film:item.n,cue:cue.id,time,label:t.textContent,box:{x:b.x,y:b.y,w:b.width,h:b.height},view:{w:box.width,h:box.height}});}}
+       const playback=host.querySelector('.gf-playback').getBoundingClientRect(),head=host.getBoundingClientRect();if(playback.bottom-head.top>innerHeight+3&&controlOverflows.length<80)controlOverflows.push({film:item.n,cue:cue.id,time,height:playback.bottom-head.top,viewport:innerHeight});
+     }}
+     status.textContent='Checking '+item.n+' · '+cue.id+' · '+frames+' frames';await new Promise(requestAnimationFrame);
+   }p.dispose();films++;}
+ }catch(e){errors.push({error:String(e),stack:e.stack});}
+ const report={viewport:[innerWidth,innerHeight],films,frames,wordOverflows,controlOverflows,errors};result.textContent=JSON.stringify(report,null,2);status.textContent='Complete: '+films+' films, '+frames+' frames. Text bounds: '+wordOverflows.length+' flagged; controls: '+controlOverflows.length+' flagged; errors: '+errors.length;document.querySelectorAll('button').forEach(b=>b.disabled=false);
+}
+document.querySelector('#all').onclick=()=>run(true);document.querySelector('#sample').onclick=()=>run(false);document.querySelectorAll('button').forEach(b=>b.disabled=false);
+</script></html>

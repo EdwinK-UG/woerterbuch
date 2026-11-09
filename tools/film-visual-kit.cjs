@@ -40,7 +40,7 @@ function auto(lesson, spec) {
         const words = t.text.split(" ").filter(Boolean), last = ti === n - 1, ps = [];
         words.forEach((wd, k) => { const isLast = k === words.length - 1, punct = /[.,!?;:]$/.test(wd); ps.push(P("k" + (t.id || ti) + (linked(t, side) || same ? "" : "_" + side) + (words.length > 1 ? "." + k : ""), isLast && punct ? key + "#" + wi + "!" : key + "#" + wi)); wi++; });
         const base = Object.assign({}, rolesNow()[t.role] || {});
-        if (ti === finI) Object.assign(base, { r: "fin" }, sp.fields === false ? {} : { f: 2 });
+        if (ti === finI && words.length === 1 && (sp.fields !== false || sp.fin)) Object.assign(base, { r: "fin" }, sp.fields === false ? {} : { f: 2 });
         else if (t.role === "verb" && ti > finI && finI >= 0 && last && sp.fields !== false) Object.assign(base, { f: "E" }, base.r ? {} : { r: "inf", l: base.l });
         if (sp.fields !== false && ti === 0 && finI === 1) base.f = 1;
         Object.assign(base, ((sp.tile || {})[side] || {})[ti] || {});

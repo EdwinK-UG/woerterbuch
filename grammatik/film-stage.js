@@ -26,6 +26,7 @@
   /* text of a row exactly as a reader sees it: pieces of a tile joined by spaces unless a piece is a continuation (compound part / punctuation) */
   E.rowText = function (src, row) { let s = ''; for (const t of row.tiles) { t.p.forEach((p, i) => { const txt = E.resolve(src, p.x), glue = (i === 0 ? t.j : p.j) || /^[.,!?;:]$/.test(txt); s += (s && !glue ? ' ' : '') + txt; }); } return s; };
 
+  E.wrap = (text,width,size,measure) => {const lines=[];let line='';for(const word of String(text).split(' ')){const next=line?line+' '+word:word;if(line&&measure(next,size)>width){lines.push(line);line=word;}else line=next;}if(line)lines.push(line);return lines;};
   /* ---- layout of one state ---- */
   E.layout = function (src, st, W, opt) {
     const fs = opt.fs, meas = opt.measure, padX = fs * 0.28, gap = fs * 0.34, M = opt.margin, avail = W - 2 * M, lineH = fs * 3.25, out = { pieces: [], tiles: [], rows: [], h: 0 };
@@ -42,7 +43,7 @@
       const below = (st.bd || []).some((b) => b[0] === row.id && b[2]) || (st.ch || []).some((c) => c.below && c.at && c.at[0] === row.id);   // a boundary label or rule chip under this row needs its own line
       y = rowTop + fs * 0.95 + (lines.length - 1) * lineH + fs * (below ? 2.6 : 1.9); out.rows[out.rows.length - 1].bottom = y;
     }
-    out.h = y + ((st.ch || []).some((c) => !c.at) ? fs * 1.5 : 0); return out;   // room for a free rule chip under the rows
+    out.h = y + (st.ch || []).filter(c=>!c.at).reduce((h,c)=>h+E.wrap(c.t,avail-fs*.6,Math.max(opt.minText||11,fs*.46),meas).length*Math.max(opt.minText||11,fs*.46)*1.3+fs*.7,0); return out;   // room for a free rule chip under the rows
   };
 
   /* ---- blending of two laid-out states ---- */
@@ -88,7 +89,7 @@
   E.describe = function (src, st) {
     const parts = [];
     for (const row of st.rows || []) { let line = (row.tag ? row.tag + ': ' : '') + E.rowText(src, row) + (row.rail ? ' (noch nicht fertig)' : ''); const marks = [];
-      for (const t of row.tiles) { const txt = t.p.map((p) => E.resolve(src, p.x)).join(' '), rr = ROLE[t.r] || null; if (t.f != null) marks.push('Position ' + (FIELD[t.f] || t.f) + ': ' + txt); if (rr && rr.l && t.r !== 'punct') marks.push((t.l || rr.l) + ': ' + txt); else if (t.l) marks.push(t.l + ': ' + txt); }
+      for (const t of row.tiles) { const txt = E.rowText(src, { tiles: [t] }), rr = ROLE[t.r] || null; if (t.f != null) marks.push('Position ' + (FIELD[t.f] || t.f) + ': ' + txt); if (rr && rr.l && t.r !== 'punct') marks.push((t.l || rr.l) + ': ' + txt); else if (t.l) marks.push(t.l + ': ' + txt); }
       if (marks.length) line += ' – ' + marks.join('; '); parts.push(line); }
     for (const br of st.br || []) if (br.l) parts.push('Klammer: ' + br.l);
     for (const ar of st.ar || []) if (ar.l) parts.push('Pfeil: ' + ar.l);
@@ -103,7 +104,7 @@
   /* ---- SVG rendering ---- */
   E.render = function (src, scene, t, W, opt) {
     const sz = (k) => Math.max(opt.minText || 11, opt.fs * k);   // small labels never drop below a readable size on phones
-    const fr = E.frame(src, scene, t, W, opt), { B, p } = fr, A = p >= 1 ? null : fr.A, fs = opt.fs, H = Math.max(opt.minH || 0, B.h + (fr.cur.tl ? opt.tlH : 0) + fs * 0.4, A ? A.h + ((fr.prev && fr.prev.tl) || fr.cur.tl ? opt.tlH : 0) : 0);
+    const fr = E.frame(src, scene, t, W, opt), { B, p } = fr, A = p >= 1 ? null : fr.A, fs = opt.fs; let H = Math.max(opt.minH || 0, Math.max(B.h,A?A.h:0)+((fr.cur.tl||(A&&fr.prev.tl))?opt.tlH:0)+fs*.85);
     let bg = '', mid = '', top = '';
     const notchCol = (id) => { let h = 0; for (const c of String(id).replace(/\..*$/, '')) h = (h * 31 + c.charCodeAt(0)) >>> 0; return C.notch[h % C.notch.length]; };
     const pieceA = new Map(A ? A.pieces.map((q) => [q.key, q]) : []), idA = new Map(); if (A) for (const q of A.pieces) { if (!idA.has(q.id)) idA.set(q.id, []); idA.get(q.id).push(q); }
@@ -159,7 +160,7 @@
         if (b.r === 'fin?' ) s += '<text x="' + f1((ux0 + ux1) / 2) + '" y="' + f1(uy + fs * 0.1) + '" text-anchor="middle" font-family="' + FONT + '" font-size="' + f1(sz(0.5)) + '" font-weight="700" fill="' + C.dash + '" opacity="' + f1(o * 100) / 100 + '">?</text>';
         const lab = (b.l != null ? b.l : (b.showL ? rr.l : '')), chip = b.f != null ? (FIELD[b.f] || String(b.f)) : ''; let lx = b.x + b.w / 2; let ly = b.base + fs * 1.05;
         if (chip || lab) { const lw = opt.measure((chip ? '‹' + chip + '› ' : '') + lab, sz(0.42)) * 0.95 + 6; lx = Math.max(lw / 2 + 2, Math.min(W - lw / 2 - 2, lx)); const key = b.row + '|' + Math.round(b.base); for (const q of (labPlaced[key] || [])) if (Math.abs(q.x - lx) < (q.w + lw) / 2 && Math.abs(q.y - ly) < 1) ly += sz(0.42) * 1.2; (labPlaced[key] = labPlaced[key] || []).push({ x: lx, w: lw, y: ly }); }
-        if (chip || lab) { const parts = []; if (chip) parts.push('<tspan font-weight="700" fill="' + C.field + '">' + esc(chip.length <= 2 ? '‹' + chip + '›' : chip) + '</tspan>'); if (lab) parts.push('<tspan fill="' + (b.r === 'fin' ? C.fin : rr.c) + '">' + esc(lab) + '</tspan>'); s += '<text x="' + f1(lx) + '" y="' + f1(ly) + '" text-anchor="middle" font-family="' + FONT + '" font-size="' + f1(sz(0.42)) + '" opacity="' + f1(o * 100) / 100 + '">' + parts.join(' ') + '</text>'; }
+        if (chip || lab) { H=Math.max(H,ly+sz(.42)*.6+fs*.4); const parts = []; if (chip) parts.push('<tspan font-weight="700" fill="' + C.field + '">' + esc(chip.length <= 2 ? '‹' + chip + '›' : chip) + '</tspan>'); if (lab) parts.push('<tspan fill="' + (b.r === 'fin' ? C.fin : rr.c) + '">' + esc(lab) + '</tspan>'); s += '<text x="' + f1(lx) + '" y="' + f1(ly) + '" text-anchor="middle" font-family="' + FONT + '" font-size="' + f1(sz(0.42)) + '" opacity="' + f1(o * 100) / 100 + '">' + parts.join(' ') + '</text>'; }
       }
       if (extras === false) return s; for (const q of L.pieces) if (q.n && q.mark) { const nid = typeof q.n === 'string' ? q.n : q.id; const cx = q.x + q.w / 2, cy = q.base - fs * 1.02; s += '<path d="M' + f1(cx) + ' ' + f1(cy - fs * 0.13) + 'L' + f1(cx + fs * 0.11) + ' ' + f1(cy) + 'L' + f1(cx) + ' ' + f1(cy + fs * 0.13) + 'L' + f1(cx - fs * 0.11) + ' ' + f1(cy) + 'Z" fill="' + notchCol(nid) + '" opacity="' + f1(op * rowOp(q) * 100) / 100 + '"/>'; }
       const tileOf = (rid, tid) => L.tiles.find((b) => b.row === rid && b.id === tid), pieceOf = (rid, pid) => L.pieces.find((q) => q.row === rid && q.id === pid) || (() => { const b = tileOf(rid, pid); return b ? { x: b.x, w: b.w, base: b.base } : null; })();
@@ -173,8 +174,17 @@
       for (const ar of st.ar || []) { const a = pieceOf(ar.a[0], ar.a[1]), b = pieceOf(ar.b[0], ar.b[1]); if (!a || !b) continue; const r = E.route(L, a, b, W, fs, opt), col = ar.k === 'fn' ? C.fin : ar.k === 'lemma' ? C.nonfin : C.soft;
         s += '<path d="M' + f1(r[0]) + ' ' + f1(r[1]) + 'Q' + f1(r[2]) + ' ' + f1(r[3]) + ' ' + f1(r[4]) + ' ' + f1(r[5]) + '" fill="none" stroke="' + col + '" stroke-width="2.4"' + (ar.k === 'lemma' ? ' stroke-dasharray="7 5"' : '') + ' opacity="' + f1(op * 100) / 100 + '" marker-end="url(#' + opt.idp + 'ah' + (ar.k === 'fn' ? 'F' : 'N') + ')"/>';
         if (ar.l) { const mx = 0.25 * r[0] + 0.5 * r[2] + 0.25 * r[4], my = 0.25 * r[1] + 0.5 * r[3] + 0.25 * r[5], tw = opt.measure(ar.l, sz(0.4)) / 2 + 4, lx = Math.max(tw, Math.min(W - tw, mx)); s += '<text x="' + f1(lx) + '" y="' + f1(my - fs * 0.12) + '" text-anchor="middle" font-family="' + FONT + '" font-size="' + f1(sz(0.4)) + '" font-weight="700" fill="' + col + '" opacity="' + f1(op * 100) / 100 + '" paint-order="stroke" stroke="' + C.paper + '" stroke-width="5">' + esc(ar.l) + '</text>'; } }
-      for (const ch of st.ch || []) { let x, y; if (ch.at) { const b = tileOf(ch.at[0], ch.at[1]); if (!b) continue; x = b.x + b.w / 2; const rowT = L.tiles.filter((q) => q.row === b.row); y = ch.below ? Math.max(...rowT.map((q) => q.base)) + fs * 1.05 + sz(0.42) * 1.2 + sz(0.46) * 0.9 : Math.min(...rowT.map((q) => q.y)) - fs * 0.75; const rw = L.rows.find((r) => r.id === b.row); if (!ch.below && rw && rw.tag) { const tagEnd = rw.x + opt.measure(rw.tag.toUpperCase(), sz(0.42)) * 1.15 + fs * 0.6, half = (opt.measure(ch.t, sz(0.46)) + fs * 0.6) / 2; if (x - half < tagEnd) x = tagEnd + half; } } else { x = W / 2; y = (L.h || fs * 3) - fs * 0.6; } const tw = opt.measure(ch.t, sz(0.46)) + fs * 0.6, hh = fs * 0.7; x = Math.max(tw / 2 + 4, Math.min(W - tw / 2 - 4, x)); const col = ch.k === 'q' ? C.fin : ch.k === 'rule' ? C.nonfin : C.soft;
-        s += '<g opacity="' + f1(op * 100) / 100 + '"><rect x="' + f1(x - tw / 2) + '" y="' + f1(y - hh * 0.72) + '" width="' + f1(tw) + '" height="' + f1(hh) + '" rx="' + f1(hh / 2) + '" fill="' + C.paper + '" stroke="' + col + '" stroke-width="1.6"/><text x="' + f1(x) + '" y="' + f1(y + hh * 0.08) + '" text-anchor="middle" font-family="' + FONT + '" font-size="' + f1(sz(0.46)) + '" font-weight="700" fill="' + col + '">' + esc(ch.t) + '</text></g>'; }
+      for (const ch of st.ch || []) {
+        const size=sz(.46),lines=E.wrap(ch.t,W-2*opt.margin-fs*.6,size,opt.measure),lh=size*1.3,tw=Math.max(...lines.map(x=>opt.measure(x,size)))+fs*.6,hh=lines.length*lh+fs*.4;
+        let x=W/2,cy=L.h-hh/2-fs*.15;
+        if(ch.at){const b=tileOf(ch.at[0],ch.at[1]);if(!b)continue;x=b.x+b.w/2;const rowT=L.tiles.filter(q=>q.row===b.row);
+          cy=ch.below?Math.max(...rowT.map(q=>q.base))+fs*1.05+sz(.42)*1.2+hh/2:Math.min(...rowT.map(q=>q.y))-fs*.75;
+        }
+        x=Math.max(tw/2+4,Math.min(W-tw/2-4,x));cy=Math.max(hh/2+4,cy);H=Math.max(H,cy+hh/2+fs*.4);
+        const col=ch.k==='q'?C.fin:ch.k==='rule'?C.nonfin:C.soft;
+        s+='<g opacity="'+f1(op*100)/100+'"><rect x="'+f1(x-tw/2)+'" y="'+f1(cy-hh/2)+'" width="'+f1(tw)+'" height="'+f1(hh)+'" rx="'+f1(Math.min(12,hh/2))+'" fill="'+C.paper+'" stroke="'+col+'" stroke-width="1.6"/>';
+        lines.forEach((line,i)=>{s+='<text x="'+f1(x)+'" y="'+f1(cy-(lines.length-1)*lh/2+i*lh+size*.35)+'" text-anchor="middle" font-family="'+FONT+'" font-size="'+f1(size)+'" font-weight="700" fill="'+col+'">'+esc(line)+'</text>';});s+='</g>';
+      }
       return s;
     };
     const sig = (b) => [b.r, b.f, b.l, b.showL, b.hide, b.dim].join('|'), stable = new Set(); if (A) for (const b of B.tiles) { const a = tileA.get(b.key); if (a && sig(a) === sig(b)) stable.add(b.key); }
@@ -201,6 +211,7 @@
         if (lvl) s += '<line x1="' + f1(x) + '" y1="' + f1(y + fs * 0.35) + '" x2="' + f1(lx) + '" y2="' + f1(ly0 - lh * 0.8) + '" stroke="' + C.faint + '" stroke-width="1.2"/>';
         lines.forEach((ln, k) => { s += '<text x="' + f1(lx) + '" y="' + f1(ly0 + lh * k) + '" text-anchor="middle" font-family="' + FONT + '" font-size="' + f1(sz(0.4)) + '" font-weight="' + (k ? 400 : 700) + '" fill="' + (q.k === 'dash' ? C.fin : C.ink) + '">' + esc(ln) + '</text>'; }); }
       if (T.empty) s += '<text x="' + f1(X(T.empty)) + '" y="' + f1(y - fs * 0.6) + '" text-anchor="middle" font-family="' + FONT + '" font-size="' + f1(sz(0.38)) + '" font-style="italic" fill="' + C.soft + '">' + esc(T.emptyL || '') + '</text>';
+      H=Math.max(H,...placed.map(b=>b.bottom+sz(.4)*.6+fs*.4));
       return '<g opacity="' + f1(op * 100) / 100 + '">' + s + '</g>'; };
     const face = (x, y, r) => '<g fill="none" stroke="' + C.ink + '" stroke-width="2" stroke-linecap="round"><circle cx="' + f1(x) + '" cy="' + f1(y) + '" r="' + f1(r) + '" fill="#f6e2c8"/><path d="M' + f1(x - r * 0.55) + ' ' + f1(y - r * 0.12) + 'q' + f1(r * 0.22) + ' ' + f1(r * 0.14) + ' ' + f1(r * 0.42) + ' 0M' + f1(x + r * 0.13) + ' ' + f1(y - r * 0.12) + 'q' + f1(r * 0.22) + ' ' + f1(r * 0.14) + ' ' + f1(r * 0.42) + ' 0"/><path d="M' + f1(x - r * 0.55) + ' ' + f1(y + r * 0.08) + 'q' + f1(r * 0.2) + ' ' + f1(r * 0.12) + ' ' + f1(r * 0.4) + ' 0M' + f1(x + r * 0.15) + ' ' + f1(y + r * 0.08) + 'q' + f1(r * 0.2) + ' ' + f1(r * 0.12) + ' ' + f1(r * 0.4) + ' 0" stroke-width="1.2" opacity=".6"/><path d="M' + f1(x - r * 0.2) + ' ' + f1(y + r * 0.5) + 'h' + f1(r * 0.4) + '"/></g>';
     if (A && fr.prev.tl && fr.cur.tl && fr.prev.tl !== fr.cur.tl) { tl += drawTL(fr.prev.tl, 1 - p) + drawTL(fr.cur.tl, p); } else if (fr.cur.tl) tl += drawTL(fr.cur.tl, A && !fr.prev.tl ? p : 1); else if (A && fr.prev.tl) tl += drawTL(fr.prev.tl, 1 - p);

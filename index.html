@@ -628,9 +628,9 @@ window.loadFilmPark=()=>filmParkP||(filmParkP=scriptFile('grammatik/film-park.js
 function loadFilm(){
   if(window.GRAM_FILM)return Promise.resolve();
   if(!filmP){
-    const css=document.createElement('link');css.rel='stylesheet';css.href='grammatik/film.css?v=3cad3b5edf59';document.head.append(css);
+    const css=document.createElement('link');css.rel='stylesheet';css.href='grammatik/film.css?v=93bbee48cb75';document.head.append(css);
     // the grammar stage is small and only needed with a film, so both arrive together
-    filmP=Promise.all([scriptFile('grammatik/film-props.js?v=cad6441c1294'),scriptFile('grammatik/film-stage.js?v=e7572b4deefc'),scriptFile('grammatik/film.js?v=f58116a644eb')]).catch(e=>{css.remove();filmP=null;throw e;});
+    filmP=Promise.all([scriptFile('grammatik/film-props.js?v=18413498785d'),scriptFile('grammatik/film-stage.js?v=690bfcb731f1'),scriptFile('grammatik/film.js?v=2f6d4d1272b3')]).catch(e=>{css.remove();filmP=null;throw e;});
   }
   return filmP;
 }

@@ -14,7 +14,7 @@
   const R = (x, y, w, h, fill, o) => P('M' + f1(x) + ' ' + f1(y) + 'h' + f1(w) + 'v' + f1(h) + 'h' + f1(-w) + 'Z', fill, o);
   const C = (x, y, r, fill, o) => '<circle cx="' + f1(x) + '" cy="' + f1(y) + '" r="' + f1(r) + '" fill="' + (fill || 'none') + '" stroke="' + ((o && o.stroke) || INK) + '" stroke-width="' + ((o && o.w) || 2.2) + '"' + (o && o.op != null ? ' opacity="' + o.op + '"' : '') + '/>';
   const hatch = (d, id) => '<path d="' + d + '" fill="url(#' + id + 'h)" stroke="none"/>';
-  const T = (x, y, s, size, col, o) => '<text x="' + f1(x) + '" y="' + f1(y) + '" font-family="\'Avenir Next\', \'Segoe UI\', system-ui, sans-serif" font-size="' + size + '" font-weight="' + ((o && o.weight) || 700) + '" fill="' + (col || INK) + '" text-anchor="' + ((o && o.anchor) || 'middle') + '"' + (o && o.op != null ? ' opacity="' + o.op + '"' : '') + ' paint-order="stroke" stroke="' + PAPER + '" stroke-width="4">' + esc(s) + '</text>';
+  const T = (x, y, s, size, col, o) => '<text x="' + f1(x) + '" y="' + f1(y) + '" font-family="\'Avenir Next\', \'Segoe UI\', system-ui, sans-serif" font-size="' + f1(Math.max(+size, 11.5 / curScale)) + '" font-weight="' + ((o && o.weight) || 700) + '" fill="' + (col || INK) + '" text-anchor="' + ((o && o.anchor) || 'middle') + '"' + (o && o.op != null ? ' opacity="' + o.op + '"' : '') + ' paint-order="stroke" stroke="' + ((o && o.stroke) || PAPER) + '" stroke-width="' + (o && o.outline != null ? o.outline : 4) + '">' + esc(s) + '</text>';
 
   /* ---- people: jointed figure, 3/4 view, two-bone limbs so hands stay on wrists and feet stay on the ground ---- */
   const LOOK = {
@@ -61,6 +61,31 @@
   /* ---- props (x,y = ground anchor) ---- */
   const PROPS = {
     floor: (it) => P('M' + f1(it.x0 || 20) + ' ' + f1(it.y) + 'H' + f1(it.x1 || 580), 'none', { w: 2.4 }) + '<rect x="' + f1(it.x0 || 20) + '" y="' + f1(it.y) + '" width="' + f1((it.x1 || 580) - (it.x0 || 20)) + '" height="10" fill="url(#IDh)" opacity=".6"/>',
+    // Semantic objects: state changes are driven only by the cue clock, never a free-running CSS loop.
+    clock: (it) => {const {x,y}=it,r=it.r||62,a=((it.hour||0)%12+(it.minute||0)/60)*Math.PI/6-Math.PI/2,b=(it.minute||0)*Math.PI/30-Math.PI/2;
+      let z=C(x,y,r,PAPER,{w:3})+C(x,y,r-6,'#fbf7ec',{w:1});for(let n=0;n<12;n++){const q=n*Math.PI/6;z+=P('M'+f1(x+Math.sin(q)*(r-12))+' '+f1(y-Math.cos(q)*(r-12))+'l'+f1(Math.sin(q)*5)+' '+f1(-Math.cos(q)*5),'none',{w:2});}
+      return z+P('M'+f1(x+Math.cos(a)*r*.47)+' '+f1(y+Math.sin(a)*r*.47)+'L'+x+' '+y+'L'+f1(x+Math.cos(b)*r*.73)+' '+f1(y+Math.sin(b)*r*.73),'none',{w:4})+C(x,y,4,K.fin)+T(x,y+r+25,it.label||'',18);},
+    calendar: (it) => {const {x,y}=it,w=it.w||134,h=125;let z=R(x-w/2,y-60,w,h,'#fbf7ec',{w:2.4})+R(x-w/2,y-60,w,28,K.green)+P('M'+(x-w/2+25)+' '+(y-68)+'v17M'+(x+w/2-25)+' '+(y-68)+'v17','none',{w:5});
+      for(let n=0;n<28;n++){const cx=x-w/2+14+n%7*(w-28)/6,cy=y-16+Math.floor(n/7)*20;z+=it.selected===n?C(cx,cy,7,K.fin,{stroke:K.fin,w:1}):C(cx,cy,2.2,'#b9ab90',{stroke:'#b9ab90',w:1});}
+      return z+T(x,y-40,it.title||'',15,PAPER,{stroke:K.green,outline:1})+T(x,y+94,it.label||'',18);},
+    easel: (it,id) => {const {x,y}=it,progress=Math.max(0,Math.min(1,it.paint||0));let z=P('M'+(x-55)+' '+y+'l35 -190h40l35 190M'+(x-60)+' '+(y-24)+'h120','none',{stroke:K.wood,w:7})+R(x-65,y-178,130,120,'#fbf7ec',{w:3});
+      if(it.finished)z+=P('M'+(x-56)+' '+(y-75)+'l42 -40l30 20l40 -38v66Z',K.lawn,{stroke:K.green,w:2})+C(x+28,y-150,13,'#e7b04a');
+      else if(progress)z+=P('M'+(x-38)+' '+(y-150)+'q'+f1(15*progress)+' '+f1(12*progress)+' '+f1(8*progress)+' '+f1(30*progress),'none',{stroke:K.green,w:9});
+      return z+hatch('M'+(x+48)+' '+(y-176)+'h14v116h-14Z',id);},
+    brush: (it) => P('M'+it.x+' '+it.y+'l18 -20','none',{stroke:K.wood,w:5})+P('M'+(it.x+18)+' '+(it.y-20)+'l6 -7','none',{stroke:K.green,w:7}),
+    train: (it,id) => {const {x,y}=it;let z=P('M20 '+(y+6)+'H580M20 '+(y+15)+'H580','none',{stroke:K.metal,w:3})+R(x-140,y-98,280,89,'#e7b04a',{w:3})+P('M'+(x+140)+' '+(y-98)+'l25 42v47h-25Z',K.green,{w:3});for(let k=0;k<5;k++)z+=R(x-123+k*47,y-81,34,34,K.sky,{w:2});for(const k of [-96,96])z+=C(x+k,y-6,13,K.metal)+C(x+k,y-6,5,'#b9ab90');return z+hatch('M'+(x-138)+' '+(y-24)+'h276v12h-276Z',id);},
+    platform: (it) => R(it.x-110,it.y,220,16,'#b9ab90')+P('M'+(it.x+75)+' '+it.y+'v-135','none',{w:4})+R(it.x+25,it.y-145,100,30,K.green)+T(it.x+75,it.y-125,it.label||'',15,PAPER),
+    vase: (it) => {const {x,y}=it;return P('M'+(x-14)+' '+(y-62)+'h28q-8 18 9 31q14 29 -23 31q-37 -2 -23 -31q17 -13 9 -31Z',K.water,{w:2.4})+P('M'+x+' '+(y-62)+'v-35m-1 15q-30 -22 -23 -30q26 -3 23 30m1 -8q28 -25 28 -8q-5 15 -28 8','none',{stroke:K.green,w:3});},
+    cake: (it) => {const {x,y}=it;return R(x-40,y-34,80,34,'#d6a77a')+P('M'+(x-40)+' '+(y-34)+'q8 -12 16 0q8 -12 16 0q8 -12 16 0q8 -12 16 0q8 -12 16 0','none',{stroke:'#fbf7ec',w:7})+P('M'+x+' '+(y-38)+'v-20','none',{stroke:K.fin,w:4})+P('M'+x+' '+(y-62)+'q-9 -8 0 -14q9 8 0 14Z','#e7b04a');},
+    phone: (it) => {const {x,y}=it;return R(x-37,y-80,74,140,K.metal)+R(x-30,y-66,60,107,'#fbf7ec',{w:1})+C(x,y+50,4,PAPER)+P('M'+(x-12)+' '+(y-15)+'q-6 28 24 24','none',{stroke:K.green,w:7})+T(x,y+88,it.label||'',18);},
+    cinema: (it) => {const {x,y}=it;return R(x-95,y-65,190,112,'#3b3530')+R(x-82,y-54,164,78,'#e9e2cf',{w:1})+P('M'+(x-16)+' '+(y-34)+'l40 20l-40 20Z',K.fin)+[0,1,2,3].map(n=>R(x-84+n*47,y+35,31,38,'#b0413e')).join('')+T(x,y+95,it.label||'',18);},
+    river: (it) => {const {x,y}=it;return P('M'+(x-210)+' '+(y-80)+'q210 100 420 0l0 100q-210 100 -420 0Z',K.water,{stroke:K.waterLine,w:3})+P('M'+(x-200)+' '+(y-92)+'q200 100 400 0M'+(x-200)+' '+(y+34)+'q200 100 400 0','none',{stroke:K.lawn,w:20});},
+    fruit: (it) => {const {x,y}=it;return C(x,y-25,26,'#b0413e',{w:2.4})+P('M'+x+' '+(y-49)+'q-5 -18 3 -24','none',{stroke:K.wood,w:4})+P('M'+(x+2)+' '+(y-54)+'q22 -26 30 -10q-4 14 -30 10Z',K.green)+(it.onlyApple?'':P('M'+(x-62)+' '+(y-56)+'q-20 56 24 50q-39 22 -43 -22Z','#e7b04a',{w:2.4}));},
+    apple: (it) => PROPS.fruit({...it,onlyApple:true}),
+    ingot: (it) => {const {x,y}=it;return P('M'+(x-48)+' '+(y-42)+'l16 -28h64l16 28Z','#dbe1df')+R(x-48,y-42,96,32,'#aeb9b6')+P('M'+(x-27)+' '+(y-62)+'h48','none',{stroke:'#fbf7ec',w:4});},
+    cafe: (it) => {const {x,y}=it;return R(x-70,y-115,140,115,'#c8b79a')+R(x-60,y-105,120,22,K.green)+T(x,y-88,'Café',16,PAPER)+R(x-53,y-70,51,45,'#e9e2cf')+R(x+10,y-70,42,70,K.wood)+P('M'+(x-83)+' '+(y-83)+'h166','none',{stroke:'#b0413e',w:10});},
+    suitcase: (it) => {const {x,y}=it;return R(x-66,y-50,132,50,K.wood)+P('M'+(x-66)+' '+(y-50)+'v-70h132v70','none',{stroke:K.woodDark,w:7})+R(x-58,y-113,116,58,'#e9e2cf',{w:2})+P('M'+(x-12)+' '+(y+1)+'v8h24v-8','none',{w:3});},
+    activityBands: (it) => {const x=it.x,y=it.y,ls=it.labels||[];return [0,1].map(n=>P('M'+(x-170)+' '+(y+n*62)+'h340','none',{stroke:n?K.fin:K.green,w:13})+T(x,y-18+n*62,ls[n]||'',18)).join('')+P('M'+x+' '+(y-30)+'v115','none',{w:2,dash:'4 5'});},
     box: (it, id) => { const x = it.x, y = it.y, w = 120, h = 66; return '<g>' + P('M' + (x - w / 2) + ' ' + (y - h) + 'l18 -16h' + w + 'l-18 16Z', K.boxSide) + R(x - w / 2, y - h, w, h, K.box) + hatch('M' + (x + w / 2) + ' ' + (y - h) + 'l18 -16v' + h + 'l-18 16Z', id) + P('M' + (x + w / 2) + ' ' + (y - h) + 'l18 -16v' + h + 'l-18 16', K.boxSide) + P('M' + (x - w / 2 + 8) + ' ' + (y - h / 2) + 'h' + (w - 16), 'none', { w: 1.2, op: 0.5 }) + '</g>'; },
     boxFront: (it) => { const x = it.x, y = it.y, w = 120, h = 66; return R(x - w / 2, y - h, w, h, K.box) + P('M' + (x - w / 2 + 8) + ' ' + (y - h / 2) + 'h' + (w - 16), 'none', { w: 1.2, op: 0.5 }) + (it.rim ? P('M' + (x - w / 2) + ' ' + (y - h) + 'h' + w, 'none', { stroke: K.fin, w: 4 }) : ''); },
     cat: (it) => { const x = it.x, y = it.y, d = it.face || 1, po = it.pose || 'sit', c = K.cat; if (po === 'sleep') return '<g><ellipse cx="' + x + '" cy="' + (y - 11) + '" rx="30" ry="12" fill="' + c + '" stroke="' + INK + '" stroke-width="2"/>' + C(x + d * 24, y - 15, 9, c) + P('M' + (x + d * 20) + ' ' + (y - 16) + 'q3 2 6 0M' + (x + d * 26) + ' ' + (y - 16) + 'q3 2 6 0', 'none', { w: 1.3 }) + P('M' + (x - d * 30) + ' ' + (y - 8) + 'q' + (d * 12) + ' 8 ' + (d * 30) + ' 4', 'none', { stroke: K.catDark, w: 4 }) + '<text x="' + (x + d * 34) + '" y="' + (y - 30) + '" font-size="12" font-family="system-ui" fill="' + K.soft + '">z</text></g>';
@@ -124,7 +149,7 @@
   }
   function mix(a, b, p) { // one item between states a and b (same id)
     if (!a) return b; if (!b) return a; if (p >= 1) return b; if (p <= 0) return a;
-    if (Math.abs(a.x - b.x) < 0.5 && Math.abs(a.y - b.y) < 0.5 && JSON.stringify(a.hands) === JSON.stringify(b.hands) && (a.lean || 0) === (b.lean || 0) && (a.open || 0) === (b.open || 0)) return b.move === 'cut' || a.pose === b.pose ? b : (p < 0.5 ? a : b);   // nothing moves: no replayed jump or walk in place
+    if (Math.abs(a.x - b.x) < 0.5 && Math.abs(a.y - b.y) < 0.5 && JSON.stringify(a.hands) === JSON.stringify(b.hands) && (a.lean || 0) === (b.lean || 0) && (a.open || 0) === (b.open || 0) && (a.paint || 0) === (b.paint || 0)) return b.move === 'cut' || a.pose === b.pose ? b : (p < 0.5 ? a : b);   // nothing moves: no replayed jump or walk in place
     const how = b.move || 'slide', out = Object.assign({}, b);
     if (how === 'cut') return p < 0.5 ? a : b;
     const u = sm(p); out.x = lerp(a.x, b.x, u); out.y = lerp(a.y, b.y, u);
@@ -134,6 +159,7 @@
     if (how === 'walk' && b.k === 'figure') { const w = walkFeet(a.x, b.x, p, b.s || 1, b.face || 1); out.x = w.x; out.feet = w.feet; out.lift = w.lift; out.pose = 'walk'; }
     if (how === 'sit' && b.k === 'figure') { out.pose = p < 0.6 ? 'stand' : 'sit'; out.x = lerp(a.x, b.x, sm(p / 0.6)); }
     if (b.hands && a.hands) out.hands = b.hands.map((h, i) => [lerp(a.hands[i][0], h[0], u), lerp(a.hands[i][1], h[1], u)]);
+    if (b.paint != null || a.paint != null) out.paint = lerp(a.paint || 0, b.paint || 0, u);
     if (b.open != null || a.open != null) out.open = lerp(a.open || 0, b.open || 0, u);
     if (b.lean != null || a.lean != null) out.lean = lerp(a.lean || 0, b.lean || 0, sm((p - 0.6) / 0.4));
     return out;

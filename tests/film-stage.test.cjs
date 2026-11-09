@@ -81,3 +81,60 @@ test('pictures: unknown kinds are refused, figures and moves render without brok
   for(const p of [0,0.13,0.5,0.87,1]){const svg=G.picture(A,B,p,600,260,{idp:'t'});assert.doesNotMatch(svg,/NaN|undefined|Infinity/,'p='+p);}
   assert.equal(G.picture(B,B,0.5,600,260,{idp:'t'}),G.picture(B,B,1,600,260,{idp:'t'}),'an unchanged state does not replay its jump or walk');
 });
+
+test('legacy multiword constituents are not inferred to be finite forms',()=>{
+  const K=require('../tools/film-visual-kit.cjs'),l=lesson();
+  l.film.scenes[0].from=[{id:'s',text:'ein Kind,',role:'neutral'},{id:'v',text:'das malt',role:'verb'}];l.film.scenes[0].to=l.film.scenes[0].from;
+  const a=K.auto(l,{scenes:{'t-move':{fields:false}}});
+  for(const list of Object.values(a.cues))for(const k of list)for(const r of k.rows)assert.ok(r.tiles.every(t=>t.r!=='fin'));
+  const s=setup("m.cues['t-move--1'][0].rows[0].tiles[0].r='fin';m.cues['t-move--1'][0].rows[0].tiles[0].p.push({x:'ex#1'});");
+  assert.match(V.build(s.a,s.les,null).errors.join('\n'),/finite marking spans multiple words/);
+});
+function interactiveFixture(task){
+  const l=lesson(),s=setup('',l),r=V.build(s.a,s.les,null);r.visual.checks['t-move']={origin:'authored-visual-diagnostic',ask:'Ordne die Wörter.',answer:'Deshalb gehe ich.',task,why:'Das Verb folgt.'};
+  const d=new JSDOM('<main><div id="h"></div></main>',{runScripts:'outside-only',pretendToBeVisual:true}),w=d.window;
+  w.matchMedia=()=>({matches:false,addEventListener(){},removeEventListener(){}});w.HTMLCanvasElement.prototype.getContext=()=>null;w.requestAnimationFrame=fn=>{w._frame=fn;return 1;};w.cancelAnimationFrame=()=>{};
+  for(const f of ['film-stage.js','film.js'])w.eval(fs.readFileSync(path.join(__dirname,'../grammatik/',f),'utf8'));
+  const h=w.document.querySelector('#h'),p=w.GRAM_FILM.mount(h,l.film,{lesson:l,visual:{visual:r.visual}});return {d,h,p};
+}
+test('exploration restores its entering play state and navigation invalidates question state',()=>{
+  const {d,h,p}=interactiveFixture({kind:'order',items:['ich','gehe','Deshalb'],accept:[[2,1,0]]});
+  h.querySelector('[data-play]').click();assert.equal(h.querySelector('[data-play]').textContent,'Pause');h.querySelector('[data-explore-toggle]').click();h.querySelector('[data-explore-toggle]').click();assert.equal(h.querySelector('[data-play]').textContent,'Pause');
+  p.seek(1);h.querySelector('[data-explore-toggle]').click();h.querySelector('[data-explore-toggle]').click();assert.equal(h.querySelector('[data-play]').textContent,'Abspielen');
+  const check=()=>[...h.querySelectorAll('button')].find(b=>b.textContent==='Prüfen').click();
+  p.seek(1);check();p.seek(5);check();h.querySelector('.gf-back').click();assert.match(h.querySelector('.gf-time').textContent,/00:05/);
+  p.seek(1);check();h.querySelector('[data-play]').click();d.window._frame(d.window.performance.now()+1700);const now=h.querySelector('.gf-time').textContent;check();h.querySelector('.gf-back').click();assert.equal(h.querySelector('.gf-time').textContent,now,'manual playback leaves the previous question lifecycle');p.dispose();d.window.close();
+});
+test('ordering and omission require real attempts; reset and reveal are independent',()=>{
+  for(const kind of ['order','omit']){
+    const {d,h,p}=interactiveFixture({kind,items:['ich','gehe','Deshalb'],accept:kind==='order'?[[2,1,0]]:[[0]],hint:'Versuche es noch einmal.'});
+    const action=t=>[...h.querySelectorAll('button')].find(b=>b.textContent===t).click();action('Prüfen');assert.match(h.querySelector('.gf-feedback').textContent,/Noch nicht/);
+    const bank=()=>h.querySelector('[aria-label="Satzteile"]');if(kind==='order')for(const i of [2,1,0])bank().children[i].click();else bank().children[0].click();action('Prüfen');assert.match(h.querySelector('.gf-feedback').textContent,/Richtig/);
+    action('Neu beginnen');assert.equal(h.querySelector('.gf-feedback').textContent,'');action('Lösung zeigen');assert.match(h.querySelector('.gf-feedback').textContent,/Lösung:/);p.dispose();d.window.close();
+  }
+});
+
+test('post-timing validation rejects damaged fractions and invalid task indices',()=>{
+  const s=setup(),r=V.build(s.a,s.les,null);assert.deepEqual(V.validateReleased(r.visual,s.les).errors,[]);
+  r.visual.scenes['t-move'].cues['t-move--1'][1].at=0;assert.match(V.validateReleased(r.visual,s.les).errors.join('\n'),/post-timing fraction/);
+  const bad=setup("m.checks['t-move']={origin:'authored-visual-diagnostic',ask:'Test?',answer:'Test.',task:{kind:'order',items:['Test.'],accept:[[5]]}};");assert.match(V.build(bad.a,bad.les,null).errors.join('\n'),/invalid manipulation/);
+});
+test('semantic pictures are deterministic at intermediate action times',()=>{
+  const a={items:[{id:'paint',k:'easel',x:360,y:240,paint:0}],marks:[]},b={items:[{id:'paint',k:'easel',x:360,y:240,paint:1}],marks:[]};
+  const at=p=>G.picture(a,b,p,320,139,{idp:'meaning'});assert.notEqual(at(0),at(.5));assert.notEqual(at(.5),at(1));assert.equal(at(.5),at(.5));
+  for(const k of ['clock','calendar','train','vase','activityBands'])assert.doesNotMatch(G.picture(null,{items:[{id:'x',k,x:300,y:120,labels:['A','B']}],marks:[]},1,320,139,{idp:'meaning'}),/NaN|undefined|Infinity/);
+});
+
+test('glued compound descriptions name one written finite word',()=>{
+  const src={examples:{x:{text:'abholt'}}},row={id:'x',ex:'x',tiles:[{id:'v',r:'fin',p:[{x:'x#0.0-2'},{x:'x#0.2-',j:1}]}]};
+  assert.equal(G.rowText(src,row),'abholt');assert.match(G.describe(src,{rows:[row]}),/finit: abholt/);assert.doesNotMatch(G.describe(src,{rows:[row]}),/ab holt/);
+});
+
+test('explicit word roles split a constituent without losing its example or bracket span',()=>{
+  const s=setup("const r=m.cues['t-move--1'][0].rows[0];r.tiles[0].p.push({x:'ex#1'});r.tiles[0].r='fin';r.tiles.splice(1,1);m.wordRoles={'Deshalb gehe':{1:'fin'}};m.cues['t-move--1'][0].br=[{t:['r','a'],l:'Wortgruppe'}];m.cues['t-move--2'][0].rows=[r];m.cues['t-move--2'][0].br=[{t:['r','a'],l:'Wortgruppe'}];");
+  const r=V.build(s.a,s.les,null);assert.deepEqual(r.errors,[]);const src=G.registry(lesson(),r.visual),k=r.visual.scenes['t-move'].cues['t-move--1'][0];assert.equal(G.rowText(src,k.s.rows[0]),'Deshalb gehe ich heute weg.');assert.equal(G.rowText(src,{tiles:k.s.rows[0].tiles.filter(t=>t.r==='fin')}),'gehe');assert.deepEqual(k.s.br[0].t,['r','a','aw1']);assert.deepEqual(r.visual.scenes['t-move'].cues['t-move--2'][0].s.br[0].t,['r','a','aw1'],'a reused row retains its complete span in later cues');
+});
+test('long explanatory chips wrap instead of leaving the phone stage',()=>{
+  const s=setup("m.cues['t-move--1'][1].ch=[{t:'Ein längerer Hinweis bleibt auch auf einem schmalen Telefon vollständig lesbar.',k:'rule'}];"),r=V.build(s.a,s.les,null),src=G.registry(lesson(),r.visual);
+  const z=G.render(src,sceneOf(r),3,304,{fs:16,measure,margin:12,tlH:106,idp:'chip'});assert.doesNotMatch(z.svg,/>Ein längerer Hinweis bleibt auch auf einem schmalen Telefon vollständig lesbar\.</);assert.match(z.svg,/vollständig lesbar\./);assert.ok(z.H>100);
+});
