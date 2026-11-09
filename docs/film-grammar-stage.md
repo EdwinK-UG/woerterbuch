@@ -7,6 +7,8 @@ The films keep their original narration, scene and cue IDs, authored timing, exa
 | Part | Public? | What it does |
 |---|---|---|
 | `grammatik/film-stage.js` | yes (generic code) | Pure SVG renderer. The picture at time *t* is a function of the scene's keyframes and *t*; nothing accumulates, so seek, replay and resize always agree. Phrase-aware reflow at the real stage width, minimum 11 px labels, arrows routed around words, one bracket segment per wrapped line, text alternative for every state. |
+| `grammatik/film-props.js` | yes (generic code) | Close Graphic Novel prop and figure kit for spatial scenes: cream paper, ink outlines, hatched shade. A picture state lists items with explicit positions; between states an item walks (planted feet), jumps, is lowered or slides once and holds. Two-bone arms and legs keep hands on wrists and feet on the ground. |
+| `grammatik/film-park.js` | yes (approved art) | The approved Close Graphic Novel park and runner (`close-novel`), copied unchanged from the design study minus the four other directions. Loaded only when a park scene is drawn. The run starts at its keyframe, plays once and settles; reduced motion cuts to the settled end. |
 | `grammatik/film.js` | yes | The existing player. With `opt.visual` and `opt.lesson` it draws covered scenes with the stage, uses the audited decoded 48 kHz length of a recording when the MP3 hash in its link matches, guards stale audio callbacks, pauses for checks and returns to the same picture. |
 | `grammatik/grammatik.js` | yes | Receives `GRAM.filmVisual(n, …)` from the protected lesson response and passes it to the player. |
 | `tools/film-visual.cjs` + `tools/film-visual-kit.cjs` | yes | Builds and validates overlays from private authoring modules. |
@@ -33,6 +35,10 @@ node tools/film-integrity.cjs check --baseline /ABS/film-baseline.json --bundle 
 ```
 
 Each overlay is appended after the unchanged lesson source as one `GRAM.filmVisual(n, …)` call, and only when it was built from exactly that lesson file. The bundle check confirms every lesson still starts with its frozen file byte for byte. Deploy the bundle with the existing `lessons` function, JWT verification on. No database, Worker or audio change is needed.
+
+## Pictures and the park
+
+Picture items and marks are validated by the overlay builder (known kinds, known people, a text alternative for every picture). Picture labels and park tags keep a readable size on phones. A picture state that does not move an item never replays its action.
 
 ## Rollback
 

@@ -8,12 +8,14 @@
 </style></head>
 <body><main class="rv"><div class="rv-bar"><select id="lesson" aria-label="Film auswählen"></select><button id="open" type="button">Als Dialog öffnen</button></div><p id="status" class="rv-status" role="status">Wird geladen …</p><div id="player"></div></main>
 <script src="../../grammatik/film-stage.js"></script>
+<script src="../../grammatik/film-props.js"></script>
 <script src="../../grammatik/film.js"></script>
 <script>
 'use strict';
 // Local review only (tools/film-review-server.cjs). Lessons, overlays and recordings come from protected local folders.
 const $=id=>document.getElementById(id),visuals=new Map();let pending=null,player=null,current=null,load=0,audio=null;
 window.GRAM={add:c=>{pending=c;},filmVisual:(n,v)=>visuals.set(n,v)};
+let parkP=null;window.loadFilmPark=()=>parkP||(parkP=new Promise((ok,bad)=>{const s=document.createElement('script');s.src='../../grammatik/film-park.js';s.onload=ok;s.onerror=bad;document.head.append(s);}));
 const q=new URLSearchParams(location.search);
 async function show(n){
   const id=++load;player?.dispose();pending=null;$('status').textContent='Film wird geladen …';

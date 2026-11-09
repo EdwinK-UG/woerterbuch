@@ -536,16 +536,22 @@ function mount(host,story,opt={}) {
   function metrics(W){
     const avail=Math.max(240,(root.innerHeight||800)-chrome()),key=W+'|'+Math.round(avail/8);if(metricCache.has(key))return metricCache.get(key);
     const small=W<560,base=small?Math.max(15,Math.min(19,W/20)):Math.max(18,Math.min(30,W/34)),floor=small?15:18;
-    const tall=fs=>{const o={fs,measure:stage.measure,margin:small?12:26,tlH:fs*(small?6.6:4.6)};let h=0;for(const sc of Object.values(stage.scenes))for(const list of Object.values(sc.cues))for(const k of list){h=Math.max(h,GRAM_STAGE.layout(stage.src,k.s,W,o).h+(k.s.tl?o.tlH:0)+fs*0.4);}return h;};
+    const picH=Math.round(Math.min(W*260/600,small?220:300,avail*0.56)),hasPic=sc=>Object.values(sc.cues).some(l=>l.some(k=>k.s.pic||k.s.park));
+    const tall=fs=>{const o={fs,measure:stage.measure,margin:small?12:26,tlH:fs*(small?6.6:4.6)};let h=0;for(const sc of Object.values(stage.scenes)){const oo={...o,picH:hasPic(sc)?picH:0};for(const list of Object.values(sc.cues))for(const k of list){h=Math.max(h,GRAM_STAGE.layout(stage.src,k.s,W,oo).h+(k.s.tl?o.tlH:0)+fs*0.4);}}return h;};
     let fs=base,h=tall(fs);if(h>avail){fs=Math.max(floor,fs*avail/h);h=tall(fs);}
-    const m={fs,measure:stage.measure,margin:small?12:26,tlH:fs*(small?6.6:4.6),minH:Math.ceil(h)};metricCache.set(key,m);return m;
+    const m={fs,measure:stage.measure,margin:small?12:26,tlH:fs*(small?6.6:4.6),minH:Math.ceil(h),picH,hasPic};metricCache.set(key,m);return m;
   }
   function chrome(){let h=0;for(const el of [$('.gf-head'),$('.gf-scene-bar'),$('.gf-caption'),$('.gf-playback')])if(el&&!el.hidden)h+=el.offsetHeight||0;return h+(opt.close?28:96);}
   function stageSvg(cue,manual){
     const sid=story.scenes[cue.scene].id,sc=stage.scenes[sid];if(!sc)return null;const kf=sceneKfs(sid);if(!kf||!kf.kfs.length)return null;
     const W=Math.max(280,Math.round(view.clientWidth||900)),m=metrics(W),t=manual&&manual.stageTime!=null?manual.stageTime:time;
     let cur=kf.kfs[0];for(const k of kf.kfs)if(k.t<=t+1e-9)cur=k;
-    return GRAM_STAGE.render(stage.src,kf,t,W,{...m,reduce:reduce||!!manual?.cut,idp:'gs'+uid,label:story.scenes[cue.scene].title+'. '+GRAM_STAGE.describe(stage.src,cur.s)}).svg;
+    const pic=m.hasPic(sc),park=cur.s.park,label=story.scenes[cue.scene].title+'. '+(cur.s.pic?.alt?cur.s.pic.alt+' ':'')+(park?.alt?park.alt+' ':'')+GRAM_STAGE.describe(stage.src,cur.s);
+    const svg=GRAM_STAGE.render(stage.src,kf,t,W,{...m,picH:pic&&!park?m.picH:0,top:park?m.fs*1.2:undefined,minH:park?0:m.minH,reduce:reduce||!!manual?.cut,idp:'gs'+uid,label}).svg;
+    if(!park)return svg;
+    // park: the approved Close Graphic Novel runner on a canvas above the phrase rows; the run starts at its keyframe, plays once and holds
+    const go=kf.kfs.find(k=>k.s.park?.go&&k.s.park.route===park.route),tAct=!go||t<go.t?0:(reduce?99:t-go.t);
+    return {park:{route:park.route,t:tAct,tag:park.tag,goal:!!park.goal,h:m.picH},svg,label};
   }
   // Answering pauses the narration and keeps its place; "Zurück zum Film" restores the same picture and resumes if it was playing.
   function hold(){if(!saved)saved={time,playing};stop();}
@@ -559,12 +565,20 @@ function mount(host,story,opt={}) {
     else{const b=document.createElement('button');b.type='button';b.textContent='Erst überlegen, dann Lösung zeigen';b.onclick=()=>answer(true,null);row.append(b);}
     area.append(row,feedback);
   }
+  function drawPark(o){
+    let wrap=view.querySelector(':scope>.gf-park');if(!wrap){view.innerHTML='<div class="gf-park"><canvas role="img"></canvas></div><div class="gf-rows"></div>';wrap=view.querySelector('.gf-park');}
+    const cv=wrap.firstChild,dpr=Math.min(2,root.devicePixelRatio||1),w=Math.max(280,Math.round(view.clientWidth||900)),h=Math.round(o.park.h);
+    if(cv.width!==Math.round(w*dpr)||cv.height!==Math.round(h*dpr)){cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);cv.style.width=w+'px';cv.style.height=h+'px';}
+    cv.setAttribute('aria-label',o.label);view.querySelector('.gf-rows').innerHTML=o.svg.replace(/ role="img" aria-label="[^"]*"/,' aria-hidden="true"');
+    if(root.GRAM_PARK)root.GRAM_PARK.draw(cv,o.park.route,o.park.t,{tag:o.park.tag,goal:o.park.goal,dpr});else if(root.loadFilmPark&&!parkLoading){parkLoading=root.loadFilmPark().then(()=>{parkLoading=null;if(!disposed)draw();}).catch(()=>{parkLoading=null;});}
+  }
+  let parkLoading=null;
   function draw(){
     const state=at(timeline,time),cue=state.cue;
     const manual=exploration?.scene===cue.scene?exploration:null;
-    let staged=null;if(stage){try{staged=stageSvg(cue,manual);}catch(e){delete stage.scenes[story.scenes[cue.scene].id];metricCache.clear();kfCache=null;staged=null;}}   // a broken overlay scene falls back to the classic picture
+    let staged=null;if(stage){try{staged=stageSvg(cue,manual);if(staged&&staged.park){drawPark(staged);staged=true;}}catch(e){delete stage.scenes[story.scenes[cue.scene].id];metricCache.clear();kfCache=null;staged=null;}}   // a broken overlay scene falls back to the classic picture
     view.classList.toggle('gf-grammar',!!staged);
-    view.innerHTML=staged||frame(timeline,time,{...theme(),player:true,...(manual?{scene:manual.override,stage:manual.stage}:reduce?{stage:cue.stage}:{})});
+    if(staged!==true)view.innerHTML=staged||frame(timeline,time,{...theme(),player:true,...(manual?{scene:manual.override,stage:manual.stage}:reduce?{stage:cue.stage}:{})});
     caption.textContent=manual?manual.caption:cue.say;range.value=String(time);range.max=String(timeline.duration);range.setAttribute('aria-valuetext',stamp(time).slice(3,8)+' von '+stamp(timeline.duration).slice(3,8));
     host.classList.toggle('gf-exploring',!!manual);$('.gf-manipulation').hidden=!manual;$('.gf-playback').hidden=!!manual;
     $('[data-explore-toggle]').textContent=manual?'Zurück zum Film':'Ausprobieren';$('[data-explore-toggle]').setAttribute('aria-pressed',String(!!manual));

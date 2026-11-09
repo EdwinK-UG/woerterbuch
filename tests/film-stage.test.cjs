@@ -74,3 +74,10 @@ test('integrity check rejects narration, id, order, timing, example and quiz cha
     [l=>{l.film.scenes[0].beats[1].stage=0;},/authored stage/],[l=>{l.film.scenes[0].to[1].text='ging';},/examples changed/],[l=>{l.film.scenes[0].quiz.options[1].text='3';},/quiz changed/],
     [l=>{l.understand[0].rows[0][0]='Darum';},/understand changed/]])assert.match(check(mut),why);
 });
+test('pictures: unknown kinds are refused, figures and moves render without broken coordinates, one action plays once',()=>{
+  global.window=globalThis;require('../grammatik/film-props.js');
+  const bad=setup("m.cues['t-move--1'][1].pic={items:[{id:'x',k:'dragon',x:1,y:1}],marks:[{k:'glitter'}]}");const e=V.build(bad.a,bad.les,null).errors.join('\n');assert.match(e,/unknown picture item dragon/);assert.match(e,/unknown picture mark glitter/);assert.match(e,/text alternative/);
+  const A={items:[{id:'f',k:'figure',who:'mara',x:100,y:240,face:1},{id:'c',k:'cat',x:80,y:240,pose:'sit'}],marks:[]},B={items:[{id:'f',k:'figure',who:'mara',x:300,y:240,face:1,move:'walk'},{id:'c',k:'cat',x:380,y:200,pose:'sit',move:'jump'}],marks:[{k:'tag',x:300,y:40,t:'Wohin?',g:1}]};
+  for(const p of [0,0.13,0.5,0.87,1]){const svg=G.picture(A,B,p,600,260,{idp:'t'});assert.doesNotMatch(svg,/NaN|undefined|Infinity/,'p='+p);}
+  assert.equal(G.picture(B,B,0.5,600,260,{idp:'t'}),G.picture(B,B,1,600,260,{idp:'t'}),'an unchanged state does not replay its jump or walk');
+});

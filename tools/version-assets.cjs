@@ -24,6 +24,8 @@ const files = [
   "grammatik/motion.js",
   "grammatik/watch.js",
   "grammatik/film-stage.js",
+  "grammatik/film-props.js",
+  "grammatik/film-park.js",
   "grammatik/film.js",
   "grammatik/film.css",
   "grammatik/vocabulary.js",

@@ -16,6 +16,7 @@
 "use strict";
 const fs = require("node:fs"), path = require("node:path"), vm = require("node:vm"), crypto = require("node:crypto");
 const E = require("../grammatik/film-stage.js"), kit = require("./film-visual-kit.cjs");
+require("../grammatik/film-props.js");   // installs picture kinds on the stage (E.KINDS) for validation
 const args = Object.fromEntries(process.argv.slice(2).reduce((a, v, i, l) => (v.startsWith("--") ? a.concat([[v.slice(2), l[i + 1] && !l[i + 1].startsWith("--") ? l[i + 1] : true]]) : a), []));
 const need = (k) => { if (!args[k] || args[k] === true) { console.error("missing --" + k); process.exit(2); } return path.resolve(args[k]); };
 const sha = (b) => crypto.createHash("sha256").update(b).digest("hex");
@@ -55,6 +56,8 @@ function build(file, lessonsDir, audit) {
         if (r.ex) { const want = (Array.isArray(r.ex) ? r.ex : [r.ex]).map((x) => (src.examples[x] || { text: "\u0000" + x }).text).join(""); rowsChecked++; if (txt !== want) errors.push(cue + " row " + r.id + ' renders "' + txt + '" but must equal "' + want + '"'); }
         else if (!r.rail && !r.list) errors.push(cue + " row " + r.id + " has no source example and is neither a rail nor a list");
       }
+      if (st.pic) { for (const it of st.pic.items || []) { if (!E.KINDS.props.includes(it.k)) errors.push(cue + ": unknown picture item " + it.k); if (it.k === "figure" && !E.KINDS.people.includes(it.who)) errors.push(cue + ": unknown person " + it.who); } for (const m of st.pic.marks || []) if (!E.KINDS.marks.includes(m.k)) errors.push(cue + ": unknown picture mark " + m.k); if (!st.pic.alt) errors.push(cue + ": picture needs a text alternative (alt)"); }
+      if (st.park && !["within", "into"].includes(st.park.route)) errors.push(cue + ": unknown park route");
       out.push({ at: k.at, s: st }); keyframes++;
     });
     (scenes[c.scene] = scenes[c.scene] || { cues: {} }).cues[cue] = out;
