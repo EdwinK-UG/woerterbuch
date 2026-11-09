@@ -29,19 +29,22 @@ function auto(lesson, spec) {
     out.examples.push([kf, sp.fromEx ? sp.fromEx[0] : "film.scenes[" + si + "].from, joined", sp.fromEx ? sp.fromEx[1] : join(sc.from)]);
     if (!same) out.examples.push([kt, sp.toEx ? sp.toEx[0] : "film.scenes[" + si + "].to, joined", sp.toEx ? sp.toEx[1] : join(sc.to)]);
     let cueNo = 1; const rolesNow = () => (typeof sp.roles === "function" ? sp.roles(cueNo) : sp.roles) || {};
+    // identity only for the same word (case and punctuation aside), or where the scene declares a form change (morph: true)
+    const norm = (x) => String(x).toLowerCase().replace(/[.,!?;:]+/g, "").trim(), other = (side, id) => (side === "from" ? sc.to : sc.from).find((t) => t.id === id);
+    const linked = (t, side) => !!t.id && !same && (sp.morph || (other(side, t.id) && norm(other(side, t.id).text) === norm(t.text)));
     const tiles = (toks, key, side, opt) => {
       let wi = 0; const n = toks.length, verbIdx = toks.map((t, i) => (t.role === "verb" ? i : -1)).filter((i) => i >= 0);
       const finI = sp.fin && sp.fin[side] != null ? sp.fin[side] : verbIdx.includes(1) ? 1 : verbIdx.includes(0) ? 0 : -1;
       const res = [];
       toks.forEach((t, ti) => {
         const words = t.text.split(" ").filter(Boolean), last = ti === n - 1, ps = [];
-        words.forEach((wd, k) => { const isLast = k === words.length - 1, punct = /[.,!?;:]$/.test(wd); ps.push(P("k" + (t.id || ti) + (words.length > 1 ? "." + k : ""), isLast && punct ? key + "#" + wi + "!" : key + "#" + wi)); wi++; });
+        words.forEach((wd, k) => { const isLast = k === words.length - 1, punct = /[.,!?;:]$/.test(wd); ps.push(P("k" + (t.id || ti) + (linked(t, side) || same ? "" : "_" + side) + (words.length > 1 ? "." + k : ""), isLast && punct ? key + "#" + wi + "!" : key + "#" + wi)); wi++; });
         const base = Object.assign({}, rolesNow()[t.role] || {});
         if (ti === finI) Object.assign(base, { r: "fin" }, sp.fields === false ? {} : { f: 2 });
         else if (t.role === "verb" && ti > finI && finI >= 0 && last && sp.fields !== false) Object.assign(base, { f: "E" }, base.r ? {} : { r: "inf", l: base.l });
         if (sp.fields !== false && ti === 0 && finI === 1) base.f = 1;
         Object.assign(base, ((sp.tile || {})[side] || {})[ti] || {});
-        const tile = T("t" + "abcdefghijklmnopqrstuvwxyz"[ti], ps, Object.assign({ N: t.id || undefined }, base));   // tile ids by position (ta, tb, …); piece ids carry the token identity
+        const tile = T("t" + "abcdefghijklmnopqrstuvwxyz"[ti], ps, Object.assign({ N: linked(t, side) ? t.id : undefined }, base));   // tile ids by position (ta, tb, …); piece ids carry the token identity
         res.push(tile);
         const lw = words[words.length - 1]; if (/[.,!?;:]$/.test(lw)) res.push(pun("p" + ti, key + "#" + (wi - 1) + "."));
       });

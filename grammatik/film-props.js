@@ -76,7 +76,13 @@
     lamp: (it) => { const x = it.x, y = it.y, top = it.top != null ? it.top : 18; return P('M' + x + ' ' + top + 'V' + (y - 30), 'none', { w: 2 }) + P('M' + (x - 30) + ' ' + y + 'L' + (x - 12) + ' ' + (y - 30) + 'h24L' + (x + 30) + ' ' + y + 'Z', K.green) + '<ellipse cx="' + x + '" cy="' + (y + 2) + '" rx="12" ry="4" fill="' + K.glass + '" stroke="' + INK + '" stroke-width="1.5"/>'; },
     hook: (it) => P('M' + (it.x0 || 40) + ' 14H' + (it.x1 || 560), 'none', { w: 3 }) + '<rect x="' + (it.x0 || 40) + '" y="4" width="' + ((it.x1 || 560) - (it.x0 || 40)) + '" height="10" fill="url(#IDh)" opacity=".7"/>',
     hand: (it) => { const x = it.x, y = it.y, d = it.face || -1; return P('M' + (x + d * 70) + ' ' + (y + 8) + 'Q' + (x + d * 30) + ' ' + (y + 4) + ' ' + (x + d * 12) + ' ' + y, 'none', { stroke: INK, w: 15 }) + P('M' + (x + d * 70) + ' ' + (y + 8) + 'Q' + (x + d * 30) + ' ' + (y + 4) + ' ' + (x + d * 12) + ' ' + y, 'none', { stroke: '#f1ede4', w: 11 }) + '<ellipse cx="' + x + '" cy="' + y + '" rx="12" ry="9" fill="' + K.skin + '" stroke="' + INK + '" stroke-width="2"/>'; },
-    door: (it, id) => { const x = it.x, y = it.y; return R(x - 46, y - 170, 92, 170, '#e9e2cf', { w: 2.4 }) + R(x - 36, y - 162, 72, 162, '#7a5534') + hatch('M' + (x + 10) + ' ' + (y - 162) + 'h26v162h-26Z', id) + C(x + 24, y - 80, 4, '#d4c7aa') + R(x - 60, y, 120, 6, '#cfc2a2', { w: 1.6 }); },
+    door: (it, id) => { const x = it.x, y = it.y; if (it.open) { const o = Math.max(0, Math.min(1, it.open)), lw = 72 * (1 - 0.72 * o); return R(x - 46, y - 170, 92, 170, '#e9e2cf', { w: 2.4 }) + R(x - 36, y - 162, 72, 162, '#3b3530') + P('M' + (x - 36) + ' ' + (y - 162) + 'L' + f1(x - 36 + lw) + ' ' + f1(y - 162 - 10 * o) + 'V' + f1(y + 8 * o) + 'L' + (x - 36) + ' ' + y + 'Z', '#7a5534') + C(x - 36 + lw - 10, y - 80, 4, '#d4c7aa') + R(x - 60, y, 120, 6, '#cfc2a2', { w: 1.6 }); }
+      return R(x - 46, y - 170, 92, 170, '#e9e2cf', { w: 2.4 }) + R(x - 36, y - 162, 72, 162, '#7a5534') + hatch('M' + (x + 10) + ' ' + (y - 162) + 'h26v162h-26Z', id) + C(x + 24, y - 80, 4, '#d4c7aa') + R(x - 60, y, 120, 6, '#cfc2a2', { w: 1.6 }); },
+    sign: (it) => { const x = it.x, y = it.y, ban = it.kind !== 'helmet', col = ban ? '#b0413e' : '#3a6ea5'; let ic = '';
+      if (it.kind === 'helmet') ic = P('M' + (x - 22) + ' ' + (y - 70) + 'q22 -38 44 0z', '#f1ede4', { stroke: '#f1ede4', w: 2 }) + P('M' + (x - 28) + ' ' + (y - 70) + 'h56', 'none', { stroke: '#f1ede4', w: 4 });
+      else if (it.kind === 'trash') ic = R(x - 14, y - 96, 28, 34, 'none', { stroke: INK, w: 3 }) + P('M' + (x - 18) + ' ' + (y - 100) + 'h36M' + (x - 5) + ' ' + (y - 106) + 'h10', 'none', { w: 3 });
+      else ic = P('M' + (x - 22) + ' ' + (y - 66) + 'l6 -16l6 16l6 -20l6 20l6 -14l6 14', 'none', { stroke: K.green, w: 3 });
+      return P('M' + x + ' ' + y + 'V' + (y - 50), 'none', { stroke: K.metal, w: 5 }) + C(x, y - 82, 34, ban ? '#f6f1e6' : col, { stroke: col, w: 6 }) + ic + (ban ? P('M' + (x - 24) + ' ' + (y - 106) + 'L' + (x + 24) + ' ' + (y - 58), 'none', { stroke: col, w: 6 }) : ''); },
     spot: (it) => '<ellipse cx="' + it.x + '" cy="' + (it.y + 3) + '" rx="34" ry="8" fill="none" stroke="' + K.fin + '" stroke-width="2.4" stroke-dasharray="6 5"/>',
     footprints: (it) => { const x = it.x, y = it.y; const fp = (fx) => '<ellipse cx="' + fx + '" cy="' + (y + 2) + '" rx="9" ry="4" fill="' + K.fin + '" opacity=".55"/>'; return fp(x - 10) + fp(x + 12); },
     house: (it, id) => { const x = it.x, y = it.y, w = it.w || 190, h = it.h || 110; return R(x - w / 2, y - h, w, h, '#c8b79a') + P('M' + (x - w / 2 - 12) + ' ' + (y - h) + 'L' + x + ' ' + (y - h - 62) + 'L' + (x + w / 2 + 12) + ' ' + (y - h) + 'Z', '#a14a33') + R(x - 18, y - 56, 36, 56, '#7a5534') + R(x - 72, y - 82, 34, 30, '#6a7470') + R(x + 38, y - 82, 34, 30, '#6a7470') + hatch('M' + (x + w / 2 - 40) + ' ' + (y - h) + 'h40v' + h + 'h-40Z', id); },
@@ -118,7 +124,7 @@
   }
   function mix(a, b, p) { // one item between states a and b (same id)
     if (!a) return b; if (!b) return a; if (p >= 1) return b; if (p <= 0) return a;
-    if (Math.abs(a.x - b.x) < 0.5 && Math.abs(a.y - b.y) < 0.5 && JSON.stringify(a.hands) === JSON.stringify(b.hands) && (a.lean || 0) === (b.lean || 0)) return b.move === 'cut' || a.pose === b.pose ? b : (p < 0.5 ? a : b);   // nothing moves: no replayed jump or walk in place
+    if (Math.abs(a.x - b.x) < 0.5 && Math.abs(a.y - b.y) < 0.5 && JSON.stringify(a.hands) === JSON.stringify(b.hands) && (a.lean || 0) === (b.lean || 0) && (a.open || 0) === (b.open || 0)) return b.move === 'cut' || a.pose === b.pose ? b : (p < 0.5 ? a : b);   // nothing moves: no replayed jump or walk in place
     const how = b.move || 'slide', out = Object.assign({}, b);
     if (how === 'cut') return p < 0.5 ? a : b;
     const u = sm(p); out.x = lerp(a.x, b.x, u); out.y = lerp(a.y, b.y, u);
@@ -128,6 +134,7 @@
     if (how === 'walk' && b.k === 'figure') { const w = walkFeet(a.x, b.x, p, b.s || 1, b.face || 1); out.x = w.x; out.feet = w.feet; out.lift = w.lift; out.pose = 'walk'; }
     if (how === 'sit' && b.k === 'figure') { out.pose = p < 0.6 ? 'stand' : 'sit'; out.x = lerp(a.x, b.x, sm(p / 0.6)); }
     if (b.hands && a.hands) out.hands = b.hands.map((h, i) => [lerp(a.hands[i][0], h[0], u), lerp(a.hands[i][1], h[1], u)]);
+    if (b.open != null || a.open != null) out.open = lerp(a.open || 0, b.open || 0, u);
     if (b.lean != null || a.lean != null) out.lean = lerp(a.lean || 0, b.lean || 0, sm((p - 0.6) / 0.4));
     return out;
   }
