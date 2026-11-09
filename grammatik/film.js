@@ -442,11 +442,25 @@ let active=null;const mounted=new Set();
 function download(name,data,type='application/json') {
   const blob=new Blob([data],{type}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
+// The private overlay is used only where every example key it needs still matches the lesson text; other scenes keep the classic picture.
+function prepareStage(story,opt){
+  const v=opt.visual?.visual,G=root.GRAM_STAGE;if(!v||!G||!opt.lesson||v.schema!=='deutschklinik.film-visual/1')return null;
+  const src=G.registry(opt.lesson,v),scenes={};
+  for(const [id,sc] of Object.entries(v.scenes||{})){if(!story.scenes.some(x=>x.id===id)||sc.kind)continue;const json=JSON.stringify(sc);if(src.bad.some(k=>json.includes('"'+k+'#')))continue;scenes[id]=sc;}
+  if(!Object.keys(scenes).length)return null;
+  const cache=new Map(),ctx=root.document?.createElement('canvas').getContext?.('2d');
+  const measure=(t,fs)=>{const k=fs+'|'+t;let w=cache.get(k);if(w==null){if(ctx){ctx.font='600 '+fs+'px "Avenir Next", "Segoe UI", "Helvetica Neue", system-ui, sans-serif';w=ctx.measureText(t).width;}else w=t.length*fs*.56;cache.set(k,w);}return w;};
+  return {src,scenes,checks:v.checks||{},measure};
+}
 function mount(host,story,opt={}) {
   validate(story);const disposables=[],clips=new Map(),durations={};
   // opt.audio: {cueId: {url, seconds, say}} from a recording manifest. A clip is used only while its text still matches the cue.
-  for(const c of compile(story).cues){const a=opt.audio?.[c.id];if(a&&typeof a.url==='string'&&a.say===c.say&&a.seconds>0){clips.set(c.id,{url:a.url,given:true});durations[c.id]=a.seconds;}}
-  let timeline=compile(story,durations),recordingPlan=null,time=0,playing=false,raf=0,clock=0,offset=0,rate=1,audio=null,audioId='',lastCue='',disposed=false,exploration=null,exploreScene=null;
+  // opt.visual: {visual, audio} private overlay for this film (protected lesson bundle). opt.lesson: the lesson object its example keys point into.
+  // A recording whose file hash equals the audited one plays on its decoded 48 kHz length instead of the MP3 frame-walk estimate.
+  const timing=opt.visual?.audio?.cues||{},rate48=opt.visual?.audio?.sampleRate||48000;
+  for(const c of compile(story).cues){const a=opt.audio?.[c.id];if(a&&typeof a.url==='string'&&a.say===c.say&&a.seconds>0){clips.set(c.id,{url:a.url,given:true});const hash=(decodeURIComponent(a.url).match(/[0-9a-f]{64}(?=\.mp3)/)||[])[0],t=timing[c.id];durations[c.id]=t&&hash&&hash===t.mp3&&t.frames>0?t.frames/rate48:a.seconds;}}
+  let timeline=compile(story,durations),recordingPlan=null,time=0,playing=false,raf=0,clock=0,offset=0,rate=1,audio=null,audioId='',lastCue='',disposed=false,exploration=null,exploreScene=null,token=0,saved=null;
+  const stage=prepareStage(story,opt),uid=Math.random().toString(36).slice(2,8);
   const media=root.matchMedia?.('(prefers-reduced-motion: reduce)'),compact=root.matchMedia?.('(max-width: 640px)');
   let reduce=!!media?.matches;
   host.classList.add('gf');host.lang='de';
@@ -461,15 +475,21 @@ function mount(host,story,opt={}) {
   const on=(el,event,fn)=>{el.addEventListener(event,fn);disposables.push(()=>el.removeEventListener(event,fn));};
   // One audio element for every clip: Safari on iPhone lets an element keep playing after the first tap, not a new one per line.
   let voice=null;
-  function clearAudio(){if(audio){audio.onended=audio.onerror=null;audio.pause();audio.removeAttribute('src');audio.load();audio=null;}audioId='';}
-  function stop(){playing=false;cancelAnimationFrame(raf);clearAudio();$('[data-play]').textContent='Abspielen';}
+  function clearAudio(){token++;if(audio){audio.onended=audio.onerror=audio.onwaiting=audio.onplaying=null;audio.pause();audio.removeAttribute('src');audio.load();audio=null;}audioId='';}
+  function stop(){playing=false;cancelAnimationFrame(raf);clearAudio();host.classList.remove('gf-waiting');$('[data-play]').textContent='Abspielen';}
   function question(s) {
     const area=$('.gf-question');area.replaceChildren();
     $('.gf-explore').hidden=!s.quiz&&!opt.onExercises;
     $('.gf-explore h3').hidden=!s.quiz;
     const tools=$('.gf-manipulation');tools.replaceChildren();exploreScene=null;
-    const canExplore=JSON.stringify(s.from)!==JSON.stringify(s.to)||s.beats.some(b=>b.stage!==s.beats[0].stage);
-    const variants=s.variants?.length?s.variants:!s.matrix&&canExplore?[{label:'Beispiel untersuchen',takeaway:s.takeaway}]:[];
+    const canExplore=JSON.stringify(s.from)!==JSON.stringify(s.to)||s.beats.some(b=>b.stage!==s.beats[0].stage),staged=!!stage?.scenes[s.id];
+    const variants=staged?[]:s.variants?.length?s.variants:!s.matrix&&canExplore?[{label:'Beispiel untersuchen',takeaway:s.takeaway}]:[];
+    if(staged){
+      const hint=document.createElement('p');hint.className='gf-hint';hint.textContent='Bewege den Regler und verfolge die Veränderung Schritt für Schritt.';
+      const label=document.createElement('label');label.className='gf-change';label.textContent='Veränderung untersuchen';const slider=document.createElement('input');slider.type='range';slider.min=0;slider.max=1;slider.step=.005;slider.value=0;slider.setAttribute('aria-label','Veränderung untersuchen');label.append(slider);tools.append(hint,label);
+      const show=()=>{stop();const idx=story.scenes.indexOf(s),cs=timeline.cues.filter(c=>c.scene===idx),t0=cs[0].start,t1=cs.at(-1).end-1e-3,t=t0+(t1-t0)*+slider.value,c=cs.find(x=>t>=x.start&&t<x.end)||cs.at(-1);exploration={scene:idx,stageTime:t,caption:c.say,label:'Veränderung untersuchen'};draw();};
+      slider.oninput=show;exploreScene=show;
+    }
     if(variants.length){
       const group=document.createElement('div');group.className='gf-options';
       const hint=document.createElement('p');hint.className='gf-hint';hint.textContent=s.variants?.length?'Wähle eine Perspektive. Bewege dann den Regler.':'Bewege den Regler und beobachte das Beispiel.';tools.append(hint,group);
@@ -494,21 +514,57 @@ function mount(host,story,opt={}) {
       exploreScene=show;
     }
     $('[data-explore-toggle]').disabled=!exploreScene;
-    if(!s.quiz){if(!variants.length&&!s.matrix)area.innerHTML='<p>Beobachte das Beispiel. Gehe dann zur nächsten Erklärung.</p>';return;}
-    const p=document.createElement('p');p.textContent=s.quiz.prompt;area.append(p);
+    const check=stage?.checks?.[s.id];
+    if(check&&check.origin==='authored-visual-diagnostic'){$('.gf-explore').hidden=false;$('.gf-explore h3').hidden=false;authored(area,s,check);}
+    if(!s.quiz){if(!variants.length&&!s.matrix&&!staged&&!area.childElementCount)area.innerHTML='<p>Beobachte das Beispiel. Gehe dann zur nächsten Erklärung.</p>';return;}
+    const p=document.createElement('p');p.textContent=s.quiz.prompt;if(area.childElementCount)p.className='gf-second';area.append(p);
     const options=document.createElement('div');options.className='gf-options';
     const feedback=document.createElement('p');feedback.className='gf-feedback';feedback.setAttribute('role','status');
     const shift=[...s.id].reduce((n,c)=>n+c.charCodeAt(0),0)%s.quiz.options.length;
     const optionsInOrder=[...s.quiz.options.slice(shift),...s.quiz.options.slice(0,shift)];
     optionsInOrder.forEach(o=>{const b=document.createElement('button');b.type='button';b.textContent=o.text;b.onclick=()=>{
-      stop();options.querySelectorAll('button').forEach(x=>{x.removeAttribute('data-correct');x.setAttribute('aria-pressed','false');});b.setAttribute('data-correct',String(!!o.correct));b.setAttribute('aria-pressed','true');feedback.textContent=(o.correct?'Richtig. ':'Schau noch einmal hin. ')+o.feedback;
-      const t=timeline.cues.filter(c=>c.scene===at(timeline,time).cue.scene).at(-1);time=t.start+Math.min(3,t.seconds);exploration=null;draw();
+      hold();options.querySelectorAll('button').forEach(x=>{x.removeAttribute('data-correct');x.setAttribute('aria-pressed','false');x.removeAttribute('aria-description');});b.setAttribute('data-correct',String(!!o.correct));b.setAttribute('aria-pressed','true');if(!o.correct)b.setAttribute('aria-description','Für diese Frage nicht richtig');feedback.textContent=(o.correct?'Richtig. ':'Für diese Frage nicht richtig. ')+o.feedback;feedback.append(back());
+      settle(story.scenes.indexOf(s));
     };options.append(b);});area.append(options,feedback);
+  }
+  // ---- grammar stage (private overlay): keyframes sit at fractions of each cue's actual length ----
+  let kfCache=null,metricCache=new Map();
+  function sceneKfs(sid){
+    if(!kfCache||kfCache.timeline!==timeline){kfCache={timeline,scenes:{}};for(const [id,sc] of Object.entries(stage.scenes))kfCache.scenes[id]={id,kfs:timeline.cues.filter(c=>story.scenes[c.scene].id===id).flatMap(c=>(sc.cues[c.id]||[]).map(k=>({t:c.start+k.at*c.seconds,s:k.s})))};}
+    return kfCache.scenes[sid];
+  }
+  function metrics(W){
+    const avail=Math.max(240,(root.innerHeight||800)-chrome()),key=W+'|'+Math.round(avail/8);if(metricCache.has(key))return metricCache.get(key);
+    const small=W<560,base=small?Math.max(15,Math.min(19,W/20)):Math.max(18,Math.min(30,W/34)),floor=small?15:18;
+    const tall=fs=>{const o={fs,measure:stage.measure,margin:small?12:26,tlH:fs*(small?6.6:4.6)};let h=0;for(const sc of Object.values(stage.scenes))for(const list of Object.values(sc.cues))for(const k of list){h=Math.max(h,GRAM_STAGE.layout(stage.src,k.s,W,o).h+(k.s.tl?o.tlH:0)+fs*0.4);}return h;};
+    let fs=base,h=tall(fs);if(h>avail){fs=Math.max(floor,fs*avail/h);h=tall(fs);}
+    const m={fs,measure:stage.measure,margin:small?12:26,tlH:fs*(small?6.6:4.6),minH:Math.ceil(h)};metricCache.set(key,m);return m;
+  }
+  function chrome(){let h=0;for(const el of [$('.gf-head'),$('.gf-scene-bar'),$('.gf-caption'),$('.gf-playback')])if(el&&!el.hidden)h+=el.offsetHeight||0;return h+(opt.close?28:96);}
+  function stageSvg(cue,manual){
+    const sid=story.scenes[cue.scene].id,sc=stage.scenes[sid];if(!sc)return null;const kf=sceneKfs(sid);if(!kf||!kf.kfs.length)return null;
+    const W=Math.max(280,Math.round(view.clientWidth||900)),m=metrics(W),t=manual&&manual.stageTime!=null?manual.stageTime:time;
+    let cur=kf.kfs[0];for(const k of kf.kfs)if(k.t<=t+1e-9)cur=k;
+    return GRAM_STAGE.render(stage.src,kf,t,W,{...m,reduce:reduce||!!manual?.cut,idp:'gs'+uid,label:story.scenes[cue.scene].title+'. '+GRAM_STAGE.describe(stage.src,cur.s)}).svg;
+  }
+  // Answering pauses the narration and keeps its place; "Zurück zum Film" restores the same picture and resumes if it was playing.
+  function hold(){if(!saved)saved={time,playing};stop();}
+  function settle(idx){const cs=timeline.cues.filter(c=>c.scene===idx),t=cs.at(-1);time=stage?.scenes[story.scenes[idx].id]?t.end-1e-3:t.start+Math.min(3,t.seconds);exploration=null;draw();}
+  function back(){const b=document.createElement('button');b.type='button';b.className='gf-back';b.textContent='Zurück zum Film';b.onclick=()=>{const was=saved;saved=null;if(!was)return;time=was.time;exploration=null;draw();if(was.playing)$('[data-play]').click();};return b;}
+  function authored(area,s,c){
+    const p=document.createElement('p');p.textContent=c.ask;area.append(p);const feedback=document.createElement('p');feedback.className='gf-feedback';feedback.setAttribute('role','status');
+    const answer=(ok,picked)=>{hold();feedback.textContent=(picked==null?'':ok?'Richtig. ':'Für diese Frage nicht richtig. ')+'Lösung: '+c.answer+' '+(c.why||'');feedback.append(back());settle(story.scenes.indexOf(s));};
+    const row=document.createElement('div');row.className='gf-options';
+    if(c.choices?.length)c.choices.forEach(label=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.onclick=()=>{row.querySelectorAll('button').forEach(x=>{x.removeAttribute('data-correct');x.setAttribute('aria-pressed','false');x.removeAttribute('aria-description');});const ok=label===c.answer;b.setAttribute('data-correct',String(ok));b.setAttribute('aria-pressed','true');if(!ok)b.setAttribute('aria-description','Für diese Frage nicht richtig');answer(ok,label);};row.append(b);});
+    else{const b=document.createElement('button');b.type='button';b.textContent='Erst überlegen, dann Lösung zeigen';b.onclick=()=>answer(true,null);row.append(b);}
+    area.append(row,feedback);
   }
   function draw(){
     const state=at(timeline,time),cue=state.cue;
     const manual=exploration?.scene===cue.scene?exploration:null;
-    view.innerHTML=frame(timeline,time,{...theme(),player:true,...(manual?{scene:manual.override,stage:manual.stage}:reduce?{stage:cue.stage}:{})});
+    let staged=null;if(stage){try{staged=stageSvg(cue,manual);}catch(e){delete stage.scenes[story.scenes[cue.scene].id];metricCache.clear();kfCache=null;staged=null;}}   // a broken overlay scene falls back to the classic picture
+    view.classList.toggle('gf-grammar',!!staged);
+    view.innerHTML=staged||frame(timeline,time,{...theme(),player:true,...(manual?{scene:manual.override,stage:manual.stage}:reduce?{stage:cue.stage}:{})});
     caption.textContent=manual?manual.caption:cue.say;range.value=String(time);range.max=String(timeline.duration);range.setAttribute('aria-valuetext',stamp(time).slice(3,8)+' von '+stamp(timeline.duration).slice(3,8));
     host.classList.toggle('gf-exploring',!!manual);$('.gf-manipulation').hidden=!manual;$('.gf-playback').hidden=!!manual;
     $('[data-explore-toggle]').textContent=manual?'Zurück zum Film':'Ausprobieren';$('[data-explore-toggle]').setAttribute('aria-pressed',String(!!manual));
@@ -532,7 +588,7 @@ function mount(host,story,opt={}) {
     if(clip){
       if(audioId!==cue.id){clearAudio();audio=voice||(voice=new Audio());audio.preload='auto';audio.src=clip.url;audioId=cue.id;
         // fetch the next recorded line while this one plays
-        const next=timeline.cues[timeline.cues.indexOf(cue)+1],ahead=next&&clips.get(next.id);if(ahead?.given&&!ahead.warm){ahead.warm=true;fetch(ahead.url).catch(()=>{ahead.warm=false;});}audio.playbackRate=rate;audio.currentTime=Math.max(0,time-cue.start);audio.onended=()=>{time=cue.end;clearAudio();clock=performance.now();offset=time;};audio.onerror=()=>{stop();status.textContent='Diese Sprachdatei konnte nicht abgespielt werden.';};audio.play().catch(()=>{stop();status.textContent='Bitte Wiedergabe erneut starten, um Audio zu erlauben.';});}
+        const next=timeline.cues[timeline.cues.indexOf(cue)+1],ahead=next&&clips.get(next.id);if(ahead?.given&&!ahead.warm){ahead.warm=true;fetch(ahead.url).catch(()=>{ahead.warm=false;});}audio.playbackRate=rate;audio.currentTime=Math.max(0,time-cue.start);const mine=token;audio.onended=()=>{if(mine!==token)return;time=cue.end;clearAudio();clock=performance.now();offset=time;};audio.onerror=()=>{if(mine!==token)return;stop();status.textContent='Diese Sprachdatei konnte nicht abgespielt werden.';};audio.onwaiting=()=>{if(mine===token)host.classList.add('gf-waiting');};audio.onplaying=()=>{if(mine===token){host.classList.remove('gf-waiting');status.textContent='';}};audio.play().catch(()=>{if(mine!==token)return;stop();status.textContent='Bitte noch einmal auf Abspielen tippen, um den Ton zu erlauben.';});}
       if(audio)time=cue.start+Math.min(cue.seconds,audio.currentTime);
     } else {
       if(audio)clearAudio();time=Math.min(cue.end,offset+(now-clock)/1000*rate);
@@ -550,6 +606,7 @@ function mount(host,story,opt={}) {
   on($('.gf-speed select'),'change',e=>{rate=+e.target.value;clock=performance.now();offset=time;if(audio)audio.playbackRate=rate;});
   on(document,'visibilitychange',()=>{if(document.hidden)stop();});
   const resize=()=>draw();compact?.addEventListener('change',resize);disposables.push(()=>compact?.removeEventListener('change',resize));
+  let lastW=0;const sizer=root.ResizeObserver&&stage?new ResizeObserver(()=>{const w=Math.round(view.clientWidth);if(w&&w!==lastW){lastW=w;metricCache.clear();draw();}}):null;sizer?.observe(view);disposables.push(()=>sizer?.disconnect());on(root,'resize',()=>{metricCache.clear();if(stage)draw();});
   const motion=()=>{reduce=!!media.matches;stop();draw();};media?.addEventListener('change',motion);disposables.push(()=>media?.removeEventListener('change',motion));
   on($('[data-script]'),'click',()=>download(story.id+'-narration.json',JSON.stringify(manifest(timeline),null,2)));
   on($('[data-subs]'),'click',()=>download(story.id+'.vtt',vtt(timeline),'text/vtt'));

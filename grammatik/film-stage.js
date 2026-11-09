@@ -1,0 +1,198 @@
+/* Deutschklinik grammar stage: the picture for a film scene whose private visual overlay is available.
+   A scene is a list of keyframes (states) placed on the cue clock. The picture at time t is a pure function of (keyframes, t):
+   the latest keyframe at or before t, blended from the previous one over a short transition. Nothing accumulates, so the
+   same time always gives the same picture after seek, replay or resize.
+   Words are never typed into the overlay. A piece points at a checked lesson example by key and word index
+   ("ex#3", "ex#3.0-3" = characters 0-3, "ex#3!" = without trailing punctuation, "ex#3." = only the punctuation);
+   GRAM_STAGE.registry resolves the keys against the protected lesson object and refuses a changed text.
+     row   { id, ex, tag, dim, rail, list, tiles }   tile { id, p:[piece], r role, f field chip, l label, L show role label, n identity, j glue, box }
+     extras per state: br brackets, ar arrows, ch chips, bd field boundaries, tl timeline                                                       */
+(function (root) {
+  'use strict';
+  const FONT = "'Avenir Next', 'Segoe UI', 'Helvetica Neue', system-ui, sans-serif", SERIF = "Georgia, 'Iowan Old Style', serif";
+  const C = { paper: '#f3eddc', paper2: '#e9e2cf', ink: '#1e2224', soft: '#5b5446', faint: 'rgba(30,34,36,0.18)', fin: '#d9622b', nonfin: '#2f5d50', conn: '#9a6a12', connBg: '#f2e2b8', tileBg: '#fbf7ec', field: '#2f4b4a', trail: '#d9622b', notch: ['#2f5d50', '#d9622b', '#9a6a12', '#6d4c8a', '#3a6ea5', '#b0413e'], dash: '#6d6248' };
+  const ROLE = { fin: { c: C.fin, l: 'finit', u: 'solid' }, 'fin?': { c: C.dash, l: 'finit?', u: 'gap' }, p2: { c: C.nonfin, l: 'Partizip II', u: 'dash' }, inf: { c: C.nonfin, l: 'Infinitiv', u: 'dot' }, ersatz: { c: C.nonfin, l: 'Ersatzinfinitiv', u: 'dot2' }, pas: { c: C.nonfin, l: 'Passiv-Partizip', u: 'dashdot' }, conn: { c: C.conn, l: 'Konnektor', u: 'none', box: 'conn' }, pfx: { c: C.nonfin, l: 'Verbteil', u: 'hook' }, pron: { c: C.soft, l: 'Pronomen', u: 'none' }, adv: { c: C.field, l: 'Adverb', u: 'none' }, plain: { c: C.ink, l: '', u: 'none' }, punct: { c: C.ink, l: '', u: 'none', nobox: 1 }, time: { c: C.soft, l: 'Zeitangabe', u: 'none' } };
+  const FIELD = { 0: '0', 1: '1', 2: '2', M: 'Mitte', E: 'Ende', V: 'Vorfeld' };
+  const E = { C, ROLE };
+  const sm = (x) => { x = Math.max(0, Math.min(1, x)); return x * x * (3 - 2 * x); }, lerp = (a, b, t) => a + (b - a) * t, f1 = (x) => Math.round(x * 10) / 10;
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+  /* ---- text references ---- */
+  E.resolve = function (src, ref) {
+    const m = /^([^#]+)#(\d+)(?:\.(\d+)-(\d*)|(!)|(\.))?$/.exec(ref); if (!m) throw new Error('bad ref ' + ref);
+    const ex = src.examples[m[1]]; if (!ex) throw new Error('unknown example ' + m[1]); const words = ex.text.split(' '), w = words[+m[2]]; if (w == null) throw new Error('no word ' + ref);
+    if (m[3] != null) return w.slice(+m[3], m[4] === '' ? undefined : +m[4]); if (m[5]) return w.replace(/[.,!?;:]+$/, ''); if (m[6]) return (w.match(/[.,!?;:]+$/) || [''])[0]; return w;
+  };
+  /* text of a row exactly as a reader sees it: pieces of a tile joined by spaces unless a piece is a continuation (compound part / punctuation) */
+  E.rowText = function (src, row) { let s = ''; for (const t of row.tiles) { t.p.forEach((p, i) => { const txt = E.resolve(src, p.x), glue = (i === 0 ? t.j : p.j) || /^[.,!?;:]$/.test(txt); s += (s && !glue ? ' ' : '') + txt; }); } return s; };
+
+  /* ---- layout of one state ---- */
+  E.layout = function (src, st, W, opt) {
+    const fs = opt.fs, meas = opt.measure, padX = fs * 0.28, gap = fs * 0.34, M = opt.margin, avail = W - 2 * M, lineH = fs * 3.25, out = { pieces: [], tiles: [], rows: [], h: 0 };
+    let y = opt.top || fs * 1.2;
+    for (const row of st.rows || []) {
+      const tiles = row.tiles.map((t) => { const rr = ROLE[t.r || 'plain'] || ROLE.plain, boxed = !rr.nobox && (t.r === 'conn' || !!t.box), group = !boxed && t.f != null && t.p.length > 1; const ps = t.p.map((p, i) => { const text = E.resolve(src, p.x); return { id: p.id || (t.p.length > 1 ? t.id + '.' + i : t.id), text, w: meas(text, fs), glue: i > 0 && (p.j || /^[.,!?;:]$/.test(text)) }; });
+        let w = 0; ps.forEach((p, i) => { if (i > 0 && !p.glue) w += meas(' ', fs); p.dx = w; w += p.w; }); return { t, ps, w: w + (boxed ? 2 * padX : 0), boxed, group, pad: boxed ? padX : 0, rr }; }).flatMap((tl) => { if (tl.boxed || tl.ps.length < 2 || tl.w <= avail) return [tl]; const out2 = []; let cur = null; for (const p of tl.ps) { const pw = (cur && !p.glue ? meas(' ', fs) : 0) + p.w; if (!cur || (cur.w + pw > avail && !p.glue)) { cur = { t: out2.length ? { ...tl.t, j: 0, _part: out2.length } : tl.t, ps: [], w: 0, boxed: false, pad: 0, rr: tl.rr }; out2.push(cur); } const g = cur.ps.length && !p.glue ? meas(' ', fs) : 0; cur.ps.push({ ...p, dx: cur.w + g }); cur.w += g + p.w; } return out2; });
+      const lines = [[]]; let x = 0; for (const tl of tiles) { const g = lines[lines.length - 1].length ? (tl.t.j || tl.t.r === 'punct' ? (tl.boxed ? gap * 0.3 : 0) : gap) : 0; if (x + g + tl.w > avail && lines[lines.length - 1].length) { const prevL = lines[lines.length - 1], carry = (tl.t.j || tl.t.r === 'punct') && prevL.length > 1 ? [prevL.pop()] : []; lines.push(carry); x = carry.reduce((a, c) => { c.gx = 0; return a + c.w; }, 0); } const L = lines[lines.length - 1]; tl.gx = L.length ? (tl.t.j || tl.t.r === 'punct' ? (tl.boxed ? gap * 0.3 : 0) : gap) : 0; L.push(tl); x += tl.gx + tl.w; }
+      const rowTop = y + (row.tag ? fs * 0.75 : 0) + (row.room || row.tag ? fs * 0.9 : fs * 0.55); out.rows.push({ id: row.id, tag: row.tag, x: M, y: y + fs * 0.5, dim: row.dim, rail: row.rail, top: y });
+      lines.forEach((L, li) => { const lw = L.reduce((a, tl) => a + tl.gx + tl.w, 0); let cx = M + Math.max(0, (avail - lw) / 2); const base = rowTop + fs * 0.95 + li * lineH;
+        for (const tl of L) { cx += tl.gx; const box = { key: row.id + '/' + tl.t.id + (tl.t._part ? '~' + tl.t._part : ''), row: row.id, id: tl.t.id, x: cx, y: base - fs * 0.92, w: tl.w, h: fs * 1.24, base, r: tl.t.r || 'plain', f: tl.t.f, l: tl.t.l, showL: tl.t.L, n: tl.t.n, boxed: tl.boxed, group: tl.group, hide: tl.t.hide, dim: tl.t.dim || row.dim, rail: row.rail, line: li };
+          out.tiles.push(box); for (const p of tl.ps) out.pieces.push({ key: row.id + '/' + p.id, row: row.id, id: p.id, tile: tl.t.id, text: p.text, x: cx + tl.pad + p.dx, w: p.w, base, n: tl.t.n, ex: row.ex, dim: tl.t.dim || row.dim, rail: row.rail, line: li }); cx += tl.w; } });
+      const below = (st.bd || []).some((b) => b[0] === row.id && b[2]) || (st.ch || []).some((c) => c.below && c.at && c.at[0] === row.id);   // a boundary label or rule chip under this row needs its own line
+      y = rowTop + fs * 0.95 + (lines.length - 1) * lineH + fs * (below ? 2.6 : 1.9);
+    }
+    out.h = y + ((st.ch || []).some((c) => !c.at) ? fs * 1.1 : 0); return out;   // room for a free rule chip under the rows
+  };
+
+  /* ---- blending of two laid-out states ---- */
+  E.frame = function (src, scene, t, W, opt) {
+    const kfs = scene.kfs; let i = 0; while (i + 1 < kfs.length && kfs[i + 1].t <= t + 1e-9) i++;
+    const cur = kfs[i], prev = i > 0 ? kfs[i - 1] : null, dur = opt.reduce ? 0 : Math.min(0.7, prev ? (kfs[i + 1] ? kfs[i + 1].t - cur.t : 9) : 0), p = !prev || dur <= 0 ? 1 : sm((t - cur.t) / dur);
+    const A = prev ? E.layout(src, prev.s, W, opt) : null, B = E.layout(src, cur.s, W, opt);
+    return { A, B, p, cur: cur.s, prev: prev ? prev.s : null, index: i };
+  };
+
+  /* ---- arrow routing: candidate curves are sampled; the first that touches no other word, label or chip wins ---- */
+  E.route = function (L, a, b, W, fs, opt) {
+    const tileOf = (q) => L.tiles.find((t) => t.row === q.row && q.x >= t.x - 1 && q.x <= t.x + t.w + 1 && Math.abs(t.base - q.base) < 1) || null;
+    const labelled = (t) => t && (t.l != null || t.showL || t.f != null), ta = tileOf(a), tb = tileOf(b);
+    const boxes = []; for (const q of L.pieces) if (q !== a && q !== b && !(q.x === a.x && q.base === a.base) && !(q.x === b.x && q.base === b.base)) boxes.push([q.x - 3, q.base - fs * 0.95, q.x + q.w + 3, q.base + fs * 0.3]);
+    for (const t of L.tiles) if (labelled(t) && t !== ta && t !== tb) { const half = Math.max(t.w, fs * 2) / 2, cx = t.x + t.w / 2; boxes.push([cx - half, t.base + fs * 0.65, cx + half, t.base + fs * 1.2]); }
+    const ax = a.x + a.w / 2, bx = b.x + b.w / 2, top = (q) => q.base - fs * 1.15, bottom = (q, t) => q.base + fs * (labelled(t) ? 1.35 : 0.55), cands = [];
+    const bend = (y0, y1, k) => Math.min(y0, y1) - fs * (k + Math.abs(ax - bx) / W);
+    if (Math.abs(a.base - b.base) < fs * 0.5) { for (const k of [0.8, 1.5, 2.3]) cands.push([ax, top(a), (ax + bx) / 2, bend(top(a), top(b), k), bx, top(b)]); cands.push([ax, bottom(a, ta), (ax + bx) / 2, Math.max(bottom(a, ta), bottom(b, tb)) + fs * 1.1, bx, bottom(b, tb)]); }
+    else { const down = a.base < b.base, y0 = down ? bottom(a, ta) : top(a), y1 = down ? top(b) : bottom(b, tb); cands.push([ax, y0, (ax + bx) / 2, (y0 + y1) / 2, bx, y1]); for (const k of [0.8, 1.6]) cands.push([ax, top(a), (ax + bx) / 2, bend(top(a), top(b), k), bx, top(b)]); for (const side of [W - opt.margin * 0.6, opt.margin * 0.6]) cands.push([ax, y0, side, (y0 + y1) / 2, bx, y1]); }
+    let best = cands[0], bestHits = Infinity; for (const c of cands) { let hits = 0; for (let i = 2; i <= 22; i++) { const u = i / 24, x = (1 - u) * (1 - u) * c[0] + 2 * u * (1 - u) * c[2] + u * u * c[4], y = (1 - u) * (1 - u) * c[1] + 2 * u * (1 - u) * c[3] + u * u * c[5]; if (y < 2) hits += 0.5; for (const bx_ of boxes) if (x >= bx_[0] && x <= bx_[2] && y >= bx_[1] && y <= bx_[3]) hits++; } if (hits < bestHits) { best = c; bestHits = hits; if (!hits) break; } }
+    return best;
+  };
+
+  /* ---- example registry: overlay keys -> exact text of the protected lesson (refused if the lesson text changed) ---- */
+  const fnv = (str) => { let h = 0x811c9dc5; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; } return ('0000000' + h.toString(16)).slice(-8); };
+  E.fnv = fnv;
+  E.get = (obj, p) => p.replace(/\[(\d+)\]/g, '.$1').split('.').filter(Boolean).reduce((o, k) => (o == null ? undefined : o[k]), obj);
+  E.lookup = function (lesson, e) {
+    const v = E.get(lesson, e.ref); let text;
+    if (e.mode === 'joined') text = Array.isArray(v) ? v.map((x) => (typeof x === 'string' ? x : x && x.text)).filter((x) => x !== '' && x != null).join(' ') : undefined; else text = v;
+    if (typeof text !== 'string') return null; if (e.span) text = text.slice(e.span[0], e.span[1]);
+    return text.length === e.len && fnv(text) === e.h ? text : null;
+  };
+  E.registry = function (lesson, visual) {
+    const out = { examples: {} }, bad = [];
+    for (const [key, e] of Object.entries((visual && visual.refs) || {})) { const t = E.lookup(lesson, e); if (t == null) bad.push(key); else out.examples[key] = { text: t }; }
+    out.bad = bad; return out;
+  };
+
+  /* ---- text alternative of one state: every row as read, with its grammatical marks ---- */
+  E.describe = function (src, st) {
+    const parts = [];
+    for (const row of st.rows || []) { let line = (row.tag ? row.tag + ': ' : '') + E.rowText(src, row) + (row.rail ? ' (noch nicht fertig)' : ''); const marks = [];
+      for (const t of row.tiles) { const txt = t.p.map((p) => E.resolve(src, p.x)).join(' '), rr = ROLE[t.r] || null; if (t.f != null) marks.push('Position ' + (FIELD[t.f] || t.f) + ': ' + txt); if (rr && rr.l && t.r !== 'punct') marks.push((t.l || rr.l) + ': ' + txt); else if (t.l) marks.push(t.l + ': ' + txt); }
+      if (marks.length) line += ' – ' + marks.join('; '); parts.push(line); }
+    for (const br of st.br || []) if (br.l) parts.push('Klammer: ' + br.l);
+    for (const ar of st.ar || []) if (ar.l) parts.push('Pfeil: ' + ar.l);
+    for (const ch of st.ch || []) parts.push('Hinweis: ' + ch.t);
+    if (st.tl) parts.push('Zeitleiste: ' + st.tl.pts.map((q) => String(q.l).replace(/\n/g, ' ')).join(', ') + (st.tl.emptyL ? ', ' + st.tl.emptyL : ''));
+    return parts.join('. ');
+  };
+
+  /* a word changing rows never slides diagonally across other words: out of its row, across in the gap next to the target row, then in */
+  E.path3 = function (ax, ay, bx, by, p, fs) { const ym = by > ay ? by - fs * 1.55 : by + fs * 1.45, u = sm(p / 0.3), v = sm((p - 0.3) / 0.4), w = sm((p - 0.7) / 0.3); return { x: lerp(ax, bx, v), y: p < 0.3 ? lerp(ay, ym, u) : p < 0.7 ? ym : lerp(ym, by, w), ym }; };
+
+  /* ---- SVG rendering ---- */
+  E.render = function (src, scene, t, W, opt) {
+    const sz = (k) => Math.max(opt.minText || 11, opt.fs * k);   // small labels never drop below a readable size on phones
+    const fr = E.frame(src, scene, t, W, opt), { B, p } = fr, A = p >= 1 ? null : fr.A, fs = opt.fs, H = Math.max(opt.minH || 0, B.h + (fr.cur.tl ? opt.tlH : 0) + fs * 0.4, A ? A.h + (fr.prev && fr.prev.tl ? opt.tlH : 0) : 0);
+    let bg = '', mid = '', top = '';
+    const notchCol = (id) => { let h = 0; for (const c of String(id).replace(/\..*$/, '')) h = (h * 31 + c.charCodeAt(0)) >>> 0; return C.notch[h % C.notch.length]; };
+    const pieceA = new Map(A ? A.pieces.map((q) => [q.key, q]) : []), idA = new Map(); if (A) for (const q of A.pieces) { if (!idA.has(q.id)) idA.set(q.id, []); idA.get(q.id).push(q); }
+    const tileA = new Map(A ? A.tiles.map((q) => [q.key, q]) : []), keysB = new Set(B.pieces.map((q) => q.key));
+    const rowOp = (o) => (o.dim ? o.dim : 1);
+    const pin = A ? Math.max(0, 2 * p - 1) : 1, pout = Math.max(0, 1 - 2 * p);   // unrelated content: old fades out first, new fades in after (never overlapping)
+    const tileB = new Map(B.tiles.map((q) => [q.key, q])), liftOf = (a, b) => { if (!a || !b || p <= 0 || p >= 1) return 0; const d = Math.abs(b.x - a.x); return d > fs * 3.5 ? -Math.sin(Math.PI * p) * fs * 1.25 : 0; }, tLift = (row, tid) => liftOf(tileA.get(row + '/' + tid), tileB.get(row + '/' + tid));
+    // rows: tags and rails
+    const rowA = new Map(A ? A.rows.map((r) => [r.id, r]) : []), rowB = new Map(B.rows.map((r) => [r.id, r]));
+    const rowDeco = (r, o, y0) => (r.tag ? '<text x="' + f1(r.x) + '" y="' + f1(y0 + fs * 0.62) + '" font-family="' + FONT + '" font-size="' + f1(sz(0.42)) + '" letter-spacing="0.08em" fill="' + C.soft + '" opacity="' + f1(o * rowOp(r) * 100) / 100 + '">' + esc(r.tag.toUpperCase()) + '</text>' : '');
+    const railOf = (r, o, y0) => (r.rail && o > 0.01 ? '<rect x="' + f1(r.x - fs * 0.2) + '" y="' + f1(y0 + fs * 0.25) + '" width="' + f1(W - 2 * r.x + fs * 0.4) + '" height="' + f1(fs * 2.9) + '" rx="' + f1(fs * 0.3) + '" fill="none" stroke="' + C.faint + '" stroke-dasharray="6 6" opacity="' + f1(o * 100) / 100 + '"/>' : '');
+    for (const r of B.rows) { const a = rowA.get(r.id), same = a && a.tag === r.tag && !!a.rail === !!r.rail, y0 = same ? lerp(a.top, r.top, p) : r.top, o = same ? 1 : pin; top += rowDeco(r, o, y0); bg += railOf(r, o, y0); if (a && !same) { top += rowDeco(a, pout, a.top); bg += railOf(a, pout, a.top); } }
+    if (A) for (const a of A.rows) if (!rowB.has(a.id)) { top += rowDeco(a, pout, a.top); bg += railOf(a, pout, a.top); }
+    // tile boxes (blend position for same key)
+    const tileShape = (b, op) => { if (!b.boxed || op <= 0.01) return ''; const rr = ROLE[b.r] || ROLE.plain, fill = b.r === 'conn' ? C.connBg : C.tileBg, st = b.r === 'conn' ? C.conn : 'rgba(30,34,36,0.55)'; const d = b.r === 'conn' ? 'M' + f1(b.x + fs * 0.18) + ' ' + f1(b.y) + 'H' + f1(b.x + b.w) + 'V' + f1(b.y + b.h) + 'H' + f1(b.x + fs * 0.18) + 'L' + f1(b.x - fs * 0.05) + ' ' + f1(b.y + b.h / 2) + 'Z' : null;
+      return (d ? '<path d="' + d + '"' : '<rect x="' + f1(b.x) + '" y="' + f1(b.y) + '" width="' + f1(b.w) + '" height="' + f1(b.h) + '" rx="' + f1(fs * 0.18) + '"') + ' fill="' + fill + '" stroke="' + st + '" stroke-width="1.6" opacity="' + f1(op * rowOp(b) * 100) / 100 + '"/>'; };
+    const used = new Set(), match = new Map();
+    for (const q of B.pieces) { let a = pieceA.get(q.key); if (!a && A && !opt.reduce) a = (idA.get(q.id) || []).find((c) => !keysB.has(c.key) && !used.has(c.key) && ((c.text.toLowerCase() === q.text.toLowerCase() && !(c.ex && q.ex && c.ex !== q.ex)) || (c.n && q.n && String(c.n) === String(q.n)))); if (a) { used.add(a.key); match.set(q.key, a); } }   // identity travels only within one example (or from its rail/list) and only when it leaves its old place
+    const arcOf = (a, b) => (Math.abs(b.x - a.x) > fs * 1.5 && p > 0 && p < 1 ? -Math.sin(Math.PI * p) * fs * 1.25 : 0), usedT = new Set();
+    for (const b of B.tiles) { if (tileA.has(b.key)) continue; const ps = B.pieces.filter((q) => q.row === b.row && q.tile === b.id); if (ps.length !== 1) continue; const a = match.get(ps[0].key); if (!a || pieceA.has(ps[0].key)) continue; const ta = tileA.get(a.row + '/' + a.tile); if (!ta || tileB.has(ta.key)) continue; usedT.add(ta.key); if (Math.abs(b.base - ta.base) > fs * 0.5) { const P3 = E.path3(ta.x, ta.base, b.x, b.base, p, fs); bg += tileShape({ ...b, x: P3.x, y: P3.y - (b.base - b.y), w: lerp(ta.w, b.w, p) }, 1); } else { const l = arcOf(ta, b); bg += tileShape({ ...b, x: lerp(ta.x, b.x, p), y: lerp(ta.y, b.y, p) + l, w: lerp(ta.w, b.w, p) }, 1); } b._travel = 1; }   // a one-word tile travels with its word
+    for (const b of B.tiles) { if (b._travel) { delete b._travel; continue; } const a0 = tileA.get(b.key); if (a0 && a0.line !== b.line && p < 1) { bg += tileShape(a0, pout) + tileShape(b, pin); continue; } const a = a0; const g = a ? { ...b, x: lerp(a.x, b.x, p), y: lerp(a.y, b.y, p) + liftOf(a, b), w: lerp(a.w, b.w, p) } : b; bg += tileShape(g, a ? 1 : pin); }
+    if (A) for (const a of A.tiles) if (!tileB.has(a.key) && !usedT.has(a.key)) bg += tileShape(a, pout);
+    // pieces: same key -> move; same identity elsewhere -> travel from there (with trail); otherwise fade in; vanished -> fade out
+    const txt = (q, x, op, extra) => '<text x="' + f1(x) + '" y="' + f1(q.base) + '" font-family="' + FONT + '" font-size="' + fs + '" font-weight="600" fill="' + C.ink + '" opacity="' + f1(op * rowOp(q) * 100) / 100 + '"' + (extra || '') + '>' + esc(q.text) + '</text>';
+    for (const q of B.pieces) {
+      const a = match.get(q.key);
+      if (a && a.key === q.key && a.line !== q.line && p < 1) { mid += txt(a, a.x, Math.max(0, 1 - 4 * p)) + txt(q, q.x, pin); continue; }
+      if (!a || p >= 1) { mid += txt(q, q.x, a ? 1 : pin); continue; }
+      const same = pieceA.has(q.key), cross = !same && Math.abs(q.base - a.base) > fs * 0.5, P3 = cross ? E.path3(a.x, a.base, q.x, q.base, p, fs) : null, x = P3 ? P3.x : lerp(a.x, q.x, p), yb = P3 ? P3.y : lerp(a.base, q.base, p), dist = Math.hypot(q.x - a.x, q.base - a.base), arc = same || cross ? (same ? tLift(q.row, q.tile) : 0) : (Math.abs(q.x - a.x) > fs * 1.5 ? -Math.sin(Math.PI * p) * fs * 1.25 : 0), travel = arc !== 0 || cross;   // only real travel (identity moving to a new place) lifts and leaves a trail; re-flow inside a row slides straight
+      if (cross && dist > 2 && p < 1) top += '<path d="M' + f1(a.x + a.w / 2) + ' ' + f1(a.base - fs * 0.35) + 'V' + f1((p < 0.3 ? yb : P3.ym) - fs * 0.35) + (p >= 0.3 ? 'H' + f1(x + q.w / 2) : '') + (p >= 0.7 ? 'V' + f1(yb - fs * 0.35) : '') + '" fill="none" stroke="' + C.trail + '" stroke-width="2" stroke-dasharray="5 5" opacity="' + f1((1 - p) * 0.9 * 100) / 100 + '"/>';
+      else if (travel && dist > 2 && p < 1) top += '<path d="M' + f1(a.x + a.w / 2) + ' ' + f1(a.base - fs * 0.35) + 'Q' + f1((a.x + q.x) / 2 + q.w / 2) + ' ' + f1(Math.min(a.base, q.base) - fs * 1.5) + ' ' + f1(x + q.w / 2) + ' ' + f1(yb + arc - fs * 0.35) + '" fill="none" stroke="' + C.trail + '" stroke-width="2" stroke-dasharray="5 5" opacity="' + f1((1 - p) * 0.9 * 100) / 100 + '"/>';
+      if (a.text !== q.text) { mid += '<text x="' + f1(x) + '" y="' + f1(yb + arc) + '" font-family="' + FONT + '" font-size="' + fs + '" font-weight="600" fill="' + C.ink + '" opacity="' + f1(Math.min(1, Math.max(0, (0.6 - p) / 0.2)) * rowOp(a) * 100) / 100 + '">' + esc(a.text) + '</text>'; mid += '<text x="' + f1(x) + '" y="' + f1(yb + arc) + '" font-family="' + FONT + '" font-size="' + fs + '" font-weight="600" fill="' + C.ink + '" opacity="' + f1(Math.min(1, Math.max(0, (p - 0.4) / 0.2)) * rowOp(q) * 100) / 100 + '">' + esc(q.text) + '</text>'; }
+      else mid += txt({ ...q, base: yb + arc }, x, 1);
+    }
+    if (A) for (const a of A.pieces) if (!keysB.has(a.key) && !used.has(a.key)) mid += txt(a, a.x, pout);
+    // decorations of A fade out, of B fade in (finite marker moves within a row: function transfer)
+    const deco = (L, st, op, keep, extras) => {
+      let s = ''; if (op <= 0.01) return s;
+      for (const b of L.tiles) { if (keep && !keep(b)) continue;
+        const rr = ROLE[b.r] || ROLE.plain, o = op * rowOp(b), ux0 = b.x + (b.boxed ? fs * 0.2 : 0), ux1 = b.x + b.w - (b.boxed ? fs * 0.2 : 0), uy = b.base + fs * 0.42;
+        if (b.r !== 'fin' && rr.u !== 'none' && !b.hide) { const da = { dash: '8 5', dot: '2 5', dot2: '2 4', dashdot: '9 4 2 4', hook: '', gap: '4 6' }[rr.u]; s += '<line x1="' + f1(ux0) + '" y1="' + f1(uy) + '" x2="' + f1(ux1) + '" y2="' + f1(uy) + '" stroke="' + rr.c + '" stroke-width="' + (rr.u === 'dot2' ? 4 : 3) + '" stroke-linecap="round"' + (da ? ' stroke-dasharray="' + da + '"' : '') + ' opacity="' + f1(o * 100) / 100 + '"/>'; if (rr.u === 'hook') s += '<path d="M' + f1(ux0) + ' ' + f1(uy - fs * 0.25) + 'V' + f1(uy) + 'H' + f1(ux0 + fs * 0.35) + '" fill="none" stroke="' + rr.c + '" stroke-width="3" opacity="' + f1(o * 100) / 100 + '"/>'; }
+        if (b.group) { const gy = b.base + fs * 0.6, gx0 = b.x + 1, gx1 = b.x + b.w - 1; s += '<path d="M' + f1(gx0) + ' ' + f1(gy - fs * 0.16) + 'V' + f1(gy) + 'H' + f1(gx1) + 'V' + f1(gy - fs * 0.16) + '" fill="none" stroke="' + C.field + '" stroke-width="1.5" opacity="' + f1(o * 55) / 100 + '"/>'; }
+        if (b.r === 'fin?' ) s += '<text x="' + f1((ux0 + ux1) / 2) + '" y="' + f1(uy + fs * 0.1) + '" text-anchor="middle" font-family="' + FONT + '" font-size="' + f1(sz(0.5)) + '" font-weight="700" fill="' + C.dash + '" opacity="' + f1(o * 100) / 100 + '">?</text>';
+        const lab = (b.l != null ? b.l : (b.showL ? rr.l : '')), chip = b.f != null ? (FIELD[b.f] || String(b.f)) : ''; let lx = b.x + b.w / 2; const ly = b.base + fs * 1.05;
+        if (chip || lab) { const parts = []; if (chip) parts.push('<tspan font-weight="700" fill="' + C.field + '">' + esc(chip.length <= 2 ? '‹' + chip + '›' : chip) + '</tspan>'); if (lab) parts.push('<tspan fill="' + (b.r === 'fin' ? C.fin : rr.c) + '">' + esc(lab) + '</tspan>'); s += '<text x="' + f1(lx) + '" y="' + f1(ly) + '" text-anchor="middle" font-family="' + FONT + '" font-size="' + f1(sz(0.42)) + '" opacity="' + f1(o * 100) / 100 + '">' + parts.join(' ') + '</text>'; }
+      }
+      if (extras === false) return s; for (const q of L.pieces) if (q.n) { const nid = typeof q.n === 'string' ? q.n : q.id; const cx = q.x + q.w / 2, cy = q.base - fs * 1.02; s += '<path d="M' + f1(cx) + ' ' + f1(cy - fs * 0.13) + 'L' + f1(cx + fs * 0.11) + ' ' + f1(cy) + 'L' + f1(cx) + ' ' + f1(cy + fs * 0.13) + 'L' + f1(cx - fs * 0.11) + ' ' + f1(cy) + 'Z" fill="' + notchCol(nid) + '" opacity="' + f1(op * rowOp(q) * 100) / 100 + '"/>'; }
+      const tileOf = (rid, tid) => L.tiles.find((b) => b.row === rid && b.id === tid), pieceOf = (rid, pid) => L.pieces.find((q) => q.row === rid && q.id === pid) || (() => { const b = tileOf(rid, pid); return b ? { x: b.x, w: b.w, base: b.base } : null; })();
+      for (const br of st.br || []) {   // one bracket segment per visual line, so a wrapped clause keeps a truthful span; label on the first segment
+        const rowT = L.tiles.filter((b) => b.row === br.t[0]), i0 = rowT.findIndex((b) => b.id === br.t[1]), i1 = rowT.findIndex((b) => b.id === (br.t[2] || br.t[1])); if (i0 < 0 || i1 < 0) continue;
+        const col = br.k === 'verb' ? C.nonfin : br.k === 'shared' ? C.fin : C.field, segs = []; for (const b of rowT.slice(Math.min(i0, i1), Math.max(i0, i1) + 1)) { const g = segs.find((q) => q.line === b.line); if (g) { g.x0 = Math.min(g.x0, b.x); g.x1 = Math.max(g.x1, b.x + b.w); g.y = Math.min(g.y, b.y); } else segs.push({ line: b.line, x0: b.x, x1: b.x + b.w, y: b.y }); }
+        segs.forEach((g, k) => { const by = g.y - fs * 0.32, open0 = k > 0, open1 = k < segs.length - 1; s += '<path d="M' + f1(g.x0) + ' ' + f1(by + (open0 ? 0 : fs * 0.22)) + 'V' + f1(by) + 'H' + f1(g.x1) + 'V' + f1(by + (open1 ? 0 : fs * 0.22)) + '" fill="none" stroke="' + col + '" stroke-width="2.4"' + (open0 || open1 ? ' stroke-linecap="round"' : '') + ' opacity="' + f1(op * 100) / 100 + '"/>'; });
+        if (br.l) { const g = segs[0], tw = opt.measure(br.l, sz(0.4)) / 2 + 2, lx = Math.max(opt.margin * 0.5 + tw, Math.min(W - opt.margin * 0.5 - tw, (g.x0 + g.x1) / 2)); s += '<text x="' + f1(lx) + '" y="' + f1(g.y - fs * 0.48) + '" text-anchor="middle" font-family="' + FONT + '" font-size="' + f1(sz(0.4)) + '" font-weight="700" fill="' + col + '" opacity="' + f1(op * 100) / 100 + '" paint-order="stroke" stroke="' + C.paper + '" stroke-width="4">' + esc(br.l) + '</text>'; }
+      }
+      for (const bd of st.bd || []) { const b = tileOf(bd[0], bd[1]); if (!b) continue; const x = b.x - fs * 0.2; s += '<line x1="' + f1(x) + '" y1="' + f1(b.y - fs * 0.35) + '" x2="' + f1(x) + '" y2="' + f1(b.base + fs * 1.15) + '" stroke="' + C.field + '" stroke-width="2.2" stroke-dasharray="3 4" opacity="' + f1(op * 100) / 100 + '"/>' + (bd[2] ? '<text x="' + f1(x) + '" y="' + f1(b.base + fs * 1.05 + sz(0.42) * 1.25) + '" text-anchor="middle" font-family="' + FONT + '" font-size="' + f1(sz(0.36)) + '" fill="' + C.field + '" opacity="' + f1(op * 100) / 100 + '">' + esc(bd[2]) + '</text>' : ''); }
+      for (const ar of st.ar || []) { const a = pieceOf(ar.a[0], ar.a[1]), b = pieceOf(ar.b[0], ar.b[1]); if (!a || !b) continue; const r = E.route(L, a, b, W, fs, opt), col = ar.k === 'fn' ? C.fin : ar.k === 'lemma' ? C.nonfin : C.soft;
+        s += '<path d="M' + f1(r[0]) + ' ' + f1(r[1]) + 'Q' + f1(r[2]) + ' ' + f1(r[3]) + ' ' + f1(r[4]) + ' ' + f1(r[5]) + '" fill="none" stroke="' + col + '" stroke-width="2.4"' + (ar.k === 'lemma' ? ' stroke-dasharray="7 5"' : '') + ' opacity="' + f1(op * 100) / 100 + '" marker-end="url(#' + opt.idp + 'ah' + (ar.k === 'fn' ? 'F' : 'N') + ')"/>';
+        if (ar.l) { const mx = 0.25 * r[0] + 0.5 * r[2] + 0.25 * r[4], my = 0.25 * r[1] + 0.5 * r[3] + 0.25 * r[5], tw = opt.measure(ar.l, sz(0.4)) / 2 + 4, lx = Math.max(tw, Math.min(W - tw, mx)); s += '<text x="' + f1(lx) + '" y="' + f1(my - fs * 0.12) + '" text-anchor="middle" font-family="' + FONT + '" font-size="' + f1(sz(0.4)) + '" font-weight="700" fill="' + col + '" opacity="' + f1(op * 100) / 100 + '" paint-order="stroke" stroke="' + C.paper + '" stroke-width="5">' + esc(ar.l) + '</text>'; } }
+      for (const ch of st.ch || []) { let x, y; if (ch.at) { const b = tileOf(ch.at[0], ch.at[1]); if (!b) continue; x = b.x + b.w / 2; const rowT = L.tiles.filter((q) => q.row === b.row); y = ch.below ? Math.max(...rowT.map((q) => q.base)) + fs * 1.05 + sz(0.42) * 1.2 + sz(0.46) * 0.9 : Math.min(...rowT.map((q) => q.y)) - fs * 0.75; const rw = L.rows.find((r) => r.id === b.row); if (!ch.below && rw && rw.tag) { const tagEnd = rw.x + opt.measure(rw.tag.toUpperCase(), sz(0.42)) * 1.15 + fs * 0.6, half = (opt.measure(ch.t, sz(0.46)) + fs * 0.6) / 2; if (x - half < tagEnd) x = tagEnd + half; } } else { x = W / 2; y = (L.h || fs * 3) - fs * 0.8; } const tw = opt.measure(ch.t, sz(0.46)) + fs * 0.6, hh = fs * 0.7; x = Math.max(tw / 2 + 4, Math.min(W - tw / 2 - 4, x)); const col = ch.k === 'q' ? C.fin : ch.k === 'rule' ? C.nonfin : C.soft;
+        s += '<g opacity="' + f1(op * 100) / 100 + '"><rect x="' + f1(x - tw / 2) + '" y="' + f1(y - hh * 0.72) + '" width="' + f1(tw) + '" height="' + f1(hh) + '" rx="' + f1(hh / 2) + '" fill="' + C.paper + '" stroke="' + col + '" stroke-width="1.6"/><text x="' + f1(x) + '" y="' + f1(y + hh * 0.08) + '" text-anchor="middle" font-family="' + FONT + '" font-size="' + f1(sz(0.46)) + '" font-weight="700" fill="' + col + '">' + esc(ch.t) + '</text></g>'; }
+      return s;
+    };
+    const sig = (b) => [b.r, b.f, b.l, b.showL, b.hide, b.dim].join('|'), stable = new Set(); if (A) for (const b of B.tiles) { const a = tileA.get(b.key); if (a && sig(a) === sig(b)) stable.add(b.key); }
+    const pieceAk = new Map(A ? A.pieces.map((q) => [q.key, q]) : []), Bmix = { h: B.h, rows: B.rows, tiles: B.tiles.map((b) => { const a = tileA.get(b.key); const l = liftOf(a, b); return a ? { ...b, x: lerp(a.x, b.x, p), y: lerp(a.y, b.y, p) + l, w: lerp(a.w, b.w, p), base: lerp(a.base, b.base, p) + l } : b; }), pieces: B.pieces.map((q) => { const a = pieceAk.get(q.key); return a ? { ...q, x: lerp(a.x, q.x, p), base: lerp(a.base, q.base, p) + tLift(q.row, q.tile) } : q; }) };
+    let dec = ''; if (A) dec += deco(A, fr.prev, pout, (b) => !stable.has(b.key)); dec += deco(Bmix, fr.cur, pin, (b) => !stable.has(b.key)); if (A) dec += deco(Bmix, fr.cur, 1, (b) => stable.has(b.key), false);
+    // finite marker: one per row; slides from the old finite word to the new one (finiteness can pass to a different lemma)
+    const finOf = (L) => { const m = new Map(), k = {}; for (const b of L.tiles) if (b.r === 'fin' && !b.hide) { k[b.row] = (k[b.row] || 0) + 1; m.set(b.row + '#' + k[b.row], b); } return m; }, fA = A ? finOf(A) : new Map(), fB = finOf(B);
+    const finMark = (b, op) => { const x0 = b.x + (b.boxed ? fs * 0.2 : 0), x1 = b.x + b.w - (b.boxed ? fs * 0.2 : 0), uy = b.base + fs * 0.42; return '<line x1="' + f1(x0) + '" y1="' + f1(uy) + '" x2="' + f1(x1) + '" y2="' + f1(uy) + '" stroke="' + C.fin + '" stroke-width="5" stroke-linecap="round" opacity="' + f1(op * rowOp(b) * 100) / 100 + '"/>'; };
+    for (const [rid, b] of fB) { const a = fA.get(rid); if (a && a.key === b.key && a.line !== b.line && p < 1) { dec += finMark(a, pout) + finMark(b, pin); continue; } dec += a ? finMark({ ...b, x: lerp(a.x, b.x, p), w: lerp(a.w, b.w, p), base: lerp(a.base, b.base, p) + (a.key === b.key ? liftOf(a, b) : 0) }, 1) : finMark(b, pin); }
+    for (const [rid, a] of fA) if (!fB.has(rid)) dec += finMark(a, pout);
+    // timeline
+    const hA = A && fr.prev && fr.prev.tl ? A.h : B.h, tp = hA > B.h ? Math.max(0, 2 * p - 1) : Math.min(1, 2 * p), tlY = lerp(hA, B.h, A ? tp : 1) + opt.tlH * 0.45; let tl = '';   // the timeline makes room first, or waits until removed rows have faded, then moves
+    const drawTL = (T, op) => { if (!T || op <= 0.01) return ''; let s = ''; const x0 = opt.margin + fs * 0.4, x1 = W - opt.margin - fs * 0.4, X = (u) => lerp(x0, x1, u), y = tlY;
+      s += '<line x1="' + f1(x0) + '" y1="' + f1(y) + '" x2="' + f1(x1) + '" y2="' + f1(y) + '" stroke="' + C.ink + '" stroke-width="2.4" marker-end="url(#' + opt.idp + 'ahN)"/>';
+      s += '<text x="' + f1(x0) + '" y="' + f1(y - fs * 0.35) + '" font-family="' + FONT + '" font-size="' + f1(sz(0.36)) + '" font-style="italic" fill="' + C.soft + '">früher</text><text x="' + f1(x1 - fs * 0.5) + '" y="' + f1(y - fs * 0.35) + '" text-anchor="end" font-family="' + FONT + '" font-size="' + f1(sz(0.36)) + '" font-style="italic" fill="' + C.soft + '">später</text>';
+      const placed = [], lh = sz(0.4) * 1.18;
+      for (const sp of T.sp || []) { const a = T.pts.find((q) => q.id === sp.a), b = T.pts.find((q) => q.id === sp.b); const xa = a ? X(a.x) : X(sp.x0), xb = X(b.x); s += '<line x1="' + f1(xa) + '" y1="' + f1(y - fs * 0.28) + '" x2="' + f1(xb) + '" y2="' + f1(y - fs * 0.28) + '" stroke="' + C.nonfin + '" stroke-width="7" stroke-linecap="round" opacity=".55"' + (sp.open ? ' stroke-dasharray="2 10"' : '') + '/>'; if (sp.l) s += '<text x="' + f1((xa + xb) / 2) + '" y="' + f1(y - fs * 0.55) + '" text-anchor="middle" font-family="' + FONT + '" font-size="' + f1(sz(0.36)) + '" fill="' + C.nonfin + '">' + esc(sp.l) + '</text>'; }
+      for (const ar of T.ar || []) { const a = T.pts.find((q) => q.id === ar.a), b = T.pts.find((q) => q.id === ar.b); if (!a || !b) continue; const xa = X(a.x), xb = X(b.x), cy = y - fs * 2.6; s += '<path d="M' + f1(xa) + ' ' + f1(y - fs * 0.55) + 'Q' + f1((xa + xb) / 2) + ' ' + f1(cy) + ' ' + f1(xb + Math.sign(xa - xb) * fs * 0.2) + ' ' + f1(y - fs * 1.05) + '" fill="none" stroke="' + (ar.k === 'infer' ? C.fin : C.soft) + '" stroke-width="2.4"' + (ar.k === 'infer' ? ' stroke-dasharray="7 6"' : '') + ' marker-end="url(#' + opt.idp + (ar.k === 'infer' ? 'ahF' : 'ahN') + ')"/>' + (ar.l ? '<text x="' + f1((xa + xb) / 2) + '" y="' + f1(cy + fs * 0.25) + '" text-anchor="middle" font-family="' + FONT + '" font-size="' + f1(sz(0.4)) + '" font-weight="700" fill="' + (ar.k === 'infer' ? C.fin : C.soft) + '" paint-order="stroke" stroke="' + C.paper + '" stroke-width="4">' + esc(ar.l) + '</text>' : ''); }
+      for (const q of T.pts) { const x = X(q.x), r = fs * 0.26; if (q.k === 'dash') s += '<circle cx="' + f1(x) + '" cy="' + f1(y) + '" r="' + f1(r) + '" fill="' + C.paper + '" stroke="' + C.fin + '" stroke-width="2.4" stroke-dasharray="4 3"/>'; else if (q.k === 'onset') s += '<path d="M' + f1(x) + ' ' + f1(y - r * 1.3) + 'V' + f1(y + r * 1.3) + '" stroke="' + C.ink + '" stroke-width="3.4"/><path d="M' + f1(x) + ' ' + f1(y - r * 1.3) + 'h' + f1(r * 1.4) + 'l' + f1(-r * 0.4) + ' ' + f1(r * 0.5) + 'l' + f1(r * 0.4) + ' ' + f1(r * 0.5) + 'h' + f1(-r * 1.4) + 'z" fill="' + C.nonfin + '"/>'; else if (q.k === 'label') s += ''; else if (q.k === 'now') s += '<rect x="' + f1(x - r * 0.45) + '" y="' + f1(y - r * 1.4) + '" width="' + f1(r * 0.9) + '" height="' + f1(r * 2.8) + '" fill="' + C.ink + '"/>'; else s += '<circle cx="' + f1(x) + '" cy="' + f1(y) + '" r="' + f1(r) + '" fill="' + (q.k === 'end' ? C.nonfin : C.ink) + '"/>';
+        if (q.q) s += '<text x="' + f1(x) + '" y="' + f1(y - r * 1.6) + '" text-anchor="middle" font-family="' + FONT + '" font-size="' + f1(sz(0.55)) + '" font-weight="700" fill="' + C.fin + '">?</text>';
+        if (q.icon === 'face') s += face(x, y - fs * 1.9, fs * 0.6);
+        const lines = String(q.l).split('\n'), lw = Math.max(...lines.map((ln, k) => opt.measure(ln, sz(0.4)) * (k ? 0.95 : 1.05))) + 8, lx = Math.max(opt.margin + lw / 2, Math.min(W - opt.margin - lw / 2, x)); let ly0 = y + fs * 0.75; for (const b of placed) if (Math.abs(b.x - lx) < (b.w + lw) / 2) ly0 = Math.max(ly0, b.bottom + lh * 1.15); placed.push({ x: lx, w: lw, bottom: ly0 + lh * (lines.length - 1) }); const lvl = ly0 > y + fs * 0.76 && q.k !== 'label';
+        if (lvl) s += '<line x1="' + f1(x) + '" y1="' + f1(y + fs * 0.35) + '" x2="' + f1(lx) + '" y2="' + f1(ly0 - lh * 0.8) + '" stroke="' + C.faint + '" stroke-width="1.2"/>';
+        lines.forEach((ln, k) => { s += '<text x="' + f1(lx) + '" y="' + f1(ly0 + lh * k) + '" text-anchor="middle" font-family="' + FONT + '" font-size="' + f1(sz(0.4)) + '" font-weight="' + (k ? 400 : 700) + '" fill="' + (q.k === 'dash' ? C.fin : C.ink) + '">' + esc(ln) + '</text>'; }); }
+      if (T.empty) s += '<text x="' + f1(X(T.empty)) + '" y="' + f1(y - fs * 0.6) + '" text-anchor="middle" font-family="' + FONT + '" font-size="' + f1(sz(0.38)) + '" font-style="italic" fill="' + C.soft + '">' + esc(T.emptyL || '') + '</text>';
+      return '<g opacity="' + f1(op * 100) / 100 + '">' + s + '</g>'; };
+    const face = (x, y, r) => '<g fill="none" stroke="' + C.ink + '" stroke-width="2" stroke-linecap="round"><circle cx="' + f1(x) + '" cy="' + f1(y) + '" r="' + f1(r) + '" fill="#f6e2c8"/><path d="M' + f1(x - r * 0.55) + ' ' + f1(y - r * 0.12) + 'q' + f1(r * 0.22) + ' ' + f1(r * 0.14) + ' ' + f1(r * 0.42) + ' 0M' + f1(x + r * 0.13) + ' ' + f1(y - r * 0.12) + 'q' + f1(r * 0.22) + ' ' + f1(r * 0.14) + ' ' + f1(r * 0.42) + ' 0"/><path d="M' + f1(x - r * 0.55) + ' ' + f1(y + r * 0.08) + 'q' + f1(r * 0.2) + ' ' + f1(r * 0.12) + ' ' + f1(r * 0.4) + ' 0M' + f1(x + r * 0.15) + ' ' + f1(y + r * 0.08) + 'q' + f1(r * 0.2) + ' ' + f1(r * 0.12) + ' ' + f1(r * 0.4) + ' 0" stroke-width="1.2" opacity=".6"/><path d="M' + f1(x - r * 0.2) + ' ' + f1(y + r * 0.5) + 'h' + f1(r * 0.4) + '"/></g>';
+    if (A && fr.prev.tl && fr.cur.tl && fr.prev.tl !== fr.cur.tl) { tl += drawTL(fr.prev.tl, 1 - p) + drawTL(fr.cur.tl, p); } else if (fr.cur.tl) tl += drawTL(fr.cur.tl, A && !fr.prev.tl ? p : 1); else if (A && fr.prev.tl) tl += drawTL(fr.prev.tl, 1 - p);
+    const defs = '<defs><marker id="' + opt.idp + 'ahF" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="' + C.fin + '"/></marker><marker id="' + opt.idp + 'ahN" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="' + C.ink + '"/></marker></defs>';
+    return { svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + f1(W) + ' ' + f1(H) + '" width="' + f1(W) + '" height="' + f1(H) + '" role="img" aria-label="' + esc(opt.label || '') + '">' + defs + '<rect width="' + f1(W) + '" height="' + f1(H) + '" fill="' + C.paper + '"/>' + bg + tl + mid + dec + top + '</svg>', H, frame: fr };
+  };
+  if (typeof module !== 'undefined' && module.exports) module.exports = E;
+  root.GRAM_STAGE = E;
+})(typeof window !== 'undefined' ? window : globalThis);

@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="de">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Filmprüfung · Deutschklinik</title>
+<link rel="stylesheet" href="../../grammatik/film.css">
+<style>
+:root{color-scheme:light;--ac:#315eaf}*{box-sizing:border-box}body{margin:0;background:#eeeae1;color:#263147;font:16px/1.5 system-ui,sans-serif}
+.rv{max-width:1180px;margin:auto;padding:14px 16px 60px}.rv-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:0 0 12px}.rv-bar select,.rv-bar button{min-height:44px;padding:8px 12px;border-radius:12px;border:1px solid #d7d3c9;background:#fffdf8;color:#263147;font:inherit;max-width:100%}.rv-bar select{flex:1;min-width:0}.rv-status{font-size:13px;color:#657186;margin:0 0 10px}
+</style></head>
+<body><main class="rv"><div class="rv-bar"><select id="lesson" aria-label="Film auswählen"></select><button id="open" type="button">Als Dialog öffnen</button></div><p id="status" class="rv-status" role="status">Wird geladen …</p><div id="player"></div></main>
+<script src="../../grammatik/film-stage.js"></script>
+<script src="../../grammatik/film.js"></script>
+<script>
+'use strict';
+// Local review only (tools/film-review-server.cjs). Lessons, overlays and recordings come from protected local folders.
+const $=id=>document.getElementById(id),visuals=new Map();let pending=null,player=null,current=null,load=0,audio=null;
+window.GRAM={add:c=>{pending=c;},filmVisual:(n,v)=>visuals.set(n,v)};
+const q=new URLSearchParams(location.search);
+async function show(n){
+  const id=++load;player?.dispose();pending=null;$('status').textContent='Film wird geladen …';
+  await new Promise((ok,bad)=>{const s=document.createElement('script');s.src='/review/lessons/k'+n+'.js';s.onload=()=>{s.remove();ok();};s.onerror=()=>{s.remove();bad(Error('Lektion fehlt'));};document.head.append(s);});
+  if(id!==load)return;current=pending;const man=await fetch('/review/audio/k'+n+'.json').then(r=>r.ok?r.json():null).catch(()=>null);if(id!==load)return;
+  audio=man?Object.fromEntries(man.cues.map(c=>[c.id,{url:c.url,seconds:c.seconds,say:c.say}])):null;
+  const v=visuals.get(n);player=GRAM_FILM.mount($('player'),current.film,{audio,visual:v,lesson:current,onExercises:()=>{}});
+  const staged=v?Object.keys(v.visual.scenes).length:0;
+  $('status').textContent=current.level+' '+n+' · '+current.film.scenes.length+' Szenen · neue Bühne in '+staged+' Szenen · '+(player.recorded?player.recorded+' Aufnahmen':'ohne Aufnahme (stille Wiedergabe)');
+  if(q.has('scene')){const sc=+q.get('scene'),cs=player.timeline.cues.filter(c=>c.scene===sc),cue=cs[Math.min(cs.length-1,+(q.get('cue')||0))];player.seek(cue.start+(+(q.get('f')||0.999))*cue.seconds-(q.has('f')?0:1e-3));}
+  window.__ready=n;
+}
+$('lesson').onchange=()=>{q.delete('scene');show(+$('lesson').value);};$('open').onclick=()=>{if(current)GRAM_FILM.open(current.film,{audio,visual:visuals.get(current.n),lesson:current});};
+(async()=>{if(!['127.0.0.1','localhost','[::1]'].includes(location.hostname))throw Error('Nur lokal.');const rows=await fetch('/review/index.json').then(r=>r.json());
+  for(const r of rows){const o=document.createElement('option');o.value=r.n;o.textContent=r.level+' '+r.n+' · '+r.title+(r.visual?' · neue Bühne':'')+(r.recorded?'':' · ohne Aufnahme');$('lesson').append(o);}
+  const n=+(q.get('n')||87);$('lesson').value=String(n);await show(n);})().catch(e=>{$('status').textContent=e.message;});
+</script></body></html>

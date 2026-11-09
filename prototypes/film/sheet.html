@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Bühnenbogen · Deutschklinik</title>
+<style>body{margin:0;background:#ddd8cc;font:13px/1.4 system-ui,sans-serif;color:#263147}.sc{margin:10px;padding:8px;background:#fffdf8;border-radius:10px}.sc h2{font-size:14px;margin:2px 4px 6px}.grid{display:flex;flex-wrap:wrap;gap:8px}.cell{background:#f3eddc}.cell p{margin:2px 4px;font-size:11px;color:#657186}.cell svg{display:block}</style></head>
+<body><div id="out">Wird geladen …</div>
+<script src="../../grammatik/film-stage.js"></script><script src="../../grammatik/film.js"></script>
+<script>
+'use strict';
+// Local review sheet: every keyframe of every staged scene, mid-transition (0.3 s) and settled, at one width. ?n=87&w=1100&mid=0.3
+const q=new URLSearchParams(location.search),n=+(q.get('n')||87),W=+(q.get('w')||1100),MID=+(q.get('mid')||0.3),only=q.get('scene');let lesson=null,visual=null;
+window.GRAM={add:c=>{lesson=c;},filmVisual:(k,v)=>{visual=v;}};
+(async()=>{
+  await new Promise((ok,bad)=>{const s=document.createElement('script');s.src='/review/lessons/k'+n+'.js';s.onload=ok;s.onerror=bad;document.head.append(s);});
+  const G=GRAM_STAGE,v=visual.visual,src=G.registry(lesson,v),fr=v.audio,dur={};for(const [id,c] of Object.entries(visual.audio?.cues||{}))dur[id]=c.frames/48000;
+  const tl=GRAM_FILM.compile(lesson.film,dur),ctx=document.createElement('canvas').getContext('2d'),cache=new Map();
+  const measure=(t,fs)=>{const k=fs+'|'+t;let w=cache.get(k);if(w==null){ctx.font='600 '+fs+'px "Avenir Next", "Segoe UI", "Helvetica Neue", system-ui, sans-serif';w=ctx.measureText(t).width;cache.set(k,w);}return w;};
+  const small=W<560,fs=small?Math.max(15,Math.min(19,W/20)):Math.max(18,Math.min(30,W/34)),opt={fs,measure,margin:small?12:26,tlH:fs*(small?6.6:4.6),idp:'s',minH:0};
+  const out=document.getElementById('out');out.textContent='';
+  lesson.film.scenes.forEach((s,si)=>{const sc=v.scenes[s.id];if(!sc||(only&&only!==s.id))return;const cues=tl.cues.filter(c=>c.scene===si),kfs=cues.flatMap(c=>(sc.cues[c.id]||[]).map((k,i)=>({t:c.start+k.at*c.seconds,s:k.s,cue:c.id,i})));
+    const sec=document.createElement('section');sec.className='sc';sec.innerHTML='<h2>'+s.id+' · '+s.title+'</h2>';const grid=document.createElement('div');grid.className='grid';sec.append(grid);
+    kfs.forEach((k,j)=>{for(const [lab,t] of (j?[['mitten',k.t+MID],['fertig',(kfs[j+1]?Math.min(kfs[j+1].t-0.01,k.t+0.8):k.t+0.8)]]:[['fertig',k.t+0.8]])){const r=G.render(src,{kfs},t,W,opt);const d=document.createElement('div');d.className='cell';d.innerHTML='<p>'+k.cue+' · '+k.i+' · '+lab+'</p>'+r.svg;grid.append(d);}});
+    out.append(sec);});
+  window.__ready=1;
+})().catch(e=>{document.getElementById('out').textContent=e.message;});
+</script></body></html>

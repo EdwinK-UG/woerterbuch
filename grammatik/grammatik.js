@@ -1118,10 +1118,14 @@ async function progressView(m) {
 
 /* ---------- chapter ---------- */
 let lessonEpoch = 0;
+/* Private film visual overlays arrive inside the protected lesson response (appended by tools/build-lesson-bundle.cjs).
+   Without one, a film keeps its classic pictures. */
+const filmVisuals = new Map();
 const lessonLoads = new Map();
 function clearLessons() {
   window.C1_VOCAB?.leave();
   lessonEpoch++;
+  filmVisuals.clear();
   lessonLoads.clear();
   for (const n of Object.keys(CH)) delete CH[n];
   cur = null;
@@ -1170,6 +1174,7 @@ async function loadChapter(n) {
 const WATCH_LEVELS = ['A1', 'B2', 'C1'];   // levels that have the video button; widen when more lessons are checked
 const hasWatch = c => !c.vocab && !isRef(c.n) && WATCH_LEVELS.includes(c.level) && !!c.understand?.length && (c.level === 'A1' || !!c.film);
 const watchBtn = c => (hasWatch(c) ? `<button class="btn sm" data-watch="${c.n}">${icn('play')} ${c.film ? 'Animation ansehen' : 'Video ansehen'}</button>` : '');
+const filmVisual = c => { const v = filmVisuals.get(c.n); return v && v.visual?.n === c.n ? { visual: v, lesson: c } : {}; };
 const filmTheme = () => ({accent:getComputedStyle(document.documentElement).getPropertyValue('--ac').trim(),brand:window.KONTO?.org()?.name || 'Deutschklinik'});
 let lessonFilm=null;
 /* Recorded narration (Worker /film-audio, same enrolment rule as the lesson). Its links last 12 hours, so a list is
@@ -1191,7 +1196,7 @@ const filmWithAudio=n=>Promise.all([window.loadFilm(),Promise.race([filmAudio(n)
 async function openWatch(n) {
   const c = CH[n]; if (!c || !hasWatch(c)) return;
   if(c.film){
-    try { const audio=await filmWithAudio(n); if(cur!==c)return; window.GRAM_FILM.open(c.film,{...filmTheme(),audio,onExercises:()=>{window.GRAM_FILM.close();jump('grs-u');}}); }
+    try { const audio=await filmWithAudio(n); if(cur!==c)return; window.GRAM_FILM.open(c.film,{...filmTheme(),...filmVisual(c),audio,onExercises:()=>{window.GRAM_FILM.close();jump('grs-u');}}); }
     catch(e){ if(typeof toast==='function')toast('Die Animation konnte nicht geladen werden.'); }
     return;
   }
@@ -1257,7 +1262,7 @@ function render(c) {
   wire(c); icons();
   if(c.film){
     const host=document.querySelector('[data-film-host]');
-    filmWithAudio(c.n).then(audio=>{if(host.isConnected&&cur===c)lessonFilm=window.GRAM_FILM.mount(host,c.film,{...filmTheme(),audio,onExercises:()=>jump('grs-u')});})
+    filmWithAudio(c.n).then(audio=>{if(host.isConnected&&cur===c)lessonFilm=window.GRAM_FILM.mount(host,c.film,{...filmTheme(),...filmVisual(c),audio,onExercises:()=>jump('grs-u')});})
       .catch(()=>{if(host.isConnected)host.textContent='Die Animation konnte nicht geladen werden. Du kannst die Erklärungen und Übungen darunter weiter nutzen.';});
   }
 }
@@ -1894,7 +1899,7 @@ const VKIT = {
     return out;
   }
 };
-window.GRAM = { kit: VKIT, view, leave, base, quiz, list: chapterList, practice, lessonEpoch: () => lessonEpoch, add(c) { CH[c.n] = c; }, allowed, chLevel,
+window.GRAM = { kit: VKIT, view, leave, base, quiz, list: chapterList, practice, lessonEpoch: () => lessonEpoch, add(c) { CH[c.n] = c; }, filmVisual(n, v) { if (Number.isInteger(n) && v && typeof v === 'object') filmVisuals.set(n, v); }, allowed, chLevel,
   chapters: () => GROUPS.flatMap(g => g.ch.filter(c => READY[c[0]]).map(c => ({ n: c[0], title: c[1], kick: c[2], level: c[3], vocab: !!g.vocab, ref: !!g.ref, group: g.t, no: g.vocab ? topicNo(c[0]) : gNo(c[0]) })))
     .sort((a, b) => (a.vocab === b.vocab ? 0 : a.vocab ? -1 : 1) || a.n - b.n),
   requiredExercises: n => (LESSON_EXERCISES[n] || []).filter(row => !(row[2] & 2)).map(row => row[0]),

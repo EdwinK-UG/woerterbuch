@@ -13,3 +13,8 @@
 @media(min-width:641px){.gf-dialog .gf-view svg{max-height:clamp(220px,calc(94dvh - 320px),420px)}}
 @media(max-width:640px){.gf-manipulation .gf-change{flex:0 0 100%;max-width:100%}.gf-options button{min-height:44px}}
 .gf-dialog .gf-head{position:sticky;top:0;z-index:2;background:var(--gf-paper)}
+/* Grammar stage (private overlay): laid out at the real width with readable type, so never squeezed by the picture cap. */
+.gf-view.gf-grammar svg{max-height:none!important}
+.gf-options [data-correct=false]{text-decoration:line-through;text-decoration-thickness:2px}.gf .gf-back{display:block;margin-top:10px;font-size:14px}.gf-question .gf-second{margin-top:18px}.gf.gf-waiting .gf-primary{opacity:.75}
+/* Short laptop windows: compact chrome keeps stage, caption and playback controls in one view. */
+@media(min-width:641px) and (max-height:820px){.gf .gf-head{padding:8px 18px}.gf .gf-head h2{font-size:19px;margin:0}.gf .gf-eyebrow{display:none}.gf-scene-bar{padding:3px 18px}.gf-scene-picker select{min-height:38px}.gf [data-explore-toggle]{min-height:38px;padding:6px 12px}.gf .gf-caption{min-height:0;padding:4px 22px 8px;font-size:15px;line-height:1.4}.gf-transport{padding-top:6px}.gf-transport button,.gf-speed select{min-height:40px}.gf-scrub{margin-bottom:0}.gf-scrub input{min-height:36px}}

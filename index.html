@@ -594,7 +594,7 @@ function loadGram(){
     if(!window.GRAM_ART)await scriptFile('grammatik/illustrations.js?v=990e867b0dec');
     // Illustrations stay static. Authored films opt in per private lesson;
     // the old picture-type motion wrapper is retained only in its review prototype.
-    if(!window.GRAM)await scriptFile('grammatik/grammatik.js?v=ccd65a0f80a9');
+    if(!window.GRAM)await scriptFile('grammatik/grammatik.js?v=62bdb304972d');
   })().catch(e=>{gramP=null;throw e});
   return gramP;
 }
@@ -625,8 +625,9 @@ let filmP=null;
 function loadFilm(){
   if(window.GRAM_FILM)return Promise.resolve();
   if(!filmP){
-    const css=document.createElement('link');css.rel='stylesheet';css.href='grammatik/film.css?v=875f9db3f512';document.head.append(css);
-    filmP=scriptFile('grammatik/film.js?v=0cf70473251f').catch(e=>{css.remove();filmP=null;throw e;});
+    const css=document.createElement('link');css.rel='stylesheet';css.href='grammatik/film.css?v=b2c49e75d4b0';document.head.append(css);
+    // the grammar stage is small and only needed with a film, so both arrive together
+    filmP=Promise.all([scriptFile('grammatik/film-stage.js?v=735412b7dfae'),scriptFile('grammatik/film.js?v=fe3188744a60')]).catch(e=>{css.remove();filmP=null;throw e;});
   }
   return filmP;
 }
