@@ -103,7 +103,7 @@
   /* ---- SVG rendering ---- */
   E.render = function (src, scene, t, W, opt) {
     const sz = (k) => Math.max(opt.minText || 11, opt.fs * k);   // small labels never drop below a readable size on phones
-    const fr = E.frame(src, scene, t, W, opt), { B, p } = fr, A = p >= 1 ? null : fr.A, fs = opt.fs, H = Math.max(opt.minH || 0, B.h + (fr.cur.tl ? opt.tlH : 0) + fs * 0.4, A ? A.h + (fr.prev && fr.prev.tl ? opt.tlH : 0) : 0);
+    const fr = E.frame(src, scene, t, W, opt), { B, p } = fr, A = p >= 1 ? null : fr.A, fs = opt.fs, H = Math.max(opt.minH || 0, B.h + (fr.cur.tl ? opt.tlH : 0) + fs * 0.4, A ? A.h + ((fr.prev && fr.prev.tl) || fr.cur.tl ? opt.tlH : 0) : 0);
     let bg = '', mid = '', top = '';
     const notchCol = (id) => { let h = 0; for (const c of String(id).replace(/\..*$/, '')) h = (h * 31 + c.charCodeAt(0)) >>> 0; return C.notch[h % C.notch.length]; };
     const pieceA = new Map(A ? A.pieces.map((q) => [q.key, q]) : []), idA = new Map(); if (A) for (const q of A.pieces) { if (!idA.has(q.id)) idA.set(q.id, []); idA.get(q.id).push(q); }
@@ -186,7 +186,7 @@
     for (const [rid, b] of fB) { const a = fA.get(rid); if (a && a.key === b.key && a.line !== b.line && p < 1) { dec += finMark(a, pout) + finMark(b, pin); continue; } dec += a ? finMark({ ...b, x: lerp(a.x, b.x, pm), w: lerp(a.w, b.w, pm), base: lerp(a.base, b.base, pm) + (a.key === b.key ? liftOf(a, b) : 0) }, 1) : finMark(b, pin); }
     for (const [rid, a] of fA) if (!fB.has(rid)) dec += finMark(a, pout);
     // timeline
-    const hA = A && fr.prev && fr.prev.tl ? A.h : B.h, tp = hA > B.h ? Math.max(0, 2 * p - 1) : Math.min(1, 2 * p), tlY = lerp(hA, B.h, A ? tp : 1) + opt.tlH * 0.45; let tl = '';   // the timeline makes room first, or waits until removed rows have faded, then moves
+    const hA = A && ((fr.prev && fr.prev.tl) || A.h > B.h) ? A.h : B.h, tp = hA > B.h ? Math.max(0, 2 * p - 1) : Math.min(1, 2 * p), tlY = lerp(hA, B.h, A ? tp : 1) + opt.tlH * 0.45; let tl = '';   // the timeline makes room first, or waits until removed rows have faded, then moves
     const drawTL = (T, op) => { if (!T || op <= 0.01) return ''; let s = ''; const x0 = opt.margin + fs * 0.4, x1 = W - opt.margin - fs * 0.4, X = (u) => lerp(x0, x1, u), y = tlY;
       s += '<line x1="' + f1(x0) + '" y1="' + f1(y) + '" x2="' + f1(x1) + '" y2="' + f1(y) + '" stroke="' + C.ink + '" stroke-width="2.4" marker-end="url(#' + opt.idp + 'ahN)"/>';
       const placed = [], lh = sz(0.4) * 1.18, ew = opt.measure(T.ends ? T.ends[1] : 'später', sz(0.36)) + 6;   // früher / später sit under the arrow ends and are kept clear like point labels
