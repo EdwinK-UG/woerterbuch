@@ -1,0 +1,44 @@
+const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),{PGlite}=require('@electric-sql/pglite');
+test('mail directory and delivery enforce founder or current class ownership, and never expose teacher recipient addresses',async()=>{
+ const db=new PGlite(),id=n=>'00000000-0000-4000-ab00-'+String(n).padStart(12,'0');
+ try{
+  await db.exec(fs.readFileSync('tests/school-security-bootstrap.sql','utf8'));
+  await db.exec(`create schema vault;create table vault.decrypted_secrets(name text,decrypted_secret text);insert into vault.decrypted_secrets values('deutschklinik_welcome_hook','fixture-secret');
+   create table public.profiles(user_id uuid,display_name text,role text,org_id uuid);
+   create table public.orgs(id uuid,owner uuid,name text,theme text,logo_url text,contact_email text);
+   create table public.classes(id uuid,org_id uuid,teacher_id uuid,name text);
+   create table public.org_members(org_id uuid,user_id uuid,class_id uuid,member_role text);
+   create table public.app_admins(user_id uuid);
+   create function public.is_founder() returns boolean language sql stable security definer set search_path='' as $$select exists(select from public.app_admins where user_id=auth.uid())$$;
+   create function public.can_manage_class(p_class uuid) returns boolean language sql stable security definer set search_path='' as $$select exists(select from public.classes c join public.orgs o on o.id=c.org_id where c.id=p_class and (c.teacher_id=auth.uid() or o.owner=auth.uid()))$$;
+   insert into auth.users(id,email,email_confirmed_at) values ${Array.from({length:8},(_,i)=>`('${id(i+1)}','user${i+1}@example.invalid',now())`).join(',')};
+   insert into public.app_admins values('${id(1)}');
+   insert into public.profiles values('${id(2)}','Teacher','teacher',null),('${id(3)}','My learner','learner','${id(10)}'),('${id(4)}','Other class','learner','${id(10)}'),('${id(5)}','Other school','learner','${id(11)}'),('${id(6)}','Owner','school',null),('${id(7)}','Moved learner','learner','${id(11)}'),('${id(8)}','Unconfirmed teacher','teacher',null);
+   insert into public.orgs values('${id(10)}','${id(6)}','School','#ac8935',null,'support@example.invalid'),('${id(11)}','${id(6)}','Other School',null,null,null);
+   insert into public.classes values('${id(20)}','${id(10)}','${id(2)}','My class'),('${id(21)}','${id(10)}','${id(8)}','Other class'),('${id(22)}','${id(11)}','${id(8)}','Other school class');
+   insert into public.org_members values('${id(10)}','${id(2)}',null,'teacher'),('${id(10)}','${id(3)}','${id(20)}','student'),('${id(10)}','${id(4)}','${id(21)}','student'),('${id(11)}','${id(5)}','${id(22)}','student'),('${id(10)}','${id(7)}','${id(20)}','student');`);
+  await db.exec(fs.readFileSync('supabase/migrations/20261110163146_founder_teacher_messages.sql','utf8'));
+  const as=async n=>db.exec(`reset role;select set_config('request.jwt.claim.sub','${n?id(n):''}',false);set role ${n?'authenticated':'anon'}`);
+  const directory=async(cls=null,search='')=>(await db.query('select public.message_recipients($1,$2,0) as v',[cls,search])).rows[0].v;
+  const delivery=async(n,cls,secret='fixture-secret')=>(await db.query('select public.message_delivery_context($1,$2,$3) as v',[id(n),cls,secret])).rows[0].v;
+  await as(null);await assert.rejects(directory(),/permission denied/);
+  await as(3);await assert.rejects(directory(id(20)),/not authorised/);
+  await db.exec(`reset role;update auth.users set raw_user_meta_data='{"role":"founder"}' where id='${id(3)}'`);
+  await as(3);await assert.rejects(directory(),/not authorised/);
+  await as(2);await assert.rejects(directory(),/not authorised/);await assert.rejects(directory(id(21)),/not authorised/);
+  const mine=await directory(id(20));assert.equal(mine.total,1);assert.equal(mine.users[0].id,id(3));assert.equal(mine.users[0].email,null);assert.ok(!JSON.stringify(mine).includes('user3@'));
+  assert.equal((await directory(id(20),'My learner')).total,1);assert.equal((await directory(id(20),'user3@')).total,0);
+  await assert.rejects(delivery(3,id(20),'wrong'),/not authorised/);
+  await assert.rejects(delivery(4,id(20)),/recipient unavailable/);await assert.rejects(delivery(7,id(20)),/recipient unavailable/);
+  assert.equal((await delivery(3,id(20))).recipient.email,'user3@example.invalid');
+  assert.equal((await delivery(3,id(20))).org.theme,'#ac8935');
+  await db.exec(`reset role;delete from public.org_members where user_id='${id(3)}'`);await as(2);
+  await assert.rejects(delivery(3,id(20)),/recipient unavailable/);
+  await db.exec(`reset role;delete from public.org_members where user_id='${id(2)}'`);await as(2);await assert.rejects(directory(id(20)),/not authorised/);
+  await as(6);assert.equal((await directory(id(21))).total,1);
+  await as(1);assert.equal((await directory()).total,8);assert.equal((await directory(null,'user5@')).users[0].email,'user5@example.invalid');
+  await db.exec(`reset role;update auth.users set email_confirmed_at=null where id='${id(8)}'`);await as(8);await assert.rejects(directory(id(21)),/not authorised/);
+  await db.exec(`reset role;update auth.users set raw_app_meta_data='{"dk_email_verification_required":true}' where id='${id(2)}'`);await as(2);await assert.rejects(directory(id(20)),/not authorised/);
+  await assert.rejects(db.query('select app_private.message_sender_allowed($1)',[id(20)]),/permission denied/);
+ }finally{await db.close();}
+});

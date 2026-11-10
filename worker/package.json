@@ -1,1 +1,1 @@
-{"name":"deutschklinik-worker","private":true,"type":"module","scripts":{"test":"node --experimental-loader=./tests/cloudflare-loader.mjs --test tests/worker.test.mjs"}}
+{"name":"deutschklinik-worker","private":true,"type":"module","scripts":{"test":"node --experimental-loader=./tests/cloudflare-loader.mjs --test tests/*.test.mjs"}}

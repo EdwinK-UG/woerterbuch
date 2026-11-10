@@ -8,6 +8,7 @@ const hash = (text) =>
 const files = [
   "config.js",
   "konto.js",
+  "js/course-mail.js",
   "js/course-counts.js",
   "js/study-sync.js",
   "js/game-messages.js",

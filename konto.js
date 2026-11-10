@@ -635,7 +635,7 @@ async function viewStaff(arg) {
   page('', `${hero(org, `<p class="kd-eye">${esc(org.org_type || (org.kind === 'school' ? T('School', 'Schule') : T('Teacher', 'Lehrkraft')))}${org.city ? ' · ' + esc(org.city) : ''}</p><h1>${esc(org.name)}</h1>
       ${org.tagline ? `<p class="kd-hi">${esc(org.tagline)}</p>` : ''}
       <div class="row"><button class="btn kd-cta" onclick="KONTO.inviteLearner()">${icn('user-plus')} ${T('Invite a learner','Lernende einladen')} ${icn('arrow-up-right')}</button></div>`)}
-    <nav class="school-shortcuts" aria-label="${T('Teaching workspace','Unterrichtsbereich')}"><a href="#/klasse/${org.id}">${icn('calendar-days')} ${T('Teaching terms','Kursdurchgänge')} ${icn('arrow-up-right')}</a><a href="#/schule/${org.id}">${icn('panel-top')} ${T('View page','Seite ansehen')}</a>${owner?`<a href="#/settings">${icn('sliders-horizontal')} ${T('Personalise','Gestalten')}</a>` : ''}</nav>
+    <nav class="school-shortcuts" aria-label="${T('Teaching workspace','Unterrichtsbereich')}"><button class="btn sm" onclick="KONTO.emailLearners()">${icn('mail')} ${T('Email learners','Lernenden schreiben')}</button><a href="#/klasse/${org.id}">${icn('calendar-days')} ${T('Teaching terms','Kursdurchgänge')} ${icn('arrow-up-right')}</a><a href="#/schule/${org.id}">${icn('panel-top')} ${T('View page','Seite ansehen')}</a>${owner?`<a href="#/settings">${icn('sliders-horizontal')} ${T('Personalise','Gestalten')}</a>` : ''}</nav>
     ${orgs.length > 1 ? `<p class="row">${orgs.map(o => `<a class="btn sm${o.id === org.id ? ' primary' : ''}" href="#/start/${o.id}">${esc(o.name)}</a>`).join('')}</p>` : ''}
     ${kpis([['users', studs.length, T('learners', 'Lernende')], ['layers', D.classes.length, T('classes', 'Klassen'), org.kind === 'school' ? teachers.length + ' ' + T('teachers', 'Lehrkräfte') : ''], ['activity', active, T('active this week', 'aktiv diese Woche')], ['gauge', avg30 == null ? '–' : avg30 + ' %', T('average score', 'Durchschnitt'), T('last 30 days', 'letzte 30 Tage')], ['hand', pend.length, T('waiting for you', 'warten auf Sie')]])}
     ${pend.length ? `<h2 class="kd-h">${icn('hand')} ${T('Waiting for a level', 'Warten auf ein Niveau')}</h2><div class="kd-card"><p class="m">${T('These learners cannot open course content until you unlock a level for them.', 'Diese Lernenden können erst üben, wenn Sie ein Niveau freischalten.')}</p>
@@ -688,7 +688,7 @@ async function viewClasses(arg) {
       <ul class="ks-inv">${D.invites.filter(i => i.class_id === c.id).map(invRow).join('')}</ul>
       <details><summary>${T('Invitation email status','Status der Einladungs-E-Mails')}</summary><p class="ks-tip">${T('Check whether the mail provider accepted each invitation. Inbox delivery can take a few minutes; ask learners to check spam too.','Prüfen Sie, ob der Mailanbieter die Einladungen angenommen hat. Die Zustellung kann einige Minuten dauern; bitte auch den Spamordner prüfen.')}</p><button class="btn sm" onclick="KONTO.checkInvitationMail('${c.id}')">${T('Check email status','E-Mail-Status prüfen')}</button><div id="mail_status_${c.id}" role="status"></div></details>
       ${apps.length ? `<h4 class="ks-h">${icn('inbox')} ${T('Live class applications', 'Anmeldungen zum Live-Unterricht')}</h4><ul class="ks-inv">${apps.map(r => `<li><b>${sName(r.user_id)}</b><span class="spacer"></span><button class="btn sm" onclick="KONTO.decideLiveRequest('${r.id}',false)">${T('Decline', 'Ablehnen')}</button><button class="btn sm primary" onclick="KONTO.decideLiveRequest('${r.id}',true)">${T('Accept & enrol', 'Annehmen & einschreiben')}</button></li>`).join('')}</ul>` : ''}
-      <h4 class="ks-h">${T('Learners · results at level', 'Lernende · Ergebnisse auf Niveau')} ${c.level}</h4>
+      <h4 class="ks-h">${T('Learners · results at level', 'Lernende · Ergebnisse auf Niveau')} ${c.level}</h4>${owner||c.teacher_id===me().id||isFounder()?`<p><button class="btn sm" onclick="KONTO.emailLearners('${c.id}')">${icn('mail')} ${T('Email learners','Lernenden schreiben')}</button></p>`:''}
       ${ms.length ? `<div class="ks-tw"><table class="ks-t"><tr><th>${T('Name', 'Name')}</th><th>${T('Levels', 'Niveaus')}</th><th>${T('Passed', 'Bestanden')}</th><th>Ø</th><th></th></tr>${ms.map(m => { const g = grade(m.user_id, c), p = D.profiles[m.user_id] || { unlocked: [] };
         return `<tr><td>${sName(m.user_id)}</td><td>${p.unlocked.map(x => `<span class="gr-lv ${x}">${x}</span>`).join(' ') || '–'}${wants(p) ? ` <span class="kd-want">${icn('hand')} ${wants(p)}</span>` : ''}</td>
           <td>${g.passed}/${g.tried}</td><td>${g.tried ? `<span class="gr-ueb ${g.avg >= g.pm ? 'pass' : 'fail'}">${g.avg} %</span>` : '–'}</td><td><button class="btn sm" onclick="KONTO.student('${m.user_id}')">${icn('sliders-horizontal')} ${T('Levels', 'Niveaus')}</button></td></tr>`; }).join('')}</table></div>` : `<p class="sub">${T('Nobody in this class yet. Share the invitation link.', 'Noch niemand in dieser Klasse. Teilen Sie den Einladungslink.')}</p>`}
@@ -843,6 +843,25 @@ async function viewTasks() {
     ${rows ? `<div class="ks-tw"><table class="ks-t"><tr><th>${T('Assignment', 'Aufgabe')}</th><th>${T('Due', 'Bis')}</th><th>${T('Pass from', 'Bestanden ab')}</th><th>${T('Status', 'Stand')}</th></tr>${rows}</table></div>` : `<p class="sub">${T('You have no assignments right now.', 'Im Moment hast du keine Aufgaben.')}</p>`}`);
 }
 
+/* ---------- selected-recipient mail ---------- */
+function emailUsers() { if(isFounder())messageSheet('founder'); }
+function emailLearners(classId=null) { if(isStaff())messageSheet('class',classId); }
+function messageSheet(mode,classId=null) {
+  const actor=me()?.id;if(!actor||!window.CourseMail)return;
+  const classes=D.classes.filter(c=>isFounder()||c.teacher_id===actor||D.org?.owner===actor);
+  if(mode==='class'&&classId&&!classes.some(c=>c.id===classId))return;
+  CourseMail.open({actor,mode,classId,classes,brand:mode==='class'?D.org?.name:'Deutschklinik',senderName:mode==='class'?P?.display_name:'Deutschklinik',t:T,sheet:openSheet,toast:toastM,
+    active:()=>me()?.id===actor,
+    recipients:body=>rpc('message_recipients',body),
+    send:async body=>{
+      const response=await fetch(APP_CONFIG.workerUrl+'/messages/send',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+await A().token()},body:JSON.stringify(body),signal:AbortSignal.timeout(30000)});
+      const data=await response.json().catch(()=>({}));
+      if(!response.ok)throw Object.assign(new Error(response.status===401?T('Sign in again, then reopen this draft.','Bitte erneut anmelden und diesen Entwurf wieder öffnen.'):data.error||T('Delivery could not be confirmed.','Der Versand konnte nicht bestätigt werden.')),{status:response.status,state:data.state});
+      return data;
+    }
+  });
+}
+
 /* ---------- founder: what is going on ---------- */
 async function viewAdmin() {
   if (!me()) return need();
@@ -855,7 +874,7 @@ async function viewAdmin() {
   const link = c => location.origin + location.pathname + '?invite=' + c;
   page('', `<section class="kd-hero cv-grid"><div><p class="kd-eye">${T('Site owner', 'Betreiber/in')}</p><h1>${T('What is happening on Deutschklinik', 'Was auf Deutschklinik passiert')}</h1>
       <p class="kd-hi">${T(`${s.users || 0} accounts · ${s.new7 || 0} new this week`, `${s.users || 0} Konten · ${s.new7 || 0} neu diese Woche`)}</p>
-      <div class="row"><button class="btn kd-cta" onclick="KONTO.inviteLearner()">${icn('send')} ${T('Invite a learner', 'Lernende einladen')}</button><a class="btn kd-ghost" href="#/klasse">${icn('calendar-plus')} ${T('My teaching terms', 'Meine Kursdurchgänge')}</a><a class="btn kd-ghost" href="#owner-accounts" onclick="event.preventDefault();document.getElementById('owner-accounts').open=true;document.getElementById('owner-accounts').scrollIntoView({behavior:'smooth'});KONTO.loadOwnerUsers()">${icn('users')} ${T('Manage accounts','Konten verwalten')}</a><button class="btn kd-ghost" onclick="KONTO.inviteSheet()">${icn('send')} ${T('Invite someone', 'Jemanden einladen')}</button></div></div></section>
+      <div class="row"><button class="btn kd-cta" onclick="KONTO.inviteLearner()">${icn('send')} ${T('Invite a learner', 'Lernende einladen')}</button><a class="btn kd-ghost" href="#/klasse">${icn('calendar-plus')} ${T('My teaching terms', 'Meine Kursdurchgänge')}</a><button class="btn kd-ghost" onclick="KONTO.emailUsers()">${icn('mail')} ${T('Email users','Nutzern schreiben')}</button><a class="btn kd-ghost" href="#owner-accounts" onclick="event.preventDefault();document.getElementById('owner-accounts').open=true;document.getElementById('owner-accounts').scrollIntoView({behavior:'smooth'});KONTO.loadOwnerUsers()">${icn('users')} ${T('Manage accounts','Konten verwalten')}</a><button class="btn kd-ghost" onclick="KONTO.inviteSheet()">${icn('send')} ${T('Invite someone', 'Jemanden einladen')}</button></div></div></section>
     ${kpis([['users', s.users || 0, T('accounts', 'Konten'), `${s.confirmed || 0} ${T('confirmed', 'bestätigt')}`], ['user-plus', s.new7 || 0, T('new this week', 'neu diese Woche'), `${s.new30 || 0} ${T('in 30 days', 'in 30 Tagen')}`], ['log-in', s.signin7 || 0, T('signed in this week', 'angemeldet diese Woche')],
       ['activity', a.active7 || 0, T('active learners', 'aktive Lernende'), T('7 days', '7 Tage')], ['dumbbell', a.ex7 || 0, T('exercises this week', 'Übungen diese Woche'), a.avg30 != null ? `Ø ${a.avg30} % (30 ${T('days', 'Tage')})` : ''],
       ['school', orgs.school || 0, T('schools', 'Schulen'), `${orgs.teacher || 0} ${T('teacher pages', 'Lehrkraft-Seiten')}`], ['layers', s.classes || 0, T('classes', 'Klassen'), `${s.in_school || 0} ${T('learners in schools', 'Lernende in Schulen')}`], ['mail', (s.users||0)-(s.confirmed||0), T('awaiting email confirmation', 'warten auf E-Mail-Bestätigung')]])}
@@ -1200,7 +1219,7 @@ header .brand{flex-shrink:0}@media(min-width:1100px){header .wrap{max-width:1220
 document.head.appendChild(st);
 
 /* ---------- start ---------- */
-window.KONTO = { level, lang, passMark, canOpen, lvState, unlock, lockSheet, unlocked: unlockedSet, profile: () => P, org: () => ORG, brand, applyBrand, view, routes: ROUTES, fillMe, saveLevel, askLevel,
+window.KONTO = { emailUsers, emailLearners, level, lang, passMark, canOpen, lvState, unlock, lockSheet, unlocked: unlockedSet, profile: () => P, org: () => ORG, brand, applyBrand, view, routes: ROUTES, fillMe, saveLevel, askLevel,
   signupFields, signupCheck, signupData, request, reqFields, sendRequest, join, decide, inviteSheet, makeSiteInvite, delSiteInvite, codeSheet,
   saveOrg, dropLogo, orgPass, addClass, classPass, invite, delInvite, moveMember, removeMember, addTask, delTask, copy, reload, refresh, liveClassSheet, saveLiveClass, sendClassInvite, sendClassInviteNow, inviteLearner, previewInvite, loadOwnerUsers, deleteAccountSheet, deleteAccount, decideLiveRequest, applyLiveClass,
   student, unlockFor, saveSettings, setCourse, unenroll, leave, T, can, gate, featureOf, saveSite, lookup, signupAs, checkInvitationMail, previewWelcome: () => { location.hash = '#/start/besucher'; } };
