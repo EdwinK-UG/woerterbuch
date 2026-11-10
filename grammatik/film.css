@@ -27,3 +27,5 @@
 .gf-workspace{max-height:var(--gf-workspace-max,none);overflow:auto;overscroll-behavior:contain;scrollbar-width:thin}.gf .gf-caption{position:sticky;top:var(--gf-tools-h,0px);z-index:1;background:var(--gf-paper)}.gf-manipulation{position:sticky;top:0;z-index:2;background:var(--gf-paper)}
 .gf [aria-label="Satzteile"] [aria-pressed=true]{text-decoration:line-through;text-decoration-thickness:2px}
 @media(max-width:640px){.gf-transport{display:grid;grid-template-columns:44px minmax(80px,1fr) 44px 58px;gap:4px}.gf-transport [data-prev]{grid-column:1;grid-row:1}.gf-transport [data-play]{grid-column:2;grid-row:1}.gf-transport [data-next]{grid-column:3;grid-row:1}.gf-speed{grid-column:4;grid-row:1}.gf-time{grid-column:1/-1;grid-row:2;justify-self:end;line-height:1.2;font-size:11px}.gf-transport button{min-width:0!important;padding-left:4px;padding-right:4px}}
+/* Frame height changes must not make the browser scroll the scene selector under the sticky heading. */
+.gf,.gf-dialog,.gf-workspace{overflow-anchor:none}
