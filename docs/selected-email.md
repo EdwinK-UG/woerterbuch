@@ -38,7 +38,7 @@ promise any particular Zoho quota. There are no attachments or marketing lists.
 
 ## Release order
 
-1. Apply `supabase/migrations/20261110163146_founder_teacher_messages.sql` to the
+1. Apply `supabase/migrations/20261110165617_founder_teacher_messages.sql` to the
    existing project. It preserves the existing welcome callback schema grants.
 2. Apply `worker/migrations/0005_direct_messages.sql` to the existing D1 database.
 3. Deploy the Worker with the new `/messages/send` route and existing bindings

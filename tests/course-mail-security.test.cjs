@@ -17,7 +17,7 @@ test('mail directory and delivery enforce founder or current class ownership, an
    insert into public.orgs values('${id(10)}','${id(6)}','School','#ac8935',null,'support@example.invalid'),('${id(11)}','${id(6)}','Other School',null,null,null);
    insert into public.classes values('${id(20)}','${id(10)}','${id(2)}','My class'),('${id(21)}','${id(10)}','${id(8)}','Other class'),('${id(22)}','${id(11)}','${id(8)}','Other school class');
    insert into public.org_members values('${id(10)}','${id(2)}',null,'teacher'),('${id(10)}','${id(3)}','${id(20)}','student'),('${id(10)}','${id(4)}','${id(21)}','student'),('${id(11)}','${id(5)}','${id(22)}','student'),('${id(10)}','${id(7)}','${id(20)}','student');`);
-  await db.exec(fs.readFileSync('supabase/migrations/20261110163146_founder_teacher_messages.sql','utf8'));
+  await db.exec(fs.readFileSync('supabase/migrations/20261110165617_founder_teacher_messages.sql','utf8'));
   const as=async n=>db.exec(`reset role;select set_config('request.jwt.claim.sub','${n?id(n):''}',false);set role ${n?'authenticated':'anon'}`);
   const directory=async(cls=null,search='')=>(await db.query('select public.message_recipients($1,$2,0) as v',[cls,search])).rows[0].v;
   const delivery=async(n,cls,secret='fixture-secret')=>(await db.query('select public.message_delivery_context($1,$2,$3) as v',[id(n),cls,secret])).rows[0].v;
