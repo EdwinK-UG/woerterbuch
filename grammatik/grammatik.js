@@ -1174,6 +1174,29 @@ async function loadChapter(n) {
 const WATCH_LEVELS = ['A1', 'B2', 'C1'];   // levels that have the video button; widen when more lessons are checked
 const hasWatch = c => !c.vocab && !isRef(c.n) && WATCH_LEVELS.includes(c.level) && !!c.understand?.length && (c.level === 'A1' || !!c.film);
 const watchBtn = c => (hasWatch(c) ? `<button class="btn sm" data-watch="${c.n}">${icn('play')} ${c.film ? 'Animation ansehen' : 'Video ansehen'}</button>` : '');
+/* Kapitel 57: the 3D saw workshop (grammatik/werkstatt/). It holds no lesson text: when it is ready it asks this page,
+   which loaded the chapter with the learner's enrolment, for the chapter's own sentences. */
+const WERKSTATT = { 57: 'grammatik/werkstatt/index.html?v=1' };
+const werkBtn = c => (WERKSTATT[c.n] && !c.vocab ? `<button class="btn sm" data-werkstatt="${c.n}">${icn('hammer')} 3D-Werkstatt</button>` : '');
+const werkCard = c => (WERKSTATT[c.n] && !c.vocab ? `<div class="gr-cream" style="display:flex;gap:.8rem;align-items:center;flex-wrap:wrap;margin:0 0 1rem"><div style="flex:1;min-width:14rem"><b>Die Säge zeigt es</b><br><span style="color:var(--mut)">Trennbare Verben lassen sich zersägen, untrennbare nicht. Sieh zu oder säge selbst – mit Ton.</span></div><button class="btn sm" data-werkstatt="${c.n}">${icn('hammer')} 3D-Werkstatt öffnen</button></div>` : '');
+function werkTexts(c) {
+  const out = [], walk = x => { if (out.length > 4000) return; if (typeof x === 'string') out.push(x); else if (Array.isArray(x)) x.forEach(walk); else if (x && typeof x === 'object') Object.values(x).forEach(walk); };
+  walk(c.understand); walk(c.examples); walk(c.speak); return out;
+}
+function openWerkstatt(n) {
+  const c = cur && cur.n === n ? cur : CH[n]; if (!c || !WERKSTATT[n]) return;
+  const previous = document.activeElement, scroll = document.body.style.overflow;
+  const d = document.createElement('dialog'); d.setAttribute('aria-label', 'Trennbar-Werkstatt 3D');
+  d.style.cssText = 'position:fixed;inset:0;width:100vw;height:100dvh;max-width:none;max-height:none;margin:0;padding:0;border:0;background:#f3e9d8';
+  const f = document.createElement('iframe'); f.title = 'Trennbar-Werkstatt 3D'; f.src = WERKSTATT[n]; f.allow = 'autoplay; fullscreen';
+  f.style.cssText = 'display:block;width:100%;height:100%;border:0';
+  const send = () => f.contentWindow?.postMessage({ type: 'werkstatt-texts', texts: werkTexts(c) }, location.origin);
+  const onMsg = e => { if (e.source !== f.contentWindow || e.origin !== location.origin) return; if (e.data?.type === 'werkstatt-ready') send(); else if (e.data?.type === 'werkstatt-close') close(); };
+  const close = () => { removeEventListener('message', onMsg); d.close(); d.remove(); document.body.style.overflow = scroll; previous?.focus?.(); };
+  addEventListener('message', onMsg); f.addEventListener('load', send);
+  d.addEventListener('cancel', e => { e.preventDefault(); close(); });
+  d.append(f); document.body.append(d); d.showModal(); document.body.style.overflow = 'hidden'; f.focus();
+}
 const filmVisual = c => { const v = filmVisuals.get(c.n); return v && v.visual?.n === c.n ? { visual: v, lesson: c } : {}; };
 const filmTheme = () => ({accent:getComputedStyle(document.documentElement).getPropertyValue('--ac').trim(),brand:window.KONTO?.org()?.name || 'Deutschklinik'});
 let lessonFilm=null;
@@ -1243,11 +1266,11 @@ function render(c) {
      <p class="gr-eyebrow">${isRef(c.n) ? 'Nachschlagen und trainieren' : `Kapitel ${gNo(c.n)} · ${H(c.group)}`} · <span class="gr-lv ${c.level}">${c.level}</span></p>
      <h1>${H(c.title)}</h1><p class="gr-kick">${H(c.kicker)}</p><p class="gr-intro">${rich(c.intro)}</p>
      <div class="gr-prog" id="grprog">${progHTML(pr)}</div>
-     <div class="row" style="margin-top:.8rem">${watchBtn(c)}<button class="btn sm" onclick="GRAM.practice('solo')">${icn('gamepad-2')} Im Spiel üben</button></div></div>
+     <div class="row" style="margin-top:.8rem">${watchBtn(c)}${werkBtn(c)}<button class="btn sm" onclick="GRAM.practice('solo')">${icn('gamepad-2')} Im Spiel üben</button></div></div>
      <figure class="gr-art">${typeof c.art === 'function' ? c.art(K) : c.scene ? window.GRAM_ART.draw(K,c.scene) : ART[c.art] ? ART[c.art]() : ''}<figcaption><span>${fmt(c.hero)}</span>${sayBtn(c.hero)}</figcaption></figure>
    </div>
    <nav class="gr-toc"><a href="#grs-v" data-jump>${icn('lightbulb')} Verstehen</a>${hasExamples?`<a href="#grs-b" data-jump>${icn('quote')} Beispiele</a>`:''}<a href="#grs-u" data-jump>${icn('pencil')} Üben</a>${hasSpeak?`<a href="#grs-s" data-jump>${icn('mic')} Sprechen</a>`:''}${secAllBtn()}</nav>
-   <section class="gr-sec" id="grs-v"><h2><span class="gr-sn">1</span>Verstehen</h2>${c.film?'<div class="gf-inline" data-film-host></div>':''}${blocks}</section>
+   <section class="gr-sec" id="grs-v"><h2><span class="gr-sn">1</span>Verstehen</h2>${c.film?'<div class="gf-inline" data-film-host></div>':''}${werkCard(c)}${blocks}</section>
    ${hasExamples?`<section class="gr-sec" id="grs-b"><h2><span class="gr-sn">2</span>Beispiele</h2>
      <div class="gr-legend"><span class="n">Nominativ – wer?</span><span class="d">Dativ – wem?</span><span class="a">Akkusativ – was?</span></div>
      <ul class="gr-exs">${c.examples.map(s => `<li><span class="s">${fmt(s)}</span>${sayBtn(s)}</li>`).join('')}</ul>
@@ -1634,6 +1657,7 @@ function onClick(ev) {
   const tb = t.closest('[data-toc]'); if (tb) { tocAll(tb.dataset.toc === 'open'); return; }
   const ex = t.closest('[data-exp]'); if (ex) { const r = ex.closest('.gr-row'), st = tocState(), open = !r.classList.contains('open'); st['c:' + r.dataset.n] = open ? 1 : 0; tocSave(st); rowOpen(r, open); icons(); return; }
   const wb = t.closest('[data-watch]'); if (wb) { openWatch(+wb.dataset.watch); return; }
+  const wk = t.closest('[data-werkstatt]'); if (wk) { openWerkstatt(+wk.dataset.werkstatt); return; }
   const sa = t.closest('[data-secall]'); if (sa) { secToggleAll(sa); return; }
   const sh2 = t.closest('.gr-ch .gr-sec>h2'); if (sh2) { sh2.parentNode.classList.toggle('closed'); return; }
   const ch = t.closest('.gr-ch'); if (!ch || !cur) return;
