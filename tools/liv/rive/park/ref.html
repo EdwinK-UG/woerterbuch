@@ -1,0 +1,30 @@
+<!doctype html><meta charset="utf-8"><title>park reference</title>
+<style>html,body{margin:0;background:#fff}canvas{display:block}</style>
+<canvas id="c" width="1760" height="864"></canvas>
+<script src="../../../../grammatik/liv/liv-art.js"></script>
+<script src="../../../../grammatik/liv/engine.js"></script>
+<script>
+// Reference renderer for the Rive scenery port: film-park.js with the camera and Liv overridable from the URL.
+//   ref.html?camX=3&route=into&moving=1&liv=0&t=3&goal=1&tag=...
+const q = new URLSearchParams(location.search);
+fetch('../../../../grammatik/liv/film-park.js').then(r => r.text()).then(src => {
+  src = src.replace('cam.target = [f.camX, 0.93, 0]', 'cam.target = [opts.camX != null ? opts.camX : f.camX, 0.93, 0]')
+           .replace('if (SKIN.art.ready)', 'if (opts.noLiv) {} else if (SKIN.art.ready)')
+           .replace('background(ctx, cam, W, H, into, f.moving,', 'background(ctx, cam, W, H, into, opts.moving != null ? opts.moving : f.moving,');
+  (0, eval)(src);
+  const o = { tag: q.get('tag') || 'in den Park · Wohin?', goal: +(q.get('goal') || 0), noLiv: q.get('liv') !== '1' };
+  if (q.has('camX')) o.camX = +q.get('camX'); if (q.has('moving')) o.moving = q.get('moving') === '1';
+  const cv = document.getElementById('c');
+  if (q.get('batch') === '1') {   // render every comparison frame and POST it to the local helper server (/save?name=)
+    (async () => { for (const cx of [0, 3, 6, 10, -2.5]) for (const r of ['into', 'within']) {
+      const oo = { tag: r === 'into' ? 'in den Park · Wohin?' : 'im Park · Wo?', goal: r === 'into' ? 1 : 0, noLiv: true, camX: cx, moving: true };
+      GRAM_PARK.draw(cv, r, 3, oo); const b = await new Promise(res => cv.toBlob(res, 'image/png'));
+      await fetch('/save?name=ref_' + r + '_cam' + cx + '.png', { method: 'POST', body: b }); }
+      document.title = 'done'; })();
+    return;
+  }
+  GRAM_PARK.draw(cv, q.get('route') || 'into', +(q.get('t') || 3), o);
+  const ctx = document.getElementById('c').getContext('2d'); ctx.font = '700 30px "Avenir Next", "Segoe UI", system-ui, sans-serif';
+  document.title = 'tagW=' + (ctx.measureText(o.tag).width + 40).toFixed(1);
+});
+</script>

@@ -1,0 +1,81 @@
+{
+ "artboard": [
+  1760,
+  864
+ ],
+ "zoom": 400.0,
+ "checked_for_abs_camX_up_to": 8.0,
+ "tolerance_px": 1.0,
+ "note": "every layer number must be written each frame; shapes and vertices off a layer depth read the same number through converters",
+ "camera": {
+  "pitch_deg": 7,
+  "dist": 60.0,
+  "target_y": 0.93,
+  "cx": 880.0,
+  "cy": 432.0
+ },
+ "formula": "parX = -camX * 400 * m",
+ "liv_slot": [
+  880.0,
+  800.531
+ ],
+ "liv_ppm_at_z0": 399.2458,
+ "layers": [
+  {
+   "prop": "parX0",
+   "name": "hills",
+   "y": null,
+   "z": null,
+   "m": 0.12
+  },
+  {
+   "prop": "parX1",
+   "name": "far",
+   "y": 0.0,
+   "z": -3.6,
+   "m": 0.9421148
+  },
+  {
+   "prop": "parX2",
+   "name": "houses",
+   "y": 0.0,
+   "z": -2.6,
+   "m": 0.95703
+  },
+  {
+   "prop": "parX3",
+   "name": "park",
+   "y": 0.0,
+   "z": -1.4,
+   "m": 0.9755637
+  },
+  {
+   "prop": "parX4",
+   "name": "gate",
+   "y": 0.0,
+   "z": -0.72,
+   "m": 0.9863883
+  },
+  {
+   "prop": "parX5",
+   "name": "ground",
+   "y": 0.0,
+   "z": 0.0,
+   "m": 0.9981146
+  },
+  {
+   "prop": "parX6",
+   "name": "near",
+   "y": 0.0,
+   "z": 0.72,
+   "m": 1.010123
+  },
+  {
+   "prop": "parX7",
+   "name": "front",
+   "y": 0.0,
+   "z": 1.1,
+   "m": 1.0165781
+  }
+ ]
+}
