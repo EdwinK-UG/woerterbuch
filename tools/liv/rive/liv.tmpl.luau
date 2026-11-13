@@ -91,7 +91,7 @@ local function advance(self:St,seconds:number):boolean
  -- ------------------------------------------------------------------ the turn (yaw) and the mirror
  local vi=math.clamp(math.floor(nv('view',1)+.5),0,4)
  local yt=YAWS[vi+1]
- self.yawV+=(100*(yt-self.yaw)-2*10*self.yawV)*dt;self.yaw+=self.yawV*dt
+ self.yawV+=(42*(yt-self.yaw)-2*6.5*self.yawV)*dt;self.yaw+=self.yawV*dt
  self.yaw=math.clamp(self.yaw,0,180)
  local mt=if nv('mirror',0)>.5 then -1.0 else 1.0
  self.flipV+=(150*(mt-self.flip)-2*12*self.flipV)*dt;self.flip+=self.flipV*dt
@@ -104,7 +104,7 @@ local function advance(self:St,seconds:number):boolean
   end
  end
  local sf=smooth(f)
- put('yawOut',yaw);put('flipX',self.flip*(1-.07*math.sin(math.pi*sf)))
+ put('yawOut',yaw);put('flipX',self.flip*(1-.24*math.sin(math.pi*sf)))
  local yr=math.rad(yaw);local ycs=math.cos(yr);local ysn=math.sin(yr)
 
  -- ------------------------------------------------------------------ gait (shared): phase, speed, feet in the world
@@ -191,7 +191,9 @@ local function advance(self:St,seconds:number):boolean
  -- ------------------------------------------------------------------ render the views that show
  for vi2,vw in ipairs(VIEWS) do
   local op=0.0
-  if lo==hi then op=if vi2==lo then 1 else 0 elseif vi2==lo then op=1-sf elseif vi2==hi then op=sf end
+  -- a turn: the views switch at the middle of the turn (both whole, never half-transparent: a group's opacity is applied to each
+  -- picture on its own, so a fading figure shows its own layers through each other) with a squash of the whole figure
+  if lo==hi then op=if vi2==lo then 1 else 0 elseif vi2==lo then op=if sf<.5 then 1 else 0 elseif vi2==hi then op=if sf>=.5 then 1 else 0 end
   local pre=vw.name..'_'
   put(pre..'opacity',op);put(pre..'blink',blink)
   if op<.003 then continue end
