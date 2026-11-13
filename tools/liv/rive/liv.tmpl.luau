@@ -330,7 +330,9 @@ local function advance(self:St,seconds:number):boolean
    for _,key in ipairs(keys) do
     local h=self.hands[pre..key]
     if h then
-     HandPose.setShape(h,name,grip);HandPose.update(h,dt);HandPose.write(h);wrist=HandPose.wrist(h)
+     if name=='relaxed' and rw>.05 then HandPose.setBlend(h,'relaxed','fist',math.clamp(rw*.9,0,.9),0,0)       -- running: loose fists
+     else HandPose.setShape(h,name,grip) end
+     HandPose.update(h,dt);HandPose.write(h);wrist=HandPose.wrist(h)
      put(pre..'hand'..key..'PalmSide',smoothTo('palm'..key,(if (PALMY[name] or 0)>0 then palmFace else 0.0),12))
     end
    end
