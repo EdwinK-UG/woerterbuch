@@ -76,7 +76,7 @@ export class LivActor {
     const M = this.rig.M;
     this.t = 0; this.x = o.x || 0; this.z = o.z || 0; this.yaw = o.yaw || 0; this.yawRate = 0;
     this.v = 0; this.acc = 0; this.leanA = 0; this.rw = 0; this.gw = 0; this.phi = 0; this.frozen = true; this.move = 0;
-    this.cmd = null; this.target = null; this.fixedYaw = null; this.layers = []; this.lookTarget = null;
+    this.cmd = null; this.target = null; this.fixedYaw = null; this.layers = []; this.lookTarget = null; this.timers = [];
     this.handOverride = { L: null, R: null }; this.exprName = 'happy';
     this.face = new Face(this.vrm); this.face.set('happy', 1);
     this.hands = { L: new Hand(this.rig, 'L', 0.3), R: new Hand(this.rig, 'R', 1.7) };
@@ -85,16 +85,17 @@ export class LivActor {
       const a = this.neutral(S);
       this.feet[S] = { planted: true, ax: a[0], az: a[1], yaw: a[2], sp: 1, lx: a[0], lz: a[1], lyaw: a[2], lpitch: 0, pitch: 0, flat: 0, ankle: null };
     }
-    if (this.prop && this.prop.flying) this.prop = null;
+    if (this.prop) { this.body.remove(this.prop.mesh); this.prop = null; }
+    if (this.flying) for (const f of this.flying) f.mesh.parent && f.mesh.parent.remove(f.mesh);
     this.flying = [];
-    this.stats = { maxOver: 0 }; this._pelY = null;
+    this.stats = { maxOver: 0 }; this._pelY = null; this.boost = 1; this._dec = 1;
     this._place(); this.update(0);
     this.springCenter.position.set(this.x, 0, this.z); this.springCenter.updateMatrixWorld();
     const sb = this.vrm.springBoneManager; if (sb) { for (const j of sb.joints) j.center = this.springCenter; sb.reset(); }
   }
   _springs(dt) {
-    const c = this.springCenter, k = 1 - Math.exp(-dt / 0.18);
-    c.position.x += (this.x - c.position.x) * k; c.position.z += (this.z - c.position.z) * k; c.updateMatrixWorld();
+    const c = this.springCenter, k = 1 - Math.exp(-dt / 0.18), dy = this.rig.hipsPos.y - this.rig.M.hipsY;
+    c.position.x += (this.x - c.position.x) * k; c.position.z += (this.z - c.position.z) * k; c.position.y += (dy - c.position.y) * k; c.updateMatrixWorld();
     // a little air: gravity tilts back with speed (body frame), so a run trails the hair a bit
     const sb = this.vrm.springBoneManager; if (!sb) return;
     const vn = this.vN || 0, back = new THREE.Vector3(-Math.sin(this.yaw), 0, -Math.cos(this.yaw)).applyQuaternion(this.root.getWorldQuaternion(new THREE.Quaternion()));
@@ -106,9 +107,9 @@ export class LivActor {
   walk(heading) { this.setVelocity(this.walkSpeed, heading == null ? this.yaw : heading); }
   run(heading) { this.setVelocity(this.runSpeed, heading == null ? this.yaw : heading); }
   stop() { this.cmd = null; if (this.target && this.target.res) this.target.res(false); this.target = null; }
-  /** Walk (or run) to (x, z) in actor.root space; resolves on arrival. opts: { run, speed } */
+  /** Walk (or run) to (x, z) in actor.root space; resolves on arrival. opts: { run, speed, then: fn(actor) called synchronously on arrival } */
   moveTo(x, z, o = {}) {
-    return new Promise((res) => { if (this.target && this.target.res) this.target.res(false); this.cmd = null; this.fixedYaw = null; this.target = { x, z, run: !!o.run, speed: o.speed, res }; });
+    return new Promise((res) => { if (this.target && this.target.res) this.target.res(false); this.cmd = null; this.fixedYaw = null; this.target = { x, z, run: !!o.run, speed: o.speed, res, then: o.then }; });
   }
   /** Turn on the spot (small steps) to face yaw (radians, 0 = +Z of actor.root); null = free. */
   turnTo(yaw) { this.fixedYaw = yaw; }
@@ -139,7 +140,9 @@ export class LivActor {
     if (this.prop) { this.body.remove(this.prop.mesh); this.prop = null; }
     this.stopAction('hold');
     if (!name) return;
-    const mesh = makeProp(name, this.rig.M.ls); this.body.add(mesh);
+    // the crate fits between her hands in the carry pose; small props scale with the leg length
+    const M = this.rig.M, sc = name === 'crate' ? (2 * (M.shW + 0.3 * M.arm) - 0.03 * M.ls) / 0.34 : M.ls;
+    const mesh = makeProp(name, sc); this.body.add(mesh);
     this.prop = { name, mesh };
     this.play(name === 'crate' ? 'carry' : 'holdOne', { hold: true, key: 'hold' });
   }
@@ -156,8 +159,11 @@ export class LivActor {
     if (dt === 0) { n = 1; }
     for (let i = 0; i < n; i++) this._tick(h, i === n - 1);
   }
+  /** Call fn(actor) after sec seconds of actor time (synchronous, so replays stay deterministic). */
+  after(sec, fn) { this.timers.push({ t: this.t + sec, fn }); }
   _tick(dt, last) {
     this.t += dt;
+    if (this.timers.length) { const due = this.timers.filter((x) => x.t <= this.t + 1e-9); this.timers = this.timers.filter((x) => x.t > this.t + 1e-9); for (const x of due) x.fn(this); }
     this._locomotion(dt);
     const pose = this._pose(dt);
     this._solve(pose, dt);
@@ -184,11 +190,11 @@ export class LivActor {
     let vT = 0, hT = this.yaw, run = false;
     if (this.target) {
       const tg = this.target, dx = tg.x - this.x, dz = tg.z - this.z, dist = Math.hypot(dx, dz);
-      run = tg.run; const vmax = tg.speed || (run ? this.runSpeed : this.walkSpeed), dec = 0.85 + 0.6 * vmax * k;
+      run = tg.run; const vmax = tg.speed || (run ? this.runSpeed : this.walkSpeed), dec = 0.8 + 0.45 * vmax * k; this._dec = dec;
       hT = dist > 0.02 ? Math.atan2(dx, dz) : this.yaw;
       vT = Math.min(vmax, Math.sqrt(2 * dec * Math.max(0, dist - 0.005)));
       const dh = Math.abs(wrapPi(hT - this.yaw));
-      if (dist < 0.025 || (dist < 0.25 && dh > 1.6)) { this.target = null; tg.res(true); vT = 0; hT = this.yaw; }
+      if (dist < 0.025 || (dist < 0.25 && dh > 1.6)) { this.target = null; tg.res(true); if (tg.then) tg.then(this); vT = 0; hT = this.yaw; }
     } else if (this.cmd) { vT = this.cmd.speed; hT = this.cmd.heading; }
     else if (this.fixedYaw != null) hT = this.fixedYaw;
     // turn: while moving the body bends the path; a big change is done slowly, or on the spot
@@ -200,7 +206,7 @@ export class LivActor {
     if (!moving && this.frozen && Math.abs(dh) < 0.003) this.yawRate = 0;
     this.yaw = wrapPi(this.yaw + this.yawRate * dt);
     // speed: speeds up and slows over several steps
-    const v0 = this.v, vN = this.v * k, a = vT > this.v ? 0.8 + 0.65 * Math.max(vN, vT * k * 0.5) : 0.9 + 0.75 * vN;
+    const v0 = this.v, vN = this.v * k, a = vT > this.v ? 0.8 + 0.65 * Math.max(vN, vT * k * 0.5) : Math.max(0.9 + 0.75 * vN, this.target ? this._dec * 1.15 : 0);
     this.v = vT > this.v ? Math.min(vT, this.v + a * dt) : Math.max(vT, this.v - a * dt);
     this.x += Math.sin(this.yaw) * this.v * dt; this.z += Math.cos(this.yaw) * this.v * dt;
     this.acc = lerp(this.acc, dt > 0 ? (this.v - v0) / dt : 0, 1 - Math.exp(-dt * 8));
@@ -306,7 +312,7 @@ export class LivActor {
     const idle = 1 - gw * mv, br = Math.sin(t * 2 * Math.PI / 3.6);
     pose.py += 0.004 * br * idle; pose.cpitch -= 0.012 * br * idle; pose.shL += 0.2 * (br * 0.5 + 0.5) * idle; pose.shR += 0.2 * (br * 0.5 + 0.5) * idle;
     const ws = Math.sin(t * 2 * Math.PI / 7.3) * idle * (1 - gw);
-    pose.psx += 0.45 * ws; pose.prl += 0.025 * ws; pose.crl -= 0.02 * ws;
+    pose.psx += 0.3 * ws; pose.prl += 0.025 * ws; pose.crl -= 0.02 * ws;
     pose.hr += 0.02 * Math.sin(t * 0.7 + 1) * idle; pose.hp += 0.015 * Math.sin(t * 0.53) * idle; pose.hy += 0.04 * Math.sin(t * 0.37 + 2) * idle;
     for (const n of ['aL', 'aR']) pose[n].h[2] += 0.012 * Math.sin(t * 1.1 + (n === 'aL' ? 0 : 2)) * idle;
     // gait: pelvis, twist, lean, arm swing
@@ -488,7 +494,7 @@ export class LivActor {
     this.vrm.scene.traverse((o) => {
       if (!o.isMesh || !o.geometry || !o.geometry.attributes.position) return;
       const mats = Array.isArray(o.material) ? o.material : [o.material];
-      if (mats.some((m) => /hair|outline|eye|face/i.test(m.name || '')) || /hair/i.test(o.name)) return;
+      if (mats.filter((m) => !/outline/i.test(m.name || '')).some((m) => /hair|eye|face/i.test(m.name || '')) || /hair/i.test(o.name)) return;
       const pos = o.geometry.attributes.position, step = Math.max(1, Math.floor(pos.count / 6000));
       for (let i = 0; i < pos.count; i += step) {
         v.fromBufferAttribute(pos, i);
@@ -516,7 +522,7 @@ export class LivActor {
       if (p.name === 'crate') {
         const a = this._palm('L'), b = this._palm('R'), c = a.add(b).multiplyScalar(0.5);
         const u = p.mesh.children.length ? p.mesh : p.mesh;
-        u.position.copy(c).add(V3(0, -0.02 * M.ls, 0.06 * M.ls).applyQuaternion(rig.D[M.chestBone]));
+        u.position.copy(c).add(V3(0, -0.015 * M.ls, 0.02 * M.ls).applyQuaternion(rig.D[M.chestBone]));
         u.quaternion.copy(qYPR(new THREE.Euler().setFromQuaternion(rig.D[M.chestBone], 'YXZ').y, 0, 0));
       } else {
         const S = 'R', side = 'right', hq = rig.D[side + 'Hand'], r = p.mesh.userData.radius || 0.02;

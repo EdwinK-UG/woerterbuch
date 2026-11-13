@@ -54,7 +54,7 @@ function followCam() {
 function buildUI() {
   const root = document.getElementById('panels');
   const sec = (title) => { const h = document.createElement('h2'); h.textContent = title; root.appendChild(h); const d = document.createElement('div'); root.appendChild(d); return d; };
-  const btn = (d, label, fn) => { const b = document.createElement('button'); b.textContent = label; b.onclick = () => { live = true; fn(b); }; d.appendChild(b); return b; };
+  const btn = (d, label, fn) => { const b = document.createElement('button'); b.textContent = label; b.onclick = () => { live = true; if (!/park/.test(label)) run = null; fn(b); }; d.appendChild(b); return b; };
   const toCam = () => Math.atan2(cam.position.x - actor.x, cam.position.z - actor.z);
   let d = sec('Move');
   btn(d, 'Walk', () => actor.walk()); btn(d, 'Run', () => actor.run()); btn(d, 'Stop', () => actor.stop());
@@ -85,23 +85,21 @@ function buildUI() {
   btn(d, 'close-up on/off', () => { close = !close; setView(view); });
   btn(d, 'follow on/off', () => { follow = !follow; });
   d = sec('Scripted scene (replay)');
-  btn(d, 'park route', () => { script = parkScript(); t0 = performance.now(); seekLive = true; });
+  btn(d, 'park route', () => { script = parkScript(); actor.reset(START); run = { t: 0, i: 0 }; setView('front'); });
 }
 
 // the film park, as a pure function of time: run 6 m, stop, turn to the camera, thumbs-up
 function parkScript() {
   return [
-    { t: 0, do: (a) => {} },
-    { t: 0.7, do: (a) => a.moveTo(6, 0, { run: true }).then(() => { a.turnTo(0); }) },
-    { t: 5.6, do: (a) => a.play('thumb') },
+    { t: 0.7, do: (a) => a.moveTo(2.6, 0, { run: true, speed: 2.48, then: (a) => { a.turnTo(0); a.after(0.45, (a) => a.play('thumb')); } }) },
   ];
 }
-let t0 = 0, seekLive = false;
-const START = { x: 0, z: 0, yaw: Math.PI / 2 };
+let run = null;   // a script playing live (events fired as their time comes)
+const START = { x: -3.4, z: 0, yaw: Math.PI / 2 };
 
-window.__step = (dt = 1 / 60, n = 1) => { live = false; seekLive = false; for (let i = 0; i < n; i++) actor.update(dt); followCam(); };
+window.__step = (dt = 1 / 60, n = 1) => { live = false; run = null; for (let i = 0; i < n; i++) actor.update(dt); followCam(); };
 window.__render = () => { renderer.render(scene, cam); return true; };
-window.__seek = (t, s) => { live = false; seekLive = false; actor.replay(s || (script.length ? script : parkScript()), t, START); followCam(); };
+window.__seek = (t, s) => { live = false; run = null; actor.replay(s || (script.length ? script : parkScript()), t, START); followCam(); };
 window.__cam = (v, closeUp = false) => { close = closeUp; setView(v); };
 window.__ui = (on) => { document.getElementById('ui').style.display = on ? '' : 'none'; document.getElementById('status').style.display = on ? '' : 'none'; };
 window.__THREE = THREE; window.__renderer = renderer; window.__scene = scene; window.__camera = cam; window.__controls = controls;
@@ -112,8 +110,8 @@ function loop(now) {
   requestAnimationFrame(loop);
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
   if (!actor) return;
-  if (seekLive) { actor.replay(script, (now - t0) / 1000, START); followCam(); }
-  else if (live) { actor.update(dt); followCam(); }
+  if (live && run) { run.t += dt; while (run.i < script.length && script[run.i].t <= run.t) script[run.i++].do(actor); }
+  if (live) { actor.update(dt); followCam(); }
   status.textContent = `${actor.v.toFixed(2)} m/s  yaw ${(actor.yaw * 57.3).toFixed(0)}°  ${actor.frozen ? 'standing' : 'stepping'}`;
   renderer.render(scene, cam);
 }

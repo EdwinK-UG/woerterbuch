@@ -66,7 +66,7 @@ export class Satchel {
     const back = (x, y) => { const v = near((p) => (Math.abs(p.x - x) < 0.025 * s && Math.abs(p.y - y) < 0.02 * s ? -p.z : null)); return v == null ? null : -v; };
     const top = (x, z) => near((p) => (Math.abs(p.x - x) < 0.02 * s && Math.abs(p.z - z) < 0.02 * s && p.y < M.shY + 0.12 * s ? p.y : null));
     const side = (y) => near((p) => (Math.abs(p.y - y) < 0.02 * s && p.x < 0 && p.x > -M.hipW * 3 ? -p.x : null));
-    const shX = M.shW * 0.55, hipY = M.hipsY - 0.02 * s, bagX = -((side(hipY - 0.04 * s) || M.hipW * 1.5) + 0.01 * s);
+    const shX = M.shW * 0.9, hipY = M.hipsY - 0.02 * s, bagX = -((side(hipY - 0.04 * s) || M.hipW * 1.5) + 0.01 * s);
     const lift = 0.007 * s;
     const A = V3(shX, M.shY, r.leftUpperArm.z), B = V3(bagX * 0.8, hipY, 0);
     const path = [];
@@ -83,7 +83,7 @@ export class Satchel {
     this.strapR = 0.008 * s;
     this.strap = new THREE.Mesh(new THREE.BufferGeometry(), toon(0x8a5a2e)); this.group.add(this.strap);
     // the bag, centred beside the right hip
-    const bw = 0.2 * s, bh = 0.16 * s, bd = 0.055 * s;
+    const bw = 0.17 * s, bh = 0.13 * s, bd = 0.05 * s;
     this.bag = new THREE.Group();
     const box = inked(roundedBox(bd, bh, bw, 0.012 * s), 0xc8a06a, 0.004 * s); this.bag.add(box);
     const flap = inked(roundedBox(bd * 0.35, bh * 0.55, bw * 1.02, 0.008 * s), 0xb48a55, 0.003 * s); flap.position.set(-bd * 0.42, bh * 0.25, 0); this.bag.add(flap);
