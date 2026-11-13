@@ -1176,7 +1176,7 @@ const hasWatch = c => !c.vocab && !isRef(c.n) && WATCH_LEVELS.includes(c.level) 
 const watchBtn = c => (hasWatch(c) ? `<button class="btn sm" data-watch="${c.n}">${icn('play')} ${c.film ? 'Animation ansehen' : 'Video ansehen'}</button>` : '');
 /* Kapitel 57: the 3D saw workshop (grammatik/werkstatt/). It holds no lesson text: when it is ready it asks this page,
    which loaded the chapter with the learner's enrolment, for the chapter's own sentences. */
-const WERKSTATT = { 57: 'grammatik/werkstatt/index.html?v=1' };
+const WERKSTATT = { 57: 'grammatik/werkstatt/index.html?v=2' };
 const werkBtn = c => (WERKSTATT[c.n] && !c.vocab ? `<button class="btn sm" data-werkstatt="${c.n}">${icn('hammer')} 3D-Werkstatt</button>` : '');
 const werkCard = c => (WERKSTATT[c.n] && !c.vocab ? `<div class="gr-cream" style="display:flex;gap:.8rem;align-items:center;flex-wrap:wrap;margin:0 0 1rem"><div style="flex:1;min-width:14rem"><b>Die Säge zeigt es</b><br><span style="color:var(--mut)">Trennbare Verben lassen sich zersägen, untrennbare nicht. Sieh zu oder säge selbst – mit Ton.</span></div><button class="btn sm" data-werkstatt="${c.n}">${icn('hammer')} 3D-Werkstatt öffnen</button></div>` : '');
 function werkTexts(c) {

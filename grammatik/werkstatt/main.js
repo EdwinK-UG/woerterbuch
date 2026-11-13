@@ -1,5 +1,5 @@
 // Trennbar-Werkstatt 3D · B1 Kapitel 57 (three.js + generated sound). Opened from the lesson, see grammatik.js.
-// Same lesson logic as the Rive version: a workman pulls a bench-mounted drop saw down onto each verb.
+// Same lesson logic as the Rive version: a young man in a flannel shirt pulls a bench-mounted drop saw down onto each verb.
 // Separable verbs split (the prefix flies to the end of the sentence); inseparable verbs make the saw kick back.
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
@@ -27,7 +27,7 @@ scene.add(sun); const fill = new THREE.DirectionalLight(0xdde8ff, 0.45); fill.po
 
 const mats = {};
 const mat = (hex, rough = 0.75, metal = 0, extra = {}) => { const k = hex + '|' + rough + '|' + metal + JSON.stringify(extra); return mats[k] || (mats[k] = new THREE.MeshStandardMaterial(Object.assign({ color: hex, roughness: rough, metalness: metal }, extra))); };
-const C = { wood: 0xe2b77d, woodDark: 0xa8733f, prefix: 0xf0a98a, paper: 0xfffaf0, ink: '#2a2f3a', coralInk: '#8a2e20', skin: 0xe9b48c, skinDark: 0xc98d66, denim: 0x3f6fa8, denimDark: 0x2c5182, cap: 0x2f6e9e, beard: 0x6b4630, boot: 0x7a4a2c, amber: 0xe6a532, steel: 0xc9d1d6, dark: 0x3a3f45, green: 0x2f7d5b };
+const C = { wood: 0xe2b77d, woodDark: 0xa8733f, prefix: 0xf0a98a, paper: 0xfffaf0, ink: '#2a2f3a', coralInk: '#8a2e20', skin: 0xf1c4a0, skinDark: 0xd9a17d, denim: 0x3f6fa8, denimDark: 0x2c5182, cap: 0x2f6e9e, beard: 0x6b4630, boot: 0x7a4a2c, amber: 0xe6a532, steel: 0xc9d1d6, dark: 0x3a3f45, green: 0x2f7d5b };
 const shadowy = (o) => { o.traverse((m) => { if (m.isMesh) { m.castShadow = true; m.receiveShadow = true; } }); return o; };
 const box = (w, h, d, m, r = 0.01) => new THREE.Mesh(r > 0 ? new RoundedBoxGeometry(w, h, d, 2, Math.min(r, w / 2, h / 2, d / 2)) : new THREE.BoxGeometry(w, h, d), m);
 const cyl = (r1, r2, h, m, seg = 20) => new THREE.Mesh(new THREE.CylinderGeometry(r1, r2, h, seg), m);
@@ -148,45 +148,90 @@ const SHELF = { x: -1.42, y: 1.12, z: -1.27, colW: 0.5, rowH: 0.2 };
 
 // ---------- the workman ----------
 const W = new THREE.Group(); scene.add(W); W.position.set(-0.36, 0, -0.52); W.rotation.y = 0.35;
+// The character: a young man with wavy brown hair, an open red flannel shirt over a grey graphic tee, jeans,
+// canvas sneakers, a wristband and a backpack. The skeleton (hips, shoulders, arm lengths) is unchanged, so every
+// pose and the arm IK below still fit.
 const plaid = (() => {
-  const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d'); g.fillStyle = '#c8574a'; g.fillRect(0, 0, 128, 128);
-  g.fillStyle = 'rgba(255,220,190,.35)'; for (let i = 0; i < 128; i += 32) { g.fillRect(i, 0, 8, 128); g.fillRect(0, i, 128, 8); }
-  g.fillStyle = 'rgba(90,20,20,.25)'; for (let i = 16; i < 128; i += 32) { g.fillRect(i, 0, 4, 128); g.fillRect(0, i, 128, 4); }
-  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(2, 2); return t;
+  const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d'); g.fillStyle = '#b8352d'; g.fillRect(0, 0, 128, 128);
+  g.fillStyle = 'rgba(28,16,24,.5)'; for (let i = 0; i < 128; i += 32) { g.fillRect(i, 0, 12, 128); g.fillRect(0, i, 128, 12); }
+  g.fillStyle = 'rgba(20,10,18,.35)'; for (let i = 20; i < 128; i += 32) { g.fillRect(i, 0, 3, 128); g.fillRect(0, i, 128, 3); }
+  g.fillStyle = 'rgba(255,205,180,.22)'; for (let i = 26; i < 128; i += 32) { g.fillRect(i, 0, 2, 128); g.fillRect(0, i, 128, 2); }
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(3, 3); return t;
 })();
-const shirtMat = new THREE.MeshStandardMaterial({ map: plaid, roughness: 0.85 });
-const skinMat = mat(C.skin, 0.7), denimMat = mat(C.denim, 0.85), denimDark = mat(C.denimDark, 0.85);
+// The torso texture: plaid all round and, at the front (u = 0 is the front of a capsule), the grey tee where the
+// shirt is open, with shadowed shirt edges. Painting it in keeps the tee on the body surface. (The capsule squeezes
+// its straight middle into a thin band of v, so pictures go on a decal, not into this texture.)
+const bodyTex = (() => {
+  const N = 512, P = N / 3, c = document.createElement('canvas'); c.width = c.height = N; const g = c.getContext('2d');
+  g.fillStyle = '#b8352d'; g.fillRect(0, 0, N, N);
+  const lines = (style, off, w) => { g.fillStyle = style; for (let i = off; i < N; i += P / 4) { g.fillRect(i, 0, w, N); g.fillRect(0, i, N, w); } };
+  lines('rgba(28,16,24,.5)', 0, P / 4 * 0.375); lines('rgba(20,10,18,.35)', P / 4 * 0.625, 3); lines('rgba(255,205,180,.22)', P / 4 * 0.81, 2);
+  const half = Math.round(N * 0.07), top = Math.round(N * 0.12), bot = Math.round(N * 0.9);
+  for (const x0 of [0, N]) {
+    g.fillStyle = '#85878a'; g.fillRect(x0 - half, top, half * 2, bot - top);
+    g.beginPath(); g.ellipse(x0, top, half, half * 0.5, 0, 0, Math.PI); g.fill();       // crew neck
+    g.fillStyle = 'rgba(30,20,20,.35)'; g.fillRect(x0 - half - 5, top, 5, bot - top); g.fillRect(x0 + half, top, 5, bot - top);   // shirt edges
+  }
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t;
+})();
+const teeArt = (() => {
+  const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d');
+  g.strokeStyle = '#a5552f'; g.lineWidth = 9; g.beginPath(); g.arc(64, 64, 50, 0, Math.PI * 2); g.stroke();
+  g.fillStyle = '#7e3b22'; g.beginPath(); g.moveTo(26, 86); g.lineTo(52, 50); g.lineTo(66, 68); g.lineTo(80, 44); g.lineTo(104, 86); g.closePath(); g.fill();
+  g.fillStyle = '#d98a3f'; g.beginPath(); g.arc(86, 36, 9, 0, Math.PI * 2); g.fill();
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+})();
+const shirtMat = new THREE.MeshStandardMaterial({ map: plaid, roughness: 0.9 }), bodyMat = new THREE.MeshStandardMaterial({ map: bodyTex, roughness: 0.9 });
+const skinMat = mat(C.skin, 0.65), denimMat = mat(C.denim, 0.85), denimDark = mat(C.denimDark, 0.85);
+const packMat = mat(0x3a3f45, 0.8), packDark = mat(0x2b2f34, 0.8);
 const torso = new THREE.Group(); W.add(torso); torso.position.y = 0.98;           // hips pivot
 const headG = new THREE.Group(); torso.add(headG); headG.position.y = 0.72;
 const face = {};
 {
-  for (const x of [-0.1, 0.1]) { const leg = cyl(0.075, 0.07, 0.86, denimMat); leg.position.set(x, 0.53, 0); W.add(leg); const cuff = cyl(0.08, 0.08, 0.06, denimDark); cuff.position.set(x, 0.14, 0); W.add(cuff);
-    const boot = box(0.13, 0.1, 0.24, mat(C.boot, 0.7), 0.035); boot.position.set(x, 0.05, 0.04); W.add(boot); const sole = box(0.14, 0.025, 0.25, mat(0x4e2f1c), 0.008); sole.position.set(x, 0.012, 0.04); W.add(sole); }
-  const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.19, 0.36, 8, 20), shirtMat); body.scale.set(1.05, 1, 0.72); body.position.y = 0.27; torso.add(body);
-  const pants = cyl(0.2, 0.19, 0.18, denimMat); pants.scale.set(1.0, 1, 0.74); pants.position.y = 0.04; torso.add(pants);
-  const bib = box(0.28, 0.3, 0.05, denimMat, 0.02); bib.position.set(0, 0.24, 0.125); torso.add(bib);
-  const pocket = box(0.11, 0.08, 0.012, denimDark, 0.008); pocket.position.set(0, 0.27, 0.152); torso.add(pocket);
-  for (const x of [-0.11, 0.11]) { const strap = box(0.045, 0.32, 0.03, denimMat, 0.01); strap.position.set(x, 0.48, 0.03); strap.rotation.x = -0.25; torso.add(strap);
-    const btn = cyl(0.016, 0.016, 0.012, mat(0xf1c64c, 0.3, 0.8)); btn.rotation.x = Math.PI / 2; btn.position.set(x, 0.37, 0.155); torso.add(btn); }
-  const neck = cyl(0.055, 0.06, 0.1, mat(C.skinDark, 0.7)); neck.position.y = 0.66; torso.add(neck);
-  const skull = sph(0.135, skinMat); skull.scale.set(1, 1.08, 1); headG.add(skull);
-  for (const x of [-0.13, 0.13]) { const ear = sph(0.035, mat(C.skinDark, 0.7)); ear.scale.set(0.6, 1, 0.8); ear.position.set(x, 0, -0.01); headG.add(ear); }
-  const hair = sph(0.14, mat(0x5a3a26, 0.9)); hair.scale.set(1.02, 0.7, 1.0); hair.position.set(0, 0.02, -0.03); headG.add(hair);
-  const beard = sph(0.125, mat(C.beard, 0.95)); beard.scale.set(1.0, 0.85, 0.85); beard.position.set(0, -0.065, 0.035); headG.add(beard);
-  const cheekL = sph(0.07, skinMat); cheekL.position.set(-0.055, 0.0, 0.085); headG.add(cheekL); const cheekR = cheekL.clone(); cheekR.position.x = 0.055; headG.add(cheekR);
-  const nose = sph(0.034, mat(0xe7a882, 0.6)); nose.scale.set(1, 0.9, 1.1); nose.position.set(0, 0.0, 0.135); headG.add(nose);
-  const mus = sph(0.06, mat(C.beard, 0.95)); mus.scale.set(1.3, 0.38, 0.6); mus.position.set(0, -0.045, 0.125); headG.add(mus);
-  for (const x of [-0.05, 0.05]) {
-    const eye = sph(0.022, mat(0xffffff, 0.3)); eye.position.set(x, 0.04, 0.118); headG.add(eye);
-    const pupil = sph(0.012, mat(0x1d2028, 0.3)); pupil.position.set(x, 0.04, 0.138); headG.add(pupil);
-    const brow = box(0.055, 0.013, 0.015, mat(0x4a2e1e, 0.9), 0.005); brow.position.set(x, 0.085, 0.124); headG.add(brow); (face.brows || (face.brows = [])).push(brow);
+  // legs and sneakers
+  for (const x of [-0.095, 0.095]) { const leg = cyl(0.068, 0.062, 0.86, denimMat); leg.position.set(x, 0.53, 0); W.add(leg); const cuff = cyl(0.071, 0.071, 0.05, denimDark); cuff.position.set(x, 0.135, 0); W.add(cuff);
+    const upper = box(0.115, 0.08, 0.22, mat(0x7c8693, 0.9), 0.035); upper.position.set(x, 0.062, 0.035); W.add(upper);
+    const sole = box(0.125, 0.03, 0.24, mat(0xf3efe6, 0.6), 0.012); sole.position.set(x, 0.016, 0.04); W.add(sole);
+    const toe = sph(0.06, mat(0xf3efe6, 0.6)); toe.scale.set(0.95, 0.55, 0.8); toe.position.set(x, 0.045, 0.115); W.add(toe);
+    for (let i = 0; i < 3; i++) { const lace = box(0.06, 0.008, 0.012, mat(0xf3efe6, 0.6), 0); lace.position.set(x, 0.104, 0.05 - i * 0.028); W.add(lace); } }
+  // flannel shirt, open over the tee
+  const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.19, 0.36, 8, 32), bodyMat); body.scale.set(0.95, 1, 0.68); body.position.y = 0.27; torso.add(body);
+  const art = new THREE.Mesh(new THREE.PlaneGeometry(0.09, 0.09), new THREE.MeshStandardMaterial({ map: teeArt, transparent: true, roughness: 0.95 })); art.position.set(0, 0.36, 0.1315); torso.add(art);
+  for (const x of [-1, 1]) {
+    const collar = box(0.075, 0.05, 0.018, shirtMat, 0.008); collar.position.set(x * 0.055, 0.6, 0.1); collar.rotation.set(-0.35, 0, x * 0.75); torso.add(collar);
+    const btn = cyl(0.008, 0.008, 0.006, mat(0xe8e2d6, 0.4)); btn.rotation.set(Math.PI / 2, 0, 0.5); if (x < 0) for (const y of [0.14, 0.26, 0.38]) { const bb = btn.clone(); bb.position.set(-0.09, y, 0.115); torso.add(bb); }
   }
-  face.smile = new THREE.Mesh(new THREE.TorusGeometry(0.03, 0.0075, 8, 16, Math.PI), mat(0x7c2e25, 0.6)); face.smile.rotation.z = Math.PI; face.smile.position.set(0, -0.07, 0.122); headG.add(face.smile);
-  face.ow = sph(0.018, mat(0x5c1f19, 0.6)); face.ow.scale.set(1, 1.2, 0.6); face.ow.position.set(0, -0.08, 0.125); headG.add(face.ow);
-  const capTop = new THREE.Mesh(new THREE.SphereGeometry(0.145, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), mat(C.cap, 0.7)); capTop.position.y = 0.05; headG.add(capTop);
-  const band = cyl(0.146, 0.146, 0.035, mat(0x24577f, 0.7)); band.position.y = 0.055; headG.add(band);
-  const brim = cyl(0.11, 0.11, 0.014, mat(0x24577f, 0.7), 24); brim.scale.set(1, 1, 1.25); brim.position.set(0, 0.05, 0.15); brim.rotation.x = 0.08; headG.add(brim);
-  const knob = sph(0.016, mat(0x24577f)); knob.position.y = 0.195; headG.add(knob);
+  const pants = cyl(0.185, 0.175, 0.16, denimMat); pants.scale.set(1.0, 1, 0.72); pants.position.y = 0.03; torso.add(pants);
+  // backpack, strap over his right shoulder
+  const pack = box(0.28, 0.34, 0.13, packMat, 0.05); pack.position.set(0, 0.32, -0.19); torso.add(pack);
+  const pocket = box(0.2, 0.13, 0.05, packDark, 0.02); pocket.position.set(0, 0.23, -0.265); torso.add(pocket);
+  const top = cyl(0.012, 0.012, 0.08, packDark); top.rotation.z = Math.PI / 2; top.position.set(0, 0.5, -0.19); torso.add(top);
+  const over = box(0.045, 0.022, 0.26, packDark, 0.008); over.position.set(-0.13, 0.585, -0.02); over.rotation.x = -0.12; torso.add(over);
+  const strap = box(0.045, 0.34, 0.02, packDark, 0.008); strap.position.set(-0.13, 0.43, 0.115); strap.rotation.x = -0.18; torso.add(strap);
+  const neck = cyl(0.052, 0.058, 0.1, mat(C.skinDark, 0.7)); neck.position.y = 0.66; torso.add(neck);
+  // head: young face, big eyes, no beard
+  const skull = sph(0.145, skinMat); skull.scale.set(1, 1.08, 1); headG.add(skull);
+  for (const x of [-0.143, 0.143]) { const ear = sph(0.034, mat(C.skinDark, 0.7)); ear.scale.set(0.55, 1, 0.8); ear.position.set(x, -0.005, -0.01); headG.add(ear); }
+  const nose = sph(0.02, mat(0xecb592, 0.6)); nose.scale.set(1, 0.9, 1.1); nose.position.set(0, -0.01, 0.142); headG.add(nose);
+  for (const x of [-0.052, 0.052]) {
+    const eye = sph(0.03, mat(0xffffff, 0.3)); eye.scale.set(1, 1.15, 0.6); eye.position.set(x, 0.03, 0.12); headG.add(eye);
+    const iris = sph(0.019, mat(0x6a4426, 0.4)); iris.scale.set(1, 1, 0.5); iris.position.set(x, 0.028, 0.134); headG.add(iris);
+    const pupil = sph(0.01, mat(0x15171c, 0.3)); pupil.scale.set(1, 1, 0.5); pupil.position.set(x, 0.028, 0.139); headG.add(pupil);
+    const glint = sph(0.004, mat(0xffffff, 0.2)); glint.position.set(x + 0.006, 0.036, 0.143); headG.add(glint);
+    const brow = box(0.05, 0.012, 0.014, mat(0x5a3820, 0.9), 0.005); brow.position.set(x, 0.085, 0.126); headG.add(brow); (face.brows || (face.brows = [])).push(brow);
+  }
+  face.smile = new THREE.Mesh(new THREE.TorusGeometry(0.028, 0.007, 8, 16, Math.PI), mat(0x8a3a30, 0.6)); face.smile.rotation.z = Math.PI; face.smile.position.set(0, -0.07, 0.128); headG.add(face.smile);
+  face.ow = sph(0.017, mat(0x5c1f19, 0.6)); face.ow.scale.set(1, 1.2, 0.6); face.ow.position.set(0, -0.08, 0.128); headG.add(face.ow);
+  // wavy hair: a cap, then clumps in two browns, a side-swept fringe
+  const hairA = mat(0x6b4428, 0.85), hairB = mat(0x86593a, 0.8);
+  const cap = sph(0.152, hairA); cap.scale.set(1.04, 0.78, 1.0); cap.position.set(0, 0.075, -0.04); headG.add(cap);
+  const back = sph(0.13, hairA); back.scale.set(1.08, 1.0, 0.85); back.position.set(0, -0.015, -0.06); headG.add(back);
+  [[-0.08, 0.13, 0.03, 0.066], [0, 0.16, 0.01, 0.07], [0.08, 0.13, 0.02, 0.064], [-0.05, 0.15, -0.07, 0.07], [0.05, 0.15, -0.07, 0.07],
+   [-0.125, 0.07, -0.02, 0.058], [0.125, 0.07, -0.02, 0.058], [-0.115, 0.0, -0.08, 0.06], [0.115, 0.0, -0.08, 0.06], [0, 0.07, -0.135, 0.075],
+   [-0.07, -0.04, -0.11, 0.055], [0.07, -0.04, -0.11, 0.055], [-0.138, 0.035, 0.03, 0.04], [0.138, 0.035, 0.03, 0.04]]
+    .forEach(([x, y, z, r], i) => { const h = sph(r, i % 2 ? hairB : hairA, 16); h.scale.set(1.05, 0.85, 1); h.position.set(x, y, z); headG.add(h); });
+  [[-0.07, 0.125, 0.1, 0.05, 1.4], [0.02, 0.135, 0.112, 0.045, 1.2], [0.085, 0.11, 0.1, 0.04, 1.1]]
+    .forEach(([x, y, z, r, w], i) => { const f = sph(r, i === 1 ? hairB : hairA, 16); f.scale.set(w, 0.65, 0.75); f.position.set(x, y, z); f.rotation.z = -0.35; headG.add(f); });
 }
 // arms: segments are placed between computed shoulder, elbow and hand points every frame
 const UA = 0.34, FA = 0.32;
@@ -208,7 +253,7 @@ function makeHand(sign) {
 const ARMS = {};
 for (const side of ['L', 'R']) {
   const sign = side === 'L' ? 1 : -1;
-  ARMS[side] = { sign, upper: limb(0.055, shirtMat), fore: limb(0.045, skinMat), cuff: limb(0.06, mat(0xb64a3f, 0.85)), sJ: sph(0.075, shirtMat), eJ: sph(0.052, shirtMat), hand: makeHand(sign) };
+  ARMS[side] = { sign, upper: limb(0.055, shirtMat), fore: limb(0.045, skinMat), cuff: limb(0.062, shirtMat), band: side === 'R' ? limb(0.052, mat(0x2a2c30, 0.6)) : null, sJ: sph(0.075, shirtMat), eJ: sph(0.052, shirtMat), hand: makeHand(sign) };
   scene.add(ARMS[side].sJ, ARMS[side].eJ); ARMS[side].sJ.castShadow = ARMS[side].eJ.castShadow = true;
 }
 
@@ -332,7 +377,7 @@ function solveArm(side) {
   const pole = W.localToWorld(pl).sub(W.position).normalize(); pole.addScaledVector(dir, -pole.dot(dir)); if (pole.lengthSq() < 1e-6) pole.set(0, -1, 0); pole.normalize();
   const E = S0.clone().addScaledVector(dir, along).addScaledVector(pole, h);
   placeLimb(A.upper, S0, E); A.sJ.position.copy(S0); A.eJ.position.copy(E);
-  const fdir = T.clone().sub(E).normalize(); placeLimb(A.fore, E, T); placeLimb(A.cuff, E, E.clone().addScaledVector(fdir, 0.07));
+  const fdir = T.clone().sub(E).normalize(); placeLimb(A.fore, E, T); placeLimb(A.cuff, E, E.clone().addScaledVector(fdir, 0.07)); if (A.band) placeLimb(A.band, T.clone().addScaledVector(fdir, -0.085), T.clone().addScaledVector(fdir, -0.05));
   const hand = A.hand, kind = handState['k' + side]; hand.g.position.copy(T).addScaledVector(fdir, 0.03);
   for (const [k, o] of Object.entries(hand.kinds)) o.visible = k === kind;
   if (kind === 'thumb') { hand.g.quaternion.setFromUnitVectors(V(0, 0, 1), V(0.15, 0, 1).normalize()); }
@@ -483,6 +528,7 @@ function resize() {
   const portrait = w / h < 0.9; const changed = portrait !== S.portrait; S.portrait = portrait;
   if (portrait) { camera.fov = 40; const half = 1.15, d = half / (Math.tan(THREE.MathUtils.degToRad(20)) * camera.aspect); camera.position.set(0.15, 1.2 + d * 0.28, d); camera.lookAt(0.05, 0.92, 0.3); shelfUnit.visible = false; for (const o of shelfObjs) o.visible = false; }
   else { camera.fov = 35; const half = 2.0, d = Math.max(3.3, half / (Math.tan(THREE.MathUtils.degToRad(17.5)) * camera.aspect)); camera.position.set(0.75, 1.2 + d * 0.2, d + 0.25); camera.lookAt(-0.15, 1.02, 0.2); shelfUnit.visible = true; for (const o of shelfObjs) o.visible = true; }
+  if (qs.get('cam') === 'face') { camera.fov = 18; camera.position.set(-0.12, 1.78, 0.45); camera.lookAt(-0.36, 1.7, -0.52); }
   if (qs.get('cam') === 'close') { camera.fov = 30; camera.position.set(0.55, 1.62, 1.55); camera.lookAt(-0.12, 1.25, -0.35); }
   camera.updateProjectionMatrix(); baseCam = camera.position.clone(); if (changed && BL.pre) { layoutSentence(); }
 }
