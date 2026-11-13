@@ -27,7 +27,7 @@ through three-quarter to the viewer and does a thumbs-up (`into`) or cheers (`wi
 | `t` | seconds into the action, 0..8 (clamped) |
 | `route` | 0 `into` (Akkusativ: starts on the pavement at x = -3.4, runs through the gate to x = 2.6), 1 `within` (Dativ: x 1.6 to 5.6 and back to 2.6) |
 | `goal` | 0 / 1: the pill's border is orange (goal) or green |
-| `tag` (text) | the phrase in the pill, for example "im Park · Wo?" |
+| `tag` (text) | the phrase in the pill, for example "im Park · Wo?" (a view-model string) |
 
 ## Same picture for the same time
 
@@ -56,4 +56,9 @@ with the real runtime: copy the published `.riv` next to it as `park.riv` and se
   plan that allows it. That is the owner's decision.
 * Narration timing: the action fits in 8 s like the canvas version (the run ends at about 3.9 s for `into`, 5.2 s for `within`, then the
   turn and a 1.8 s gesture), taken from the canvas engine's own recording.
-* The Rive text of the pill is not measured by the runtime: the controller sets the pill width from the text length.
+* The pill is a layout that hugs its text (set the `tag` string); Rive uses Inter where the canvas used Avenir Next, so the text is a little narrower. The scenery matches the canvas park to a mean of 0.5 to 1.1 of 765 colour levels per pixel (`docs/liv-park-scenery.md`).
+* The run is the canvas engine's recording, so timing, route and the 8 s cycle are the same; Liv herself is the new Rive rig (the canvas park drew the old canvas Liv).
+
+## Previews
+
+`tools/liv/rive/park/preview/liv-park-into.mp4` and `liv-park-within.mp4`: the whole 8 s cycle at 30 fps, rendered by the Rive runtime (CLI) frame by frame from `t`.

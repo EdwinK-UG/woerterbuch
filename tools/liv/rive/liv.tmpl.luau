@@ -538,7 +538,7 @@ local function advance(self:St,seconds:number):boolean
  local fi=math.clamp(self.simI,0,#prof.x-1)+1
  local x,cam=prof.x[fi],prof.cam[fi]
  local sx0=PARK_CX+(x-cam)*PARK_S
- put('parkCharX',sx0-512*PARK_CS);put('parkCharY',PARK_GY-1412*PARK_CS);put('parkShadowX',sx0)
+ put('parkCharX',sx0-PARK_CX-512*PARK_CS);put('parkCharY',-1412*PARK_CS+PARK_GY*0);put('parkShadowX',sx0-PARK_CX)      -- relative to the scenery's Liv slot at (PARK_CX, ground)
  for _,L in ipairs(PARK_LAYERS) do put(L.prop,-cam*PARK_ZOOM*L.m) end
  put('parkMoving',if prof.mv[fi]>.5 then 1 else 0);put('goalVis',if prof.mv[fi]>.5 then 1 else 0)
  put('parkT',self.simT)

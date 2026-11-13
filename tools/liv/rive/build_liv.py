@@ -84,12 +84,15 @@ def prop(name, default):
     props[name] = el('ViewModelPropertyNumber', vm, name=name).get('id'); defaults[name] = default
 def bindp(target, key, name): el('DataBindContext', target, sourcePathIds='0:40-' + props[name], propertyKey=key)
 PARK_LAYERS = []
+SPROPS = {}
 if PARK:                                      # the park: scenery behind her (layers scroll with the camera), she stands in its 'Liv slot'
     sys.path.insert(0, str(HERE / 'park'))
-    try: from scenery import emit_scenery
-    except ImportError: from stub_scenery import emit_scenery
-    for k, v in {'t': 0.0, 'route': 0, 'goal': 0, 'goalVis': 0, 'parkCharX': 0.0, 'parkCharY': 0.0, 'parkShadowX': 0.0, 'parkMoving': 0, 'parkT': 0.0}.items(): prop(k, v)
-    slot, PARK_LAYERS = emit_scenery(el, ab, prop, bindp, root, PARK_GY)
+    from scenery import emit_scenery
+    for k, v in {'parkCharX': 0.0, 'parkCharY': 0.0, 'parkShadowX': 0.0, 'parkMoving': 0, 'parkT': 0.0}.items(): prop(k, v)
+    def prop_str(name, default):
+        if name not in props: props[name] = el('ViewModelPropertyString', vm, name=name).get('id'); SPROPS[name] = default
+    slot = emit_scenery(el, ab, {'root': root, 'prop': prop, 'prop_str': prop_str, 'bindp': bindp, 'font_id': '0:30'})
+    PARK_LAYERS = [{'prop': L['prop'], 'm': L['m']} for L in json.loads((HERE / 'park' / 'layers.json').read_text())['layers']]
     char = el('Node', slot, name='Liv', x=0, y=0, scaleX=SCALE, scaleY=SCALE, id='0:10')
     bindp(char, 13, 'parkCharX'); bindp(char, 14, 'parkCharY')
 else:
@@ -441,7 +444,7 @@ def emit_view(V):
 for V in VIEWS: emit_view(V)
 
 if PARK:                                                        # a soft contact shadow under her (the stage's own floor is the scenery)
-    sh_ = el('Shape', slot, name='Contact shadow', x=880, y=PARK_GY - 2); el('Ellipse', sh_, width=170, height=15)
+    sh_ = el('Shape', slot, name='Contact shadow', x=0, y=-2); el('Ellipse', sh_, width=170, height=15)
     f = el('Fill', sh_, fillRule='clockwise'); el('SolidColor', f, colorValue='38402A10'); el('Feather', f, strength=6)
     prop('parkShadowX', 0.0); bindp(sh_, 13, 'parkShadowX'); slot.remove(sh_); slot.insert(0, sh_)
 else:
@@ -463,6 +466,7 @@ else:
 # ---------------------------------------------------------------- controller, buttons, state machine
 ins = el('ViewModelInstance', vm, name='Default', exports=True, id='0:41')
 for name, value in defaults.items(): el('ViewModelInstanceNumber', ins, viewModelPropertyId=props[name], propertyValue=value)
+for name, value in SPROPS.items(): el('ViewModelInstanceString', ins, viewModelPropertyId=props[name], propertyValue=value)
 import shutil; shutil.copy(HERE / 'face' / 'face.luau', OUTD / 'face.luau')
 shutil.copy(HERE / 'hands' / 'hand_pose.luau', OUTD / 'hand_pose.luau')
 el('ScriptAsset', root, file='hand_pose.luau', name='hand_pose', isModule=True, id='0:79')
