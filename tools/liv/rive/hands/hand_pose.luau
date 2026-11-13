@@ -28,6 +28,8 @@ export type Hand = {
   squeeze: number,
   props: {[string]: Property<number>},
   prefix: string,
+  roll: number, rollV: number, rollTarget: number,
+  palmSide: Property<number>?,
 }
 
 local M = {}
@@ -50,7 +52,7 @@ local FIXED: {[string]: {number}} = {
   fist     = {0.62, 0.62, 1.00, 1.00, 1.00, 1.00, 0.00},
   point    = {0.55, 0.62, 0.00, 0.97, 1.00, 1.00, 0.06},
   thumbsUp = {0.00, -1.00, 1.00, 1.00, 1.00, 1.00, 0.00},
-  pinch    = {0.30, 0.55, 0.52, 0.30, 0.26, 0.24, 0.30},
+  pinch    = {0.70, 0.60, 0.475, 0.30, 0.26, 0.24, 0.30},   -- back of the hand (tips meet: solved on the rig)
   carry    = {0.30, 0.15, 0.66, 0.68, 0.70, 0.72, 0.00},
   beckon   = {0.30, 0.25, 0.10, 0.62, 0.80, 0.86, 0.10},
   count1   = {0.55, 0.62, 0.00, 0.97, 1.00, 1.00, 0.30},
@@ -60,6 +62,14 @@ local FIXED: {[string]: {number}} = {
   count5   = {0.00, -0.65, 0.00, 0.00, 0.00, 0.02, 0.90},
 }
 
+-- palm-side variants: the two sides of the rig foreshorten differently (the back slides fingers under the palm, the
+-- palm side turns them toward the viewer), so contact shapes are solved per side and blended by the hand's palmSide
+local PALM: {[string]: {number}} = {
+  pinch    = {0.90, 0.50, 0.65, 0.36, 0.32, 0.30, 0.30},
+}
+
+local THUMBS_UP_BEND = 1.35     -- radians of wrist bend at roll +-1 in thumbs-up (sign follows the roll)
+
 local function clamp01(x: number): number return math.clamp(x, 0, 1) end
 local function lerp(a: number, b: number, t: number): number return a + (b - a) * t end
 
@@ -68,7 +78,7 @@ local function gripRow(name: string, grip: number): {number}
   if name == 'gripSphere' then
     local r = if grip > 0 then grip else 20
     local c = clamp01(0.98 - r / 48)                -- r 20 -> 0.56: the fingers wrap the ball
-    return {0.30, 0.55, c - 0.04, c, c + 0.03, c + 0.06, clamp01(0.75 - r / 80)}
+    return {0.45, 0.62, c - 0.04, c, c + 0.03, c + 0.06, clamp01(0.75 - r / 80)}
   end
   -- gripHandle: a cylinder across the palm
   local r = if grip > 0 then grip else 15
@@ -99,6 +109,7 @@ function M.new(seed: number): Hand
     shapeA = 'relaxed', gripA = 0, shapeB = 'relaxed', gripB = 0, mix = 0,
     prevA = 'relaxed', prevGripA = 0, prevB = 'relaxed', prevGripB = 0, prevMix = 0,
     changeT = -10, squeeze = 0, props = {}, prefix = '',
+    roll = 0, rollV = 0, rollTarget = 0, palmSide = nil,
   }
 end
 
@@ -132,9 +143,20 @@ local function targetAt(h: Hand, i: number, tt: number): number
   local ga = if useNew then h.gripA else h.prevGripA
   local gb = if useNew then h.gripB else h.prevGripB
   local m = if useNew then h.mix else h.prevMix
-  local va = M.shapeRow(a, ga, tt)[i]
+  local ps = 0.0
+  local pp = h.palmSide
+  if pp then ps = math.clamp(pp.value, 0, 1) end
+  local function row(name: string, g: number): number
+    local v0 = M.shapeRow(name, g, tt)[i]
+    -- an apple seen from the back of the hand: the fingers lie over it, a little less curled, so they stay visible
+    if name == 'gripSphere' and i >= 3 and i <= 6 then v0 = lerp(v0 - 0.17, v0, ps) end
+    local alt = PALM[name]
+    if alt ~= nil and ps > 0 then return lerp(v0, alt[i], ps) end
+    return v0
+  end
+  local va = row(a, ga)
   local v = va
-  if m > 0 then v = lerp(va, M.shapeRow(b, gb, tt)[i], m) end
+  if m > 0 then v = lerp(va, row(b, gb), m) end
   if h.squeeze > 0 then v = lerp(v, FIXED.fist[i], h.squeeze) end
   return v
 end
@@ -142,6 +164,14 @@ end
 function M.update(h: Hand, dt: number)
   local d = math.clamp(dt, 0, 1 / 20)
   h.t += d
+  do  -- wrist roll: a critically damped spring (about 0.3 s)
+    local w = 13.0
+    for _ = 1, 2 do
+      local hs = d * 0.5
+      h.rollV += (w * w * (h.rollTarget - h.roll) - 2 * 0.9 * w * h.rollV) * hs
+      h.roll += h.rollV * hs
+    end
+  end
   for i = 1, 7 do
     local goal = targetAt(h, i, h.t - DELAY[i])
     -- idle micro-motion: about +-3 % of the range, slow, different for every channel and hand
@@ -167,6 +197,8 @@ function M.wrist(h: Hand): number
   local name = if h.mix < 0.5 then h.shapeA else h.shapeB
   if name == 'wave' then return 0.38 * math.sin(2 * math.pi * 2.1 * h.t) end
   if name == 'beckon' then return 0.10 * math.sin(2 * math.pi * (h.t % 0.95) / 0.95 - 0.6) end
+  -- thumbs-up with a wrist roll: the wrist also bends so the curled fingers point across and the thumb points up
+  if name == 'thumbsUp' then return THUMBS_UP_BEND * h.roll end
   return 0
 end
 
@@ -183,13 +215,23 @@ function M.attach(h: Hand, vm: ViewModel, prefix: string)
     local p = vm:getNumber(prefix .. cap(c))
     if p then h.props[c] = p end
   end
+  local r = vm:getNumber(prefix .. 'Roll')
+  if r then h.props.roll = r end
+  h.palmSide = vm:getNumber(prefix .. 'PalmSide')      -- read only (the controller sets it): contact shapes per side
 end
+
+-- wrist roll about the hand's own axis, -1..1 (0 neutral; +-0.5 edge-on; +-1 the other side of the hand, the thumb on
+-- the other side). A smooth spring follows the target; the hook in a controller is one call per frame.
+function M.setRoll(h: Hand, target: number) h.rollTarget = math.clamp(target, -1, 1) end
+
 
 function M.write(h: Hand)
   for i, c in ipairs(M.CHANNELS) do
     local p = h.props[c]
     if p then p.value = h.cur[i] end
   end
+  local r = h.props.roll
+  if r then r.value = h.roll end
 end
 
 return M
