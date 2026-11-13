@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Trennbar-Werkstatt mit Liv – preview</title><meta name="robots" content="noindex">
+<style>html, body { margin: 0; height: 100%; background: #f3e9d8; } iframe { display: block; width: 100%; height: 100%; border: 0; }</style>
+</head>
+<body>
+<!-- Local preview without an account. In the app the lesson page sends the chapter's own sentences; here the page
+     gets stand-in sentences in the same markup ({v:…} finite verb, {t:…} separated prefix), so nothing private is used. -->
+<iframe id="f" title="Trennbar-Werkstatt mit Liv" allow="autoplay; fullscreen"></iframe>
+<script>
+const SAMPLE = [
+  'Der Film {v:fängt} um acht {t:an}.', 'Ich {v:verstehe} die Frage.', 'Ich {v:kaufe} heute {t:ein}.', 'Ich {v:bestelle} eine Pizza.',
+  'Wir {v:steigen} in Köln {t:um}.', 'Wir {v:wiederholen} die Wörter.', 'Die Fähre {v:setzt} jetzt {t:über}.', 'Sie {v:übersetzt} den Brief.',
+];
+const f = document.getElementById('f'), send = () => f.contentWindow.postMessage({ type: 'werkstatt-texts', texts: SAMPLE }, location.origin);
+addEventListener('message', (e) => { if (e.source !== f.contentWindow || e.origin !== location.origin) return; if (e.data && e.data.type === 'werkstatt-ready') send(); else if (e.data && e.data.type === 'werkstatt-close') history.back(); });
+f.addEventListener('load', send); f.src = '../../grammatik/liv/werkstatt/index.html' + location.search;
+</script>
+</body>
+</html>

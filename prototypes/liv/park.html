@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Liv film park – preview</title><meta name="robots" content="noindex">
+<style>
+  body { margin: 0; padding: 18px; background: #f3e9d8; color: #2a2f3a; font: 15px/1.5 system-ui, sans-serif; }
+  h1 { font-size: 20px; margin: 0 0 4px; } p { margin: 0 0 12px; color: #6b6f78; max-width: 70ch; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin: 10px 0; }
+  canvas { display: block; background: #e9e2cf; border-radius: 8px; max-width: 100%; }
+  button { font: inherit; border: 0; border-radius: 10px; padding: 8px 14px; background: #fff; cursor: pointer; } button.on { background: #2f7d5b; color: #fff; }
+  input[type=range] { flex: 1; min-width: 200px; }
+</style>
+</head>
+<body>
+<h1>Liv in the film park</h1>
+<p>Local preview of <code>grammatik/liv/film-park.js</code>, the picture the film player shows in park scenes. It is called exactly as the player calls it: <code>GRAM_PARK.draw(canvas, route, t, {tag, goal, dpr})</code>. Drag the slider: any time always gives the same frame.</p>
+<div class="row"><button id="into" class="on">into · in den Park</button><button id="within">within · im Park</button><button id="play">Pause</button><input id="t" type="range" min="0" max="8" step="0.01" value="0"><span id="tv">0.00 s</span></div>
+<div class="row"><label>Width <select id="w"><option>900</option><option>600</option><option selected>390</option><option>320</option></select></label></div>
+<canvas id="c"></canvas>
+<script src="../../grammatik/liv/liv-art.js"></script>
+<script src="../../grammatik/liv/engine.js"></script>
+<script src="../../grammatik/liv/film-park.js"></script>
+<script>
+const $ = (id) => document.getElementById(id), cv = $('c'); let route = 'into', playing = true, t = 0, lastNow = 0;
+function size() { const w = +$('w').value, h = Math.round(Math.max(140, Math.min(w * 260 / 600, w < 500 ? 220 : 300))), dpr = Math.min(2, devicePixelRatio || 1); cv.width = w * dpr; cv.height = h * dpr; cv.style.width = w + 'px'; cv.style.height = h + 'px'; }
+function paint() { GRAM_PARK.draw(cv, route, t, { tag: route === 'into' ? 'in den Park · Wohin?' : 'im Park · Wo?', goal: route === 'into', dpr: Math.min(2, devicePixelRatio || 1) }); $('t').value = t; $('tv').textContent = t.toFixed(2) + ' s'; }
+function loop(now) { if (playing) { t += Math.min(0.05, (now - lastNow) / 1000); if (t > GRAM_PARK.CYCLE + 1) t = 0; } lastNow = now; paint(); requestAnimationFrame(loop); }
+for (const r of ['into', 'within']) $(r).onclick = () => { route = r; t = 0; $('into').classList.toggle('on', r === 'into'); $('within').classList.toggle('on', r === 'within'); };
+$('play').onclick = () => { playing = !playing; $('play').textContent = playing ? 'Pause' : 'Play'; };
+$('t').oninput = () => { playing = false; $('play').textContent = 'Play'; t = +$('t').value; };
+$('w').onchange = size; size(); requestAnimationFrame((n) => { lastNow = n; loop(n); });
+window.__park = { set: (r, tt) => { playing = false; route = r; t = tt; paint(); } };
+</script>
+</body>
+</html>
