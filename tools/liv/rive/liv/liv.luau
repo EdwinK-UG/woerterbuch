@@ -12,6 +12,7 @@
 -- number (0..4); the two views around the current yaw cross-fade, the others are hidden and not computed.
 local Face = require('face')
 local HandPose = require('hand_pose')
+local Actions = require('actions')              -- [liv-actions] the action library (actions.luau, docs/liv-actions.md)
 local FACE_CFG_FRONT = require('face_cfg_front')
 local FACE_CFG_TQ = require('face_cfg_tq')
 local FACE_CFG_SIDE = require('face_cfg_side')
@@ -21,23 +22,25 @@ type View = {name: string, yaw: number, aR: boolean, farB: boolean, c: {[string]
 type St = {context: Context, vm: ViewModel?, n: {[string]: Property<number>}, cur: {[string]: number}, vel: {[string]: number},
   t: number, v: number, s: number, phi: number, frozen: boolean, rw: number, gw: number,
   fR: Foot, fL: Foot, yaw: number, yawV: number, flip: number, flipV: number, turnF: number,
-  hands: {[string]: any}, face: Face.Face?, blinkT: number, blinkI: number, sx: {[string]: number}, sv: {[string]: number}, ready: boolean, prev: {[string]: number}}
+  hands: {[string]: any}, face: Face.Face?, blinkT: number, blinkI: number, sx: {[string]: number}, sv: {[string]: number}, ready: boolean, prev: {[string]: number},
+  act: Actions.State}                           -- [liv-actions] action layers, props
+
 local VIEWS: {View} = {
  {name='front',yaw=0,aR=true,farB=true,
   c={oxg=511.5,oyg=1420.5,pelx=513,pely=912,legmax=383.2845912,hipdy=18,hipAx=-87.6,hipBx=79.7,lat0=0.09588353414,footWA=1.570796327,footWB=1.570796327,ffbias=1,shAx=-99,shAy=-377,shAx0=414,shAy0=535,wAx=223.8152155,wAy=732.2471664,shBx=97,shBy=-377,shBx0=610,shBy0=535,wBx=799.8318433,wBy=732.5854017},
-  rest={spineRot=-1.570796327,headRot=0,hairRot=-3.141592654,skirtRot=1.570796327,skirtLRot=1.712961742,skirtRRot=1.434270751,apron1Rot=1.570796327,apron2Rot=0,satchelRot=1.570796327,handARot=4.440892099e-16,slvA1Rot=0,slvA2Rot=0,handBRot=-4.440892099e-16,slvB1Rot=0,slvB2Rot=0}},
+  rest={spineRot=-1.570796327,headRot=0,hairRot=-3.141592654,skirtRot=1.570796327,skirtLRot=1.712961742,skirtRRot=1.434270751,apron1Rot=1.570796327,apron2Rot=0,satchelRot=1.570796327,handARot=4.440892099e-16,slvA1Rot=0,slvA2Rot=0,handBRot=-4.440892099e-16,slvB1Rot=0,slvB2Rot=0,headPX=451,headPY=-2.761578532e-14}},
  {name='tq',yaw=43,aR=true,farB=true,
   c={oxg=488,oyg=1411.5,pelx=510,pely=912,legmax=380.6052173,hipdy=18,hipAx=-58,hipBx=56,lat0=0.11943523,footWA=0.8523306928,footWB=0.8523306928,ffbias=0,shAx=-70,shAy=-374,shAx0=440,shAy0=538,wAx=256.716103,wAy=741.6754982,shBx=55,shBy=-367,shBx0=565,shBy0=545,wBx=762.8976189,wBy=734.5060514},
-  rest={spineRot=-1.584431845,headRot=0.02733329187,hairRot=-3.091547114,skirtRot=1.570796327,skirtLRot=1.844963778,skirtRRot=1.267911458,apron1Rot=1.570796327,apron2Rot=0,satchelRot=1.570796327,handARot=4.440892099e-16,slvA1Rot=0,slvA2Rot=0,handBRot=4.440892099e-16,slvB1Rot=0,slvB2Rot=0}},
+  rest={spineRot=-1.584431845,headRot=0.02733329187,hairRot=-3.091547114,skirtRot=1.570796327,skirtLRot=1.844963778,skirtRRot=1.267911458,apron1Rot=1.570796327,apron2Rot=0,satchelRot=1.570796327,handARot=4.440892099e-16,slvA1Rot=0,slvA2Rot=0,handBRot=4.440892099e-16,slvB1Rot=0,slvB2Rot=0,headPX=440.0409072,headPY=4.440892099e-14}},
  {name='side',yaw=90,aR=true,farB=true,
   c={oxg=480.5,oyg=1417,pelx=505,pely=912,legmax=388.05,hipdy=22.873865,hipAx=-77.11698744,hipBx=72.15140464,lat0=0.13,footWA=0.6624262938,footWB=0.6624262938,ffbias=0,shAx=-9,shAy=-383,shAx0=496,shAy0=529,wAx=309.7512354,wAy=743.4000926,shBx=28.80745031,shBy=-383,shBx0=533.8074503,shBy0=529,wBx=711.3157894,wBy=740.3453352},
-  rest={spineRot=-1.545858187,headRot=-0.02493813961,hairRot=-2.624897515,skirtRot=1.55992719,skirtLRot=1.687451762,skirtRRot=1.432619982,apron1Rot=1.39216532,apron2Rot=-0.016760548,satchelRot=1.570796327,bow1Rot=2.296436664,handARot=0,slvA1Rot=0,slvA2Rot=0,handBRot=4.440892099e-16,slvB1Rot=0,slvB2Rot=0}},
+  rest={spineRot=-1.545858187,headRot=-0.02493813961,hairRot=-2.624897515,skirtRot=1.55992719,skirtLRot=1.687451762,skirtRRot=1.432619982,apron1Rot=1.39216532,apron2Rot=-0.016760548,satchelRot=1.570796327,bow1Rot=2.296436664,handARot=0,slvA1Rot=0,slvA2Rot=0,handBRot=4.440892099e-16,slvB1Rot=0,slvB2Rot=0,headPX=441.1371669,headPY=-2.131628207e-14}},
  {name='tqb',yaw=137,aR=false,farB=false,
   c={oxg=465.5,oyg=1414.5,pelx=500,pely=912,legmax=388.05,hipdy=2.417016382,hipAx=-70.83640145,hipBx=18.41315008,lat0=0.1009021771,footWA=0.8523306928,footWB=0.8523306928,ffbias=0,shAx=-58,shAy=-378,shAx0=442,shAy0=534,wAx=269.8329369,wAy=734.137643,shBx=34,shBy=-368,shBx0=534,shBy0=544,wBx=727.8304346,wBy=748.8339318},
-  rest={spineRot=-1.566312052,headRot=-0.004484274875,hairRot=-3.079173844,skirtRot=1.62991738,skirtLRot=1.685649135,skirtRRot=1.574558065,satchelRot=1.570796327,bow1Rot=2.289626326,bow2Rot=1.642103792,handARot=-8.881784197e-16,slvA1Rot=0,slvA2Rot=0,handBRot=0,slvB1Rot=0,slvB2Rot=0}},
+  rest={spineRot=-1.566312052,headRot=-0.004484274875,hairRot=-3.079173844,skirtRot=1.62991738,skirtLRot=1.685649135,skirtRRot=1.574558065,satchelRot=1.570796327,bow1Rot=2.289626326,bow2Rot=1.642103792,handARot=-8.881784197e-16,slvA1Rot=0,slvA2Rot=0,handBRot=0,slvB1Rot=0,slvB2Rot=0,headPX=446.0044843,headPY=-1.576516695e-14}},
  {name='back',yaw=180,aR=false,farB=true,
   c={oxg=511,oyg=1419,pelx=512,pely=912,legmax=381.3650651,hipdy=18,hipAx=-83.4,hipBx=82.6,lat0=0.09337349398,footWA=1.570796327,footWB=1.570796327,ffbias=1,shAx=-97,shAy=-379,shAx0=415,shAy0=533,wAx=227.5456573,wAy=732.8443679,shBx=96,shBy=-379,shBx0=608,shBy0=533,wBx=796.4609161,wBy=731.893433},
-  rest={spineRot=-1.570796327,headRot=0,hairRot=-3.141592654,skirtRot=1.570796327,skirtLRot=1.71128857,skirtRRot=1.431256048,satchelRot=1.570796327,bow1Rot=1.760166377,bow2Rot=1.384834441,handARot=4.440892099e-16,slvA1Rot=0,slvA2Rot=0,handBRot=4.440892099e-16,slvB1Rot=0,slvB2Rot=0}}
+  rest={spineRot=-1.570796327,headRot=0,hairRot=-3.141592654,skirtRot=1.570796327,skirtLRot=1.71128857,skirtRRot=1.431256048,satchelRot=1.570796327,bow1Rot=1.760166377,bow2Rot=1.384834441,handARot=4.440892099e-16,slvA1Rot=0,slvA2Rot=0,handBRot=4.440892099e-16,slvB1Rot=0,slvB2Rot=0,headPX=448,headPY=-2.74320883e-14}}
 }
 -- hand shapes by number (poses use these): the names of hands/hand_pose.luau
 local HP = {'relaxed','open','flat','wave','fist','point','thumbsUp','pinch','gripSphere','gripHandle','carry','beckon','count1','count2','count3','count4','count5'}
@@ -83,6 +86,11 @@ local function init(self:St,context:Context):boolean
    grab(pre..'hand'..sd..'X');grab(pre..'hand'..sd..'Y');grab(pre..'foot'..sd..'X');grab(pre..'foot'..sd..'Y');grab(pre..'foot'..sd..'Rot')
   end
  end
+ -- [liv-actions] begin: action inputs and read-outs, props, face inputs the actions drive, per-view prop and head numbers
+ for _,k in ipairs({'action','actionT','prop','propApple','propCrate','propSaw','flyOp','expression','lookX','lookY'}) do grab(k) end
+ for _,vw in ipairs(VIEWS) do for _,k in ipairs({'crateX','crateY','crateSX','flyX','flyY','flyS','headPX','headPY'}) do grab(vw.name..'_'..k) end end
+ do local bn:{string}={};for _,vw in ipairs(VIEWS) do table.insert(bn,vw.name..'_ikInvA');table.insert(bn,vw.name..'_ikInvB');table.insert(bn,vw.name..'_legInvA') end;Actions.attach(self.act,vm,bn) end
+ -- [liv-actions] end
  self.face=Face.new(vm, {{pre = 'front_', cfg = FACE_CFG_FRONT}, {pre = 'tq_', cfg = FACE_CFG_TQ}, {pre = 'side_', cfg = FACE_CFG_SIDE}}, '')
  for vi2,vw in ipairs(VIEWS) do                                   -- one painted hand per side (and the far arm's copy in front) per view
   local pre=vw.name..'_'
@@ -194,6 +202,10 @@ local function advance(self:St,seconds:number):boolean
   track(k,target,w,zeta)
  end
  local cur=self.cur
+ -- [liv-actions] begin: play the requested action (layers, blends, expression, props); per-view parts are applied below
+ local act=self.act
+ Actions.frame(act,dt,nv,put,gw)
+ -- [liv-actions] end
  -- hand shapes: a quick cross-fade (the shape weights are channels of their own)
  -- blink for the views without the expression rig (front, side): every 2.2 to 5.4 s, about 0.2 s; the face rig has its own
  local blink=0.0
@@ -253,6 +265,10 @@ local function advance(self:St,seconds:number):boolean
   -- a foot lifted by the pose (Step)
   axR+=cur.dRu*sn*PPM;ayR+=cur.dRu*cs*KD*PPM-cur.dRup*PPM
   axL+=cur.dLu*sn*PPM;ayL+=cur.dLu*cs*KD*PPM-cur.dLup*PPM
+  do -- [liv-actions] feet moved by an action (jump, kick, sit, dance) and the hop
+   local dx,dy,dp=Actions.foot(act,'r',cs,sn,KD);axR+=dx;ayR+=dy;pitR+=dp
+   dx,dy,dp=Actions.foot(act,'l',cs,sn,KD);axL+=dx;ayL+=dy;pitL+=dp
+  end
   local fA_x,fA_y,fA_p=axR,ayR,pitR;local fB_x,fB_y,fB_p=axL,ayL,pitL
   if not vw.aR then fA_x,fA_y,fA_p=axL,ayL,pitL;fB_x,fB_y,fB_p=axR,ayR,pitR end
 
@@ -274,12 +290,14 @@ local function advance(self:St,seconds:number):boolean
   local pelY=lerp(poseY,gaitY,gw)
   if gw>.001 then pelY=(pelY+ymin+math.sqrt((pelY-ymin)*(pelY-ymin)+14*14))*.5 end
   pelX=lerp(c.pelx+cur.pelDZ*sn*PPM,pelX,gw)          -- a pose can push the hips back (crouch)
+  do local dx,dy=Actions.pelvis(act,cs,sn);pelX+=dx;pelY+=dy end   -- [liv-actions] hips down / back / sideways, hop
   local lean=move*lerp(.045,.19,rw)
   local twist=move*lerp(.028,.05,rw)*math.sin(2*math.pi*self.phi)
   local ks=.2+.8*sn                                           -- forward lean shows in side views, not from the front
   local spineA=(lean*gw+cur.lean)*ks+twist*gw*(.4+.6*sn)
   local headA=(-.55*lean*gw+cur.headR)*ks-.8*twist*gw*(.4+.6*sn)+.012*math.sin(self.t*2*math.pi/6.1)*math.sin(self.t*2*math.pi/3.8)
   spineA+=.004*math.sin(self.t*2*math.pi/3.8)
+  do local ds,dh=Actions.spine(act,cs,sn);spineA+=ds;headA+=dh end   -- [liv-actions] lean, chest roll, head pitch / roll
   local rsp=vw.rest.spineRot;local rhd=vw.rest.headRot
   local cr=math.cos(spineA);local sr=math.sin(spineA)
   -- arms: the gait swings them against the legs (elbow folds when running); the pose gives body-space targets
@@ -310,6 +328,19 @@ local function advance(self:St,seconds:number):boolean
    local px,py=poseHand(isRight)
    if bind>.5 then px=if sd=='A' then c.wAx else c.wBx;py=if sd=='A' then c.wAy else c.wBy end
    handX[sd]=lerp(px,gx,gw);handY[sd]=lerp(py,gy,gw)
+   -- [liv-actions] the action's hand (chest frame, turned with the spine) replaces the pose / gait hand by the action's weight
+   local ax,ay,aw=Actions.hand(act,if isRight then 'r' else 'l',cs,sn,pelX,pelY,spineA)
+   do local cr2=math.cos(spineA);local sr2=math.sin(spineA)                 -- (arc about the shoulder; the elbow side from the hint)
+    local shx=if sd=='A' then c.shAx else c.shBx;local shy=if sd=='A' then c.shAy else c.shBy
+    local sx,sy=pelX+shx*cr2-shy*sr2,pelY+shx*sr2+shy*cr2
+    handX[sd],handY[sd]=Actions.arm(act,pre..'ikInv'..sd,if isRight then 'r' else 'l',sx,sy,handX[sd],handY[sd],ax,ay,aw,cs,sn,spineA,dt) end
+  end
+  do -- [liv-actions] head on the neck, props (crate between the hands, the thrown apple)
+   local ha,hs=Actions.head(act,cs,sn)
+   put(pre..'headPX',(vw.rest.headPX or 0)+ha);put(pre..'headPY',(vw.rest.headPY or 0)+hs)
+   local rS=sideR;local lS=if sideR=='A' then 'B' else 'A'
+   Actions.legs(act,pre..'legInvA',cs)
+   Actions.props(act,pre,handX[rS],handY[rS],handX[lS],handY[lS],cs,sn,put)
   end
 
   -- outputs: pelvis, spine, head, IK targets, feet
@@ -340,7 +371,7 @@ local function advance(self:St,seconds:number):boolean
   end
   -- hands (the painted articulated hand): the shape is a name from the pose, springs and cascade live in hand_pose.luau
   local farSlot=if vw.farB then 'B' else 'A'
-  local ffv=math.max(math.clamp(cur.ff,0,1),c.ffbias)
+  local ffv=math.max(Actions.ff(act,pre,math.clamp(cur.ff,0,1),cs,sn,dt),c.ffbias)   -- [liv-actions] far hand in front of the chest
   put(pre..'front',ffv);put(pre..'back',1-ffv)
   local palmFace=smooth((cs+.1)/.4)                                -- 1 when she faces the viewer, 0 from the side and the back
   for _,sd in ipairs({'A','B'}) do
@@ -348,6 +379,7 @@ local function advance(self:St,seconds:number):boolean
    local idx=math.floor(pqd(if isRight then 'shapeR' else 'shapeL',1)+.5)
    local name=HP[math.clamp(idx,1,#HP)]
    local grip=pqd(if isRight then 'gripR' else 'gripL',20)
+   name,grip=Actions.shape(act,if isRight then 'r' else 'l',name,grip)        -- [liv-actions] the action's or the prop's hand shape
    local keys={sd}
    if sd==farSlot then keys={sd,sd..'F'} end
    local wrist=0.0
@@ -355,10 +387,10 @@ local function advance(self:St,seconds:number):boolean
     local h=self.hands[pre..key]
     if h then
      HandPose.setShape(h,name,grip);HandPose.update(h,dt);HandPose.write(h);wrist=HandPose.wrist(h)
-     put(pre..'hand'..key..'PalmSide',smoothTo('palm'..key,(if (PALMY[name] or 0)>0 then palmFace else 0.0),12))
+     put(pre..'hand'..key..'PalmSide',smoothTo('palm'..key,Actions.palm(act,if isRight then 'r' else 'l',cs,sn,(if (PALMY[name] or 0)>0 then palmFace else 0.0)),12))   -- [liv-actions] palm from the action
     end
    end
-   put(pre..'hand'..sd..'Rot',(vw.rest['hand'..sd..'Rot'] or 0)+wrist)
+   put(pre..'hand'..sd..'Rot',(vw.rest['hand'..sd..'Rot'] or 0)+wrist+Actions.bend(act,if isRight then 'r' else 'l',1))   -- [liv-actions] wrist bend
   end
   -- secondary motion: hair, skirt, apron, satchel, sleeves trail the body (damped springs)
   local function spring(k:string,target:number,wn:number,z:number)
@@ -424,5 +456,5 @@ return function(context:Context):Layout<St>
  local lat0=VIEWS[1].c.lat0
  return {context=context,vm=nil,n={},cur={},vel={},t=0,v=0,s=0,phi=.05,frozen=true,rw=0,gw=0,
   fR=newFoot(0,-lat0,.05),fL=newFoot(0,lat0,.55),yaw=43,yawV=0,flip=1,flipV=0,turnF=0,
-  hands={},face=nil,blinkT=0,blinkI=1,sx={},sv={},ready=false,prev={},init=init,advance=advance,draw=function(self:St,renderer:Renderer) end}
+  hands={},face=nil,blinkT=0,blinkI=1,sx={},sv={},ready=false,prev={},act=Actions.new(),init=init,advance=advance,draw=function(self:St,renderer:Renderer) end}
 end
