@@ -1,12 +1,12 @@
 -- Test controller: drives the face module and a gentle head nod (button "Nod").
 local Face = require('face')
-local CFG_TQ = require('face_cfg_tq')
+local CFG_V = require('face_cfg_tq')
 type St = {context: Context, face: Face.Face?, rot: Property<number>?, rest: number, nod: Property<number>?, t: number}
 local function init(self: St, context: Context): boolean
  self.context = context
  local vm = context:viewModel()
  if vm == nil then return true end
- self.face = Face.new(vm, {{pre = 'tq_', cfg = CFG_TQ}}, '')
+ self.face = Face.new(vm, {{pre = 'tq_', cfg = CFG_V}}, '')
  self.rot = vm:getNumber('headRot'); self.nod = vm:getNumber('nod')
  local r = vm:getNumber('headRest'); if r then self.rest = r.value end
  return true

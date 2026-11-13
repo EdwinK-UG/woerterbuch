@@ -1,13 +1,15 @@
 # Liv in Rive: face and expressions
 
-Branch `liv/face`, folder `tools/liv/rive/face/`. Three-quarter view (`tq`) is built and checked; the other views need
-their own cut (see "Other views"). Liv does not speak: there is no lip sync, only expression mouths.
+Branch `liv/face`, folder `tools/liv/rive/face/`. Built and checked for the three-quarter (`tq`), front and side views;
+the three-quarter back and back views have no face (nothing is emitted for them). Liv does not speak: there is no lip
+sync, only expression mouths. `build_liv.py` (feat/liv-2d-scenes) picks up every view that has `face/art/<view>_face.json`.
 
 ```sh
-python3 tools/liv/rive/face/cut_face.py            # face art from the pack's pixels   -> face/art/
-python3 tools/liv/rive/face/build_face_test.py     # standalone test project          -> face/liv-face-test/
+python3 tools/liv/rive/face/cut_face.py tq         # face art from the pack's pixels (also: front, side) -> face/art/
+python3 tools/liv/rive/face/build_face_test.py tq  # standalone test project: liv-face-test/ (front, side: liv-face-test-<view>/)
 cd tools/liv/rive/face/liv-face-test && rive . --verify && rive .
-python3 tools/liv/rive/face/render_preview.py all  # Rive-runtime renders              -> face/preview/
+python3 tools/liv/rive/face/render_preview.py all  # Rive-runtime renders -> face/preview/ (VIEW=front / VIEW=side -> preview/<view>/)
+python3 tools/liv/rive/build_liv.py && cd tools/liv/rive/liv && rive . --verify    # the whole rig with every face
 ```
 
 ## How the face is made (no redrawing of her likeness)
@@ -76,6 +78,8 @@ wink: the handoff's order), `expressionAmount` 0..1, `lookX` / `lookY` -1..1 (+x
   while the rig cross-fades views. Views without a part simply have no such numbers.
 
 ## Integration into build_liv.py (feat/liv-2d-scenes, 6d5952a)
+
+Done by the lead in 8ccc09b (these were the steps; kept for reference and for other characters).
 
 1. Imports, after the existing imports:
    ```python
@@ -165,6 +169,21 @@ Check after integrating: `rive . --verify` (0 errors, 0 warnings), then a `--com
 
 ## Weak spots (honest)
 
+Front and side (renders in `face/preview/front/` and `face/preview/side/`, same set as tq; plus the whole rig checked in
+`tools/liv/rive/liv` with `view` 0 / 1 / 2 and expressions happy, laugh, sad):
+
+- The pack's closed patches `front_blink0/1` (faint outlines of the open eye) and `side_blink0` (a streak) are not used:
+  the closed eyes are the head's skin with tq_blink0's lash, mirrored for the front view's left eye.
+- **Side mouths** are drawn in code and small (the profile lips are about 25 px): laugh and the wink's open smile read at
+  64 px, the others mostly do not. Open mouths keep the head's painted lip contour (the jaw does not drop), as the
+  canvas engine's wedge does. Teeth (ouch / effort) are a plain white band with a centre line.
+- **Side eye**: the iris sits at the eye's front edge, so looking forward moves it 0.6 px only; a small light tick
+  shows at the lash's front end when looking down.
+- **Front**: as in tq, the pack mouths are drawings of their own (neutral `mouth_1` has a slight wave); laughing arcs and
+  lowered lids are the same technique as tq, with the same slightly sharp lid edge across the iris.
+
+Three-quarter:
+
 - **Far eye** is 22 px wide: its upper-right edge, where lash, face contour and hair meet, stays painted when the lid comes
   down (a small dark stub above the lowered lid in ouch / sad at 3x), and looking left shows a thin double line there.
 - **Lowered lids** (sad, ouch, effort, blink in-between) are the painted lash slid down: the lid edge is the lash's own
@@ -178,14 +197,27 @@ Check after integrating: `rive . --verify` (0 errors, 0 warnings), then a `--com
   face is not yet integrated into `build_liv.py` (steps above; the lead integrates); not tested on a phone or in the web
   runtime.
 
-## Other views
+## Front and side views
 
-`cut_face.py` takes one `CFG[view]` per view (eye boxes in head-image pixels, iris guesses, the column where hair starts,
-lid travel, iris travel, happy-arc points, far-brow box and hair edge, mouth point); `face_tq.VIEWS[view]` (or the
-`view_cfg` argument) says which parts exist. Expected work per view:
+**Front** (`CFG['front']`, `VIEWS['front']`): both eyes are cut like the three-quarter near eye (frame, lash, filler,
+iris, eye white), with the pack's closed patches `front_blink0/1` and drawn laughing arcs; both brows are the pack's
+`front_brow0/1` (the head has none painted); mouths are `front_mouth` (painted smile) and the nine pack mouths about
+(515, 401), not squeezed. The point is 7 px below the canvas engine's (515, 394) so the pack mouths sit on the painted
+smile's line. Eye N is her right eye (viewer's left), F her left; iris travel is mirrored (each iris has room toward
+its outer corner: N -6.5 .. +1.8 px, F -1.8 .. +6.5 px). The wink closes eye N.
 
-- **front**: two eyes of equal size (call them N and F or add L / R names), two pack brows (`front_brow0/1`), front blink
-  patches exist; mouth point (515, 394), no squeeze.
-- **side**: one eye (`side_blink0` exists), no far brow, the mouth is a profile mouth: the pack mouths do not fit; the
-  canvas engine draws a profile wedge there, which would have to be drawn in code.
-- **tqb / back**: no face: emit nothing (`eyes: [], brows: [], mouths: []`), the controller skips missing numbers.
+**Side** (`CFG['side']`, `VIEWS['side']`): one eye (N) with `side_blink0`, its brow cut out of the head (matted, with a
+filled hole patch, as the three-quarter far brow); no far eye or brow. The mouths are **profile mouths drawn in code**
+(`cut_face.profile_mouths`) in the art's palette (ink `#3a1c0c`, interior `#8c3a2c`, tongue `#e07a66`, teeth
+`#fbf4e8`) at the lips of the face contour (the notch at view (635, 403), contour from `parts.json _meta.side.edge`),
+clipped to stay inside the contour like the canvas engine's profile wedge. They use the slot names of the pack mouths
+they stand for, so `face.luau` needs no per-view table: `0` closed smile, `1` flat, `0f` corners down (sad), `8` open
+laugh with upper teeth and tongue, `5` open round (surprised), `4f` clenched teeth (ouch, effort); happy is the pack's
+painted `side_mouth`. The mouth bone's pivot is the lip notch and `mouth_xk = 0`, so mouth moves never leave the profile.
+
+**Three-quarter back, back**: no face; `VIEWS` lists them with no parts, and no face json is written for them, so
+`build_liv.py` gives them none.
+
+Per view, `cut_face.py` takes eye boxes in head-image pixels, iris ellipse guesses (refined by a fit, or the guess if the
+fit is implausible), the column where hair starts, lid travel, iris travel, laughing-arc points, brows to cut (box, hair
+edge, a seed pixel), and the mouth (pack placement or `profile`).

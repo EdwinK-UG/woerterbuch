@@ -1,0 +1,4 @@
+name: Liv-Face-Test
+logs:
+  file: build/rive.log
+  problems: build/problems.log

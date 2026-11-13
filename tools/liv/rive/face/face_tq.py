@@ -32,6 +32,14 @@ VIEWS = {
     'tq': {'eyes': ['N', 'F'], 'brows': ['N', 'F'],
            'mouths': ['painted', '0', '1', '2', '3', '4', '5', '6', '7', '8', '0f', '4f'],
            'brow_raise': 9.0, 'brow_rot': 0.2, 'brow_far_scale': 0.85},
+    'front': {'eyes': ['N', 'F'], 'brows': ['N', 'F'],
+              'mouths': ['painted', '0', '1', '2', '3', '4', '5', '6', '7', '8', '0f', '4f'],
+              'brow_raise': 9.0, 'brow_rot': 0.2, 'brow_far_scale': 1.0},
+    # side: one eye and one brow; the mouths are drawn profile mouths in the slots of the pack mouths they stand for
+    'side': {'eyes': ['N'], 'brows': ['N'], 'mouths': ['painted', '0', '1', '8', '5', '0f', '4f'],
+             'brow_raise': 8.0, 'brow_rot': 0.15, 'brow_far_scale': 1.0, 'mouth_xk': 0.0},
+    'tqb': {'eyes': [], 'brows': [], 'mouths': []},
+    'back': {'eyes': [], 'brows': [], 'mouths': []},
 }
 MOUTHS_PACK = [str(i) for i in range(9)]
 
@@ -143,6 +151,8 @@ def emit_face(el, parent_head_bone_element, ctx, pre='', view_cfg=None):
     for mname in V['mouths']:
         if mname == 'painted':
             im = R.rect(f'Liv mouth painted', asset(f'{view}_mouth_painted.png'), M['painted_box'], 'mouth')
+        elif 'boxes' in M:          # drawn profile mouths, each with its own box
+            im = R.rect(f'Liv mouth {mname}', asset(f'{view}_mouth_{mname}.png'), M['boxes'][mname], 'mouth')
         else:
             im = R.quad(f'Liv mouth {mname}', asset(f'mouth_{mname}.png'), [placed(0, 0), placed(pw, 0), placed(pw, ph), placed(0, ph)], 'mouth')
         prop('mo_' + mname, 1.0 if mname == 'painted' else 0.0, im, 18)
@@ -188,8 +198,8 @@ def emit_face(el, parent_head_bone_element, ctx, pre='', view_cfg=None):
 def luau_cfg(view, J=None, V=None):
     """The per-view numbers for face.luau, as a Luau module (all numbers, one flat table)."""
     J = J or json.loads((ART / f'{view}_face.json').read_text()); V = V or VIEWS[view]
-    cfg = {'brow_raise': V['brow_raise'], 'brow_rot': V['brow_rot'], 'brow_far_scale': V['brow_far_scale'],
-           'wide_sx': 1.05, 'wide_sy': 1.09, 'iris_wide': 0.86, 'mouth_px': 1.0}
+    cfg = {'brow_raise': V.get('brow_raise', 9.0), 'brow_rot': V.get('brow_rot', 0.2), 'brow_far_scale': V.get('brow_far_scale', 1.0),
+           'wide_sx': 1.05, 'wide_sy': 1.09, 'iris_wide': 0.86, 'mouth_px': 1.0, 'mouth_xk': V.get('mouth_xk', 1.0)}
     for en in ('N', 'F'):
         E = J['eyes'].get(en) if en in V.get('eyes', []) else None
         cfg['has' + en] = 1 if E else 0

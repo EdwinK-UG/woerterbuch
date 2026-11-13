@@ -5,15 +5,17 @@
     python3 tools/liv/rive/face/render_preview.py transitions  # 1/30 s frames of expression changes
     python3 tools/liv/rive/face/render_preview.py video        # mp4: every expression, then a blink / look / wink run
     python3 tools/liv/rive/face/render_preview.py all
+    VIEW=front python3 tools/liv/rive/face/render_preview.py all      # front / side test projects -> preview/<view>/
 Every picture here is a screenshot of the Rive runtime, not a Python composite.
 """
 from pathlib import Path
-import json, subprocess, sys, tempfile, shutil
+import json, os, subprocess, sys, tempfile, shutil
 from PIL import Image, ImageDraw, ImageFont
 
 HERE = Path(__file__).resolve().parent
-PROJ = HERE / 'liv-face-test'
-PREV = HERE / 'preview'; PREV.mkdir(exist_ok=True)
+VIEW = os.environ.get('VIEW', 'tq')                         # VIEW=front python3 render_preview.py sheet
+PROJ = HERE / ('liv-face-test' if VIEW == 'tq' else f'liv-face-test-{VIEW}')
+PREV = HERE / 'preview' / ('' if VIEW == 'tq' else VIEW); PREV.mkdir(exist_ok=True, parents=True)
 RIVE = '/Users/edwin/Documents/Codex/2026-11-02/i-x20/work/rive-tools/rive'
 L = json.loads((PROJ / 'layout.json').read_text())
 FACE = [round(v) for v in L['face_crop']]; HEAD = [round(v) for v in L['head_crop']]
