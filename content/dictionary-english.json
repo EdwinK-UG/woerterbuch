@@ -1,0 +1,150 @@
+{
+  "62be03fde6b3c07b2908883bdab108c02c3740307a58e9decfbd0ea73873f6d6": [
+    {
+      "key": "s0",
+      "en": "apple"
+    },
+    {
+      "key": "e0:0",
+      "en": "I eat an apple for breakfast every morning."
+    }
+  ],
+  "afda1e2715b662b9b4e1303045d9595f0cd513700a725561d45e4bcc6475bef3": [
+    {
+      "key": "s0",
+      "en": "house; building"
+    },
+    {
+      "key": "e0:0",
+      "en": "My parents have a house with a big garden."
+    },
+    {
+      "key": "s1",
+      "en": "home"
+    },
+    {
+      "key": "e1:0",
+      "en": "We're staying home today because it's raining."
+    },
+    {
+      "key": "s2",
+      "en": "all the residents of a building"
+    },
+    {
+      "key": "e2:0",
+      "en": "The whole house was awake because of the noise."
+    },
+    {
+      "key": "s3",
+      "en": "firm; institution"
+    },
+    {
+      "key": "e3:0",
+      "en": "More than a thousand people work in our firm."
+    },
+    {
+      "key": "s4",
+      "en": "theatre or concert hall and its audience"
+    },
+    {
+      "key": "e4:0",
+      "en": "The house was completely sold out at the premiere."
+    }
+  ],
+  "38bf015ad973efb7890f601519619e7187ef1a7c5e13562187df4118d1bf87e9": [
+    {
+      "key": "s0",
+      "en": "bench"
+    },
+    {
+      "key": "e0:0",
+      "en": "We sat down on a bench in the sun in the park."
+    },
+    {
+      "key": "s1",
+      "en": "workbench"
+    },
+    {
+      "key": "e1:0",
+      "en": "The carpenter stands at his bench all day."
+    },
+    {
+      "key": "s2",
+      "en": "shoal; sandbank"
+    },
+    {
+      "key": "e2:0",
+      "en": "The ship ran aground on a sandbank."
+    }
+  ],
+  "2c9107109b5af5323bf3b97c39ead4a7b0960cf5372cc7ad98195785525c6492": [
+    {
+      "key": "s0",
+      "en": "bank"
+    },
+    {
+      "key": "e0:0",
+      "en": "I still have to go to the bank to withdraw money."
+    },
+    {
+      "key": "s1",
+      "en": "bank (a place that collects and stores things)"
+    },
+    {
+      "key": "e1:0",
+      "en": "She donated blood to the blood bank."
+    },
+    {
+      "key": "s2",
+      "en": "the bank (in gambling)"
+    },
+    {
+      "key": "e2:0",
+      "en": "He broke the bank at the casino."
+    }
+  ],
+  "0e374a9c94bbde034e1b271a7240ba0dd61547803223face138be256d0da44df": [
+    {
+      "key": "s0",
+      "en": "cat"
+    },
+    {
+      "key": "e0:0",
+      "en": "Our cat likes to sleep on the sofa best."
+    }
+  ],
+  "eda09a6911e0790f4c576feff0d2451147b30577192f4deeeb1d8c22d2045723": [
+    {
+      "key": "s0",
+      "en": "to learn"
+    },
+    {
+      "key": "e0:0",
+      "en": "I've been learning German at the adult education centre for two years."
+    },
+    {
+      "key": "s1",
+      "en": "to study; to revise (for an exam or for school)"
+    },
+    {
+      "key": "e1:0",
+      "en": "We have a test tomorrow, so I have to study today."
+    },
+    {
+      "key": "s2",
+      "en": "to train for a profession"
+    },
+    {
+      "key": "e2:0",
+      "en": "My brother trained as an electrician and now works at a company."
+    },
+    {
+      "key": "s3",
+      "en": "to learn (from experience)"
+    },
+    {
+      "key": "e3:0",
+      "en": "She learned a lot from this mistake."
+    }
+  ]
+}

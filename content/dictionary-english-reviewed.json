@@ -1,0 +1,27 @@
+{
+  "Apfel": {"s0":"apple", "e0:0":"I eat an apple for breakfast every morning."},
+  "Haus": {
+    "s0":"house; building", "e0:0":"My parents have a house with a big garden.",
+    "s1":"home", "e1:0":"We're staying home today because it's raining.",
+    "s2":"all the residents of a building", "e2:0":"The whole house was awake because of the noise.",
+    "s3":"firm; institution", "e3:0":"More than a thousand people work in our firm.",
+    "s4":"theatre or concert hall and its audience", "e4:0":"The house was completely sold out at the premiere."
+  },
+  "Bank¹": {
+    "s0":"bench", "e0:0":"We sat down on a bench in the sun in the park.",
+    "s1":"workbench", "e1:0":"The carpenter stands at his bench all day.",
+    "s2":"shoal; sandbank", "e2:0":"The ship ran aground on a sandbank."
+  },
+  "Bank²": {
+    "s0":"bank", "e0:0":"I still have to go to the bank to withdraw money.",
+    "s1":"bank (a place that collects and stores things)", "e1:0":"She donated blood to the blood bank.",
+    "s2":"the bank (in gambling)", "e2:0":"He broke the bank at the casino."
+  },
+  "Katze": {"s0":"cat", "e0:0":"Our cat likes to sleep on the sofa best."},
+  "lernen": {
+    "s0":"to learn", "e0:0":"I've been learning German at the adult education centre for two years.",
+    "s1":"to study; to revise (for an exam or for school)", "e1:0":"We have a test tomorrow, so I have to study today.",
+    "s2":"to train for a profession", "e2:0":"My brother trained as an electrician and now works at a company.",
+    "s3":"to learn (from experience)", "e3:0":"She learned a lot from this mistake."
+  }
+}

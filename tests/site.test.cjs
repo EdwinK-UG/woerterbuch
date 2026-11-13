@@ -171,12 +171,12 @@ test('English meanings follow their senses, examples stay folded and the German-
     assert.equal(meanings[0].textContent,'to learn');
     assert.ok([...s.document.querySelectorAll('.dictionary-extra summary')].every(summary=>!summary.closest('i')));
     assert.ok(Object.keys(s.window.localStorage).some(key=>key.startsWith('gd_en_')));
-    assert.ok(meanings.some(line=>line.textContent==='to learn; to study'));
+    assert.ok(meanings.some(line=>line.textContent==='to study; to revise (for an exam or for school)'));
     const examples = [...s.document.querySelectorAll('.english-example')];
     assert.ok(examples.every(line=>line.hidden));
     s.document.querySelector('.english-examples-toggle').click();
     assert.equal(examples[0].hidden,false);
-    assert.equal(examples[0].textContent,'I've been learning German at the adult education centre for two years.');
+    assert.equal(examples[0].textContent,"I've been learning German at the adult education centre for two years.");
     assert.ok(examples[0].parentElement.textContent.includes('Ich lerne seit zwei Jahren Deutsch'));
     s.document.querySelector('.english-toggle').click();
     assert.ok([...meanings,...examples].every(line=>line.hidden));
