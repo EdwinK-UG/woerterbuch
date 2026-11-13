@@ -30,11 +30,19 @@ cd tools/liv/rive/liv && rive . --verify && rive .       # live window: poses, g
   seen from the front or back a lifted leg is foreshortened (thigh bone scaled, boot counter-scaled) instead of bending sideways.
 - **Gait** (walk 0.9 m/s, run 2.5 m/s, stance 62 % to 36 %, flight phase, heel and toe, pelvis, arm swing, lean) as before.
   Foot sliding in the three-quarter view: 0.0003 view px controller, at most 0.65 px in rendered pixels while walking.
-- **Face** (three-quarter view): ten expressions (`expression` 0..9, `expressionAmount`), gaze (`lookX`, `lookY`), blink, wink,
-  idle glances; cut from the pack's pixels (`face/`, `docs/liv-face.md`). The other views keep the pack's blink patches.
-- **Hands**: still the pack's six painted hand drawings, switched by cross-fade. A rig of articulated painted hands (cut from
-  the generated parts sheet) is being built on branch `liv/hands`.
-- **Controls** (view-model numbers): `pose` 0..7, `gait` 0..2, `view` 0..4, `mirror`, `rate` (time scale), face inputs.
+- **Face** (front, three-quarter, side): ten expressions (`expression` 0..9, `expressionAmount`), gaze (`lookX`, `lookY`), blink,
+  wink, idle glances; cut from the pack's pixels, profile mouths drawn in code (`face/`, `docs/liv-face.md`). The back views
+  have no face.
+- **Hands**: articulated painted hands cut from the owner's generated parts sheet (`hands/`, `docs/liv-hands.md`): 17 shapes
+  (relaxed, open, flat, wave, fist, point, thumbs-up, pinch, grips, carry, beckon, count 1 to 5), fingers curl and spread with
+  springs and a cascade, back or palm side, left and right; loose fists while running.
+- **Actions** (`actions.luau`, `docs/liv-actions.md`): the canvas engine's 27 actions (wave, point, clap, think, cheer, jump,
+  crouch, carry, push, pull, throw, kick, sit, bow, nod, shake, dance ...) in all five views, layered over standing or walking,
+  with props (apple, crate, saw handle) in her hand.
+- **Turns**: a turn switches whole views at the middle with a squash (a fading group would show its own layers through each
+  other); the art is lossy WebP copies (the Rive file is about 2.3 MB).
+- **Controls** (view-model numbers): `pose` 0..7, `action` 1..27, `prop` 0..3, `gait` 0..2, `view` 0..4, `mirror`, `rate` (time
+  scale), face inputs `expression`, `expressionAmount`, `lookX`, `lookY`, `blinkNow`, `winkNow`.
 
 ## Checked
 
@@ -49,15 +57,20 @@ cd tools/liv/rive/liv && rive . --verify && rive .       # live window: poses, g
 
 ## Not done / weak spots
 
-- **Hands** are the old drawings (see above). **Faces** exist for the three-quarter view only (front needs a config entry, the side
-  view needs a profile mouth drawn in code).
-- Only seven test poses (Rest, Wave, Reach, Cheer, Crouch, Step, Hands, Bind), not the handoff's 26 actions; no gripping yet.
+- Hands: pinch does not make the thumb and index tips meet; grips are finger shapes only (the props are in front of or behind the
+  hand, not wrapped); from the back, curled fingers hide behind the palm; palm-side half-curled fingers look short; a faint dashed
+  line at the wrist; flatter than the pack's painted hands; no side view of the hand.
+- Actions: sleeves still tear in the side view when the upper arm goes forward and up past about 70 degrees; in the back views
+  the near arm is always drawn on top, so hands in front of her chest (clap, think, sit) show on her back; in the front view
+  push, pull, stop, thumbs-up and kick are foreshortened (no wrist roll); holding a crate does not block one-hand actions.
 - The cross-fade between views is a dissolve with a small squash, not a drawn turn.
 - Quarter-speed playback (`measure_all.py --slow`) was not re-measured after the multi-view rewrite. The front and back pixel
   numbers need a tracker that follows the sole in y as well.
 - Side view: the legs are drawn spread about 150 px at the hips (the pack's stride); the pack's side torso part is wrong at the
   waist, so the cut uses the picture's pixels.
-- Park and Werkstatt scenes in Rive, the state machine the web app drives, phone and Safari testing: not started. The canvas
+- Web runtime speed of the full project (five views, hands, faces) is unmeasured: the browser pane was hidden, so the page only
+  got about 1 frame a second whatever it loaded. The CLI renders it fast. Phone and Safari testing: not done.
+- Park and Werkstatt scenes in Rive and the state machine the web app drives: not started. The canvas
   versions are untouched and remain the fallback.
 - Far sleeves in the side and three-quarter-back views are the near sleeve mirrored (`fix_sleeves.py`): whole, but lit from the wrong side.
 - Crouch is better (hips push back) but still the stiffest pose; the pack's neck at the top of the back torso has hair-coloured paint (hidden by the head).
