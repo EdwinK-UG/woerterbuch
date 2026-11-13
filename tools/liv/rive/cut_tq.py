@@ -171,6 +171,15 @@ info['ankleA'] = META['A']['ankle']; info['ankleB'] = META['B']['ankle']
 info['kneeA'] = [424, 1128]; info['kneeB'] = [571, 1120]
 info['neck'] = META['neck']
 info['legpiece'] = {sd: make_leg_pieces(sd) for sd in 'AB'}
+# --- the rest of the per-view contract (the generic builder reads these from every view's json)
+info['yaw_deg'] = 43; info['facing'] = 'right'; info['A_is'] = 'R'; info['far_arm'] = 'B'
+info['rig'] = {'head_top': [neck_x + 4, 180] if (neck_x := META['neck'][0]) else None,
+               'hair': [[452, 232], [440, 420]],
+               'skirt_L': [[420, 770], [330, 1090]], 'skirt': [[510, 770], [510, 1090]], 'skirt_R': [[600, 770], [700, 1090]],
+               'apron': [[510, 748], [510, 905], [510, 1072]],
+               'bag': {'a': [556, 478], 'b': [438, 800]}, 'bag_visible': True}
+info['parts'] = [n for n in PARTS if n.startswith('tq_')]
+info['hand'] = {sd: {'wrist': info[sd]['wrist'], 'dir': info[sd]['dir']} for sd in 'AB'}
 info['_ppm'] = 996
 # satchel strap: the canvas rig strokes it 30 px wide in the strap colour with an ink edge
 strap = np.zeros((8, 30, 4), np.float32)

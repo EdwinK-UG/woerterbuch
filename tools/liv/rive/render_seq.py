@@ -4,7 +4,7 @@
 
 Steps (one argument each):
     data k=v         set a view-model number
-    adv S [N]        advance S seconds in 1/30 s steps; with N, screenshot every N-th step (f0000.png, f0001.png ...)
+    adv S [N [dump]] advance S seconds in 1/30 s steps; with N, screenshot every N-th step (f0000.png, f0001.png ...), with dump also f0000.json
     shot NAME        screenshot NAME.png
     dump NAME        view-model dump NAME.json
 """
@@ -24,10 +24,13 @@ def main():
         elif p[0] == 'shot': lines.append(f'screenshot {out}/{p[1]}.png')
         elif p[0] == 'dump': lines.append(f'data-dump {out}/{p[1]}.json')
         elif p[0] == 'adv':
-            frames = int(round(float(p[1]) * 30)); every = int(p[2]) if len(p) > 2 else 0
+            frames = int(round(float(p[1]) * 30)); every = int(p[2]) if len(p) > 2 else 0; dumps = len(p) > 3 and p[3] == 'dump'
             for i in range(frames):
                 lines.append('advance 33.333ms')
-                if every and (i + 1) % every == 0: lines.append(f'screenshot {out}/f{n:04d}.png'); n += 1
+                if every and (i + 1) % every == 0:
+                    lines.append(f'screenshot {out}/f{n:04d}.png')
+                    if dumps: lines.append(f'data-dump {out}/f{n:04d}.json')
+                    n += 1
     lines.append('quit')
     r = subprocess.run([RIVE, str(proj), '--commands'], input='\n'.join(lines) + '\n', text=True, capture_output=True, timeout=600)
     if r.returncode: print(r.stdout[-800:], r.stderr[-800:])

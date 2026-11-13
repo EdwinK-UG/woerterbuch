@@ -15,17 +15,22 @@ import numpy as np
 from PIL import Image
 
 args = sys.argv[1:]
-prefix = 'w'
+prefix = 'w'; VIEW = ''; YAW = 43.0; FOOTW = .84
+if '--view' in args: i = args.index('--view'); VIEW = args[i + 1]; del args[i:i + 2]
+if '--footw' in args: i = args.index('--footw'); FOOTW = float(args[i + 1]); del args[i:i + 2]
+if '--yaw' in args: i = args.index('--yaw'); YAW = float(args[i + 1]); del args[i:i + 2]
 if '--prefix' in args: i = args.index('--prefix'); prefix = args[i + 1]; del args[i:i + 2]
 D, OUT = Path(args[0]), args[1]
 SCALE, CX, CY = .62, 40, 36
-FX = math.sin(.7505); PPM = 996
+FX = math.sin(math.radians(YAW)); PPM = 996
 
 def vals(p):
     out = {}
     def w(o):
         if isinstance(o, dict):
-            if 'name' in o and 'value' in o: out[o['name']] = o['value']
+            if 'name' in o and 'value' in o:
+                out[o['name']] = o['value']
+                if VIEW and o['name'].startswith(VIEW + '_'): out[o['name'][len(VIEW) + 1:]] = o['value']       # a view's numbers without the prefix
             for v in o.values(): w(v)
         elif isinstance(o, list):
             for v in o: w(v)
@@ -57,7 +62,7 @@ pix = {'A': [], 'B': []}; prev = {}; runs = {'A': [], 'B': []}; cur = {'A': [], 
 for i, p in enumerate(files):
     v = V[i]; im = np.asarray(Image.open(str(p).replace('.json', '.png')).convert('RGB'))
     for f in 'AB':
-        flat = v['pl' + f] > .5 and abs(v['foot%sRot' % f] - 0.84) < .006
+        flat = v['pl' + f] > .5 and abs(v['foot%sRot' % f] - FOOTW) < .006
         other = 'B' if f == 'A' else 'A'
         near_other = abs(v['foot%sX' % f] - v['foot%sX' % other]) < 125       # the other boot is in the window: not measurable
         r = boot_bottom(im, v['foot%sX' % f], v['foot%sY' % f]) if (flat and not near_other) else None
