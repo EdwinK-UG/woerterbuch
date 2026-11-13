@@ -52,7 +52,9 @@
     "slvA2Rot": 0.0,
     "handBRot": -4.440892098500626e-16,
     "slvB1Rot": 0.0,
-    "slvB2Rot": 0.0
+    "slvB2Rot": 0.0,
+    "headPX": 451.0,
+    "headPY": -2.7615785320772814e-14
    }
   },
   "tq": {
@@ -100,7 +102,9 @@
     "slvA2Rot": 0.0,
     "handBRot": 4.440892098500626e-16,
     "slvB1Rot": 0.0,
-    "slvB2Rot": 0.0
+    "slvB2Rot": 0.0,
+    "headPX": 440.0409071893203,
+    "headPY": 4.440892098500626e-14
    }
   },
   "side": {
@@ -149,7 +153,9 @@
     "slvA2Rot": 0.0,
     "handBRot": 4.440892098500626e-16,
     "slvB1Rot": 0.0,
-    "slvB2Rot": 0.0
+    "slvB2Rot": 0.0,
+    "headPX": 441.13716687669836,
+    "headPY": -2.1316282072803006e-14
    }
   },
   "tqb": {
@@ -197,7 +203,9 @@
     "slvA2Rot": 0.0,
     "handBRot": 0.0,
     "slvB1Rot": 0.0,
-    "slvB2Rot": 0.0
+    "slvB2Rot": 0.0,
+    "headPX": 446.0044842823892,
+    "headPY": -1.5765166949677223e-14
    }
   },
   "back": {
@@ -245,9 +253,11 @@
     "slvA2Rot": 0.0,
     "handBRot": 4.440892098500626e-16,
     "slvB1Rot": 0.0,
-    "slvB2Rot": 0.0
+    "slvB2Rot": 0.0,
+    "headPX": 448.0,
+    "headPY": -2.743208830090071e-14
    }
   }
  },
- "props": 463
+ "props": 510
 }

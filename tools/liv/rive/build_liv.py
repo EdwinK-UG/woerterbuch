@@ -83,6 +83,9 @@ GLOBAL_DEFAULTS = {'pose': 0, 'rate': 1.0, 'gait': 0, 'view': ALL_VIEWS.index(DE
 for k, v in GLOBAL_DEFAULTS.items(): prop(k, v)
 for k, v in {'expression': 0, 'expressionAmount': 1.0, 'lookX': 0.0, 'lookY': 0.0, 'blinkNow': 0, 'winkNow': 0, 'faceIdle': 1, 'autoBlink': 1}.items(): prop(k, v)
 FACE_VIEWS = []
+# [liv-actions] begin: the action library's numbers (actions_rig.py, actions.luau, docs/liv-actions.md)
+import actions_rig; actions_rig.declare(prop)
+# [liv-actions] end
 for i in range(8): prop(f'mX{i}', 0.0); prop(f'mY{i}', 0.0)
 bindp(flip, 16, 'flipX')
 
@@ -353,6 +356,10 @@ def emit_view(V):
         for lid in lids: vbind(lid, 18, 'blink')
     for k in ('plA', 'plB', 'cAX', 'cAY', 'cBX', 'cBY'): vprop(k, 1 if k.startswith('pl') else 0)
 
+    # [liv-actions] begin: props on her right hand, the crate between the hands, the thrown apple, head offsets (actions_rig.py)
+    actions_rig.view(dict(V=V, el=el, g=g, bones=bones, hand_mounts=hand_mounts, far_hand_front=far_hand_front, far=far, A_is_R=A_is_R,
+                          vprop=vprop, vbind=vbind, bindp=bindp, rest=rest, head_anchor=head, far_top=far_up_front, vm=vm, yaw=yaw))
+    # [liv-actions] end
     # constants for the controller (view pixels)
     ankA, ankB = T['ankleA'], T['ankleB']
     half = abs(ankB[0] - ankA[0]) / 2 / PPM
@@ -393,6 +400,10 @@ shutil.copy(HERE / 'hands' / 'hand_pose.luau', OUTD / 'hand_pose.luau')
 el('ScriptAsset', root, file='hand_pose.luau', name='hand_pose', isModule=True, id='0:79')
 el('ScriptAsset', root, file='face.luau', name='face', isModule=True, id='0:77')
 for i, V in enumerate(FACE_VIEWS): el('ScriptAsset', root, file=f'face_cfg_{V}.luau', name=f'face_cfg_{V}', isModule=True, id=f'0:{70 + i}')
+# [liv-actions] begin: the action module (required by liv.luau, so declared before it)
+actions_rig.instance(el, ins)
+shutil.copy(HERE / 'actions.luau', OUTD / 'actions.luau'); el('ScriptAsset', root, file='actions.luau', name='actions', isModule=True, id='0:78')
+# [liv-actions] end
 el('ScriptAsset', root, file='liv.luau', name='liv', id='0:80')
 layout = el('LayoutComponent', ab, name='Liv controller', width=STAGE_W, height=STAGE_H, styleId='0:82', id='0:81')
 el('LayoutComponentStyle', layout, name='Fill stage', layoutWidthScaleType='fill', layoutHeightScaleType='fill', widthUnitsValue='auto', heightUnitsValue='auto', id='0:82')
@@ -422,6 +433,9 @@ button('Walk', 1130, 624, 150, 42, [('gait', 1), ('pose', 0)]); button('Run', 11
 VIEW_BUTTONS = [('Front', 0), ('3/4 front', 1), ('Side', 2), ('3/4 back', 3), ('Back', 4)]
 for i, (n, vv) in enumerate(VIEW_BUTTONS): button(n, 860, 120 + i * 54, 150, 42, [('view', vv)])
 button('Face left', 860, 120 + 5 * 54 + 20, 150, 42, [('mirror', 1)]); button('Face right', 860, 120 + 6 * 54 + 20, 150, 42, [('mirror', 0)])
+# [liv-actions] begin: action and prop buttons
+actions_rig.buttons(dict(el=el, ab=ab, sm=sm, props=props, text=text))
+# [liv-actions] end
 entry = el('EntryState', layer, x=0, y=0); el('StateTransition', entry, stateToId='0:12')
 el('AnyState', layer, x=0, y=-150); el('ExitState', layer, x=650, y=-150)
 el('AnimationState', layer, animationId='0:60', id='0:12', x=180, y=0)
