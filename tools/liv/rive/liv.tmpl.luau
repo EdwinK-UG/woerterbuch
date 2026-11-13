@@ -11,17 +11,20 @@
 -- Every view has its own rig (art + bones + IK) in the same artboard. `yaw` turns toward the target of the `view`
 -- number (0..4); the two views around the current yaw cross-fade, the others are hidden and not computed.
 local Face = require('face')
+local HandPose = require('hand_pose')
 @FACEREQ@
 type Foot = {u: number, w: number, fu: number, fw: number, planted: boolean, ph: number}
 type View = {name: string, yaw: number, aR: boolean, farB: boolean, c: {[string]: number}, rest: {[string]: number}}
 type St = {context: Context, vm: ViewModel?, n: {[string]: Property<number>}, cur: {[string]: number}, vel: {[string]: number},
   t: number, v: number, s: number, phi: number, frozen: boolean, rw: number, gw: number,
   fR: Foot, fL: Foot, yaw: number, yawV: number, flip: number, flipV: number, turnF: number,
-  face: Face.Face?, blinkT: number, blinkI: number, sx: {[string]: number}, sv: {[string]: number}, ready: boolean, prev: {[string]: number}}
+  hands: {[string]: any}, face: Face.Face?, blinkT: number, blinkI: number, sx: {[string]: number}, sv: {[string]: number}, ready: boolean, prev: {[string]: number}}
 local VIEWS: {View} = {
 @VIEWS@
 }
-local SHAPES = {'Relaxed','Palm','Fist','Point','Thumb','Back'}
+-- hand shapes by number (poses use these): the names of hands/hand_pose.luau
+local HP = {'relaxed','open','flat','wave','fist','point','thumbsUp','pinch','gripSphere','gripHandle','carry','beckon','count1','count2','count3','count4','count5'}
+local PALMY: {[string]: number} = {open=1,flat=1,wave=1,beckon=1,count1=1,count2=1,count3=1,count4=1,count5=1}   -- shapes shown palm-first when she faces the viewer
 -- Poses: hand targets in body space (X left, Y up, Z forward, metres, relative to the standing pelvis); shapeR / shapeL
 -- 1 relaxed 2 palm 3 fist 4 point 5 thumb 6 back of hand; pelDY pelvis offset (m, up); lean / headR in radians (+ forward);
 -- dRu / dRup / dLu / dLup lift a foot (forward m, up m); ff 1 puts the far arm in front of the torso; bind 1 = the art's pose
@@ -51,13 +54,22 @@ local function init(self:St,context:Context):boolean
  for _,vw in ipairs(VIEWS) do
   local pre=vw.name..'_'
   for k,_ in pairs(vw.rest) do grab(pre..k) end
-  for _,k in ipairs({'opacity','pelvisX','pelvisY','front','back','blink','legAScale','legBScale','legAScaleInv','legBScaleInv','handAFlip','handBFlip','plA','plB','cAX','cAY','cBX','cBY'}) do grab(pre..k) end
+  for _,k in ipairs({'opacity','pelvisX','pelvisY','front','back','blink','legAScale','legBScale','legAScaleInv','legBScaleInv','plA','plB','cAX','cAY','cBX','cBY'}) do grab(pre..k) end
   for _,sd in ipairs({'A','B'}) do
    grab(pre..'hand'..sd..'X');grab(pre..'hand'..sd..'Y');grab(pre..'foot'..sd..'X');grab(pre..'foot'..sd..'Y');grab(pre..'foot'..sd..'Rot')
-   for _,sh in ipairs(SHAPES) do grab(pre..'hand'..sd..sh);grab(pre..'hand'..sd..'F'..sh) end
   end
  end
  self.face=Face.new(vm, {@FACEVIEWS@}, '')
+ for vi2,vw in ipairs(VIEWS) do                                   -- one painted hand per side (and the far arm's copy in front) per view
+  local pre=vw.name..'_'
+  for sdi,sd in ipairs({'A','B'}) do
+   for _,key in ipairs({sd,sd..'F'}) do
+    local h=HandPose.new((vi2*3+sdi)*1.37)
+    HandPose.attach(h,vm,pre..'hand'..key)
+    self.hands[pre..key]=h
+   end
+  end
+ end
  -- start in the Rest pose, not in the drawn A-pose
  local r0:{[string]:number}=POSES[1]
  for _,k in ipairs(CH) do self.cur[k]=r0[k] or 0;self.vel[k]=0 end
@@ -159,11 +171,6 @@ local function advance(self:St,seconds:number):boolean
  end
  local cur=self.cur
  -- hand shapes: a quick cross-fade (the shape weights are channels of their own)
- local shR=math.floor(pqd('shapeR',1)+.5)-1;local shL=math.floor(pqd('shapeL',1)+.5)-1
- for i,sh in ipairs(SHAPES) do
-  track('sR'..i,if shR==i-1 then 1 else 0,40,1.0);track('sL'..i,if shL==i-1 then 1 else 0,40,1.0)
- end
-
  -- blink for the views without the expression rig (front, side): every 2.2 to 5.4 s, about 0.2 s; the face rig has its own
  local blink=0.0
  do
@@ -289,7 +296,6 @@ local function advance(self:St,seconds:number):boolean
    put(pre..'foot'..sd..'X',if sd=='A' then fA_x else fB_x);put(pre..'foot'..sd..'Y',if sd=='A' then fA_y else fB_y)
    put(pre..'foot'..sd..'Rot',(if sd=='A' then c.footWA else c.footWB)-(if sd=='A' then fA_p else fB_p)*.85*(.15+.85*sn))
   end
-  local waveRot=if pi==1 then .42*math.sin(self.t*2*math.pi*2.3) else 0.0
   -- seen from the front or back a lifted leg gets shorter (its knee goes toward the camera) instead of bending sideways:
   -- the thigh bone is scaled along its length (the shin and foot inherit it: a boot squashed by up to 20 %, a swing foot that rises
   -- less than in profile, so the rest of the shortening is within what the knee can absorb)
@@ -308,33 +314,27 @@ local function advance(self:St,seconds:number):boolean
    vel+=(wn*wn*(target-x)-2*wn*vel)*dt;x+=vel*dt
    self.sx[pre..k]=x;self.sv[pre..k]=vel;return x
   end
-  for _,sd in ipairs({'A','B'}) do
-   local isA=(sd=='A')
-   local shx=(if isA then c.shAx0 else c.shBx0)+(pelX-c.pelx)
-   local shy=(if isA then c.shAy0 else c.shBy0)+(pelY-c.pely)
-   local dx=handX[sd]-shx;local dy=handY[sd]-shy
-   local cc=dx/math.max(1,math.sqrt(dx*dx+dy*dy))
-   local want=1.0
-   if isA and cc<-.38 then want=-1.0 end
-   if (not isA) and cc>.38 then want=-1.0 end
-   put(pre..'hand'..sd..'Flip',smoothTo('flip'..sd,want,32))
-   local hr=smoothTo('hrot'..sd,if sd==sideR then waveRot else 0.0,26)
-   put(pre..'hand'..sd..'Rot',(vw.rest['hand'..sd..'Rot'] or 0)+hr)
-  end
-  -- the far arm: behind the torso (back) or in front of it (front); hands: shape weight times that
+  -- hands (the painted articulated hand): the shape is a name from the pose, springs and cascade live in hand_pose.luau
   local farSlot=if vw.farB then 'B' else 'A'
   local ffv=math.max(math.clamp(cur.ff,0,1),c.ffbias)
   put(pre..'front',ffv);put(pre..'back',1-ffv)
+  local palmFace=smooth((cs+.1)/.4)                                -- 1 when she faces the viewer, 0 from the side and the back
   for _,sd in ipairs({'A','B'}) do
    local isRight=(sd==sideR)
-   for i,sh in ipairs(SHAPES) do
-    local wgt=math.clamp(if isRight then (cur['sR'..i] or 0) else (cur['sL'..i] or 0),0,1)
-    if sd==farSlot then
-     put(pre..'hand'..sd..sh,wgt*(1-ffv));put(pre..'hand'..sd..'F'..sh,wgt*ffv)
-    else
-     put(pre..'hand'..sd..sh,wgt)
+   local idx=math.floor(pqd(if isRight then 'shapeR' else 'shapeL',1)+.5)
+   local name=HP[math.clamp(idx,1,#HP)]
+   local grip=pqd(if isRight then 'gripR' else 'gripL',20)
+   local keys={sd}
+   if sd==farSlot then keys={sd,sd..'F'} end
+   local wrist=0.0
+   for _,key in ipairs(keys) do
+    local h=self.hands[pre..key]
+    if h then
+     HandPose.setShape(h,name,grip);HandPose.update(h,dt);HandPose.write(h);wrist=HandPose.wrist(h)
+     put(pre..'hand'..key..'PalmSide',smoothTo('palm'..key,(if (PALMY[name] or 0)>0 then palmFace else 0.0),12))
     end
    end
+   put(pre..'hand'..sd..'Rot',(vw.rest['hand'..sd..'Rot'] or 0)+wrist)
   end
   -- secondary motion: hair, skirt, apron, satchel, sleeves trail the body (damped springs)
   local function spring(k:string,target:number,wn:number,z:number)
@@ -400,5 +400,5 @@ return function(context:Context):Layout<St>
  local lat0=VIEWS[1].c.lat0
  return {context=context,vm=nil,n={},cur={},vel={},t=0,v=0,s=0,phi=.05,frozen=true,rw=0,gw=0,
   fR=newFoot(0,-lat0,.05),fL=newFoot(0,lat0,.55),yaw=43,yawV=0,flip=1,flipV=0,turnF=0,
-  face=nil,blinkT=0,blinkI=1,sx={},sv={},ready=false,prev={},init=init,advance=advance,draw=function(self:St,renderer:Renderer) end}
+  hands={},face=nil,blinkT=0,blinkI=1,sx={},sv={},ready=false,prev={},init=init,advance=advance,draw=function(self:St,renderer:Renderer) end}
 end

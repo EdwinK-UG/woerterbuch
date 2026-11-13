@@ -31,12 +31,12 @@ HERE = Path(__file__).resolve().parent
 SRC = HERE / 'source' / 'C01_right_hand_cutout_parts_4096x2048.png'
 OUT = HERE / 'pieces'
 INK, SKIN, SHADE = (0x3a, 0x1c, 0x0c), (0xfd, 0xc2, 0x8d), (0xf0, 0xa5, 0x6e)
-GROW = 14            # native px added to the outer outline (the sheet's line is about 10 px)
-RIG_S = 0.105        # rig pictures: the stage scale on a 2x screen (0.084 view x 0.62 stage x 2); see docs (Rive blurs minified images near 90 deg)
+GROW = 19            # native px added to the outer outline (the sheet's line is about 10 px)
+RIG_S = 0.112        # rig pictures: the stage scale on a 2x screen (0.084 view x 0.62 stage x 2); see docs (Rive blurs minified images near 90 deg)
 PADN = 30            # native px of transparent margin around every piece (3 rig px)
-FIN_SY = 1.12        # the rig lengthens the finger pieces to this (they are short against the palm)
+FIN_SY = 1.02        # the rig lengthens the finger pieces to this (they are short against the palm)
 FINGERS = ['index', 'middle', 'ring', 'pinky']
-FIN_SX = .74         # the rig narrows the finger pieces to this (the sheet's fingers are too wide for its palm)
+FIN_SX = .93         # the rig narrows the finger pieces to this (the sheet's fingers are too wide for its palm)
 ROOT_DEPTH = .80     # the rig puts a base piece's root end this many (narrowed) finger widths below its knuckle top
 
 
@@ -144,11 +144,11 @@ def remove_wrist_line(rgba, inside):
         reg[top:, x, :3] = SKIN if not color_mask(reg[max(0, top - 4), x, :3].astype(np.uint8)[None], SHADE)[0] else SHADE
     # cut off everything below the inner edge of the old line (the picture ends with skin, no ink)
     ys = [np.nonzero(sub[:, x])[0].min() for x in range(sub.shape[1]) if sub[:, x].any()]
-    cut = yb - band + int(np.median(ys)) + 2
+    cut = yb - band + int(np.median(ys)) - 5
     rgba[cut:, :, 3] = 0
     # a short fade at the cut, so the hand blends into the forearm drawn under it
-    for i in range(1, 7):
-        rgba[cut - i, x0 + side - 4:x1 - side + 5, 3] *= min(1.0, i / 6.0)
+    for i in range(1, 26):
+        rgba[cut - i, x0 + side - 4:x1 - side + 5, 3] *= min(1.0, (i / 25.0) ** 1.5)
     return {'wristCut': cut, 'wristX': [int(x0), int(x1)]}
 
 
@@ -322,3 +322,13 @@ def check_sheet(meta):
 
 if __name__ == '__main__':
     main()
+
+# ---- match the arms: the sheet's skin (#FDC28D) is lighter than the arm pieces cut from the pack's view picture (rendered about 255 190 134),
+# so a hand next to its forearm showed as a lighter patch with a light line at the wrist; tint every picture toward the arm's skin
+ARM_SKIN = np.array([254.0, 190.0, 134.0]); TINT = ARM_SKIN / np.array(SKIN, float)
+for sub in ('native', 'rig'):
+    for p in sorted((OUT / sub).glob('*.png')):
+        im = np.asarray(Image.open(p).convert('RGBA')).astype(np.float32)
+        im[..., :3] = np.clip(im[..., :3] * TINT[None, None, :], 0, 255)
+        Image.fromarray(im.astype(np.uint8), 'RGBA').save(p)
+print('tinted to the arm skin', TINT.round(3))

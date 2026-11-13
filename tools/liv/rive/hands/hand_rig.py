@@ -42,7 +42,8 @@ HERE = Path(__file__).resolve().parent
 P = json.loads((HERE / 'pieces' / 'pieces.json').read_text())
 RIG_S = P['_meta']['rigScale']
 
-ART_S = .084            # sheet px -> view px (a whole hand, wrist to middle tip, about 115 view px)
+WRIST_BACK = 9.0       # view px: the hand starts this far back into the forearm
+ART_S = .09            # sheet px -> view px (a whole hand, wrist to middle tip, about 115 view px)
 FIN_SX, FIN_SY = P['_meta']['fingerScaleX'], P['_meta']['fingerScaleY'] # finger pieces: narrower than drawn (the sheet's fingers are too wide for its palm)
 THUMB_S = .70           # thumb pieces (the sheet's thumb base is a cupcake)
 ROOT_DEPTH = P['_meta']['rootDepth']  # the base piece's root END sits this many (scaled) finger widths below the knuckle bump's top
@@ -207,7 +208,7 @@ def emit_hand(el, parent, side, scale, props, pre=''):
         return el('Image', par, name=f'{pre}{prefix} {name}', assetId=asset(f'{rel}/{piece}.png'), originX=0, originY=0, samplerWrapX=1, samplerWrapY=1,
                   x=round(-px * sx, 3), y=round(-py * sy, 3), scaleX=round(sx / bx, 5), scaleY=round(sy / by, 5))
 
-    hand = node(parent, 'hand', scaleX=scale, scaleY=scale)
+    hand = node(parent, 'hand', x=-WRIST_BACK, scaleX=scale, scaleY=scale)       # the stump overlaps the forearm's end (no gap at the wrist)
     mirror = node(hand, 'mirror', scaleY=base['flip']); bind(mirror, 17, 'flip')
     art = node(mirror, 'art', rotation=math.pi / 2, scaleX=ART_S, scaleY=ART_S)    # sheet up -> along the hand bone
 

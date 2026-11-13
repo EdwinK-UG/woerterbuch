@@ -21,6 +21,7 @@ from PIL import Image
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE / 'face')); from face_tq import emit_face     # the face and expression rig (face/, from the pack's pixels)
+sys.path.insert(0, str(HERE / 'hands')); import hand_rig   # the painted articulated hand (hands/, from the generated parts sheet)
 import os
 OUTD = HERE / os.environ.get('LIV_OUT', 'liv'); OUTD.mkdir(exist_ok=True)      # LIV_OUT=liv-scratch builds an experiment next to the real project
 PARTS = json.loads((HERE / 'parts/parts.json').read_text())
@@ -231,18 +232,21 @@ def emit_view(V):
     arm_up = {sd: rigid(f'Liv upper arm {sd}', A(f'upper{sd}'), T[sd]['upper'], f'upper{sd}') for sd in SIDES}
     arm_fo = {sd: rigid(f'Liv forearm {sd}', A(f'fore{sd}'), T[sd]['fore'], f'fore{sd}') for sd in SIDES}
 
-    # hands: six poses as sprites on the hand bone, one visible at a time (opacity per pose)
-    HAND_SCALE = 996 / PARTS['hand_relaxed']['ppm'] * 1.1
-    HAND_POSES = ['relaxed', 'palm', 'fist', 'point', 'thumb', 'back']
-    def make_hand(sd, pose, tag=''):
-        a = T['hand'][sd] if 'hand' in T else T[sd]; wr = np.array(a['wrist']); u = np.array(a['dir']); bone_ang = math.atan2(u[1], u[0])
-        hp = PARTS['hand_' + pose]; w_, h_ = hp['w'], hp['h']; ax, ay = hp['ax'], hp['ay']
-        rot = bone_ang - math.atan2(hp['fwd'][1], hp['fwd'][0]); c, s_ = math.cos(rot), math.sin(rot)
-        flipv = -1 if sd == 'B' else 1                            # the drawn hands are one hand: mirror the other
-        def P(lx, ly): lx, ly = (lx - ax) * HAND_SCALE, ((ly - ay) * HAND_SCALE) * flipv; return (wr[0] - 8 * u[0] + lx * c - ly * s_, wr[1] - 8 * u[1] + lx * s_ + ly * c)
-        return mesh(f'Liv hand {sd} {pose}{tag}', f'../parts/hand_{pose}.png', [P(0, 0), P(w_, 0), P(w_, h_), P(0, h_)], [(0, 0), (1, 0), (1, 1), (0, 1)], [(0, 1, 2), (0, 2, 3)], [f'hand{sd}'], lambda *_: [(0, 1)])
-    hand_imgs = {sd: {p: make_hand(sd, p) for p in HAND_POSES} for sd in SIDES}
-    far_hand_front = {p: make_hand(far, p, ' (front)') for p in HAND_POSES} if far in SIDES else {}
+    # hands: the painted articulated hand (hands/hand_rig.py), one mount per side that follows the hand bone in world space;
+    # the far arm has a second mount for its copy in front of the torso
+    def bind_c(t, k, name, conv):                                # a bind with an optional converter
+        a_ = {'sourcePathIds': '0:40-' + props[name], 'propertyKey': k}
+        if conv: a_['converterId'] = conv
+        el('DataBindContext', t, **a_)
+    def hand_mount(sd, tag=''):
+        m = el('Node', g, name=f'Liv hand {sd}{tag} mount')
+        el('TransformConstraint', m, targetId=bones[f'hand{sd}'].get('id'), sourceSpaceValue='world', destSpaceValue='world', strength=1, name=f'follow hand {sd}{tag}')
+        side = 'R' if (sd == 'A') == A_is_R else 'L'
+        hp = {'prefix': f'hand{sd}{tag}', 'root': root, 'asset': asset, 'pieces': '../hands/pieces/rig', 'bind': bind_c, 'declare': prop}
+        hand_rig.emit_hand(el, m, side, 1.0, hp, pre=pre)
+        return m
+    hand_mounts = {sd: hand_mount(sd) for sd in SIDES}
+    far_hand_front = hand_mount(far, 'F') if far in SIDES else None
     far_up_front = rigid(f'Liv upper arm {far} (front)', A(f'upper{far}'), T[far]['upper'], f'upper{far}') if far in SIDES else None
     far_fo_front = rigid(f'Liv forearm {far} (front)', A(f'fore{far}'), T[far]['fore'], f'fore{far}') if far in SIDES else None
 
@@ -304,12 +308,12 @@ def emit_view(V):
     # ---------------------------------------------------------------- draw order (first child = on top)
     # the near arm is in front of everything (and of the head when raised); the far arm is behind the torso, with a second copy in
     # front faded in when it swings forward or up; the far arm's back copy is at the very bottom
-    def arm_group(sd, up, fo, hands): return [*[hands[p] for p in HAND_POSES], fo, *( [sleeves[sd]] if sd in sleeves else []), *( [caps[sd]] if sd in caps else []), up]
-    order = [*(arm_group(near, arm_up[near], arm_fo[near], hand_imgs[near]) if near in SIDES else []), *lids, head,
+    def arm_group(sd, up, fo, hand): return [hand, fo, *( [sleeves[sd]] if sd in sleeves else []), *( [caps[sd]] if sd in caps else []), up]
+    order = [*(arm_group(near, arm_up[near], arm_fo[near], hand_mounts[near]) if near in SIDES else []), *lids, head,
              *(arm_group(far, far_up_front, far_fo_front, far_hand_front) if far in SIDES else []),
              *[x for x in (satchel, strap) if x is not None], *bow_imgs, torso, *[x for x in (apron,) if x is not None], skirt, *[x for x in (slip, chemise) if x is not None],
              boots['A'], socks['A'], shins['A'], thighs['A'], boots['B'], socks['B'], shins['B'], thighs['B'],
-             *([*[hand_imgs[far][p] for p in HAND_POSES], arm_fo[far], arm_up[far]] if far in SIDES else [])]
+             *([hand_mounts[far], arm_fo[far], arm_up[far]] if far in SIDES else [])]
     for im in order:
         g.remove(im); g.append(im)
 
@@ -324,19 +328,16 @@ def emit_view(V):
         rest[f'hand{sd}Rot'] = rot_of(f'hand{sd}'); vprop(f'hand{sd}Rot', rest[f'hand{sd}Rot']); vbind(bones[f'hand{sd}'], 15, f'hand{sd}Rot')
         for h in ('1', '2'):
             rest[f'slv{sd}{h}Rot'] = 0.0; vprop(f'slv{sd}{h}Rot', 0.0); vbind(bones[f'slv{sd}{h}'], 15, f'slv{sd}{h}Rot')
-        vprop(f'hand{sd}Flip', 1.0); vbind(bones[f'hand{sd}'], 17, f'hand{sd}Flip')
         vprop(f'hand{sd}X', T[sd]['wrist'][0]); vprop(f'hand{sd}Y', T[sd]['wrist'][1]); vbind(targets['hand' + sd], 13, f'hand{sd}X'); vbind(targets['hand' + sd], 14, f'hand{sd}Y')
-        for p in HAND_POSES:
-            vprop(f'hand{sd}{p.capitalize()}', 1.0 if p == 'relaxed' else 0.0); vbind(hand_imgs[sd][p], 18, f'hand{sd}{p.capitalize()}')
     for sd in 'AB':
         vprop(f'foot{sd}X', T['ankle' + sd][0]); vprop(f'foot{sd}Y', T['ankle' + sd][1]); vprop(f'foot{sd}Rot', FOOT_W[sd])
         vbind(targets['foot' + sd], 13, f'foot{sd}X'); vbind(targets['foot' + sd], 14, f'foot{sd}Y'); vbind(targets['foot' + sd], 15, f'foot{sd}Rot')
     for sd in 'AB':                                              # leg foreshortening (seen from the front or back a lifted leg gets shorter, its knee goes toward the camera)
         vprop(f'leg{sd}Scale', 1.0); vbind(bones[f'thigh{sd}'], 16, f'leg{sd}Scale')     # the shin and foot inherit the thigh's scale
     if far in SIDES:
-        for p in HAND_POSES: vprop(f'hand{far}F{p.capitalize()}', 0.0); vbind(far_hand_front[p], 18, f'hand{far}F{p.capitalize()}')
         vprop('front', 0.0); vprop('back', 1.0)
-        vbind(far_up_front, 18, 'front'); vbind(far_fo_front, 18, 'front'); vbind(arm_up[far], 18, 'back'); vbind(arm_fo[far], 18, 'back')
+        vbind(far_up_front, 18, 'front'); vbind(far_fo_front, 18, 'front'); vbind(far_hand_front, 18, 'front')
+        vbind(arm_up[far], 18, 'back'); vbind(arm_fo[far], 18, 'back'); vbind(hand_mounts[far], 18, 'back')
     if face:
         for n, d in face['props'].items(): vprop(n, d)
         for e_, key, n in face['bindings']: vbind(e_, key, n)
@@ -381,6 +382,8 @@ ab.remove(floor); ab.insert(0, floor); ab.remove(shadow); ab.insert(1, shadow)
 ins = el('ViewModelInstance', vm, name='Default', exports=True, id='0:41')
 for name, value in defaults.items(): el('ViewModelInstanceNumber', ins, viewModelPropertyId=props[name], propertyValue=value)
 import shutil; shutil.copy(HERE / 'face' / 'face.luau', OUTD / 'face.luau')
+shutil.copy(HERE / 'hands' / 'hand_pose.luau', OUTD / 'hand_pose.luau')
+el('ScriptAsset', root, file='hand_pose.luau', name='hand_pose', isModule=True, id='0:79')
 el('ScriptAsset', root, file='face.luau', name='face', isModule=True, id='0:77')
 for i, V in enumerate(FACE_VIEWS): el('ScriptAsset', root, file=f'face_cfg_{V}.luau', name=f'face_cfg_{V}', isModule=True, id=f'0:{70 + i}')
 el('ScriptAsset', root, file='liv.luau', name='liv', id='0:80')
