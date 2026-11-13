@@ -46,9 +46,16 @@ def el(t, parent=None, **a):
 root = E.Element('Rive', version='1', kind='fragment')
 assets = {}                                                   # relative file -> ImageAsset id
 AID = [100]
+WEBP = os.environ.get('LIV_WEBP', '1') == '1'      # lossy WebP copies of the art (a quarter of the size, same look at q94) in <project>/art/; LIV_WEBP=0 uses the PNGs
 def asset(rel):
     if rel not in assets:
-        a = el('ImageAsset', root, file=rel, name=Path(rel).stem, id=f'0:{AID[0]}'); AID[0] += 1
+        use = rel
+        if WEBP and rel.endswith('.png') and 'strap' not in rel:
+            src = (OUTD / rel).resolve(); (OUTD / 'art').mkdir(exist_ok=True)
+            name = '_'.join(src.parts[-2:]).replace('.png', '.webp'); dst = OUTD / 'art' / name
+            Image.open(src).convert('RGBA').save(dst, 'WEBP', quality=94, method=6, exact=True)
+            use = f'art/{name}'
+        a = el('ImageAsset', root, file=use, name=Path(rel).stem, id=f'0:{AID[0]}'); AID[0] += 1
         assets[rel] = a.get('id')
     return assets[rel]
 def artfile(V, name):
@@ -435,6 +442,6 @@ luau = (HERE / 'liv.tmpl.luau').read_text().replace('@VIEWS@', view_lines).repla
 E.indent(root)
 (OUTD / 'scene.rml').write_text(E.tostring(root, encoding='unicode'))
 (OUTD / 'rive.yaml').write_text('name: Liv\nlogs:\n  file: build/rive.log\n  problems: build/problems.log\n')
-(OUTD / '.gitignore').write_text('build/\nweb-check/*.riv\n')
+(OUTD / '.gitignore').write_text('build/\nweb-check/*.riv\nart/\n')
 json.dump({'views': VIEWS, 'ctrl': CTRL, 'props': len(props)}, open(OUTD / 'defaults.json', 'w'), indent=1)
 print('views', VIEWS, 'view-model numbers', len(props))
