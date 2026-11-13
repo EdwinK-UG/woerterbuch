@@ -26,6 +26,7 @@ export class Face {
   constructor(vrm) {
     this.em = vrm.expressionManager; this.names = new Set(this.em ? Object.keys(this.em.expressionMap) : []);
     this.cur = {}; this.expr = 'happy'; this.amount = 1; this.override = null;
+    if (this.em) for (const n of this.names) this.em.setValue(n, 0);   // a new face starts clean (a reset must not leave the last expression on)
     this.t = 0; this.blinkT = -1; this.blinkI = 0; this.blinkAt = 1.4; this.winkT = -1;
     this.sacI = 0; this.sacT = 0; this.gx = 0; this.gy = 0; this.sx = 0; this.sy = 0; this.idle = true;
   }
