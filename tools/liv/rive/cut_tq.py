@@ -125,18 +125,52 @@ def make_cap(side):
     # The top of the sleeve, from the shoulder joint a little way down the arm, faded out: it stays sewn to the torso when
     # the arm goes up (drawn behind the sleeve, so at rest it is hidden by the same pixels)
     a = info[side]; sh = np.array(a['sh']); u = np.array(a['dir'])
-    p = PARTS['tq_sleeve' + side]; im = np.asarray(Image.open(HERE / f'parts/tq_sleeve{side}.png').convert('RGBA')).astype(np.float32)
+    p = PARTS['tq_sleeve' + side]; src = OUT / f'tq_sleeve{side}_c.png'   # the re-toned sleeve (cut_cloth.py) if it has been made
+    im = np.asarray(Image.open(src if src.exists() else HERE / f'parts/tq_sleeve{side}.png').convert('RGBA')).astype(np.float32)
     yy_, xx_ = np.mgrid[0:im.shape[0], 0:im.shape[1]]
     t = (xx_ + p['x'] - sh[0]) * u[0] + (yy_ + p['y'] - sh[1]) * u[1]
     im[..., 3] *= np.clip((30 - t) / 22, 0, 1)
     Image.fromarray(np.clip(im, 0, 255).astype(np.uint8), 'RGBA').save(OUT / f'tq_cap{side}.png')
 make_cap('A'); make_cap('B')
+def make_leg_pieces(side):
+    """Thigh and shin as two rigid pieces with a round knee, the way the arms have an elbow disc: the thigh ends in a
+    half disc with an ink arc, the shin starts with a plain skin disc drawn over it. No skinned bend, so no pinched
+    knee. The skin comes from the strip cut above (colours across the leg)."""
+    prof = np.asarray(Image.open(OUT / f'tq_leg{side}.png').convert('RGBA'))[0, :, :3].astype(np.float32)
+    w = len(prof); hw = w / 2.0; ink = 3.2
+    inner = prof[5:w - 5]
+    def col(sv):                                           # skin colour at lateral offset sv (-hw..hw)
+        x = np.clip((sv + hw - 5) / max(1, w - 10) * (len(inner) - 1), 0, len(inner) - 1)
+        return np.stack([np.interp(x, np.arange(len(inner)), inner[:, c]) for c in range(3)], -1)
+    hip, knee, ank = np.array(info['hip' + side], float), np.array(info['knee' + side], float), np.array(info['ankle' + side], float)
+    def piece(name, top_ext, length, cap_top):
+        # rows: t from -top_ext (above the bone's start) down to length (+ hw for the round end of the thigh)
+        rows = int(np.ceil(top_ext + length + (0 if cap_top else hw))) + 1
+        rr, cc = np.mgrid[0:rows, 0:int(round(w))].astype(np.float32); tt = rr - top_ext; ss = cc + .5 - hw
+        if cap_top:       # shin: the tube from the knee down, a plain skin disc above the knee centre
+            sd_tube = np.abs(ss) - hw                          # the sides only: the top is the cap, the bottom is under the sock
+            sd_cap = np.hypot(ss, np.minimum(tt, 0)) - (hw - 3.6)
+            sd = np.where(tt < 0, sd_cap, sd_tube)
+        else:             # thigh: the tube to the knee centre, then a half disc
+            sd = np.where(tt <= length, np.maximum(np.abs(ss) - hw, -tt - 1e3), np.hypot(ss, tt - length) - hw)
+        a = np.clip(.5 - sd, 0, 1)
+        skin = col(ss)
+        is_ink = (sd > -ink)
+        if cap_top: is_ink = is_ink & (tt >= 0)
+        rgb = np.where(is_ink[..., None], INK[None, None, :] * .92 + skin * .08, skin)
+        Image.fromarray(np.dstack([rgb, a * 255]).clip(0, 255).astype(np.uint8), 'RGBA').save(OUT / f'{name}.png')
+        return [int(rows), int(round(w))]
+    lt = float(np.linalg.norm(knee - hip)); ls = float(np.linalg.norm(ank - knee)) + 10
+    r1 = piece(f'tq_thigh{side}', 34, lt, False); top2 = int(np.ceil(hw)); r2 = piece(f'tq_shin{side}', top2, ls, True)
+    return dict(thigh=dict(rows=r1[0], cols=r1[1], top_ext=34, length=lt), shin=dict(rows=r2[0], cols=r2[1], top_ext=top2, length=ls), hw=hw)
+
 # joints: hips under the skirt, knees between hip and ankle, ankles from the pack's measurements
 info['pelvis'] = [510, 912]
 info['hipA'] = [452, 930]; info['hipB'] = [566, 930]
 info['ankleA'] = META['A']['ankle']; info['ankleB'] = META['B']['ankle']
 info['kneeA'] = [424, 1128]; info['kneeB'] = [571, 1120]
 info['neck'] = META['neck']
+info['legpiece'] = {sd: make_leg_pieces(sd) for sd in 'AB'}
 info['_ppm'] = 996
 # satchel strap: the canvas rig strokes it 30 px wide in the strap colour with an ink edge
 strap = np.zeros((8, 30, 4), np.float32)

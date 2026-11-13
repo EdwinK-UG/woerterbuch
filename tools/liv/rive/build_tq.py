@@ -41,10 +41,10 @@ assets = {}
 def asset(key, rel, ident):
     assets[key] = el('ImageAsset', root, file=rel, name=key, id=f'0:{ident}').get('id')
 aid = 100
-for n in ['tq_skirt', 'tq_torso', 'tq_head', 'tq_sleeveA', 'tq_sleeveB', 'tq_sockA', 'tq_bootA', 'tq_sockB', 'tq_bootB',
-          'tq_blink0', 'tq_blink1', 'tq_brow0', 'tq_mouth']:
+for n in ['tq_head', 'tq_bootA', 'tq_bootB', 'tq_blink0', 'tq_blink1', 'tq_brow0', 'tq_mouth']:
     asset(n, f'../parts/{n}.png', aid); aid += 1
-for n in ['tq_upperA', 'tq_foreA', 'tq_upperB', 'tq_foreB', 'tq_legA', 'tq_legB', 'tq_capA', 'tq_capB', 'tq_strap']:
+for n in ['tq_upperA', 'tq_foreA', 'tq_upperB', 'tq_foreB', 'tq_thighA', 'tq_shinA', 'tq_thighB', 'tq_shinB', 'tq_capA', 'tq_capB', 'tq_strap',
+          'tq_torso_c', 'tq_sleeveA_c', 'tq_sleeveB_c', 'tq_sockA_c', 'tq_sockB_c', 'tq_apron', 'tq_skirtred', 'tq_slip', 'tq_chemise']:   # cloth: re-toned by cut_cloth.py
     asset(n, f'../tq/{n}.png', aid); aid += 1
 for n in ['relaxed', 'palm', 'fist', 'point', 'thumb', 'back']:
     asset('hand_' + n, f'../parts/hand_{n}.png', aid); aid += 1
@@ -106,6 +106,8 @@ for sd in SIDES:
 # secondary motion: hair (child of the head), skirt (child of the pelvis), satchel on its strap (child of the pelvis)
 bone('hair', (452, 232), (440, 420), 'head')
 bone('skirt', (510, 770), (510, 1090), 'pelvis')
+bone('skirtL', (420, 770), (330, 1090), 'pelvis'); bone('skirtR', (600, 770), (700, 1090), 'pelvis')       # the hem flutters in three parts
+bone('apron1', (510, 748), (510, 905), 'pelvis'); bone('apron2', (510, 905), (510, 1072), 'apron1', False)  # the apron hangs from the waistband and bends
 BAG_B = (438, 800)                                      # where the strap ends (the pack's bag point for this view)
 bone('satchel', (BAG_B[0], BAG_B[1] + 2), (BAG_B[0], BAG_B[1] + 110), 'pelvis')
 # IK targets: nodes in character space, driven by the controller (view model)
@@ -182,7 +184,7 @@ def sleeve(sd):
         if k <= 1: return [(3, 1 - k), (1, k)]
         if k <= 2: return [(1, 2 - k), (2, k - 1)]
         return [(2, 3 - k), (0, k - 2)]
-    return grid(f'Liv sleeve {sd}', 'tq_sleeve' + sd, bx, 10, 10, [f'upper{sd}', f'slv{sd}1', f'slv{sd}2', 'spine'], wts)
+    return grid(f'Liv sleeve {sd}', 'tq_sleeve' + sd + '_c', bx, 10, 10, [f'upper{sd}', f'slv{sd}1', f'slv{sd}2', 'spine'], wts)
 sleeves = {sd: sleeve(sd) for sd in SIDES}
 caps = {sd: rigid(f'Liv shoulder cap {sd}', 'tq_cap' + sd, box_of('tq_sleeve' + sd), 'spine') for sd in SIDES}
 
@@ -213,16 +215,25 @@ hand_imgs = {sd: {p: make_hand(sd, p) for p in HAND_POSES} for sd in SIDES}
 def torso_w(px, py):
     t = smooth((py - 520) / 240)                                # chest follows the spine, waist the pelvis
     return [(0, t), (1, 1 - t)]
-torso = grid('Liv torso', 'tq_torso', box_of('tq_torso'), 6, 10, ['spine', 'pelvis'], lambda px, py: [(0, 1 - smooth((py - 520) / 240)), (1, smooth((py - 520) / 240))])
+def torso_ws(px, py):
+    t = smooth((py - 520) / 240)                                # chest follows the spine, waist the pelvis
+    return [(0, 1 - t), (1, t)]
+torso = grid('Liv torso', 'tq_torso_c', box_of('tq_torso'), 6, 10, ['spine', 'pelvis'], torso_ws)
+chemise = grid('Liv chemise (base layer)', 'tq_chemise', box_of('tq_torso'), 4, 6, ['spine', 'pelvis'], torso_ws)   # plain linen under the bodice, never skin
+SKIRT_INF = ['pelvis', 'thighA', 'thighB', 'skirtL', 'skirt', 'skirtR']
 def skirt_w(px, py):
-    t = smooth((py - 760) / 330)                                # waist on the pelvis, hem swings with the thighs a little
-    side = cl((px - 360) / 300)
-    return [(0, 1 - t * .45), (1, t * .45 * (1 - side)), (2, t * .45 * side)]
-def skirt_w(px, py):
-    t = smooth((py - 760) / 330)                                # waist on the pelvis, hem swings with the thighs and trails a little
-    side = cl((px - 360) / 300)
-    return [(0, 1 - t * .6), (1, t * .18 * (1 - side)), (2, t * .18 * side), (3, t * .24)]
-skirt = grid('Liv skirt', 'tq_skirt', box_of('tq_skirt'), 10, 10, ['pelvis', 'thighA', 'thighB', 'skirt'], skirt_w)
+    # at most four bones per vertex: pelvis, one or two thighs, one or two hem bones; every blend is continuous in x
+    t = smooth((py - 760) / 330)                                # waist on the pelvis, the hem swings with the thighs and flutters
+    s = cl((px - 360) / 300); sB = smooth((s - .25) / .5); sA = 1 - sB
+    wl = cl((435 - px) / 150); wr = cl((px - 585) / 150); wc = 1 - wl - wr
+    return [(0, 1 - t * .6), (1, t * .18 * sA), (2, t * .18 * sB), (3, t * .24 * wl), (4, t * .24 * wc), (5, t * .24 * wr)]
+skirt = grid('Liv skirt (red)', 'tq_skirtred', box_of('tq_skirt'), 10, 10, SKIRT_INF, skirt_w)
+slip = grid('Liv petticoat (base layer)', 'tq_slip', box_of('tq_skirt'), 8, 8, SKIRT_INF, skirt_w)              # plain linen under the skirt, never skin
+def apron_w(px, py):
+    u = smooth((py - 760) / 70)                                 # the waistband is sewn to the pelvis, the rest hangs
+    v = smooth((py - 860) / 190)
+    return [(0, 1 - u), (1, u * (1 - v)), (2, u * v)]
+apron = grid('Liv apron', 'tq_apron', box_of('tq_skirt'), 12, 12, ['pelvis', 'apron1', 'apron2'], apron_w)
 # satchel and strap
 SAT_S = 996 / PARTS['satchel']['ppm']
 sx0, sy0 = BAG_B[0] - PARTS['satchel']['ax'] * SAT_S, BAG_B[1] - PARTS['satchel']['ay'] * SAT_S
@@ -243,26 +254,20 @@ def strap_mesh():
     return mesh('Liv satchel strap', 'tq_strap', pts, uvs, tris, ['spine', 'satchel'], wts)
 strap = strap_mesh()
 
-# legs: a skin tube hip -> knee -> ankle (strip of leg skin stretched along it), then sock and boot on the foot
-def leg_tube(sd):
-    hip, knee, ank = np.array(T['hip' + sd]), np.array(T['knee' + sd]), np.array(T['ankle' + sd])
-    x0, x1 = T['leg' + sd]['x0'], T['leg' + sd]['x1']; half0 = (x1 - x0) / 2
-    pts, uvs, tris = [], [], []
-    rows = 14
-    for r in range(rows + 1):
-        t = r / rows
-        c = hip + (knee - hip) * (t / .5) if t <= .5 else knee + (ank - knee) * ((t - .5) / .5)
-        w_ = half0 * (1.0 - .18 * t)
-        pts += [(c[0] - w_, c[1]), (c[0] + w_, c[1])]; uvs += [(0, t), (1, t)]
-        if r < rows:
-            i = r * 2; tris += [(i, i + 1, i + 3), (i, i + 3, i + 2)]
-    def wts(px, py):
-        d_knee = (py - knee[1])
-        t = smooth((d_knee + 40) / 80)
-        return [(0, 1 - t), (1, t)]
-    return mesh(f'Liv leg {sd}', 'tq_leg' + sd, pts, uvs, tris, [f'thigh{sd}', f'shin{sd}'], wts)
-legs = {sd: leg_tube(sd) for sd in SIDES}
-socks = {sd: rigid(f'Liv sock {sd}', 'tq_sock' + sd, box_of('tq_sock' + sd), f'shin{sd}') for sd in SIDES}
+# legs: thigh and shin are two rigid skin pieces with a round knee (a half disc with an ink arc on the thigh, a plain skin
+# disc on the shin drawn over it), like the arms' elbows: no pinched, skinned bend. cut_tq.py draws them from the leg strip.
+def leg_pieces(sd):
+    lp = T['legpiece'][sd]; hip, knee, ank = np.array(T['hip' + sd], float), np.array(T['knee' + sd], float), np.array(T['ankle' + sd], float)
+    def quad(name, key, org, to, spec, bone_name):
+        u = (to - org) / np.linalg.norm(to - org); n = np.array([u[1], -u[0]]); hw = spec['cols'] / 2.0
+        t0, t1 = -spec['top_ext'], spec['rows'] - spec['top_ext']
+        P = lambda t, s_: tuple(org + u * t + n * s_)
+        return mesh(name, key, [P(t0, -hw), P(t0, hw), P(t1, hw), P(t1, -hw)], [(0, 0), (1, 0), (1, 1), (0, 1)], [(0, 1, 2), (0, 2, 3)], [bone_name], lambda *_: [(0, 1)])
+    return (quad(f'Liv thigh {sd}', f'tq_thigh{sd}', hip, knee, lp['thigh'], f'thigh{sd}'),
+            quad(f'Liv shin {sd}', f'tq_shin{sd}', knee, ank, lp['shin'], f'shin{sd}'))
+thighs, shins = {}, {}
+for sd in SIDES: thighs[sd], shins[sd] = leg_pieces(sd)
+socks = {sd: rigid(f'Liv sock {sd}', 'tq_sock' + sd + '_c', box_of('tq_sock' + sd), f'shin{sd}') for sd in SIDES}
 boots = {sd: rigid(f'Liv boot {sd}', 'tq_boot' + sd, box_of('tq_boot' + sd), f'foot{sd}') for sd in SIDES}
 
 # ---------------------------------------------------------------- draw order (first child = on top)
@@ -277,8 +282,8 @@ bf_up, bf_fo = dup_arm('B')
 hands_front_B = {p: make_hand('B', p, ' (front)') for p in HAND_POSES}
 order = [*[hand_imgs['A'][p] for p in HAND_POSES], arm_imgs['A']['fore'], sleeves['A'], caps['A'], arm_imgs['A']['upper'], *lids, head,   # her near arm is in front of the head when it goes up
          *[hands_front_B[p] for p in HAND_POSES], bf_fo, sleeves['B'], caps['B'], bf_up,
-         satchel, strap, torso, skirt,
-         boots['A'], socks['A'], legs['A'], boots['B'], socks['B'], legs['B'],
+         satchel, strap, torso, apron, skirt, slip, chemise,
+         boots['A'], socks['A'], shins['A'], thighs['A'], boots['B'], socks['B'], shins['B'], thighs['B'],
          *[hand_imgs['B'][p] for p in HAND_POSES], arm_imgs['B']['fore'], arm_imgs['B']['upper']]
 for im in order:
     char.remove(im); char.append(im)
@@ -290,7 +295,7 @@ defaults = {'pelvisX': pel[0], 'pelvisY': pel[1], 'pose': 0, 'rate': 1.0, 'front
             'plA': 1, 'plB': 1, 'cAX': 0, 'cAY': 0, 'cBX': 0, 'cBY': 0}
 for i in range(8): defaults[f'mX{i}'] = 0.0; defaults[f'mY{i}'] = 0.0
 for p in HAND_POSES: defaults['handBF' + p.capitalize()] = 0.0
-for k in ['spine', 'head', 'upperA', 'upperB', 'foreA', 'foreB', 'handA', 'handB', 'hair', 'skirt', 'satchel']: defaults[k + 'Rot'] = rot_of(k)
+for k in ['spine', 'head', 'upperA', 'upperB', 'foreA', 'foreB', 'handA', 'handB', 'hair', 'skirt', 'skirtL', 'skirtR', 'apron1', 'apron2', 'satchel', 'slvA1', 'slvA2', 'slvB1', 'slvB2']: defaults[k + 'Rot'] = rot_of(k)
 for sd in SIDES:
     defaults[f'hand{sd}X'], defaults[f'hand{sd}Y'] = T[sd]['wrist']
     defaults[f'foot{sd}X'], defaults[f'foot{sd}Y'] = T['ankle' + sd]
@@ -304,7 +309,7 @@ ins = el('ViewModelInstance', vm, name='Default', exports=True, id='0:41')
 for name, value in defaults.items(): el('ViewModelInstanceNumber', ins, viewModelPropertyId=props[name], propertyValue=value)
 def bindp(target, key, name): el('DataBindContext', target, sourcePathIds='0:40-' + props[name], propertyKey=key)
 bindp(bones['pelvis'], 90, 'pelvisX'); bindp(bones['pelvis'], 91, 'pelvisY')
-for k in ['spine', 'head', 'handA', 'handB', 'hair', 'skirt', 'satchel']: bindp(bones[k], 15, k + 'Rot')
+for k in ['spine', 'head', 'handA', 'handB', 'hair', 'skirt', 'skirtL', 'skirtR', 'apron1', 'apron2', 'satchel', 'slvA1', 'slvA2', 'slvB1', 'slvB2']: bindp(bones[k], 15, k + 'Rot')
 for lid in lids: bindp(lid, 18, 'blink')
 bindp(bones['handA'], 17, 'handAFlip'); bindp(bones['handB'], 17, 'handBFlip')       # a hand turns over (mirrors) so its fingers curl the way gravity wants
 for sd in SIDES:
@@ -404,7 +409,7 @@ for sd in SIDES:
 E.indent(root)
 (OUTD / 'scene.rml').write_text(E.tostring(root, encoding='unicode'))
 (OUTD / 'rive.yaml').write_text('name: Liv-TQ\nlogs:\n  file: build/rive.log\n  problems: build/problems.log\n')
-(OUTD / '.gitignore').write_text('build/\n')
+(OUTD / '.gitignore').write_text('build/\nweb-check/*.riv\n')
 (OUTD / 'rig-bones.json').write_text(json.dumps({k: {'start': world[k][0], 'end': world[k][1], 'world_angle': world[k][2], 'rotation': float(bones[k].get('rotation'))} for k in bones}, indent=1))
 json.dump({'defaults': defaults, 'T': T, 'poses': POSES}, open(OUTD / 'defaults.json', 'w'), indent=1)
 print('bones', len(bones), 'images', len(order))

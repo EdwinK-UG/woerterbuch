@@ -295,8 +295,29 @@ local function advance(self:St,seconds:number):boolean
     if p then p.value=(REST[k..'Rot'] or 0)+math.clamp(c,-.45,.45) end
    end
    spring('hair',.00006*accW+.00003*sw+.0016*math.clamp(hv,-30,30)+.1*rw*smooth(v/1.5),13,.34)
+   -- skirt: three hem bones that flutter a little out of step with each other, and with the stride
+   local stride=2*math.pi*self.phi
+   local flut=move*(.012+.03*rw)
    spring('skirt',.00016*accW+.00005*sw+.07*rw,11,.42)
+   spring('skirtL',.00016*accW+.00005*sw+.07*rw+flut*math.sin(2*stride+.9),9.5,.36)
+   spring('skirtR',.00016*accW+.00005*sw+.07*rw-flut*math.sin(2*stride+.2),12.5,.4)
+   -- apron: hangs from the waistband, the hem trails more than the middle (two bones in a chain)
+   spring('apron1',.00009*accW+.00003*sw+.035*rw+.35*flut*math.sin(2*stride+2.1),10,.5)
+   spring('apron2',.00022*accW+.00007*sw+.085*rw+.8*flut*math.sin(2*stride+1.5),8.2,.36)
    spring('satchel',.00016*accW+.00008*sw+.06*rw,8.5,.3)
+   -- sleeves: the puff trails the arm's swing (angular speed of the hand about the shoulder) and settles with a small overshoot
+   local pxx=self.cur['pelvisX'] or PELX;local pyy=self.cur['pelvisY'] or 912
+   for _,sd in ipairs({'A','B'}) do
+    local shx=pxx+(if sd=='A' then SHAx else SHBx);local shy=pyy+(if sd=='A' then SHAy else SHBy)
+    local hx=self.cur['hand'..sd..'X'] or shx;local hy=self.cur['hand'..sd..'Y'] or shy+200
+    local th=math.atan2(hx-shx,hy-shy);local pt=self.sx['th'..sd] or th
+    local d=th-pt;if d>math.pi then d-=2*math.pi elseif d<-math.pi then d+=2*math.pi end
+    self.sx['th'..sd]=th
+    local om=math.clamp(d/dt,-14,14)
+    local ws=lerp(self.sx['om'..sd] or 0,om,.35);self.sx['om'..sd]=ws
+    spring('slv'..sd..'1',math.clamp(.018*ws,-.28,.28),15,.45)
+    spring('slv'..sd..'2',math.clamp(.032*ws,-.4,.4),13,.4)
+   end
   end
  end
 
