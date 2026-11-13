@@ -1,0 +1,16 @@
+back: joints (view px, 996 px = 1 m)
+  arm A: sh [415.0, 533.0] elbow [312.7, 641.4] wrist [227.5, 732.8] dir [-0.682, 0.732] half 28.0 axis_offset 0.95
+         upper arm 149.0 px (pack 149), forearm to wrist joint 125.0 px (139 - 14 overlap = 125; bone to hand-sprite anchor 139.0)
+  arm B: sh [608.0, 533.0] elbow [710.6, 641.1] wrist [796.5, 731.9] dir [0.687, 0.727] half 27.9 axis_offset -0.34
+         upper arm 149.0 px (pack 149), forearm to wrist joint 125.0 px (139 - 14 overlap = 125; bone to hand-sprite anchor 139.0)
+  leg A: hip [428.6, 930.0] knee [423.3, 1125.5] ankle [418, 1321]: thigh 195.6 shin 195.6 (pack 199/199), hip-ankle 391.1, knee between hip and ankle: True, straight-leg reach used 1.000
+  leg B: hip [594.6, 930.0] knee [599.3, 1125.5] ankle [604, 1321]: thigh 195.6 shin 195.6 (pack 199/199), hip-ankle 391.1, knee between hip and ankle: True, straight-leg reach used 1.000
+  pelvis [512.0, 912.0] neck [512, 464] head_top [512.0, 120.0] hair [[512.0, 180.0], [512.0, 443.0]]
+  skirt_L: [[405.5, 770], [361.8, 1079.0]]
+  skirt: [[512.0, 770], [512.0, 1095.0]]
+  skirt_R: [[617.8, 770], [661.2, 1079.0]]
+  bow1: [[503.1, 694.0], [491.6, 754.0]]
+  bow2: [[521.8, 695.0], [532.9, 754.0]]
+  bag {'a': [462, 474], 'b': [622, 800]} visible True
+  hand A: wrist [227.5, 732.8] dir [-0.682, 0.732] visible length 148 px tip [131, 845]
+  hand B: wrist [796.5, 731.9] dir [0.687, 0.727] visible length 148 px tip [893, 845]
