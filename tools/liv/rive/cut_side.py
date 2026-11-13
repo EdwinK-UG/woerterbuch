@@ -284,12 +284,13 @@ class ViewCut:
             hit = [min(d)[1]]
         leg = ndimage.binary_fill_holes(lab == hit[0])
         self.claim(f'leg{sd}', leg)
+        block = self.cov | getattr(self, 'hem', np.zeros_like(self.cov))   # skirt (with its hem line) and sock
         ys, cx, wd = [], [], []
         for y in range(y_top, y_bot + 1):
             xs = np.nonzero(leg[y])[0]
             if len(xs) < 10: continue
             # rows touching the skirt or the sock are left out of the fit
-            if self.cov[y, max(0, xs.min() - 2):xs.max() + 3].any() or self.cov[max(0, y - 3):y + 4, xs.min():xs.max() + 1].any(): continue
+            if block[y, max(0, xs.min() - 2):xs.max() + 3].any() or block[max(0, y - 6):y + 7, xs.min():xs.max() + 1].any(): continue
             ys.append(y); cx.append((xs.min() + xs.max()) / 2); wd.append(xs.max() - xs.min() + 1)
         a, b = np.polyfit(ys, cx, 1)
         u = unit([a, 1.0])                                             # down the leg

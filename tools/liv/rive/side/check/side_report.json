@@ -1,20 +1,20 @@
 {
  "diff": {
-  "all_px": 59657,
-  "outside_cloth": 2419,
+  "all_px": 59686,
+  "outside_cloth": 2450,
   "fg_px": 351735,
-  "pct_outside_cloth_of_fg": 0.6877336631270701,
-  "pct_outside_cloth_of_image": 0.1537958780924479,
+  "pct_outside_cloth_of_fg": 0.6965471164370904,
+  "pct_outside_cloth_of_image": 0.15576680501302084,
   "unclaimed_residual_px": 1638,
   "seal": {
-   "gap_px": 3874,
-   "left_open": 2352,
+   "gap_px": 3937,
+   "left_open": 2358,
    "edited": {
     "sleeveA_c": 382,
     "upperA": 21,
     "sleeveB_x": 36,
     "torso_c": 462,
-    "skirtred": 617,
+    "skirtred": 674,
     "upperB": 4
    }
   }
@@ -32,8 +32,8 @@
   "upperB": 5,
   "foreB": 24,
   "thighA": 0,
-  "shinA": 44,
+  "shinA": 46,
   "thighB": 0,
-  "shinB": 21
+  "shinB": 23
  }
 }
