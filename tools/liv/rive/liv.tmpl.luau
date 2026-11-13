@@ -40,7 +40,7 @@ local function cadence(v:number):number return 1.9+1.0*math.min(v,.9)/.9+math.ma
 local function stanceOf(v:number):number return .62-.26*smooth((v-.9)/1.1) end                        -- share of the stride on the ground
 local function newFoot(u:number,w:number,ph:number):Foot return {u=u,w=w,fu=u,fw=w,planted=true,ph=ph} end
 
-local CH={'hRX','hRY','hRZ','hLX','hLY','hLZ','pelDY','lean','headR','dRu','dRup','dLu','dLup','ff'}
+local CH={'hRX','hRY','hRZ','hLX','hLY','hLZ','pelDY','pelDZ','lean','headR','dRu','dRup','dLu','dLup','ff'}
 local function init(self:St,context:Context):boolean
  self.context=context
  local vm=context:viewModel();if vm==nil then return true end
@@ -241,7 +241,7 @@ local function advance(self:St,seconds:number):boolean
   local ymin=math.max(reach(c.hipAx,fA_x,fA_y),reach(c.hipBx,fB_x,fB_y))
   local pelY=lerp(poseY,gaitY,gw)
   if gw>.001 then pelY=(pelY+ymin+math.sqrt((pelY-ymin)*(pelY-ymin)+14*14))*.5 end
-  pelX=lerp(c.pelx,pelX,gw)
+  pelX=lerp(c.pelx+cur.pelDZ*sn*PPM,pelX,gw)          -- a pose can push the hips back (crouch)
   local lean=move*lerp(.045,.19,rw)
   local twist=move*lerp(.028,.05,rw)*math.sin(2*math.pi*self.phi)
   local ks=.2+.8*sn                                           -- forward lean shows in side views, not from the front

@@ -21,7 +21,8 @@ from PIL import Image
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE / 'face')); from face_tq import emit_face     # the face and expression rig (face/, from the pack's pixels)
-OUTD = HERE / 'liv'; OUTD.mkdir(exist_ok=True)
+import os
+OUTD = HERE / os.environ.get('LIV_OUT', 'liv'); OUTD.mkdir(exist_ok=True)      # LIV_OUT=liv-scratch builds an experiment next to the real project
 PARTS = json.loads((HERE / 'parts/parts.json').read_text())
 ALL_VIEWS = ['front', 'tq', 'side', 'tqb', 'back']
 DEFAULT_YAW = {'front': 0, 'tq': 43, 'side': 90, 'tqb': 137, 'back': 180}

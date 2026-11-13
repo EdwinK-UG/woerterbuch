@@ -44,8 +44,8 @@ local POSES: {{[string]: number}} = {
  {hRX=-.10,hRY=.106,hRZ=-.02,hLX=.10,hLY=.122,hLZ=.12},                                                  -- 0 Rest: arms hang
  {hRX=-.43,hRY=.596,hRZ=.14,hLX=.10,hLY=.122,hLZ=.12,shapeR=2,lean=-.03},                                   -- 1 Wave
  {hRX=-.513,hRY=.313,hRZ=.05,hLX=.384,hLY=.263,hLZ=0,shapeR=4,lean=.04,headR=.04},                           -- 2 Reach
- {hRX=-.291,hRY=.6225,hRZ=.06,hLX=.302,hLY=.6225,hLZ=.06,shapeR=2,shapeL=2,pelDY=.016,headR=-.03},               -- 3 Cheer
- {hRX=-.154,hRY=-.018,hRZ=0,hLX=.14,hLY=-.018,hLZ=0,pelDY=-.092,ff=1,lean=.1,headR=-.07},                    -- 4 Crouch
+ {hRX=-.291,hRY=.6225,hRZ=-.04,hLX=.302,hLY=.6225,hLZ=-.04,shapeR=2,shapeL=2,pelDY=.016,headR=-.03},               -- 3 Cheer
+ {hRX=-.154,hRY=-.018,hRZ=0,hLX=.14,hLY=-.018,hLZ=0,pelDY=-.092,pelDZ=-.06,ff=1,lean=.2,headR=-.13},                    -- 4 Crouch
  {hRX=-.178,hRY=.1225,hRZ=0,hLX=.178,hLY=.112,hLZ=0,dRu=.0766,dRup=.0905,ff=1,lean=.05},                     -- 5 Step
  {hRX=-.247,hRY=.4438,hRZ=0,hLX=.2636,hLY=.4438,hLZ=0,shapeR=3,shapeL=5,ff=1,lean=-.04},                     -- 6 Hands
  {bind=1}                                                                                                     -- 7 Bind: the art as drawn
@@ -62,7 +62,7 @@ local function cadence(v:number):number return 1.9+1.0*math.min(v,.9)/.9+math.ma
 local function stanceOf(v:number):number return .62-.26*smooth((v-.9)/1.1) end                        -- share of the stride on the ground
 local function newFoot(u:number,w:number,ph:number):Foot return {u=u,w=w,fu=u,fw=w,planted=true,ph=ph} end
 
-local CH={'hRX','hRY','hRZ','hLX','hLY','hLZ','pelDY','lean','headR','dRu','dRup','dLu','dLup','ff'}
+local CH={'hRX','hRY','hRZ','hLX','hLY','hLZ','pelDY','pelDZ','lean','headR','dRu','dRup','dLu','dLup','ff'}
 local function init(self:St,context:Context):boolean
  self.context=context
  local vm=context:viewModel();if vm==nil then return true end
@@ -263,7 +263,7 @@ local function advance(self:St,seconds:number):boolean
   local ymin=math.max(reach(c.hipAx,fA_x,fA_y),reach(c.hipBx,fB_x,fB_y))
   local pelY=lerp(poseY,gaitY,gw)
   if gw>.001 then pelY=(pelY+ymin+math.sqrt((pelY-ymin)*(pelY-ymin)+14*14))*.5 end
-  pelX=lerp(c.pelx,pelX,gw)
+  pelX=lerp(c.pelx+cur.pelDZ*sn*PPM,pelX,gw)          -- a pose can push the hips back (crouch)
   local lean=move*lerp(.045,.19,rw)
   local twist=move*lerp(.028,.05,rw)*math.sin(2*math.pi*self.phi)
   local ks=.2+.8*sn                                           -- forward lean shows in side views, not from the front
