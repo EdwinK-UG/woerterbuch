@@ -259,6 +259,10 @@ def emit_view(V):
     far_hand_front = hand_mount(far, 'F') if far in SIDES else None
     far_up_front = rigid(f'Liv upper arm {far} (front)', A(f'upper{far}'), T[far]['upper'], f'upper{far}') if far in SIDES else None
     far_fo_front = rigid(f'Liv forearm {far} (front)', A(f'fore{far}'), T[far]['fore'], f'fore{far}') if far in SIDES else None
+    # [back views] seen from behind, an arm whose hand is in front of her chest must go behind the torso: the near arm gets a back copy too
+    back_view = yaw > 100
+    near_back = (hand_mount(near, 'N'), rigid(f'Liv forearm {near} (behind)', A(f'fore{near}'), T[near]['fore'], f'fore{near}'),
+                 rigid(f'Liv upper arm {near} (behind)', A(f'upper{near}'), T[near]['upper'], f'upper{near}')) if (back_view and near in SIDES) else None
 
     # torso, skirt (red), apron, base layers
     def torso_ws(px, py):
@@ -323,7 +327,7 @@ def emit_view(V):
              *(arm_group(far, far_up_front, far_fo_front, far_hand_front) if far in SIDES else []),
              *[x for x in (satchel, strap) if x is not None], *bow_imgs, torso, *[x for x in (apron,) if x is not None], skirt, *[x for x in (slip, chemise) if x is not None],
              boots['A'], socks['A'], shins['A'], thighs['A'], boots['B'], socks['B'], shins['B'], thighs['B'],
-             *([hand_mounts[far], arm_fo[far], arm_up[far]] if far in SIDES else [])]
+             *([hand_mounts[far], arm_fo[far], arm_up[far]] if far in SIDES else []), *(list(near_back) if near_back else [])]
     for im in order:
         g.remove(im); g.append(im)
 
@@ -348,6 +352,10 @@ def emit_view(V):
         vprop('front', 0.0); vprop('back', 1.0)
         vbind(far_up_front, 18, 'front'); vbind(far_fo_front, 18, 'front'); vbind(far_hand_front, 18, 'front')
         vbind(arm_up[far], 18, 'back'); vbind(arm_fo[far], 18, 'back'); vbind(hand_mounts[far], 18, 'back')
+    if near_back:
+        vprop('frontN', 1.0); vprop('backN', 0.0)
+        for x_ in (hand_mounts[near], arm_fo[near], arm_up[near]): vbind(x_, 18, 'frontN')
+        for x_ in near_back: vbind(x_, 18, 'backN')
     if face:
         for n, d in face['props'].items(): vprop(n, d)
         for e_, key, n in face['bindings']: vbind(e_, key, n)
@@ -366,7 +374,8 @@ def emit_view(V):
     c = dict(oxg=(ankA[0] + ankB[0]) / 2, oyg=(ankA[1] + ankB[1]) / 2 + 98, pelx=pel[0], pely=pel[1],
              legmax=.975 * (math.dist(T['hipA'], T['kneeA']) + math.dist(T['kneeA'], ankA)), hipdy=T['hipA'][1] - pel[1],
              hipAx=T['hipA'][0] - pel[0], hipBx=T['hipB'][0] - pel[0], lat0=min(.13, max(.08, half / max(abs(math.cos(math.radians(yaw))), .35))),
-             footWA=FOOT_W['A'], footWB=FOOT_W['B'], ffbias=1.0 if yaw in (0, 180) else 0.0)     # ffbias: seen from the front or back the far arm is in front of the torso at rest
+             footWA=FOOT_W['A'], footWB=FOOT_W['B'], ffbias=1.0 if yaw in (0, 180) else 0.0,
+             backv=1.0 if back_view else 0.0, torsohalf=abs(T['A']['sh'][0] - T['B']['sh'][0]) / 2 * 0.9 if ('A' in T and 'B' in T) else 80.0)     # ffbias: seen from the front or back the far arm is in front of the torso at rest
     for sd in 'AB':
         s_ = T[sd]['sh'] if sd in T else T[near]['sh']
         c[f'sh{sd}x'] = s_[0] - pel[0]; c[f'sh{sd}y'] = s_[1] - pel[1]; c[f'sh{sd}x0'] = s_[0]; c[f'sh{sd}y0'] = s_[1]

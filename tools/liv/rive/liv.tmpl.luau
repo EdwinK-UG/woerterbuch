@@ -57,7 +57,7 @@ local function init(self:St,context:Context):boolean
  for _,vw in ipairs(VIEWS) do
   local pre=vw.name..'_'
   for k,_ in pairs(vw.rest) do grab(pre..k) end
-  for _,k in ipairs({'opacity','pelvisX','pelvisY','front','back','blink','legAScale','legBScale','legAScaleInv','legBScaleInv','plA','plB','cAX','cAY','cBX','cBY'}) do grab(pre..k) end
+  for _,k in ipairs({'opacity','pelvisX','pelvisY','front','back','frontN','backN','blink','legAScale','legBScale','legAScaleInv','legBScaleInv','plA','plB','cAX','cAY','cBX','cBY'}) do grab(pre..k) end
   for _,sd in ipairs({'A','B'}) do
    grab(pre..'hand'..sd..'X');grab(pre..'hand'..sd..'Y');grab(pre..'foot'..sd..'X');grab(pre..'foot'..sd..'Y');grab(pre..'foot'..sd..'Rot')
   end
@@ -71,7 +71,7 @@ local function init(self:St,context:Context):boolean
  for vi2,vw in ipairs(VIEWS) do                                   -- one painted hand per side (and the far arm's copy in front) per view
   local pre=vw.name..'_'
   for sdi,sd in ipairs({'A','B'}) do
-   for _,key in ipairs({sd,sd..'F'}) do
+   for _,key in ipairs({sd,sd..'F',sd..'N'}) do
     local h=HandPose.new((vi2*3+sdi)*1.37)
     HandPose.attach(h,vm,pre..'hand'..key)
     self.hands[pre..key]=h
@@ -350,7 +350,16 @@ local function advance(self:St,seconds:number):boolean
   -- hands (the painted articulated hand): the shape is a name from the pose, springs and cascade live in hand_pose.luau
   local farSlot=if vw.farB then 'B' else 'A'
   local ffv=math.max(Actions.ff(act,pre,math.clamp(cur.ff,0,1),cs,sn,dt),c.ffbias)   -- [liv-actions] far hand in front of the chest
-  put(pre..'front',ffv);put(pre..'back',1-ffv)
+  if c.backv>.5 then   -- [back views] an arm goes behind the torso when its hand is in front of her chest
+   -- a hard switch with a margin (a half-faded arm would show its layers through each other)
+   local function behind(sd:string):number
+    local dx=math.abs(handX[sd]-pelX);local was=self.sx[pre..'bh'..sd] or 0
+    local now=if dx<c.torsohalf-12 then 1 elseif dx>c.torsohalf+12 then 0 else was
+    self.sx[pre..'bh'..sd]=now;return now
+   end
+   local nS=if farSlot=='A' then 'B' else 'A'
+   put(pre..'front',1-behind(farSlot));put(pre..'back',behind(farSlot));put(pre..'frontN',1-behind(nS));put(pre..'backN',behind(nS))
+  else put(pre..'front',ffv);put(pre..'back',1-ffv) end
   local palmFace=smooth((cs+.1)/.4)                                -- 1 when she faces the viewer, 0 from the side and the back
   for _,sd in ipairs({'A','B'}) do
    local isRight=(sd==sideR)
@@ -359,7 +368,7 @@ local function advance(self:St,seconds:number):boolean
    local grip=pqd(if isRight then 'gripR' else 'gripL',20)
    name,grip=Actions.shape(act,if isRight then 'r' else 'l',name,grip)        -- [liv-actions] the action's or the prop's hand shape
    local keys={sd}
-   if sd==farSlot then keys={sd,sd..'F'} end
+   if sd==farSlot then keys={sd,sd..'F'} elseif c.backv>.5 then keys={sd,sd..'N'} end
    local wrist=0.0
    for _,key in ipairs(keys) do
     local h=self.hands[pre..key]

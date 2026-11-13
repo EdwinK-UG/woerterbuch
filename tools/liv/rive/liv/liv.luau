@@ -27,19 +27,19 @@ type St = {context: Context, vm: ViewModel?, n: {[string]: Property<number>}, cu
 
 local VIEWS: {View} = {
  {name='front',yaw=0,aR=true,farB=true,
-  c={oxg=511.5,oyg=1420.5,pelx=513,pely=912,legmax=383.2845912,hipdy=18,hipAx=-87.6,hipBx=79.7,lat0=0.09588353414,footWA=1.570796327,footWB=1.570796327,ffbias=1,shAx=-99,shAy=-377,shAx0=414,shAy0=535,wAx=223.8152155,wAy=732.2471664,shBx=97,shBy=-377,shBx0=610,shBy0=535,wBx=799.8318433,wBy=732.5854017},
+  c={oxg=511.5,oyg=1420.5,pelx=513,pely=912,legmax=383.2845912,hipdy=18,hipAx=-87.6,hipBx=79.7,lat0=0.09588353414,footWA=1.570796327,footWB=1.570796327,ffbias=1,backv=0,torsohalf=88.2,shAx=-99,shAy=-377,shAx0=414,shAy0=535,wAx=223.8152155,wAy=732.2471664,shBx=97,shBy=-377,shBx0=610,shBy0=535,wBx=799.8318433,wBy=732.5854017},
   rest={spineRot=-1.570796327,headRot=0,hairRot=-3.141592654,skirtRot=1.570796327,skirtLRot=1.712961742,skirtRRot=1.434270751,apron1Rot=1.570796327,apron2Rot=0,satchelRot=1.570796327,handARot=4.440892099e-16,slvA1Rot=0,slvA2Rot=0,handBRot=-4.440892099e-16,slvB1Rot=0,slvB2Rot=0,headPX=451,headPY=-2.761578532e-14}},
  {name='tq',yaw=43,aR=true,farB=true,
-  c={oxg=488,oyg=1411.5,pelx=510,pely=912,legmax=380.6052173,hipdy=18,hipAx=-58,hipBx=56,lat0=0.11943523,footWA=0.8523306928,footWB=0.8523306928,ffbias=0,shAx=-70,shAy=-374,shAx0=440,shAy0=538,wAx=256.716103,wAy=741.6754982,shBx=55,shBy=-367,shBx0=565,shBy0=545,wBx=762.8976189,wBy=734.5060514},
+  c={oxg=488,oyg=1411.5,pelx=510,pely=912,legmax=380.6052173,hipdy=18,hipAx=-58,hipBx=56,lat0=0.11943523,footWA=0.8523306928,footWB=0.8523306928,ffbias=0,backv=0,torsohalf=56.25,shAx=-70,shAy=-374,shAx0=440,shAy0=538,wAx=256.716103,wAy=741.6754982,shBx=55,shBy=-367,shBx0=565,shBy0=545,wBx=762.8976189,wBy=734.5060514},
   rest={spineRot=-1.584431845,headRot=0.02733329187,hairRot=-3.091547114,skirtRot=1.570796327,skirtLRot=1.844963778,skirtRRot=1.267911458,apron1Rot=1.570796327,apron2Rot=0,satchelRot=1.570796327,handARot=4.440892099e-16,slvA1Rot=0,slvA2Rot=0,handBRot=4.440892099e-16,slvB1Rot=0,slvB2Rot=0,headPX=440.0409072,headPY=4.440892099e-14}},
  {name='side',yaw=90,aR=true,farB=true,
-  c={oxg=480.5,oyg=1417,pelx=505,pely=912,legmax=388.05,hipdy=22.873865,hipAx=-77.11698744,hipBx=72.15140464,lat0=0.13,footWA=0.6624262938,footWB=0.6624262938,ffbias=0,shAx=-9,shAy=-383,shAx0=496,shAy0=529,wAx=309.7512354,wAy=743.4000926,shBx=28.80745031,shBy=-383,shBx0=533.8074503,shBy0=529,wBx=711.3157894,wBy=740.3453352},
+  c={oxg=480.5,oyg=1417,pelx=505,pely=912,legmax=388.05,hipdy=22.873865,hipAx=-77.11698744,hipBx=72.15140464,lat0=0.13,footWA=0.6624262938,footWB=0.6624262938,ffbias=0,backv=0,torsohalf=17.01335264,shAx=-9,shAy=-383,shAx0=496,shAy0=529,wAx=309.7512354,wAy=743.4000926,shBx=28.80745031,shBy=-383,shBx0=533.8074503,shBy0=529,wBx=711.3157894,wBy=740.3453352},
   rest={spineRot=-1.545858187,headRot=-0.02493813961,hairRot=-2.624897515,skirtRot=1.55992719,skirtLRot=1.687451762,skirtRRot=1.432619982,apron1Rot=1.39216532,apron2Rot=-0.016760548,satchelRot=1.570796327,bow1Rot=2.296436664,handARot=0,slvA1Rot=0,slvA2Rot=0,handBRot=4.440892099e-16,slvB1Rot=0,slvB2Rot=0,headPX=441.1371669,headPY=-2.131628207e-14}},
  {name='tqb',yaw=137,aR=false,farB=false,
-  c={oxg=465.5,oyg=1414.5,pelx=500,pely=912,legmax=388.05,hipdy=2.417016382,hipAx=-70.83640145,hipBx=18.41315008,lat0=0.1009021771,footWA=0.8523306928,footWB=0.8523306928,ffbias=0,shAx=-58,shAy=-378,shAx0=442,shAy0=534,wAx=269.8329369,wAy=734.137643,shBx=34,shBy=-368,shBx0=534,shBy0=544,wBx=727.8304346,wBy=748.8339318},
+  c={oxg=465.5,oyg=1414.5,pelx=500,pely=912,legmax=388.05,hipdy=2.417016382,hipAx=-70.83640145,hipBx=18.41315008,lat0=0.1009021771,footWA=0.8523306928,footWB=0.8523306928,ffbias=0,backv=1,torsohalf=41.4,shAx=-58,shAy=-378,shAx0=442,shAy0=534,wAx=269.8329369,wAy=734.137643,shBx=34,shBy=-368,shBx0=534,shBy0=544,wBx=727.8304346,wBy=748.8339318},
   rest={spineRot=-1.566312052,headRot=-0.004484274875,hairRot=-3.079173844,skirtRot=1.62991738,skirtLRot=1.685649135,skirtRRot=1.574558065,satchelRot=1.570796327,bow1Rot=2.289626326,bow2Rot=1.642103792,handARot=-8.881784197e-16,slvA1Rot=0,slvA2Rot=0,handBRot=0,slvB1Rot=0,slvB2Rot=0,headPX=446.0044843,headPY=-1.576516695e-14}},
  {name='back',yaw=180,aR=false,farB=true,
-  c={oxg=511,oyg=1419,pelx=512,pely=912,legmax=381.3650651,hipdy=18,hipAx=-83.4,hipBx=82.6,lat0=0.09337349398,footWA=1.570796327,footWB=1.570796327,ffbias=1,shAx=-97,shAy=-379,shAx0=415,shAy0=533,wAx=227.5456573,wAy=732.8443679,shBx=96,shBy=-379,shBx0=608,shBy0=533,wBx=796.4609161,wBy=731.893433},
+  c={oxg=511,oyg=1419,pelx=512,pely=912,legmax=381.3650651,hipdy=18,hipAx=-83.4,hipBx=82.6,lat0=0.09337349398,footWA=1.570796327,footWB=1.570796327,ffbias=1,backv=1,torsohalf=86.85,shAx=-97,shAy=-379,shAx0=415,shAy0=533,wAx=227.5456573,wAy=732.8443679,shBx=96,shBy=-379,shBx0=608,shBy0=533,wBx=796.4609161,wBy=731.893433},
   rest={spineRot=-1.570796327,headRot=0,hairRot=-3.141592654,skirtRot=1.570796327,skirtLRot=1.71128857,skirtRRot=1.431256048,satchelRot=1.570796327,bow1Rot=1.760166377,bow2Rot=1.384834441,handARot=4.440892099e-16,slvA1Rot=0,slvA2Rot=0,handBRot=4.440892099e-16,slvB1Rot=0,slvB2Rot=0,headPX=448,headPY=-2.74320883e-14}}
 }
 -- hand shapes by number (poses use these): the names of hands/hand_pose.luau
@@ -81,7 +81,7 @@ local function init(self:St,context:Context):boolean
  for _,vw in ipairs(VIEWS) do
   local pre=vw.name..'_'
   for k,_ in pairs(vw.rest) do grab(pre..k) end
-  for _,k in ipairs({'opacity','pelvisX','pelvisY','front','back','blink','legAScale','legBScale','legAScaleInv','legBScaleInv','plA','plB','cAX','cAY','cBX','cBY'}) do grab(pre..k) end
+  for _,k in ipairs({'opacity','pelvisX','pelvisY','front','back','frontN','backN','blink','legAScale','legBScale','legAScaleInv','legBScaleInv','plA','plB','cAX','cAY','cBX','cBY'}) do grab(pre..k) end
   for _,sd in ipairs({'A','B'}) do
    grab(pre..'hand'..sd..'X');grab(pre..'hand'..sd..'Y');grab(pre..'foot'..sd..'X');grab(pre..'foot'..sd..'Y');grab(pre..'foot'..sd..'Rot')
   end
@@ -95,7 +95,7 @@ local function init(self:St,context:Context):boolean
  for vi2,vw in ipairs(VIEWS) do                                   -- one painted hand per side (and the far arm's copy in front) per view
   local pre=vw.name..'_'
   for sdi,sd in ipairs({'A','B'}) do
-   for _,key in ipairs({sd,sd..'F'}) do
+   for _,key in ipairs({sd,sd..'F',sd..'N'}) do
     local h=HandPose.new((vi2*3+sdi)*1.37)
     HandPose.attach(h,vm,pre..'hand'..key)
     self.hands[pre..key]=h
@@ -374,7 +374,16 @@ local function advance(self:St,seconds:number):boolean
   -- hands (the painted articulated hand): the shape is a name from the pose, springs and cascade live in hand_pose.luau
   local farSlot=if vw.farB then 'B' else 'A'
   local ffv=math.max(Actions.ff(act,pre,math.clamp(cur.ff,0,1),cs,sn,dt),c.ffbias)   -- [liv-actions] far hand in front of the chest
-  put(pre..'front',ffv);put(pre..'back',1-ffv)
+  if c.backv>.5 then   -- [back views] an arm goes behind the torso when its hand is in front of her chest
+   -- a hard switch with a margin (a half-faded arm would show its layers through each other)
+   local function behind(sd:string):number
+    local dx=math.abs(handX[sd]-pelX);local was=self.sx[pre..'bh'..sd] or 0
+    local now=if dx<c.torsohalf-12 then 1 elseif dx>c.torsohalf+12 then 0 else was
+    self.sx[pre..'bh'..sd]=now;return now
+   end
+   local nS=if farSlot=='A' then 'B' else 'A'
+   put(pre..'front',1-behind(farSlot));put(pre..'back',behind(farSlot));put(pre..'frontN',1-behind(nS));put(pre..'backN',behind(nS))
+  else put(pre..'front',ffv);put(pre..'back',1-ffv) end
   local palmFace=smooth((cs+.1)/.4)                                -- 1 when she faces the viewer, 0 from the side and the back
   for _,sd in ipairs({'A','B'}) do
    local isRight=(sd==sideR)
@@ -383,7 +392,7 @@ local function advance(self:St,seconds:number):boolean
    local grip=pqd(if isRight then 'gripR' else 'gripL',20)
    name,grip=Actions.shape(act,if isRight then 'r' else 'l',name,grip)        -- [liv-actions] the action's or the prop's hand shape
    local keys={sd}
-   if sd==farSlot then keys={sd,sd..'F'} end
+   if sd==farSlot then keys={sd,sd..'F'} elseif c.backv>.5 then keys={sd,sd..'N'} end
    local wrist=0.0
    for _,key in ipairs(keys) do
     local h=self.hands[pre..key]
