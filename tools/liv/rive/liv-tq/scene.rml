@@ -1,0 +1,2577 @@
+<Rive version="1" kind="fragment">
+  <ImageAsset file="../parts/tq_skirt.png" name="tq_skirt" id="0:100" />
+  <ImageAsset file="../parts/tq_torso.png" name="tq_torso" id="0:101" />
+  <ImageAsset file="../parts/tq_head.png" name="tq_head" id="0:102" />
+  <ImageAsset file="../parts/tq_sleeveA.png" name="tq_sleeveA" id="0:103" />
+  <ImageAsset file="../parts/tq_sleeveB.png" name="tq_sleeveB" id="0:104" />
+  <ImageAsset file="../parts/tq_sockA.png" name="tq_sockA" id="0:105" />
+  <ImageAsset file="../parts/tq_bootA.png" name="tq_bootA" id="0:106" />
+  <ImageAsset file="../parts/tq_sockB.png" name="tq_sockB" id="0:107" />
+  <ImageAsset file="../parts/tq_bootB.png" name="tq_bootB" id="0:108" />
+  <ImageAsset file="../parts/tq_blink0.png" name="tq_blink0" id="0:109" />
+  <ImageAsset file="../parts/tq_blink1.png" name="tq_blink1" id="0:110" />
+  <ImageAsset file="../parts/tq_brow0.png" name="tq_brow0" id="0:111" />
+  <ImageAsset file="../parts/tq_mouth.png" name="tq_mouth" id="0:112" />
+  <ImageAsset file="../tq/tq_upperA.png" name="tq_upperA" id="0:113" />
+  <ImageAsset file="../tq/tq_foreA.png" name="tq_foreA" id="0:114" />
+  <ImageAsset file="../tq/tq_upperB.png" name="tq_upperB" id="0:115" />
+  <ImageAsset file="../tq/tq_foreB.png" name="tq_foreB" id="0:116" />
+  <ImageAsset file="../tq/tq_legA.png" name="tq_legA" id="0:117" />
+  <ImageAsset file="../tq/tq_legB.png" name="tq_legB" id="0:118" />
+  <ImageAsset file="../tq/tq_capA.png" name="tq_capA" id="0:119" />
+  <ImageAsset file="../tq/tq_capB.png" name="tq_capB" id="0:120" />
+  <ImageAsset file="../parts/hand_relaxed.png" name="hand_relaxed" id="0:121" />
+  <ImageAsset file="../parts/hand_palm.png" name="hand_palm" id="0:122" />
+  <ImageAsset file="../parts/hand_fist.png" name="hand_fist" id="0:123" />
+  <ImageAsset file="../parts/hand_point.png" name="hand_point" id="0:124" />
+  <ImageAsset file="../parts/hand_thumb.png" name="hand_thumb" id="0:125" />
+  <ImageAsset file="../parts/hand_back.png" name="hand_back" id="0:126" />
+  <Artboard name="Liv three-quarter" width="1240" height="1020" defaultStateMachineId="0:7" styleId="0:5" id="0:2" viewModelId="0:40" viewModelInstanceId="0:41">
+    <LayoutComponent name="Pose controller" width="1240" height="1020" styleId="0:82" id="0:81">
+      <LayoutComponentStyle name="Fill stage" layoutWidthScaleType="fill" layoutHeightScaleType="fill" widthUnitsValue="auto" heightUnitsValue="auto" id="0:82" />
+      <ScriptedLayout name="Liv pose controller" scriptAssetId="0:80" id="0:3576" />
+    </LayoutComponent>
+    <Shape name="Floor line" x="357.44" y="866.8" id="0:3567">
+      <Rectangle width="760" height="2" id="0:3568" />
+      <Fill id="0:3569">
+        <SolidColor colorValue="FFD9CDBA" id="0:3570" />
+      </Fill>
+    </Shape>
+    <Shape name="Contact shadow" x="350.0" y="866.8" id="0:3571">
+      <Ellipse width="250" height="24" id="0:3572" />
+      <Fill fillRule="clockwise" id="0:3573">
+        <SolidColor colorValue="30402A10" id="0:3574" />
+        <Feather strength="9" id="0:3575" />
+      </Fill>
+    </Shape>
+    <Shape x="1130" y="554" name="Bind button" id="0:3669">
+      <Rectangle width="150" height="46" cornerRadiusTL="10" cornerRadiusTR="10" cornerRadiusBL="10" cornerRadiusBR="10" id="0:3670" />
+      <Fill id="0:3671">
+        <SolidColor colorValue="FFE6D8C6" id="0:3672" />
+      </Fill>
+    </Shape>
+    <Shape x="1130" y="492" name="Hands button" id="0:3657">
+      <Rectangle width="150" height="46" cornerRadiusTL="10" cornerRadiusTR="10" cornerRadiusBL="10" cornerRadiusBR="10" id="0:3658" />
+      <Fill id="0:3659">
+        <SolidColor colorValue="FFE6D8C6" id="0:3660" />
+      </Fill>
+    </Shape>
+    <Shape x="1130" y="430" name="Step button" id="0:3645">
+      <Rectangle width="150" height="46" cornerRadiusTL="10" cornerRadiusTR="10" cornerRadiusBL="10" cornerRadiusBR="10" id="0:3646" />
+      <Fill id="0:3647">
+        <SolidColor colorValue="FFE6D8C6" id="0:3648" />
+      </Fill>
+    </Shape>
+    <Shape x="1130" y="368" name="Crouch button" id="0:3633">
+      <Rectangle width="150" height="46" cornerRadiusTL="10" cornerRadiusTR="10" cornerRadiusBL="10" cornerRadiusBR="10" id="0:3634" />
+      <Fill id="0:3635">
+        <SolidColor colorValue="FFE6D8C6" id="0:3636" />
+      </Fill>
+    </Shape>
+    <Shape x="1130" y="306" name="Cheer button" id="0:3621">
+      <Rectangle width="150" height="46" cornerRadiusTL="10" cornerRadiusTR="10" cornerRadiusBL="10" cornerRadiusBR="10" id="0:3622" />
+      <Fill id="0:3623">
+        <SolidColor colorValue="FFE6D8C6" id="0:3624" />
+      </Fill>
+    </Shape>
+    <Shape x="1130" y="244" name="Reach button" id="0:3609">
+      <Rectangle width="150" height="46" cornerRadiusTL="10" cornerRadiusTR="10" cornerRadiusBL="10" cornerRadiusBR="10" id="0:3610" />
+      <Fill id="0:3611">
+        <SolidColor colorValue="FFE6D8C6" id="0:3612" />
+      </Fill>
+    </Shape>
+    <Shape x="1130" y="182" name="Wave button" id="0:3597">
+      <Rectangle width="150" height="46" cornerRadiusTL="10" cornerRadiusTR="10" cornerRadiusBL="10" cornerRadiusBR="10" id="0:3598" />
+      <Fill id="0:3599">
+        <SolidColor colorValue="FFE6D8C6" id="0:3600" />
+      </Fill>
+    </Shape>
+    <Shape x="1130" y="120" name="Rest button" id="0:3585">
+      <Rectangle width="150" height="46" cornerRadiusTL="10" cornerRadiusTR="10" cornerRadiusBL="10" cornerRadiusBR="10" id="0:3586" />
+      <Fill id="0:3587">
+        <SolidColor colorValue="FFE6D8C6" id="0:3588" />
+      </Fill>
+    </Shape>
+    <LayoutComponentStyle name="Artboard style" id="0:5" />
+    <Fill name="Studio" id="0:2001">
+      <SolidColor colorValue="FFF3EBDD" id="0:2002" />
+    </Fill>
+    <Node name="Liv" x="40" y="36" scaleX="0.62" scaleY="0.62" id="0:10">
+      <RootBone name="pelvis" x="510.0" y="912.0" rotation="0.0" length="0.0" id="0:2003">
+        <RootBone name="spine" x="0.0" y="0.0" rotation="-1.5844318452963992" length="440.0409071893203" id="0:2004">
+          <RootBone name="head" x="440.0409071893203" y="4.440892098500626e-14" rotation="0.027333291874368726" length="292.0273959751037" id="0:2005">
+            <DataBindContext sourcePathIds="0:40-0:3458" propertyKey="15" id="0:3532" />
+          </RootBone>
+          <RootBone name="shoulder_R" x="374.9196888393381" y="-64.89396675049177" rotation="-2.397760628859361" length="149.00233384234838" id="0:2006">
+            <RootBone name="upperArm_R" x="0.0" y="-0.0" rotation="0.0" length="149.00233384234838" id="0:2007">
+              <Bone name="foreArm_R" rotation="0.005596993303063957" length="124.99999999999999" id="0:2008">
+                <Bone name="hand_R" rotation="4.440892098500626e-16" length="69.99999999999999" id="0:2009">
+                  <DataBindContext sourcePathIds="0:40-0:3463" propertyKey="15" id="0:3533" />
+                </Bone>
+                <IKConstraint name="arm A IK" targetId="0:2024" parentBoneCount="1" invertDirection="false" strength="1" id="0:2028" />
+              </Bone>
+            </RootBone>
+            <RootBone name="sleeveHelper_R1" x="0.0" y="-0.0" rotation="0.0" length="149.00233384234838" id="0:2010">
+              <RotationConstraint name="sleeve A 1" targetId="0:2007" copyFactor="0.3333" offset="true" sourceSpaceValue="local" destSpaceValue="local" strength="1" id="0:2031" />
+            </RootBone>
+            <RootBone name="sleeveHelper_R2" x="0.0" y="-0.0" rotation="0.0" length="149.00233384234838" id="0:2011">
+              <RotationConstraint name="sleeve A 2" targetId="0:2007" copyFactor="0.6667" offset="true" sourceSpaceValue="local" destSpaceValue="local" strength="1" id="0:2032" />
+            </RootBone>
+          </RootBone>
+          <RootBone name="shoulder_L" x="366.215952578854" y="59.99896729746763" rotation="2.3478499788506317" length="149.00003720124656" id="0:2012">
+            <RootBone name="upperArm_L" x="0.0" y="0.0" rotation="0.0" length="149.00003720124656" id="0:2013">
+              <Bone name="foreArm_L" rotation="0.0007066438191545288" length="125.00000000000007" id="0:2014">
+                <Bone name="hand_L" rotation="4.440892098500626e-16" length="69.99999999999999" id="0:2015">
+                  <DataBindContext sourcePathIds="0:40-0:3464" propertyKey="15" id="0:3534" />
+                </Bone>
+                <IKConstraint name="arm B IK" targetId="0:2026" parentBoneCount="1" invertDirection="false" strength="1" id="0:2033" />
+              </Bone>
+            </RootBone>
+            <RootBone name="sleeveHelper_L1" x="0.0" y="0.0" rotation="0.0" length="149.00003720124656" id="0:2016">
+              <RotationConstraint name="sleeve B 1" targetId="0:2013" copyFactor="0.3333" offset="true" sourceSpaceValue="local" destSpaceValue="local" strength="1" id="0:2036" />
+            </RootBone>
+            <RootBone name="sleeveHelper_L2" x="0.0" y="0.0" rotation="0.0" length="149.00003720124656" id="0:2017">
+              <RotationConstraint name="sleeve B 2" targetId="0:2013" copyFactor="0.6667" offset="true" sourceSpaceValue="local" destSpaceValue="local" strength="1" id="0:2037" />
+            </RootBone>
+          </RootBone>
+          <DataBindContext sourcePathIds="0:40-0:3457" propertyKey="15" id="0:3531" />
+        </RootBone>
+        <RootBone name="thigh_R" x="-58.0" y="18.0" rotation="1.7112789551852945" length="199.96999774966244" id="0:2018">
+          <Bone name="shin_R" rotation="-0.01938495131364215" length="190.3943276465977" id="0:2019">
+            <Bone name="foot_R" rotation="-0.8524943400982354" length="104.80458005259122" id="0:2020">
+              <RotationConstraint name="foot A level" targetId="0:2025" copyFactor="1" offset="false" sourceSpaceValue="world" destSpaceValue="world" strength="1" id="0:2030" />
+            </Bone>
+            <IKConstraint name="leg A IK" targetId="0:2025" parentBoneCount="1" invertDirection="true" strength="1" id="0:2029" />
+          </Bone>
+        </RootBone>
+        <RootBone name="thigh_L" x="56.0" y="18.0" rotation="1.5444866095419743" length="190.06577808748213" id="0:2021">
+          <Bone name="shin_L" rotation="0.005260195115875721" length="190.04210059878838" id="0:2022">
+            <Bone name="foot_L" rotation="-0.7103471408844335" length="104.80458005259122" id="0:2023">
+              <RotationConstraint name="foot B level" targetId="0:2027" copyFactor="1" offset="false" sourceSpaceValue="world" destSpaceValue="world" strength="1" id="0:2035" />
+            </Bone>
+            <IKConstraint name="leg B IK" targetId="0:2027" parentBoneCount="1" invertDirection="true" strength="1" id="0:2034" />
+          </Bone>
+        </RootBone>
+        <DataBindContext sourcePathIds="0:40-0:3445" propertyKey="90" id="0:3529" />
+        <DataBindContext sourcePathIds="0:40-0:3446" propertyKey="91" id="0:3530" />
+      </RootBone>
+      <Node name="hand A target" x="256.7161029602517" y="741.6754982230057" id="0:2024">
+        <DataBindContext sourcePathIds="0:40-0:3465" propertyKey="13" id="0:3535" />
+        <DataBindContext sourcePathIds="0:40-0:3466" propertyKey="14" id="0:3536" />
+      </Node>
+      <Node name="foot A target" x="401" y="1317" rotation="0.8393996637734166" id="0:2025">
+        <DataBindContext sourcePathIds="0:40-0:3467" propertyKey="13" id="0:3537" />
+        <DataBindContext sourcePathIds="0:40-0:3468" propertyKey="14" id="0:3538" />
+        <DataBindContext sourcePathIds="0:40-0:3469" propertyKey="15" id="0:3539" />
+      </Node>
+      <Node name="hand B target" x="762.8976188803593" y="734.506051427011" id="0:2026">
+        <DataBindContext sourcePathIds="0:40-0:3476" propertyKey="13" id="0:3546" />
+        <DataBindContext sourcePathIds="0:40-0:3477" propertyKey="14" id="0:3547" />
+      </Node>
+      <Node name="foot B target" x="575" y="1310" rotation="0.8393996637734166" id="0:2027">
+        <DataBindContext sourcePathIds="0:40-0:3478" propertyKey="13" id="0:3548" />
+        <DataBindContext sourcePathIds="0:40-0:3479" propertyKey="14" id="0:3549" />
+        <DataBindContext sourcePathIds="0:40-0:3480" propertyKey="15" id="0:3550" />
+      </Node>
+      <Image name="Liv head" assetId="0:102" originX="0" originY="0" id="0:2038">
+        <Mesh name="Liv head mesh" triangleIndexBytes="AAECAAID" id="0:2039">
+          <MeshVertex x="269" y="114" u="0" v="0" id="0:2040">
+            <Weight values="255" indices="1" id="0:2041" />
+          </MeshVertex>
+          <MeshVertex x="680" y="114" u="1" v="0" id="0:2042">
+            <Weight values="255" indices="1" id="0:2043" />
+          </MeshVertex>
+          <MeshVertex x="680" y="498" u="1" v="1" id="0:2044">
+            <Weight values="255" indices="1" id="0:2045" />
+          </MeshVertex>
+          <MeshVertex x="269" y="498" u="0" v="1" id="0:2046">
+            <Weight values="255" indices="1" id="0:2047" />
+          </MeshVertex>
+          <Skin name="Liv head skin" tx="0" ty="0" id="0:2048">
+            <Tendon boneId="0:2005" name="head" xx="0.013697345026974934" xy="-0.9999061869691637" yx="0.9999061869691637" yy="0.013697345026974934" tx="504" ty="472" id="0:2049" />
+          </Skin>
+        </Mesh>
+      </Image>
+      <Image name="Liv hand A relaxed" assetId="0:121" originX="0" originY="0" id="0:2620">
+        <Mesh name="Liv hand A relaxed mesh" triangleIndexBytes="AAECAAID" id="0:2621">
+          <MeshVertex x="299.275" y="754.049" u="0" v="0" id="0:2622">
+            <Weight values="255" indices="1" id="0:2623" />
+          </MeshVertex>
+          <MeshVertex x="218.061" y="843.748" u="1" v="0" id="0:2624">
+            <Weight values="255" indices="1" id="0:2625" />
+          </MeshVertex>
+          <MeshVertex x="169.967" y="800.203" u="1" v="1" id="0:2626">
+            <Weight values="255" indices="1" id="0:2627" />
+          </MeshVertex>
+          <MeshVertex x="251.181" y="710.504" u="0" v="1" id="0:2628">
+            <Weight values="255" indices="1" id="0:2629" />
+          </MeshVertex>
+          <Skin name="Liv hand A relaxed skin" tx="0" ty="0" id="0:2630">
+            <Tendon boneId="0:2009" name="handA" xx="-0.671175586817032" xy="0.7412984093203038" yx="-0.7412984093203038" yy="-0.671175586817032" tx="256.7161029602517" ty="741.6754982230057" id="0:2631" />
+          </Skin>
+        </Mesh>
+        <DataBindContext sourcePathIds="0:40-0:3470" propertyKey="18" id="0:3540" />
+      </Image>
+      <Image name="Liv hand A palm" assetId="0:122" originX="0" originY="0" id="0:2632">
+        <Mesh name="Liv hand A palm mesh" triangleIndexBytes="AAECAAID" id="0:2633">
+          <MeshVertex x="218.086" y="841.994" u="0" v="0" id="0:2634">
+            <Weight values="255" indices="1" id="0:2635" />
+          </MeshVertex>
+          <MeshVertex x="147.09" y="777.714" u="1" v="0" id="0:2636">
+            <Weight values="255" indices="1" id="0:2637" />
+          </MeshVertex>
+          <MeshVertex x="227.267" y="689.16" u="1" v="1" id="0:2638">
+            <Weight values="255" indices="1" id="0:2639" />
+          </MeshVertex>
+          <MeshVertex x="298.263" y="753.44" u="0" v="1" id="0:2640">
+            <Weight values="255" indices="1" id="0:2641" />
+          </MeshVertex>
+          <Skin name="Liv hand A palm skin" tx="0" ty="0" id="0:2642">
+            <Tendon boneId="0:2009" name="handA" xx="-0.671175586817032" xy="0.7412984093203038" yx="-0.7412984093203038" yy="-0.671175586817032" tx="256.7161029602517" ty="741.6754982230057" id="0:2643" />
+          </Skin>
+        </Mesh>
+        <DataBindContext sourcePathIds="0:40-0:3471" propertyKey="18" id="0:3541" />
+      </Image>
+      <Image name="Liv hand A fist" assetId="0:123" originX="0" originY="0" id="0:2644">
+        <Mesh name="Liv hand A fist mesh" triangleIndexBytes="AAECAAID" id="0:2645">
+          <MeshVertex x="308.629" y="766.157" u="0" v="0" id="0:2646">
+            <Weight values="255" indices="1" id="0:2647" />
+          </MeshVertex>
+          <MeshVertex x="247.46" y="833.717" u="1" v="0" id="0:2648">
+            <Weight values="255" indices="1" id="0:2649" />
+          </MeshVertex>
+          <MeshVertex x="191.732" y="783.261" u="1" v="1" id="0:2650">
+            <Weight values="255" indices="1" id="0:2651" />
+          </MeshVertex>
+          <MeshVertex x="252.902" y="715.7" u="0" v="1" id="0:2652">
+            <Weight values="255" indices="1" id="0:2653" />
+          </MeshVertex>
+          <Skin name="Liv hand A fist skin" tx="0" ty="0" id="0:2654">
+            <Tendon boneId="0:2009" name="handA" xx="-0.671175586817032" xy="0.7412984093203038" yx="-0.7412984093203038" yy="-0.671175586817032" tx="256.7161029602517" ty="741.6754982230057" id="0:2655" />
+          </Skin>
+        </Mesh>
+        <DataBindContext sourcePathIds="0:40-0:3472" propertyKey="18" id="0:3542" />
+      </Image>
+      <Image name="Liv hand A point" assetId="0:124" originX="0" originY="0" id="0:2656">
+        <Mesh name="Liv hand A point mesh" triangleIndexBytes="AAECAAID" id="0:2657">
+          <MeshVertex x="300.524" y="755.086" u="0" v="0" id="0:2658">
+            <Weight values="255" indices="1" id="0:2659" />
+          </MeshVertex>
+          <MeshVertex x="218.965" y="845.166" u="1" v="0" id="0:2660">
+            <Weight values="255" indices="1" id="0:2661" />
+          </MeshVertex>
+          <MeshVertex x="170.107" y="800.931" u="1" v="1" id="0:2662">
+            <Weight values="255" indices="1" id="0:2663" />
+          </MeshVertex>
+          <MeshVertex x="251.667" y="710.85" u="0" v="1" id="0:2664">
+            <Weight values="255" indices="1" id="0:2665" />
+          </MeshVertex>
+          <Skin name="Liv hand A point skin" tx="0" ty="0" id="0:2666">
+            <Tendon boneId="0:2009" name="handA" xx="-0.671175586817032" xy="0.7412984093203038" yx="-0.7412984093203038" yy="-0.671175586817032" tx="256.7161029602517" ty="741.6754982230057" id="0:2667" />
+          </Skin>
+        </Mesh>
+        <DataBindContext sourcePathIds="0:40-0:3473" propertyKey="18" id="0:3543" />
+      </Image>
+      <Image name="Liv hand A thumb" assetId="0:125" originX="0" originY="0" id="0:2668">
+        <Mesh name="Liv hand A thumb mesh" triangleIndexBytes="AAECAAID" id="0:2669">
+          <MeshVertex x="326.467" y="782.589" u="0" v="0" id="0:2670">
+            <Weight values="255" indices="1" id="0:2671" />
+          </MeshVertex>
+          <MeshVertex x="267.026" y="848.24" u="1" v="0" id="0:2672">
+            <Weight values="255" indices="1" id="0:2673" />
+          </MeshVertex>
+          <MeshVertex x="192.213" y="780.505" u="1" v="1" id="0:2674">
+            <Weight values="255" indices="1" id="0:2675" />
+          </MeshVertex>
+          <MeshVertex x="251.655" y="714.853" u="0" v="1" id="0:2676">
+            <Weight values="255" indices="1" id="0:2677" />
+          </MeshVertex>
+          <Skin name="Liv hand A thumb skin" tx="0" ty="0" id="0:2678">
+            <Tendon boneId="0:2009" name="handA" xx="-0.671175586817032" xy="0.7412984093203038" yx="-0.7412984093203038" yy="-0.671175586817032" tx="256.7161029602517" ty="741.6754982230057" id="0:2679" />
+          </Skin>
+        </Mesh>
+        <DataBindContext sourcePathIds="0:40-0:3474" propertyKey="18" id="0:3544" />
+      </Image>
+      <Image name="Liv hand A back" assetId="0:126" originX="0" originY="0" id="0:2680">
+        <Mesh name="Liv hand A back mesh" triangleIndexBytes="AAECAAID" id="0:2681">
+          <MeshVertex x="229.955" y="852.361" u="0" v="0" id="0:2682">
+            <Weight values="255" indices="1" id="0:2683" />
+          </MeshVertex>
+          <MeshVertex x="158.959" y="788.081" u="1" v="0" id="0:2684">
+            <Weight values="255" indices="1" id="0:2685" />
+          </MeshVertex>
+          <MeshVertex x="239.136" y="699.527" u="1" v="1" id="0:2686">
+            <Weight values="255" indices="1" id="0:2687" />
+          </MeshVertex>
+          <MeshVertex x="310.132" y="763.807" u="0" v="1" id="0:2688">
+            <Weight values="255" indices="1" id="0:2689" />
+          </MeshVertex>
+          <Skin name="Liv hand A back skin" tx="0" ty="0" id="0:2690">
+            <Tendon boneId="0:2009" name="handA" xx="-0.671175586817032" xy="0.7412984093203038" yx="-0.7412984093203038" yy="-0.671175586817032" tx="256.7161029602517" ty="741.6754982230057" id="0:2691" />
+          </Skin>
+        </Mesh>
+        <DataBindContext sourcePathIds="0:40-0:3475" propertyKey="18" id="0:3545" />
+      </Image>
+      <Image name="Liv forearm A" assetId="0:114" originX="0" originY="0" id="0:2584">
+        <Mesh name="Liv forearm A mesh" triangleIndexBytes="AAECAAID" id="0:2585">
+          <MeshVertex x="238" y="620" u="0" v="0" id="0:2586">
+            <Weight values="255" indices="1" id="0:2587" />
+          </MeshVertex>
+          <MeshVertex x="371" y="620" u="1" v="0" id="0:2588">
+            <Weight values="255" indices="1" id="0:2589" />
+          </MeshVertex>
+          <MeshVertex x="371" y="760" u="1" v="1" id="0:2590">
+            <Weight values="255" indices="1" id="0:2591" />
+          </MeshVertex>
+          <MeshVertex x="238" y="760" u="0" v="1" id="0:2592">
+            <Weight values="255" indices="1" id="0:2593" />
+          </MeshVertex>
+          <Skin name="Liv forearm A skin" tx="0" ty="0" id="0:2594">
+            <Tendon boneId="0:2008" name="foreA" xx="-0.6711755868170317" xy="0.7412984093203041" yx="-0.7412984093203041" yy="-0.6711755868170317" tx="340.61305131238066" ty="649.0131970579677" id="0:2595" />
+          </Skin>
+        </Mesh>
+      </Image>
+      <Image name="Liv sleeve A" assetId="0:103" originX="0" originY="0" id="0:2050">
+        <Mesh name="Liv sleeve A mesh" triangleIndexBytes="AAEMAAwLAQINAQ0MAgMOAg4NAwQPAw8OBAUQBBAPBQYRBREQBgcSBhIRBwgTBxMSCAkUCBQTCQoVCRUUCwwXCxcWDA0YDBgXDQ4ZDRkYDg8aDhoZDxAbDxsaEBEcEBwbERIdER0cEhMeEh4dExQfEx8eFBUgFCAfFhciFiIhFxgjFyMiGBkkGCQjGRolGSUkGhsmGiYlGxwnGycmHB0oHCgnHR4pHSkoHh8qHiopHyArHysqISItIS0sIiMuIi4tIyQvIy8uJCUwJDAvJSYxJTEwJicyJjIxJygzJzMyKCk0KDQzKSo1KTU0Kis2KjY1LC04LDg3LS45LTk4Li86Ljo5LzA7Lzs6MDE8MDw7MTI9MT08MjM+Mj49MzQ/Mz8+NDVANEA/NTZBNUFANzhDN0NCODlEOERDOTpFOUVEOjtGOkZFOzxHO0dGPD1IPEhHPT5JPUlIPj9KPkpJP0BLP0tKQEFMQExLQkNOQk5NQ0RPQ09OREVQRFBPRUZRRVFQRkdSRlJRR0hTR1NSSElUSFRTSUpVSVVUSktWSlZVS0xXS1dWTU5ZTVlYTk9aTlpZT1BbT1taUFFcUFxbUVJdUV1cUlNeUl5dU1RfU19eVFVgVGBfVVZhVWFgVldiVmJhWFlkWGRjWVplWWVkWltmWmZlW1xnW2dmXF1oXGhnXV5pXWloXl9qXmppX2BrX2tqYGFsYGxrYWJtYW1sY2RvY29uZGVwZHBvZWZxZXFwZmdyZnJxZ2hzZ3NyaGl0aHRzaWp1aXV0amt2anZ1a2x3a3d2bG14bHh3" id="0:2051">
+          <MeshVertex x="327.0" y="478.0" u="0.0" v="0.0" id="0:2052">
+            <Weight values="53295" indices="770" id="0:2053" />
+          </MeshVertex>
+          <MeshVertex x="342.0" y="478.0" u="0.1" v="0.0" id="0:2054">
+            <Weight values="6120" indices="770" id="0:2055" />
+          </MeshVertex>
+          <MeshVertex x="357.0" y="478.0" u="0.2" v="0.0" id="0:2056">
+            <Weight values="29835" indices="516" id="0:2057" />
+          </MeshVertex>
+          <MeshVertex x="372.0" y="478.0" u="0.3" v="0.0" id="0:2058">
+            <Weight values="4080" indices="516" id="0:2059" />
+          </MeshVertex>
+          <MeshVertex x="387.0" y="478.0" u="0.4" v="0.0" id="0:2060">
+            <Weight values="255" indices="4" id="0:2061" />
+          </MeshVertex>
+          <MeshVertex x="402.0" y="478.0" u="0.5" v="0.0" id="0:2062">
+            <Weight values="255" indices="4" id="0:2063" />
+          </MeshVertex>
+          <MeshVertex x="417.0" y="478.0" u="0.6" v="0.0" id="0:2064">
+            <Weight values="255" indices="4" id="0:2065" />
+          </MeshVertex>
+          <MeshVertex x="432.0" y="478.0" u="0.7" v="0.0" id="0:2066">
+            <Weight values="255" indices="4" id="0:2067" />
+          </MeshVertex>
+          <MeshVertex x="447.0" y="478.0" u="0.8" v="0.0" id="0:2068">
+            <Weight values="255" indices="4" id="0:2069" />
+          </MeshVertex>
+          <MeshVertex x="462.0" y="478.0" u="0.9" v="0.0" id="0:2070">
+            <Weight values="255" indices="4" id="0:2071" />
+          </MeshVertex>
+          <MeshVertex x="477.0" y="478.0" u="1.0" v="0.0" id="0:2072">
+            <Weight values="255" indices="4" id="0:2073" />
+          </MeshVertex>
+          <MeshVertex x="327.0" y="492.7" u="0.0" v="0.1" id="0:2074">
+            <Weight values="33915" indices="259" id="0:2075" />
+          </MeshVertex>
+          <MeshVertex x="342.0" y="492.7" u="0.1" v="0.1" id="0:2076">
+            <Weight values="57120" indices="770" id="0:2077" />
+          </MeshVertex>
+          <MeshVertex x="357.0" y="492.7" u="0.2" v="0.1" id="0:2078">
+            <Weight values="9945" indices="770" id="0:2079" />
+          </MeshVertex>
+          <MeshVertex x="372.0" y="492.7" u="0.3" v="0.1" id="0:2080">
+            <Weight values="32640" indices="516" id="0:2081" />
+          </MeshVertex>
+          <MeshVertex x="387.0" y="492.7" u="0.4" v="0.1" id="0:2082">
+            <Weight values="5355" indices="516" id="0:2083" />
+          </MeshVertex>
+          <MeshVertex x="402.0" y="492.7" u="0.5" v="0.1" id="0:2084">
+            <Weight values="255" indices="4" id="0:2085" />
+          </MeshVertex>
+          <MeshVertex x="417.0" y="492.7" u="0.6" v="0.1" id="0:2086">
+            <Weight values="255" indices="4" id="0:2087" />
+          </MeshVertex>
+          <MeshVertex x="432.0" y="492.7" u="0.7" v="0.1" id="0:2088">
+            <Weight values="255" indices="4" id="0:2089" />
+          </MeshVertex>
+          <MeshVertex x="447.0" y="492.7" u="0.8" v="0.1" id="0:2090">
+            <Weight values="255" indices="4" id="0:2091" />
+          </MeshVertex>
+          <MeshVertex x="462.0" y="492.7" u="0.9" v="0.1" id="0:2092">
+            <Weight values="255" indices="4" id="0:2093" />
+          </MeshVertex>
+          <MeshVertex x="477.0" y="492.7" u="1.0" v="0.1" id="0:2094">
+            <Weight values="255" indices="4" id="0:2095" />
+          </MeshVertex>
+          <MeshVertex x="327.0" y="507.4" u="0.0" v="0.2" id="0:2096">
+            <Weight values="61965" indices="259" id="0:2097" />
+          </MeshVertex>
+          <MeshVertex x="342.0" y="507.4" u="0.1" v="0.2" id="0:2098">
+            <Weight values="36975" indices="259" id="0:2099" />
+          </MeshVertex>
+          <MeshVertex x="357.0" y="507.4" u="0.2" v="0.2" id="0:2100">
+            <Weight values="60945" indices="770" id="0:2101" />
+          </MeshVertex>
+          <MeshVertex x="372.0" y="507.4" u="0.3" v="0.2" id="0:2102">
+            <Weight values="13770" indices="770" id="0:2103" />
+          </MeshVertex>
+          <MeshVertex x="387.0" y="507.4" u="0.4" v="0.2" id="0:2104">
+            <Weight values="35700" indices="516" id="0:2105" />
+          </MeshVertex>
+          <MeshVertex x="402.0" y="507.4" u="0.5" v="0.2" id="0:2106">
+            <Weight values="6885" indices="516" id="0:2107" />
+          </MeshVertex>
+          <MeshVertex x="417.0" y="507.4" u="0.6" v="0.2" id="0:2108">
+            <Weight values="255" indices="4" id="0:2109" />
+          </MeshVertex>
+          <MeshVertex x="432.0" y="507.4" u="0.7" v="0.2" id="0:2110">
+            <Weight values="255" indices="4" id="0:2111" />
+          </MeshVertex>
+          <MeshVertex x="447.0" y="507.4" u="0.8" v="0.2" id="0:2112">
+            <Weight values="255" indices="4" id="0:2113" />
+          </MeshVertex>
+          <MeshVertex x="462.0" y="507.4" u="0.9" v="0.2" id="0:2114">
+            <Weight values="255" indices="4" id="0:2115" />
+          </MeshVertex>
+          <MeshVertex x="477.0" y="507.4" u="1.0" v="0.2" id="0:2116">
+            <Weight values="255" indices="4" id="0:2117" />
+          </MeshVertex>
+          <MeshVertex x="327.0" y="522.1" u="0.0" v="0.3" id="0:2118">
+            <Weight values="255" indices="1" id="0:2119" />
+          </MeshVertex>
+          <MeshVertex x="342.0" y="522.1" u="0.1" v="0.3" id="0:2120">
+            <Weight values="62985" indices="259" id="0:2121" />
+          </MeshVertex>
+          <MeshVertex x="357.0" y="522.1" u="0.2" v="0.3" id="0:2122">
+            <Weight values="39780" indices="259" id="0:2123" />
+          </MeshVertex>
+          <MeshVertex x="372.0" y="522.1" u="0.3" v="0.3" id="0:2124">
+            <Weight values="64515" indices="770" id="0:2125" />
+          </MeshVertex>
+          <MeshVertex x="387.0" y="522.1" u="0.4" v="0.3" id="0:2126">
+            <Weight values="17595" indices="770" id="0:2127" />
+          </MeshVertex>
+          <MeshVertex x="402.0" y="522.1" u="0.5" v="0.3" id="0:2128">
+            <Weight values="39015" indices="516" id="0:2129" />
+          </MeshVertex>
+          <MeshVertex x="417.0" y="522.1" u="0.6" v="0.3" id="0:2130">
+            <Weight values="8415" indices="516" id="0:2131" />
+          </MeshVertex>
+          <MeshVertex x="432.0" y="522.1" u="0.7" v="0.3" id="0:2132">
+            <Weight values="255" indices="4" id="0:2133" />
+          </MeshVertex>
+          <MeshVertex x="447.0" y="522.1" u="0.8" v="0.3" id="0:2134">
+            <Weight values="255" indices="4" id="0:2135" />
+          </MeshVertex>
+          <MeshVertex x="462.0" y="522.1" u="0.9" v="0.3" id="0:2136">
+            <Weight values="255" indices="4" id="0:2137" />
+          </MeshVertex>
+          <MeshVertex x="477.0" y="522.1" u="1.0" v="0.3" id="0:2138">
+            <Weight values="255" indices="4" id="0:2139" />
+          </MeshVertex>
+          <MeshVertex x="327.0" y="536.8" u="0.0" v="0.4" id="0:2140">
+            <Weight values="255" indices="1" id="0:2141" />
+          </MeshVertex>
+          <MeshVertex x="342.0" y="536.8" u="0.1" v="0.4" id="0:2142">
+            <Weight values="255" indices="1" id="0:2143" />
+          </MeshVertex>
+          <MeshVertex x="357.0" y="536.8" u="0.2" v="0.4" id="0:2144">
+            <Weight values="63750" indices="259" id="0:2145" />
+          </MeshVertex>
+          <MeshVertex x="372.0" y="536.8" u="0.3" v="0.4" id="0:2146">
+            <Weight values="42330" indices="259" id="0:2147" />
+          </MeshVertex>
+          <MeshVertex x="387.0" y="536.8" u="0.4" v="0.4" id="0:2148">
+            <Weight values="3315" indices="259" id="0:2149" />
+          </MeshVertex>
+          <MeshVertex x="402.0" y="536.8" u="0.5" v="0.4" id="0:2150">
+            <Weight values="21420" indices="770" id="0:2151" />
+          </MeshVertex>
+          <MeshVertex x="417.0" y="536.8" u="0.6" v="0.4" id="0:2152">
+            <Weight values="42075" indices="516" id="0:2153" />
+          </MeshVertex>
+          <MeshVertex x="432.0" y="536.8" u="0.7" v="0.4" id="0:2154">
+            <Weight values="10200" indices="516" id="0:2155" />
+          </MeshVertex>
+          <MeshVertex x="447.0" y="536.8" u="0.8" v="0.4" id="0:2156">
+            <Weight values="255" indices="4" id="0:2157" />
+          </MeshVertex>
+          <MeshVertex x="462.0" y="536.8" u="0.9" v="0.4" id="0:2158">
+            <Weight values="255" indices="4" id="0:2159" />
+          </MeshVertex>
+          <MeshVertex x="477.0" y="536.8" u="1.0" v="0.4" id="0:2160">
+            <Weight values="255" indices="4" id="0:2161" />
+          </MeshVertex>
+          <MeshVertex x="327.0" y="551.5" u="0.0" v="0.5" id="0:2162">
+            <Weight values="255" indices="1" id="0:2163" />
+          </MeshVertex>
+          <MeshVertex x="342.0" y="551.5" u="0.1" v="0.5" id="0:2164">
+            <Weight values="255" indices="1" id="0:2165" />
+          </MeshVertex>
+          <MeshVertex x="357.0" y="551.5" u="0.2" v="0.5" id="0:2166">
+            <Weight values="255" indices="1" id="0:2167" />
+          </MeshVertex>
+          <MeshVertex x="372.0" y="551.5" u="0.3" v="0.5" id="0:2168">
+            <Weight values="64515" indices="259" id="0:2169" />
+          </MeshVertex>
+          <MeshVertex x="387.0" y="551.5" u="0.4" v="0.5" id="0:2170">
+            <Weight values="44880" indices="259" id="0:2171" />
+          </MeshVertex>
+          <MeshVertex x="402.0" y="551.5" u="0.5" v="0.5" id="0:2172">
+            <Weight values="6885" indices="259" id="0:2173" />
+          </MeshVertex>
+          <MeshVertex x="417.0" y="551.5" u="0.6" v="0.5" id="0:2174">
+            <Weight values="25500" indices="770" id="0:2175" />
+          </MeshVertex>
+          <MeshVertex x="432.0" y="551.5" u="0.7" v="0.5" id="0:2176">
+            <Weight values="45390" indices="516" id="0:2177" />
+          </MeshVertex>
+          <MeshVertex x="447.0" y="551.5" u="0.8" v="0.5" id="0:2178">
+            <Weight values="12240" indices="516" id="0:2179" />
+          </MeshVertex>
+          <MeshVertex x="462.0" y="551.5" u="0.9" v="0.5" id="0:2180">
+            <Weight values="255" indices="4" id="0:2181" />
+          </MeshVertex>
+          <MeshVertex x="477.0" y="551.5" u="1.0" v="0.5" id="0:2182">
+            <Weight values="255" indices="4" id="0:2183" />
+          </MeshVertex>
+          <MeshVertex x="327.0" y="566.2" u="0.0" v="0.6" id="0:2184">
+            <Weight values="255" indices="1" id="0:2185" />
+          </MeshVertex>
+          <MeshVertex x="342.0" y="566.2" u="0.1" v="0.6" id="0:2186">
+            <Weight values="255" indices="1" id="0:2187" />
+          </MeshVertex>
+          <MeshVertex x="357.0" y="566.2" u="0.2" v="0.6" id="0:2188">
+            <Weight values="255" indices="1" id="0:2189" />
+          </MeshVertex>
+          <MeshVertex x="372.0" y="566.2" u="0.3" v="0.6" id="0:2190">
+            <Weight values="255" indices="1" id="0:2191" />
+          </MeshVertex>
+          <MeshVertex x="387.0" y="566.2" u="0.4" v="0.6" id="0:2192">
+            <Weight values="65025" indices="259" id="0:2193" />
+          </MeshVertex>
+          <MeshVertex x="402.0" y="566.2" u="0.5" v="0.6" id="0:2194">
+            <Weight values="47430" indices="259" id="0:2195" />
+          </MeshVertex>
+          <MeshVertex x="417.0" y="566.2" u="0.6" v="0.6" id="0:2196">
+            <Weight values="10455" indices="259" id="0:2197" />
+          </MeshVertex>
+          <MeshVertex x="432.0" y="566.2" u="0.7" v="0.6" id="0:2198">
+            <Weight values="29325" indices="770" id="0:2199" />
+          </MeshVertex>
+          <MeshVertex x="447.0" y="566.2" u="0.8" v="0.6" id="0:2200">
+            <Weight values="48960" indices="516" id="0:2201" />
+          </MeshVertex>
+          <MeshVertex x="462.0" y="566.2" u="0.9" v="0.6" id="0:2202">
+            <Weight values="14280" indices="516" id="0:2203" />
+          </MeshVertex>
+          <MeshVertex x="477.0" y="566.2" u="1.0" v="0.6" id="0:2204">
+            <Weight values="255" indices="4" id="0:2205" />
+          </MeshVertex>
+          <MeshVertex x="327.0" y="580.9" u="0.0" v="0.7" id="0:2206">
+            <Weight values="255" indices="1" id="0:2207" />
+          </MeshVertex>
+          <MeshVertex x="342.0" y="580.9" u="0.1" v="0.7" id="0:2208">
+            <Weight values="255" indices="1" id="0:2209" />
+          </MeshVertex>
+          <MeshVertex x="357.0" y="580.9" u="0.2" v="0.7" id="0:2210">
+            <Weight values="255" indices="1" id="0:2211" />
+          </MeshVertex>
+          <MeshVertex x="372.0" y="580.9" u="0.3" v="0.7" id="0:2212">
+            <Weight values="255" indices="1" id="0:2213" />
+          </MeshVertex>
+          <MeshVertex x="387.0" y="580.9" u="0.4" v="0.7" id="0:2214">
+            <Weight values="255" indices="1" id="0:2215" />
+          </MeshVertex>
+          <MeshVertex x="402.0" y="580.9" u="0.5" v="0.7" id="0:2216">
+            <Weight values="65280" indices="259" id="0:2217" />
+          </MeshVertex>
+          <MeshVertex x="417.0" y="580.9" u="0.6" v="0.7" id="0:2218">
+            <Weight values="49725" indices="259" id="0:2219" />
+          </MeshVertex>
+          <MeshVertex x="432.0" y="580.9" u="0.7" v="0.7" id="0:2220">
+            <Weight values="14025" indices="259" id="0:2221" />
+          </MeshVertex>
+          <MeshVertex x="447.0" y="580.9" u="0.8" v="0.7" id="0:2222">
+            <Weight values="33150" indices="770" id="0:2223" />
+          </MeshVertex>
+          <MeshVertex x="462.0" y="580.9" u="0.9" v="0.7" id="0:2224">
+            <Weight values="52275" indices="516" id="0:2225" />
+          </MeshVertex>
+          <MeshVertex x="477.0" y="580.9" u="1.0" v="0.7" id="0:2226">
+            <Weight values="16320" indices="516" id="0:2227" />
+          </MeshVertex>
+          <MeshVertex x="327.0" y="595.6" u="0.0" v="0.8" id="0:2228">
+            <Weight values="255" indices="1" id="0:2229" />
+          </MeshVertex>
+          <MeshVertex x="342.0" y="595.6" u="0.1" v="0.8" id="0:2230">
+            <Weight values="255" indices="1" id="0:2231" />
+          </MeshVertex>
+          <MeshVertex x="357.0" y="595.6" u="0.2" v="0.8" id="0:2232">
+            <Weight values="255" indices="1" id="0:2233" />
+          </MeshVertex>
+          <MeshVertex x="372.0" y="595.6" u="0.3" v="0.8" id="0:2234">
+            <Weight values="255" indices="1" id="0:2235" />
+          </MeshVertex>
+          <MeshVertex x="387.0" y="595.6" u="0.4" v="0.8" id="0:2236">
+            <Weight values="255" indices="1" id="0:2237" />
+          </MeshVertex>
+          <MeshVertex x="402.0" y="595.6" u="0.5" v="0.8" id="0:2238">
+            <Weight values="255" indices="1" id="0:2239" />
+          </MeshVertex>
+          <MeshVertex x="417.0" y="595.6" u="0.6" v="0.8" id="0:2240">
+            <Weight values="255" indices="1" id="0:2241" />
+          </MeshVertex>
+          <MeshVertex x="432.0" y="595.6" u="0.7" v="0.8" id="0:2242">
+            <Weight values="51765" indices="259" id="0:2243" />
+          </MeshVertex>
+          <MeshVertex x="447.0" y="595.6" u="0.8" v="0.8" id="0:2244">
+            <Weight values="17595" indices="259" id="0:2245" />
+          </MeshVertex>
+          <MeshVertex x="462.0" y="595.6" u="0.9" v="0.8" id="0:2246">
+            <Weight values="37230" indices="770" id="0:2247" />
+          </MeshVertex>
+          <MeshVertex x="477.0" y="595.6" u="1.0" v="0.8" id="0:2248">
+            <Weight values="55845" indices="516" id="0:2249" />
+          </MeshVertex>
+          <MeshVertex x="327.0" y="610.3" u="0.0" v="0.9" id="0:2250">
+            <Weight values="255" indices="1" id="0:2251" />
+          </MeshVertex>
+          <MeshVertex x="342.0" y="610.3" u="0.1" v="0.9" id="0:2252">
+            <Weight values="255" indices="1" id="0:2253" />
+          </MeshVertex>
+          <MeshVertex x="357.0" y="610.3" u="0.2" v="0.9" id="0:2254">
+            <Weight values="255" indices="1" id="0:2255" />
+          </MeshVertex>
+          <MeshVertex x="372.0" y="610.3" u="0.3" v="0.9" id="0:2256">
+            <Weight values="255" indices="1" id="0:2257" />
+          </MeshVertex>
+          <MeshVertex x="387.0" y="610.3" u="0.4" v="0.9" id="0:2258">
+            <Weight values="255" indices="1" id="0:2259" />
+          </MeshVertex>
+          <MeshVertex x="402.0" y="610.3" u="0.5" v="0.9" id="0:2260">
+            <Weight values="255" indices="1" id="0:2261" />
+          </MeshVertex>
+          <MeshVertex x="417.0" y="610.3" u="0.6" v="0.9" id="0:2262">
+            <Weight values="255" indices="1" id="0:2263" />
+          </MeshVertex>
+          <MeshVertex x="432.0" y="610.3" u="0.7" v="0.9" id="0:2264">
+            <Weight values="255" indices="1" id="0:2265" />
+          </MeshVertex>
+          <MeshVertex x="447.0" y="610.3" u="0.8" v="0.9" id="0:2266">
+            <Weight values="53805" indices="259" id="0:2267" />
+          </MeshVertex>
+          <MeshVertex x="462.0" y="610.3" u="0.9" v="0.9" id="0:2268">
+            <Weight values="20910" indices="259" id="0:2269" />
+          </MeshVertex>
+          <MeshVertex x="477.0" y="610.3" u="1.0" v="0.9" id="0:2270">
+            <Weight values="41055" indices="770" id="0:2271" />
+          </MeshVertex>
+          <MeshVertex x="327.0" y="625.0" u="0.0" v="1.0" id="0:2272">
+            <Weight values="255" indices="1" id="0:2273" />
+          </MeshVertex>
+          <MeshVertex x="342.0" y="625.0" u="0.1" v="1.0" id="0:2274">
+            <Weight values="255" indices="1" id="0:2275" />
+          </MeshVertex>
+          <MeshVertex x="357.0" y="625.0" u="0.2" v="1.0" id="0:2276">
+            <Weight values="255" indices="1" id="0:2277" />
+          </MeshVertex>
+          <MeshVertex x="372.0" y="625.0" u="0.3" v="1.0" id="0:2278">
+            <Weight values="255" indices="1" id="0:2279" />
+          </MeshVertex>
+          <MeshVertex x="387.0" y="625.0" u="0.4" v="1.0" id="0:2280">
+            <Weight values="255" indices="1" id="0:2281" />
+          </MeshVertex>
+          <MeshVertex x="402.0" y="625.0" u="0.5" v="1.0" id="0:2282">
+            <Weight values="255" indices="1" id="0:2283" />
+          </MeshVertex>
+          <MeshVertex x="417.0" y="625.0" u="0.6" v="1.0" id="0:2284">
+            <Weight values="255" indices="1" id="0:2285" />
+          </MeshVertex>
+          <MeshVertex x="432.0" y="625.0" u="0.7" v="1.0" id="0:2286">
+            <Weight values="255" indices="1" id="0:2287" />
+          </MeshVertex>
+          <MeshVertex x="447.0" y="625.0" u="0.8" v="1.0" id="0:2288">
+            <Weight values="255" indices="1" id="0:2289" />
+          </MeshVertex>
+          <MeshVertex x="462.0" y="625.0" u="0.9" v="1.0" id="0:2290">
+            <Weight values="55845" indices="259" id="0:2291" />
+          </MeshVertex>
+          <MeshVertex x="477.0" y="625.0" u="1.0" v="1.0" id="0:2292">
+            <Weight values="24225" indices="259" id="0:2293" />
+          </MeshVertex>
+          <Skin name="Liv sleeve A skin" tx="0" ty="0" id="0:2294">
+            <Tendon boneId="0:2007" name="upperA" xx="-0.6670160535389701" xy="0.7450433439212096" yx="-0.7450433439212096" yy="-0.6670160535389701" tx="440.0" ty="538.0" id="0:2295" />
+            <Tendon boneId="0:2010" name="slvA1" xx="-0.6670160535389701" xy="0.7450433439212096" yx="-0.7450433439212096" yy="-0.6670160535389701" tx="440.0" ty="538.0" id="0:2296" />
+            <Tendon boneId="0:2011" name="slvA2" xx="-0.6670160535389701" xy="0.7450433439212096" yx="-0.7450433439212096" yy="-0.6670160535389701" tx="440.0" ty="538.0" id="0:2297" />
+            <Tendon boneId="0:2004" name="spine" xx="-0.013635095969426868" xy="-0.9999070377579631" yx="0.9999070377579631" yy="-0.013635095969426868" tx="510" ty="912" id="0:2298" />
+          </Skin>
+        </Mesh>
+      </Image>
+      <Image name="Liv shoulder cap A" assetId="0:119" originX="0" originY="0" id="0:2548">
+        <Mesh name="Liv shoulder cap A mesh" triangleIndexBytes="AAECAAID" id="0:2549">
+          <MeshVertex x="327" y="478" u="0" v="0" id="0:2550">
+            <Weight values="255" indices="1" id="0:2551" />
+          </MeshVertex>
+          <MeshVertex x="477" y="478" u="1" v="0" id="0:2552">
+            <Weight values="255" indices="1" id="0:2553" />
+          </MeshVertex>
+          <MeshVertex x="477" y="625" u="1" v="1" id="0:2554">
+            <Weight values="255" indices="1" id="0:2555" />
+          </MeshVertex>
+          <MeshVertex x="327" y="625" u="0" v="1" id="0:2556">
+            <Weight values="255" indices="1" id="0:2557" />
+          </MeshVertex>
+          <Skin name="Liv shoulder cap A skin" tx="0" ty="0" id="0:2558">
+            <Tendon boneId="0:2004" name="spine" xx="-0.013635095969426868" xy="-0.9999070377579631" yx="0.9999070377579631" yy="-0.013635095969426868" tx="510" ty="912" id="0:2559" />
+          </Skin>
+        </Mesh>
+      </Image>
+      <Image name="Liv upper arm A" assetId="0:113" originX="0" originY="0" id="0:2572">
+        <Mesh name="Liv upper arm A mesh" triangleIndexBytes="AAECAAID" id="0:2573">
+          <MeshVertex x="308" y="510" u="0" v="0" id="0:2574">
+            <Weight values="255" indices="1" id="0:2575" />
+          </MeshVertex>
+          <MeshVertex x="471" y="510" u="1" v="0" id="0:2576">
+            <Weight values="255" indices="1" id="0:2577" />
+          </MeshVertex>
+          <MeshVertex x="471" y="683" u="1" v="1" id="0:2578">
+            <Weight values="255" indices="1" id="0:2579" />
+          </MeshVertex>
+          <MeshVertex x="308" y="683" u="0" v="1" id="0:2580">
+            <Weight values="255" indices="1" id="0:2581" />
+          </MeshVertex>
+          <Skin name="Liv upper arm A skin" tx="0" ty="0" id="0:2582">
+            <Tendon boneId="0:2007" name="upperA" xx="-0.6670160535389701" xy="0.7450433439212096" yx="-0.7450433439212096" yy="-0.6670160535389701" tx="440.0" ty="538.0" id="0:2583" />
+          </Skin>
+        </Mesh>
+      </Image>
+      <Image name="Liv hand B relaxed (front)" assetId="0:121" originX="0" originY="0" id="0:3373">
+        <Mesh name="Liv hand B relaxed (front) mesh" triangleIndexBytes="AAECAAID" id="0:3374">
+          <MeshVertex x="721.322" y="749.862" u="0" v="0" id="0:3375">
+            <Weight values="255" indices="1" id="0:3376" />
+          </MeshVertex>
+          <MeshVertex x="808.684" y="833.584" u="1" v="0" id="0:3377">
+            <Weight values="255" indices="1" id="0:3378" />
+          </MeshVertex>
+          <MeshVertex x="853.573" y="786.743" u="1" v="1" id="0:3379">
+            <Weight values="255" indices="1" id="0:3380" />
+          </MeshVertex>
+          <MeshVertex x="766.211" y="703.021" u="0" v="1" id="0:3381">
+            <Weight values="255" indices="1" id="0:3382" />
+          </MeshVertex>
+          <Skin name="Liv hand B relaxed (front) skin" tx="0" ty="0" id="0:3383">
+            <Tendon boneId="0:2015" name="handB" xx="0.7219882051154239" xy="0.6919053632356152" yx="-0.6919053632356152" yy="0.7219882051154239" tx="762.8976188803593" ty="734.506051427011" id="0:3384" />
+          </Skin>
+        </Mesh>
+        <DataBindContext sourcePathIds="0:40-0:3451" propertyKey="18" id="0:3557" />
+      </Image>
+      <Image name="Liv hand B palm (front)" assetId="0:122" originX="0" originY="0" id="0:3385">
+        <Mesh name="Liv hand B palm (front) mesh" triangleIndexBytes="AAECAAID" id="0:3386">
+          <MeshVertex x="705.708" y="626.105" u="0" v="0" id="0:3387">
+            <Weight values="255" indices="1" id="0:3388" />
+          </MeshVertex>
+          <MeshVertex x="639.443" y="695.251" u="1" v="0" id="0:3389">
+            <Weight values="255" indices="1" id="0:3390" />
+          </MeshVertex>
+          <MeshVertex x="725.69" y="777.904" u="1" v="1" id="0:3391">
+            <Weight values="255" indices="1" id="0:3392" />
+          </MeshVertex>
+          <MeshVertex x="791.955" y="708.758" u="0" v="1" id="0:3393">
+            <Weight values="255" indices="1" id="0:3394" />
+          </MeshVertex>
+          <Skin name="Liv hand B palm (front) skin" tx="0" ty="0" id="0:3395">
+            <Tendon boneId="0:2015" name="handB" xx="0.7219882051154239" xy="0.6919053632356152" yx="-0.6919053632356152" yy="0.7219882051154239" tx="762.8976188803593" ty="734.506051427011" id="0:3396" />
+          </Skin>
+        </Mesh>
+        <DataBindContext sourcePathIds="0:40-0:3452" propertyKey="18" id="0:3558" />
+      </Image>
+      <Image name="Liv hand B fist (front)" assetId="0:123" originX="0" originY="0" id="0:3397">
+        <Mesh name="Liv hand B fist (front) mesh" triangleIndexBytes="AAECAAID" id="0:3398">
+          <MeshVertex x="712.848" y="762.602" u="0" v="0" id="0:3399">
+            <Weight values="255" indices="1" id="0:3400" />
+          </MeshVertex>
+          <MeshVertex x="778.649" y="825.661" u="1" v="0" id="0:3401">
+            <Weight values="255" indices="1" id="0:3402" />
+          </MeshVertex>
+          <MeshVertex x="830.663" y="771.385" u="1" v="1" id="0:3403">
+            <Weight values="255" indices="1" id="0:3404" />
+          </MeshVertex>
+          <MeshVertex x="764.863" y="708.326" u="0" v="1" id="0:3405">
+            <Weight values="255" indices="1" id="0:3406" />
+          </MeshVertex>
+          <Skin name="Liv hand B fist (front) skin" tx="0" ty="0" id="0:3407">
+            <Tendon boneId="0:2015" name="handB" xx="0.7219882051154239" xy="0.6919053632356152" yx="-0.6919053632356152" yy="0.7219882051154239" tx="762.8976188803593" ty="734.506051427011" id="0:3408" />
+          </Skin>
+        </Mesh>
+        <DataBindContext sourcePathIds="0:40-0:3453" propertyKey="18" id="0:3559" />
+      </Image>
+      <Image name="Liv hand B point (front)" assetId="0:124" originX="0" originY="0" id="0:3409">
+        <Mesh name="Liv hand B point (front) mesh" triangleIndexBytes="AAECAAID" id="0:3410">
+          <MeshVertex x="720.149" y="750.985" u="0" v="0" id="0:3411">
+            <Weight values="255" indices="1" id="0:3412" />
+          </MeshVertex>
+          <MeshVertex x="807.883" y="835.064" u="1" v="0" id="0:3413">
+            <Weight values="255" indices="1" id="0:3414" />
+          </MeshVertex>
+          <MeshVertex x="853.485" y="787.479" u="1" v="1" id="0:3415">
+            <Weight values="255" indices="1" id="0:3416" />
+          </MeshVertex>
+          <MeshVertex x="765.751" y="703.401" u="0" v="1" id="0:3417">
+            <Weight values="255" indices="1" id="0:3418" />
+          </MeshVertex>
+          <Skin name="Liv hand B point (front) skin" tx="0" ty="0" id="0:3419">
+            <Tendon boneId="0:2015" name="handB" xx="0.7219882051154239" xy="0.6919053632356152" yx="-0.6919053632356152" yy="0.7219882051154239" tx="762.8976188803593" ty="734.506051427011" id="0:3420" />
+          </Skin>
+        </Mesh>
+        <DataBindContext sourcePathIds="0:40-0:3454" propertyKey="18" id="0:3560" />
+      </Image>
+      <Image name="Liv hand B thumb (front)" assetId="0:125" originX="0" originY="0" id="0:3421">
+        <Mesh name="Liv hand B thumb (front) mesh" triangleIndexBytes="AAECAAID" id="0:3422">
+          <MeshVertex x="696.219" y="780.256" u="0" v="0" id="0:3423">
+            <Weight values="255" indices="1" id="0:3424" />
+          </MeshVertex>
+          <MeshVertex x="760.161" y="841.534" u="1" v="0" id="0:3425">
+            <Weight values="255" indices="1" id="0:3426" />
+          </MeshVertex>
+          <MeshVertex x="829.988" y="768.67" u="1" v="1" id="0:3427">
+            <Weight values="255" indices="1" id="0:3428" />
+          </MeshVertex>
+          <MeshVertex x="766.047" y="707.392" u="0" v="1" id="0:3429">
+            <Weight values="255" indices="1" id="0:3430" />
+          </MeshVertex>
+          <Skin name="Liv hand B thumb (front) skin" tx="0" ty="0" id="0:3431">
+            <Tendon boneId="0:2015" name="handB" xx="0.7219882051154239" xy="0.6919053632356152" yx="-0.6919053632356152" yy="0.7219882051154239" tx="762.8976188803593" ty="734.506051427011" id="0:3432" />
+          </Skin>
+        </Mesh>
+        <DataBindContext sourcePathIds="0:40-0:3455" propertyKey="18" id="0:3561" />
+      </Image>
+      <Image name="Liv hand B back (front)" assetId="0:126" originX="0" originY="0" id="0:3433">
+        <Mesh name="Liv hand B back (front) mesh" triangleIndexBytes="AAECAAID" id="0:3434">
+          <MeshVertex x="716.813" y="614.924" u="0" v="0" id="0:3435">
+            <Weight values="255" indices="1" id="0:3436" />
+          </MeshVertex>
+          <MeshVertex x="650.548" y="684.07" u="1" v="0" id="0:3437">
+            <Weight values="255" indices="1" id="0:3438" />
+          </MeshVertex>
+          <MeshVertex x="736.795" y="766.723" u="1" v="1" id="0:3439">
+            <Weight values="255" indices="1" id="0:3440" />
+          </MeshVertex>
+          <MeshVertex x="803.06" y="697.577" u="0" v="1" id="0:3441">
+            <Weight values="255" indices="1" id="0:3442" />
+          </MeshVertex>
+          <Skin name="Liv hand B back (front) skin" tx="0" ty="0" id="0:3443">
+            <Tendon boneId="0:2015" name="handB" xx="0.7219882051154239" xy="0.6919053632356152" yx="-0.6919053632356152" yy="0.7219882051154239" tx="762.8976188803593" ty="734.506051427011" id="0:3444" />
+          </Skin>
+        </Mesh>
+        <DataBindContext sourcePathIds="0:40-0:3456" propertyKey="18" id="0:3562" />
+      </Image>
+      <Image name="Liv forearm B (front)" assetId="0:116" originX="0" originY="0" id="0:3361">
+        <Mesh name="Liv forearm B (front) mesh" triangleIndexBytes="AAECAAID" id="0:3362">
+          <MeshVertex x="646" y="621" u="0" v="0" id="0:3363">
+            <Weight values="255" indices="1" id="0:3364" />
+          </MeshVertex>
+          <MeshVertex x="779" y="621" u="1" v="0" id="0:3365">
+            <Weight values="255" indices="1" id="0:3366" />
+          </MeshVertex>
+          <MeshVertex x="779" y="751" u="1" v="1" id="0:3367">
+            <Weight values="255" indices="1" id="0:3368" />
+          </MeshVertex>
+          <MeshVertex x="646" y="751" u="0" v="1" id="0:3369">
+            <Weight values="255" indices="1" id="0:3370" />
+          </MeshVertex>
+          <Skin name="Liv forearm B (front) skin" tx="0" ty="0" id="0:3371">
+            <Tendon boneId="0:2014" name="foreB" xx="0.721988205115424" xy="0.691905363235615" yx="-0.691905363235615" yy="0.721988205115424" tx="672.6490932409313" ty="648.0178810225591" id="0:3372" />
+          </Skin>
+        </Mesh>
+        <DataBindContext sourcePathIds="0:40-0:3449" propertyKey="18" id="0:3564" />
+      </Image>
+      <Image name="Liv sleeve B" assetId="0:104" originX="0" originY="0" id="0:2299">
+        <Mesh name="Liv sleeve B mesh" triangleIndexBytes="AAEMAAwLAQINAQ0MAgMOAg4NAwQPAw8OBAUQBBAPBQYRBREQBgcSBhIRBwgTBxMSCAkUCBQTCQoVCRUUCwwXCxcWDA0YDBgXDQ4ZDRkYDg8aDhoZDxAbDxsaEBEcEBwbERIdER0cEhMeEh4dExQfEx8eFBUgFCAfFhciFiIhFxgjFyMiGBkkGCQjGRolGSUkGhsmGiYlGxwnGycmHB0oHCgnHR4pHSkoHh8qHiopHyArHysqISItIS0sIiMuIi4tIyQvIy8uJCUwJDAvJSYxJTEwJicyJjIxJygzJzMyKCk0KDQzKSo1KTU0Kis2KjY1LC04LDg3LS45LTk4Li86Ljo5LzA7Lzs6MDE8MDw7MTI9MT08MjM+Mj49MzQ/Mz8+NDVANEA/NTZBNUFANzhDN0NCODlEOERDOTpFOUVEOjtGOkZFOzxHO0dGPD1IPEhHPT5JPUlIPj9KPkpJP0BLP0tKQEFMQExLQkNOQk5NQ0RPQ09OREVQRFBPRUZRRVFQRkdSRlJRR0hTR1NSSElUSFRTSUpVSVVUSktWSlZVS0xXS1dWTU5ZTVlYTk9aTlpZT1BbT1taUFFcUFxbUVJdUV1cUlNeUl5dU1RfU19eVFVgVGBfVVZhVWFgVldiVmJhWFlkWGRjWVplWWVkWltmWmZlW1xnW2dmXF1oXGhnXV5pXWloXl9qXmppX2BrX2tqYGFsYGxrYWJtYW1sY2RvY29uZGVwZHBvZWZxZXFwZmdyZnJxZ2hzZ3NyaGl0aHRzaWp1aXV0amt2anZ1a2x3a3d2bG14bHh3" id="0:2300">
+          <MeshVertex x="563.0" y="483.0" u="0.0" v="0.0" id="0:2301">
+            <Weight values="255" indices="4" id="0:2302" />
+          </MeshVertex>
+          <MeshVertex x="574.1" y="483.0" u="0.1" v="0.0" id="0:2303">
+            <Weight values="255" indices="4" id="0:2304" />
+          </MeshVertex>
+          <MeshVertex x="585.2" y="483.0" u="0.2" v="0.0" id="0:2305">
+            <Weight values="255" indices="4" id="0:2306" />
+          </MeshVertex>
+          <MeshVertex x="596.3" y="483.0" u="0.3" v="0.0" id="0:2307">
+            <Weight values="255" indices="4" id="0:2308" />
+          </MeshVertex>
+          <MeshVertex x="607.4" y="483.0" u="0.4" v="0.0" id="0:2309">
+            <Weight values="255" indices="4" id="0:2310" />
+          </MeshVertex>
+          <MeshVertex x="618.5" y="483.0" u="0.5" v="0.0" id="0:2311">
+            <Weight values="255" indices="4" id="0:2312" />
+          </MeshVertex>
+          <MeshVertex x="629.6" y="483.0" u="0.6" v="0.0" id="0:2313">
+            <Weight values="8670" indices="516" id="0:2314" />
+          </MeshVertex>
+          <MeshVertex x="640.7" y="483.0" u="0.7" v="0.0" id="0:2315">
+            <Weight values="31620" indices="516" id="0:2316" />
+          </MeshVertex>
+          <MeshVertex x="651.8" y="483.0" u="0.8" v="0.0" id="0:2317">
+            <Weight values="64260" indices="516" id="0:2318" />
+          </MeshVertex>
+          <MeshVertex x="662.9" y="483.0" u="0.9" v="0.0" id="0:2319">
+            <Weight values="36465" indices="770" id="0:2320" />
+          </MeshVertex>
+          <MeshVertex x="674.0" y="483.0" u="1.0" v="0.0" id="0:2321">
+            <Weight values="8160" indices="259" id="0:2322" />
+          </MeshVertex>
+          <MeshVertex x="563.0" y="497.1" u="0.0" v="0.1" id="0:2323">
+            <Weight values="255" indices="4" id="0:2324" />
+          </MeshVertex>
+          <MeshVertex x="574.1" y="497.1" u="0.1" v="0.1" id="0:2325">
+            <Weight values="255" indices="4" id="0:2326" />
+          </MeshVertex>
+          <MeshVertex x="585.2" y="497.1" u="0.2" v="0.1" id="0:2327">
+            <Weight values="255" indices="4" id="0:2328" />
+          </MeshVertex>
+          <MeshVertex x="596.3" y="497.1" u="0.3" v="0.1" id="0:2329">
+            <Weight values="255" indices="4" id="0:2330" />
+          </MeshVertex>
+          <MeshVertex x="607.4" y="497.1" u="0.4" v="0.1" id="0:2331">
+            <Weight values="510" indices="516" id="0:2332" />
+          </MeshVertex>
+          <MeshVertex x="618.5" y="497.1" u="0.5" v="0.1" id="0:2333">
+            <Weight values="12495" indices="516" id="0:2334" />
+          </MeshVertex>
+          <MeshVertex x="629.6" y="497.1" u="0.6" v="0.1" id="0:2335">
+            <Weight values="37995" indices="516" id="0:2336" />
+          </MeshVertex>
+          <MeshVertex x="640.7" y="497.1" u="0.7" v="0.1" id="0:2337">
+            <Weight values="7140" indices="770" id="0:2338" />
+          </MeshVertex>
+          <MeshVertex x="651.8" y="497.1" u="0.8" v="0.1" id="0:2339">
+            <Weight values="44625" indices="770" id="0:2340" />
+          </MeshVertex>
+          <MeshVertex x="662.9" y="497.1" u="0.9" v="0.1" id="0:2341">
+            <Weight values="15555" indices="259" id="0:2342" />
+          </MeshVertex>
+          <MeshVertex x="674.0" y="497.1" u="1.0" v="0.1" id="0:2343">
+            <Weight values="44880" indices="259" id="0:2344" />
+          </MeshVertex>
+          <MeshVertex x="563.0" y="511.2" u="0.0" v="0.2" id="0:2345">
+            <Weight values="255" indices="4" id="0:2346" />
+          </MeshVertex>
+          <MeshVertex x="574.1" y="511.2" u="0.1" v="0.2" id="0:2347">
+            <Weight values="255" indices="4" id="0:2348" />
+          </MeshVertex>
+          <MeshVertex x="585.2" y="511.2" u="0.2" v="0.2" id="0:2349">
+            <Weight values="255" indices="4" id="0:2350" />
+          </MeshVertex>
+          <MeshVertex x="596.3" y="511.2" u="0.3" v="0.2" id="0:2351">
+            <Weight values="1785" indices="516" id="0:2352" />
+          </MeshVertex>
+          <MeshVertex x="607.4" y="511.2" u="0.4" v="0.2" id="0:2353">
+            <Weight values="17085" indices="516" id="0:2354" />
+          </MeshVertex>
+          <MeshVertex x="618.5" y="511.2" u="0.5" v="0.2" id="0:2355">
+            <Weight values="44880" indices="516" id="0:2356" />
+          </MeshVertex>
+          <MeshVertex x="629.6" y="511.2" u="0.6" v="0.2" id="0:2357">
+            <Weight values="15300" indices="770" id="0:2358" />
+          </MeshVertex>
+          <MeshVertex x="640.7" y="511.2" u="0.7" v="0.2" id="0:2359">
+            <Weight values="52785" indices="770" id="0:2360" />
+          </MeshVertex>
+          <MeshVertex x="651.8" y="511.2" u="0.8" v="0.2" id="0:2361">
+            <Weight values="22695" indices="259" id="0:2362" />
+          </MeshVertex>
+          <MeshVertex x="662.9" y="511.2" u="0.9" v="0.2" id="0:2363">
+            <Weight values="49725" indices="259" id="0:2364" />
+          </MeshVertex>
+          <MeshVertex x="674.0" y="511.2" u="1.0" v="0.2" id="0:2365">
+            <Weight values="64260" indices="259" id="0:2366" />
+          </MeshVertex>
+          <MeshVertex x="563.0" y="525.3" u="0.0" v="0.3" id="0:2367">
+            <Weight values="255" indices="4" id="0:2368" />
+          </MeshVertex>
+          <MeshVertex x="574.1" y="525.3" u="0.1" v="0.3" id="0:2369">
+            <Weight values="255" indices="4" id="0:2370" />
+          </MeshVertex>
+          <MeshVertex x="585.2" y="525.3" u="0.2" v="0.3" id="0:2371">
+            <Weight values="3825" indices="516" id="0:2372" />
+          </MeshVertex>
+          <MeshVertex x="596.3" y="525.3" u="0.3" v="0.3" id="0:2373">
+            <Weight values="22185" indices="516" id="0:2374" />
+          </MeshVertex>
+          <MeshVertex x="607.4" y="525.3" u="0.4" v="0.3" id="0:2375">
+            <Weight values="52275" indices="516" id="0:2376" />
+          </MeshVertex>
+          <MeshVertex x="618.5" y="525.3" u="0.5" v="0.3" id="0:2377">
+            <Weight values="23205" indices="770" id="0:2378" />
+          </MeshVertex>
+          <MeshVertex x="629.6" y="525.3" u="0.6" v="0.3" id="0:2379">
+            <Weight values="60690" indices="770" id="0:2380" />
+          </MeshVertex>
+          <MeshVertex x="640.7" y="525.3" u="0.7" v="0.3" id="0:2381">
+            <Weight values="29325" indices="259" id="0:2382" />
+          </MeshVertex>
+          <MeshVertex x="651.8" y="525.3" u="0.8" v="0.3" id="0:2383">
+            <Weight values="54315" indices="259" id="0:2384" />
+          </MeshVertex>
+          <MeshVertex x="662.9" y="525.3" u="0.9" v="0.3" id="0:2385">
+            <Weight values="65025" indices="259" id="0:2386" />
+          </MeshVertex>
+          <MeshVertex x="674.0" y="525.3" u="1.0" v="0.3" id="0:2387">
+            <Weight values="255" indices="1" id="0:2388" />
+          </MeshVertex>
+          <MeshVertex x="563.0" y="539.4" u="0.0" v="0.4" id="0:2389">
+            <Weight values="255" indices="4" id="0:2390" />
+          </MeshVertex>
+          <MeshVertex x="574.1" y="539.4" u="0.1" v="0.4" id="0:2391">
+            <Weight values="6630" indices="516" id="0:2392" />
+          </MeshVertex>
+          <MeshVertex x="585.2" y="539.4" u="0.2" v="0.4" id="0:2393">
+            <Weight values="28050" indices="516" id="0:2394" />
+          </MeshVertex>
+          <MeshVertex x="596.3" y="539.4" u="0.3" v="0.4" id="0:2395">
+            <Weight values="59670" indices="516" id="0:2396" />
+          </MeshVertex>
+          <MeshVertex x="607.4" y="539.4" u="0.4" v="0.4" id="0:2397">
+            <Weight values="31620" indices="770" id="0:2398" />
+          </MeshVertex>
+          <MeshVertex x="618.5" y="539.4" u="0.5" v="0.4" id="0:2399">
+            <Weight values="3570" indices="259" id="0:2400" />
+          </MeshVertex>
+          <MeshVertex x="629.6" y="539.4" u="0.6" v="0.4" id="0:2401">
+            <Weight values="35700" indices="259" id="0:2402" />
+          </MeshVertex>
+          <MeshVertex x="640.7" y="539.4" u="0.7" v="0.4" id="0:2403">
+            <Weight values="57885" indices="259" id="0:2404" />
+          </MeshVertex>
+          <MeshVertex x="651.8" y="539.4" u="0.8" v="0.4" id="0:2405">
+            <Weight values="255" indices="1" id="0:2406" />
+          </MeshVertex>
+          <MeshVertex x="662.9" y="539.4" u="0.9" v="0.4" id="0:2407">
+            <Weight values="255" indices="1" id="0:2408" />
+          </MeshVertex>
+          <MeshVertex x="674.0" y="539.4" u="1.0" v="0.4" id="0:2409">
+            <Weight values="255" indices="1" id="0:2410" />
+          </MeshVertex>
+          <MeshVertex x="563.0" y="553.5" u="0.0" v="0.5" id="0:2411">
+            <Weight values="10200" indices="516" id="0:2412" />
+          </MeshVertex>
+          <MeshVertex x="574.1" y="553.5" u="0.1" v="0.5" id="0:2413">
+            <Weight values="34170" indices="516" id="0:2414" />
+          </MeshVertex>
+          <MeshVertex x="585.2" y="553.5" u="0.2" v="0.5" id="0:2415">
+            <Weight values="2295" indices="770" id="0:2416" />
+          </MeshVertex>
+          <MeshVertex x="596.3" y="553.5" u="0.3" v="0.5" id="0:2417">
+            <Weight values="39780" indices="770" id="0:2418" />
+          </MeshVertex>
+          <MeshVertex x="607.4" y="553.5" u="0.4" v="0.5" id="0:2419">
+            <Weight values="11220" indices="259" id="0:2420" />
+          </MeshVertex>
+          <MeshVertex x="618.5" y="553.5" u="0.5" v="0.5" id="0:2421">
+            <Weight values="41565" indices="259" id="0:2422" />
+          </MeshVertex>
+          <MeshVertex x="629.6" y="553.5" u="0.6" v="0.5" id="0:2423">
+            <Weight values="60945" indices="259" id="0:2424" />
+          </MeshVertex>
+          <MeshVertex x="640.7" y="553.5" u="0.7" v="0.5" id="0:2425">
+            <Weight values="255" indices="1" id="0:2426" />
+          </MeshVertex>
+          <MeshVertex x="651.8" y="553.5" u="0.8" v="0.5" id="0:2427">
+            <Weight values="255" indices="1" id="0:2428" />
+          </MeshVertex>
+          <MeshVertex x="662.9" y="553.5" u="0.9" v="0.5" id="0:2429">
+            <Weight values="255" indices="1" id="0:2430" />
+          </MeshVertex>
+          <MeshVertex x="674.0" y="553.5" u="1.0" v="0.5" id="0:2431">
+            <Weight values="255" indices="1" id="0:2432" />
+          </MeshVertex>
+          <MeshVertex x="563.0" y="567.6" u="0.0" v="0.6" id="0:2433">
+            <Weight values="40800" indices="516" id="0:2434" />
+          </MeshVertex>
+          <MeshVertex x="574.1" y="567.6" u="0.1" v="0.6" id="0:2435">
+            <Weight values="10455" indices="770" id="0:2436" />
+          </MeshVertex>
+          <MeshVertex x="585.2" y="567.6" u="0.2" v="0.6" id="0:2437">
+            <Weight values="47940" indices="770" id="0:2438" />
+          </MeshVertex>
+          <MeshVertex x="596.3" y="567.6" u="0.3" v="0.6" id="0:2439">
+            <Weight values="18360" indices="259" id="0:2440" />
+          </MeshVertex>
+          <MeshVertex x="607.4" y="567.6" u="0.4" v="0.6" id="0:2441">
+            <Weight values="46920" indices="259" id="0:2442" />
+          </MeshVertex>
+          <MeshVertex x="618.5" y="567.6" u="0.5" v="0.6" id="0:2443">
+            <Weight values="63240" indices="259" id="0:2444" />
+          </MeshVertex>
+          <MeshVertex x="629.6" y="567.6" u="0.6" v="0.6" id="0:2445">
+            <Weight values="255" indices="1" id="0:2446" />
+          </MeshVertex>
+          <MeshVertex x="640.7" y="567.6" u="0.7" v="0.6" id="0:2447">
+            <Weight values="255" indices="1" id="0:2448" />
+          </MeshVertex>
+          <MeshVertex x="651.8" y="567.6" u="0.8" v="0.6" id="0:2449">
+            <Weight values="255" indices="1" id="0:2450" />
+          </MeshVertex>
+          <MeshVertex x="662.9" y="567.6" u="0.9" v="0.6" id="0:2451">
+            <Weight values="255" indices="1" id="0:2452" />
+          </MeshVertex>
+          <MeshVertex x="674.0" y="567.6" u="1.0" v="0.6" id="0:2453">
+            <Weight values="255" indices="1" id="0:2454" />
+          </MeshVertex>
+          <MeshVertex x="563.0" y="581.7" u="0.0" v="0.7" id="0:2455">
+            <Weight values="18360" indices="770" id="0:2456" />
+          </MeshVertex>
+          <MeshVertex x="574.1" y="581.7" u="0.1" v="0.7" id="0:2457">
+            <Weight values="56100" indices="770" id="0:2458" />
+          </MeshVertex>
+          <MeshVertex x="585.2" y="581.7" u="0.2" v="0.7" id="0:2459">
+            <Weight values="25500" indices="259" id="0:2460" />
+          </MeshVertex>
+          <MeshVertex x="596.3" y="581.7" u="0.3" v="0.7" id="0:2461">
+            <Weight values="51765" indices="259" id="0:2462" />
+          </MeshVertex>
+          <MeshVertex x="607.4" y="581.7" u="0.4" v="0.7" id="0:2463">
+            <Weight values="64770" indices="259" id="0:2464" />
+          </MeshVertex>
+          <MeshVertex x="618.5" y="581.7" u="0.5" v="0.7" id="0:2465">
+            <Weight values="255" indices="1" id="0:2466" />
+          </MeshVertex>
+          <MeshVertex x="629.6" y="581.7" u="0.6" v="0.7" id="0:2467">
+            <Weight values="255" indices="1" id="0:2468" />
+          </MeshVertex>
+          <MeshVertex x="640.7" y="581.7" u="0.7" v="0.7" id="0:2469">
+            <Weight values="255" indices="1" id="0:2470" />
+          </MeshVertex>
+          <MeshVertex x="651.8" y="581.7" u="0.8" v="0.7" id="0:2471">
+            <Weight values="255" indices="1" id="0:2472" />
+          </MeshVertex>
+          <MeshVertex x="662.9" y="581.7" u="0.9" v="0.7" id="0:2473">
+            <Weight values="255" indices="1" id="0:2474" />
+          </MeshVertex>
+          <MeshVertex x="674.0" y="581.7" u="1.0" v="0.7" id="0:2475">
+            <Weight values="255" indices="1" id="0:2476" />
+          </MeshVertex>
+          <MeshVertex x="563.0" y="595.8" u="0.0" v="0.8" id="0:2477">
+            <Weight values="64005" indices="770" id="0:2478" />
+          </MeshVertex>
+          <MeshVertex x="574.1" y="595.8" u="0.1" v="0.8" id="0:2479">
+            <Weight values="31875" indices="259" id="0:2480" />
+          </MeshVertex>
+          <MeshVertex x="585.2" y="595.8" u="0.2" v="0.8" id="0:2481">
+            <Weight values="55845" indices="259" id="0:2482" />
+          </MeshVertex>
+          <MeshVertex x="596.3" y="595.8" u="0.3" v="0.8" id="0:2483">
+            <Weight values="65280" indices="259" id="0:2484" />
+          </MeshVertex>
+          <MeshVertex x="607.4" y="595.8" u="0.4" v="0.8" id="0:2485">
+            <Weight values="255" indices="1" id="0:2486" />
+          </MeshVertex>
+          <MeshVertex x="618.5" y="595.8" u="0.5" v="0.8" id="0:2487">
+            <Weight values="255" indices="1" id="0:2488" />
+          </MeshVertex>
+          <MeshVertex x="629.6" y="595.8" u="0.6" v="0.8" id="0:2489">
+            <Weight values="255" indices="1" id="0:2490" />
+          </MeshVertex>
+          <MeshVertex x="640.7" y="595.8" u="0.7" v="0.8" id="0:2491">
+            <Weight values="255" indices="1" id="0:2492" />
+          </MeshVertex>
+          <MeshVertex x="651.8" y="595.8" u="0.8" v="0.8" id="0:2493">
+            <Weight values="255" indices="1" id="0:2494" />
+          </MeshVertex>
+          <MeshVertex x="662.9" y="595.8" u="0.9" v="0.8" id="0:2495">
+            <Weight values="255" indices="1" id="0:2496" />
+          </MeshVertex>
+          <MeshVertex x="674.0" y="595.8" u="1.0" v="0.8" id="0:2497">
+            <Weight values="255" indices="1" id="0:2498" />
+          </MeshVertex>
+          <MeshVertex x="563.0" y="609.9" u="0.0" v="0.9" id="0:2499">
+            <Weight values="38250" indices="259" id="0:2500" />
+          </MeshVertex>
+          <MeshVertex x="574.1" y="609.9" u="0.1" v="0.9" id="0:2501">
+            <Weight values="59160" indices="259" id="0:2502" />
+          </MeshVertex>
+          <MeshVertex x="585.2" y="609.9" u="0.2" v="0.9" id="0:2503">
+            <Weight values="255" indices="1" id="0:2504" />
+          </MeshVertex>
+          <MeshVertex x="596.3" y="609.9" u="0.3" v="0.9" id="0:2505">
+            <Weight values="255" indices="1" id="0:2506" />
+          </MeshVertex>
+          <MeshVertex x="607.4" y="609.9" u="0.4" v="0.9" id="0:2507">
+            <Weight values="255" indices="1" id="0:2508" />
+          </MeshVertex>
+          <MeshVertex x="618.5" y="609.9" u="0.5" v="0.9" id="0:2509">
+            <Weight values="255" indices="1" id="0:2510" />
+          </MeshVertex>
+          <MeshVertex x="629.6" y="609.9" u="0.6" v="0.9" id="0:2511">
+            <Weight values="255" indices="1" id="0:2512" />
+          </MeshVertex>
+          <MeshVertex x="640.7" y="609.9" u="0.7" v="0.9" id="0:2513">
+            <Weight values="255" indices="1" id="0:2514" />
+          </MeshVertex>
+          <MeshVertex x="651.8" y="609.9" u="0.8" v="0.9" id="0:2515">
+            <Weight values="255" indices="1" id="0:2516" />
+          </MeshVertex>
+          <MeshVertex x="662.9" y="609.9" u="0.9" v="0.9" id="0:2517">
+            <Weight values="255" indices="1" id="0:2518" />
+          </MeshVertex>
+          <MeshVertex x="674.0" y="609.9" u="1.0" v="0.9" id="0:2519">
+            <Weight values="255" indices="1" id="0:2520" />
+          </MeshVertex>
+          <MeshVertex x="563.0" y="624.0" u="0.0" v="1.0" id="0:2521">
+            <Weight values="61965" indices="259" id="0:2522" />
+          </MeshVertex>
+          <MeshVertex x="574.1" y="624.0" u="0.1" v="1.0" id="0:2523">
+            <Weight values="255" indices="1" id="0:2524" />
+          </MeshVertex>
+          <MeshVertex x="585.2" y="624.0" u="0.2" v="1.0" id="0:2525">
+            <Weight values="255" indices="1" id="0:2526" />
+          </MeshVertex>
+          <MeshVertex x="596.3" y="624.0" u="0.3" v="1.0" id="0:2527">
+            <Weight values="255" indices="1" id="0:2528" />
+          </MeshVertex>
+          <MeshVertex x="607.4" y="624.0" u="0.4" v="1.0" id="0:2529">
+            <Weight values="255" indices="1" id="0:2530" />
+          </MeshVertex>
+          <MeshVertex x="618.5" y="624.0" u="0.5" v="1.0" id="0:2531">
+            <Weight values="255" indices="1" id="0:2532" />
+          </MeshVertex>
+          <MeshVertex x="629.6" y="624.0" u="0.6" v="1.0" id="0:2533">
+            <Weight values="255" indices="1" id="0:2534" />
+          </MeshVertex>
+          <MeshVertex x="640.7" y="624.0" u="0.7" v="1.0" id="0:2535">
+            <Weight values="255" indices="1" id="0:2536" />
+          </MeshVertex>
+          <MeshVertex x="651.8" y="624.0" u="0.8" v="1.0" id="0:2537">
+            <Weight values="255" indices="1" id="0:2538" />
+          </MeshVertex>
+          <MeshVertex x="662.9" y="624.0" u="0.9" v="1.0" id="0:2539">
+            <Weight values="255" indices="1" id="0:2540" />
+          </MeshVertex>
+          <MeshVertex x="674.0" y="624.0" u="1.0" v="1.0" id="0:2541">
+            <Weight values="255" indices="1" id="0:2542" />
+          </MeshVertex>
+          <Skin name="Liv sleeve B skin" tx="0" ty="0" id="0:2543">
+            <Tendon boneId="0:2013" name="upperB" xx="0.7224769554623351" xy="0.6913950020255245" yx="-0.6913950020255245" yy="0.7224769554623351" tx="565.0" ty="545.0" id="0:2544" />
+            <Tendon boneId="0:2016" name="slvB1" xx="0.7224769554623351" xy="0.6913950020255245" yx="-0.6913950020255245" yy="0.7224769554623351" tx="565.0" ty="545.0" id="0:2545" />
+            <Tendon boneId="0:2017" name="slvB2" xx="0.7224769554623351" xy="0.6913950020255245" yx="-0.6913950020255245" yy="0.7224769554623351" tx="565.0" ty="545.0" id="0:2546" />
+            <Tendon boneId="0:2004" name="spine" xx="-0.013635095969426868" xy="-0.9999070377579631" yx="0.9999070377579631" yy="-0.013635095969426868" tx="510" ty="912" id="0:2547" />
+          </Skin>
+        </Mesh>
+      </Image>
+      <Image name="Liv shoulder cap B" assetId="0:120" originX="0" originY="0" id="0:2560">
+        <Mesh name="Liv shoulder cap B mesh" triangleIndexBytes="AAECAAID" id="0:2561">
+          <MeshVertex x="563" y="483" u="0" v="0" id="0:2562">
+            <Weight values="255" indices="1" id="0:2563" />
+          </MeshVertex>
+          <MeshVertex x="674" y="483" u="1" v="0" id="0:2564">
+            <Weight values="255" indices="1" id="0:2565" />
+          </MeshVertex>
+          <MeshVertex x="674" y="624" u="1" v="1" id="0:2566">
+            <Weight values="255" indices="1" id="0:2567" />
+          </MeshVertex>
+          <MeshVertex x="563" y="624" u="0" v="1" id="0:2568">
+            <Weight values="255" indices="1" id="0:2569" />
+          </MeshVertex>
+          <Skin name="Liv shoulder cap B skin" tx="0" ty="0" id="0:2570">
+            <Tendon boneId="0:2004" name="spine" xx="-0.013635095969426868" xy="-0.9999070377579631" yx="0.9999070377579631" yy="-0.013635095969426868" tx="510" ty="912" id="0:2571" />
+          </Skin>
+        </Mesh>
+      </Image>
+      <Image name="Liv upper arm B (front)" assetId="0:115" originX="0" originY="0" id="0:3349">
+        <Mesh name="Liv upper arm B (front) mesh" triangleIndexBytes="AAECAAID" id="0:3350">
+          <MeshVertex x="538" y="518" u="0" v="0" id="0:3351">
+            <Weight values="255" indices="1" id="0:3352" />
+          </MeshVertex>
+          <MeshVertex x="704" y="518" u="1" v="0" id="0:3353">
+            <Weight values="255" indices="1" id="0:3354" />
+          </MeshVertex>
+          <MeshVertex x="704" y="680" u="1" v="1" id="0:3355">
+            <Weight values="255" indices="1" id="0:3356" />
+          </MeshVertex>
+          <MeshVertex x="538" y="680" u="0" v="1" id="0:3357">
+            <Weight values="255" indices="1" id="0:3358" />
+          </MeshVertex>
+          <Skin name="Liv upper arm B (front) skin" tx="0" ty="0" id="0:3359">
+            <Tendon boneId="0:2013" name="upperB" xx="0.7224769554623351" xy="0.6913950020255245" yx="-0.6913950020255245" yy="0.7224769554623351" tx="565.0" ty="545.0" id="0:3360" />
+          </Skin>
+        </Mesh>
+        <DataBindContext sourcePathIds="0:40-0:3449" propertyKey="18" id="0:3563" />
+      </Image>
+      <Image name="Liv torso" assetId="0:101" originX="0" originY="0" id="0:2764">
+        <Mesh name="Liv torso mesh" triangleIndexBytes="AAEIAAgHAQIJAQkIAgMKAgoJAwQLAwsKBAUMBAwLBQYNBQ0MBwgPBw8OCAkQCBAPCQoRCREQCgsSChIRCwwTCxMSDA0UDBQTDg8WDhYVDxAXDxcWEBEYEBgXERIZERkYEhMaEhoZExQbExsaFRYdFR0cFhceFh4dFxgfFx8eGBkgGCAfGRohGSEgGhsiGiIhHB0kHCQjHR4lHSUkHh8mHiYlHyAnHycmICEoICgnISIpISkoIyQrIysqJCUsJCwrJSYtJS0sJicuJi4tJygvJy8uKCkwKDAvKisyKjIxKywzKzMyLC00LDQzLS41LTU0Li82LjY1LzA3Lzc2MTI5MTk4MjM6Mjo5MzQ7Mzs6NDU8NDw7NTY9NT08Njc+Nj49ODlAOEA/OTpBOUFAOjtCOkJBOzxDO0NCPD1EPERDPT5FPUVEP0BHP0dGQEFIQEhHQUJJQUlIQkNKQkpJQ0RLQ0tKREVMRExL" id="0:2765">
+          <MeshVertex x="394.0" y="458.0" u="0.0" v="0.0" id="0:2766">
+            <Weight values="255" indices="1" id="0:2767" />
+          </MeshVertex>
+          <MeshVertex x="438.0" y="458.0" u="0.16667" v="0.0" id="0:2768">
+            <Weight values="255" indices="1" id="0:2769" />
+          </MeshVertex>
+          <MeshVertex x="482.0" y="458.0" u="0.33333" v="0.0" id="0:2770">
+            <Weight values="255" indices="1" id="0:2771" />
+          </MeshVertex>
+          <MeshVertex x="526.0" y="458.0" u="0.5" v="0.0" id="0:2772">
+            <Weight values="255" indices="1" id="0:2773" />
+          </MeshVertex>
+          <MeshVertex x="570.0" y="458.0" u="0.66667" v="0.0" id="0:2774">
+            <Weight values="255" indices="1" id="0:2775" />
+          </MeshVertex>
+          <MeshVertex x="614.0" y="458.0" u="0.83333" v="0.0" id="0:2776">
+            <Weight values="255" indices="1" id="0:2777" />
+          </MeshVertex>
+          <MeshVertex x="658.0" y="458.0" u="1.0" v="0.0" id="0:2778">
+            <Weight values="255" indices="1" id="0:2779" />
+          </MeshVertex>
+          <MeshVertex x="394.0" y="488.6" u="0.0" v="0.1" id="0:2780">
+            <Weight values="255" indices="1" id="0:2781" />
+          </MeshVertex>
+          <MeshVertex x="438.0" y="488.6" u="0.16667" v="0.1" id="0:2782">
+            <Weight values="255" indices="1" id="0:2783" />
+          </MeshVertex>
+          <MeshVertex x="482.0" y="488.6" u="0.33333" v="0.1" id="0:2784">
+            <Weight values="255" indices="1" id="0:2785" />
+          </MeshVertex>
+          <MeshVertex x="526.0" y="488.6" u="0.5" v="0.1" id="0:2786">
+            <Weight values="255" indices="1" id="0:2787" />
+          </MeshVertex>
+          <MeshVertex x="570.0" y="488.6" u="0.66667" v="0.1" id="0:2788">
+            <Weight values="255" indices="1" id="0:2789" />
+          </MeshVertex>
+          <MeshVertex x="614.0" y="488.6" u="0.83333" v="0.1" id="0:2790">
+            <Weight values="255" indices="1" id="0:2791" />
+          </MeshVertex>
+          <MeshVertex x="658.0" y="488.6" u="1.0" v="0.1" id="0:2792">
+            <Weight values="255" indices="1" id="0:2793" />
+          </MeshVertex>
+          <MeshVertex x="394.0" y="519.2" u="0.0" v="0.2" id="0:2794">
+            <Weight values="255" indices="1" id="0:2795" />
+          </MeshVertex>
+          <MeshVertex x="438.0" y="519.2" u="0.16667" v="0.2" id="0:2796">
+            <Weight values="255" indices="1" id="0:2797" />
+          </MeshVertex>
+          <MeshVertex x="482.0" y="519.2" u="0.33333" v="0.2" id="0:2798">
+            <Weight values="255" indices="1" id="0:2799" />
+          </MeshVertex>
+          <MeshVertex x="526.0" y="519.2" u="0.5" v="0.2" id="0:2800">
+            <Weight values="255" indices="1" id="0:2801" />
+          </MeshVertex>
+          <MeshVertex x="570.0" y="519.2" u="0.66667" v="0.2" id="0:2802">
+            <Weight values="255" indices="1" id="0:2803" />
+          </MeshVertex>
+          <MeshVertex x="614.0" y="519.2" u="0.83333" v="0.2" id="0:2804">
+            <Weight values="255" indices="1" id="0:2805" />
+          </MeshVertex>
+          <MeshVertex x="658.0" y="519.2" u="1.0" v="0.2" id="0:2806">
+            <Weight values="255" indices="1" id="0:2807" />
+          </MeshVertex>
+          <MeshVertex x="394.0" y="549.8" u="0.0" v="0.3" id="0:2808">
+            <Weight values="3060" indices="513" id="0:2809" />
+          </MeshVertex>
+          <MeshVertex x="438.0" y="549.8" u="0.16667" v="0.3" id="0:2810">
+            <Weight values="3060" indices="513" id="0:2811" />
+          </MeshVertex>
+          <MeshVertex x="482.0" y="549.8" u="0.33333" v="0.3" id="0:2812">
+            <Weight values="3060" indices="513" id="0:2813" />
+          </MeshVertex>
+          <MeshVertex x="526.0" y="549.8" u="0.5" v="0.3" id="0:2814">
+            <Weight values="3060" indices="513" id="0:2815" />
+          </MeshVertex>
+          <MeshVertex x="570.0" y="549.8" u="0.66667" v="0.3" id="0:2816">
+            <Weight values="3060" indices="513" id="0:2817" />
+          </MeshVertex>
+          <MeshVertex x="614.0" y="549.8" u="0.83333" v="0.3" id="0:2818">
+            <Weight values="3060" indices="513" id="0:2819" />
+          </MeshVertex>
+          <MeshVertex x="658.0" y="549.8" u="1.0" v="0.3" id="0:2820">
+            <Weight values="3060" indices="513" id="0:2821" />
+          </MeshVertex>
+          <MeshVertex x="394.0" y="580.4" u="0.0" v="0.4" id="0:2822">
+            <Weight values="10455" indices="513" id="0:2823" />
+          </MeshVertex>
+          <MeshVertex x="438.0" y="580.4" u="0.16667" v="0.4" id="0:2824">
+            <Weight values="10455" indices="513" id="0:2825" />
+          </MeshVertex>
+          <MeshVertex x="482.0" y="580.4" u="0.33333" v="0.4" id="0:2826">
+            <Weight values="10455" indices="513" id="0:2827" />
+          </MeshVertex>
+          <MeshVertex x="526.0" y="580.4" u="0.5" v="0.4" id="0:2828">
+            <Weight values="10455" indices="513" id="0:2829" />
+          </MeshVertex>
+          <MeshVertex x="570.0" y="580.4" u="0.66667" v="0.4" id="0:2830">
+            <Weight values="10455" indices="513" id="0:2831" />
+          </MeshVertex>
+          <MeshVertex x="614.0" y="580.4" u="0.83333" v="0.4" id="0:2832">
+            <Weight values="10455" indices="513" id="0:2833" />
+          </MeshVertex>
+          <MeshVertex x="658.0" y="580.4" u="1.0" v="0.4" id="0:2834">
+            <Weight values="10455" indices="513" id="0:2835" />
+          </MeshVertex>
+          <MeshVertex x="394.0" y="611.0" u="0.0" v="0.5" id="0:2836">
+            <Weight values="21165" indices="513" id="0:2837" />
+          </MeshVertex>
+          <MeshVertex x="438.0" y="611.0" u="0.16667" v="0.5" id="0:2838">
+            <Weight values="21165" indices="513" id="0:2839" />
+          </MeshVertex>
+          <MeshVertex x="482.0" y="611.0" u="0.33333" v="0.5" id="0:2840">
+            <Weight values="21165" indices="513" id="0:2841" />
+          </MeshVertex>
+          <MeshVertex x="526.0" y="611.0" u="0.5" v="0.5" id="0:2842">
+            <Weight values="21165" indices="513" id="0:2843" />
+          </MeshVertex>
+          <MeshVertex x="570.0" y="611.0" u="0.66667" v="0.5" id="0:2844">
+            <Weight values="21165" indices="513" id="0:2845" />
+          </MeshVertex>
+          <MeshVertex x="614.0" y="611.0" u="0.83333" v="0.5" id="0:2846">
+            <Weight values="21165" indices="513" id="0:2847" />
+          </MeshVertex>
+          <MeshVertex x="658.0" y="611.0" u="1.0" v="0.5" id="0:2848">
+            <Weight values="21165" indices="513" id="0:2849" />
+          </MeshVertex>
+          <MeshVertex x="394.0" y="641.6" u="0.0" v="0.6" id="0:2850">
+            <Weight values="33405" indices="513" id="0:2851" />
+          </MeshVertex>
+          <MeshVertex x="438.0" y="641.6" u="0.16667" v="0.6" id="0:2852">
+            <Weight values="33405" indices="513" id="0:2853" />
+          </MeshVertex>
+          <MeshVertex x="482.0" y="641.6" u="0.33333" v="0.6" id="0:2854">
+            <Weight values="33405" indices="513" id="0:2855" />
+          </MeshVertex>
+          <MeshVertex x="526.0" y="641.6" u="0.5" v="0.6" id="0:2856">
+            <Weight values="33405" indices="513" id="0:2857" />
+          </MeshVertex>
+          <MeshVertex x="570.0" y="641.6" u="0.66667" v="0.6" id="0:2858">
+            <Weight values="33405" indices="513" id="0:2859" />
+          </MeshVertex>
+          <MeshVertex x="614.0" y="641.6" u="0.83333" v="0.6" id="0:2860">
+            <Weight values="33405" indices="513" id="0:2861" />
+          </MeshVertex>
+          <MeshVertex x="658.0" y="641.6" u="1.0" v="0.6" id="0:2862">
+            <Weight values="33405" indices="513" id="0:2863" />
+          </MeshVertex>
+          <MeshVertex x="394.0" y="672.2" u="0.0" v="0.7" id="0:2864">
+            <Weight values="45645" indices="513" id="0:2865" />
+          </MeshVertex>
+          <MeshVertex x="438.0" y="672.2" u="0.16667" v="0.7" id="0:2866">
+            <Weight values="45645" indices="513" id="0:2867" />
+          </MeshVertex>
+          <MeshVertex x="482.0" y="672.2" u="0.33333" v="0.7" id="0:2868">
+            <Weight values="45645" indices="513" id="0:2869" />
+          </MeshVertex>
+          <MeshVertex x="526.0" y="672.2" u="0.5" v="0.7" id="0:2870">
+            <Weight values="45645" indices="513" id="0:2871" />
+          </MeshVertex>
+          <MeshVertex x="570.0" y="672.2" u="0.66667" v="0.7" id="0:2872">
+            <Weight values="45645" indices="513" id="0:2873" />
+          </MeshVertex>
+          <MeshVertex x="614.0" y="672.2" u="0.83333" v="0.7" id="0:2874">
+            <Weight values="45645" indices="513" id="0:2875" />
+          </MeshVertex>
+          <MeshVertex x="658.0" y="672.2" u="1.0" v="0.7" id="0:2876">
+            <Weight values="45645" indices="513" id="0:2877" />
+          </MeshVertex>
+          <MeshVertex x="394.0" y="702.8" u="0.0" v="0.8" id="0:2878">
+            <Weight values="55845" indices="513" id="0:2879" />
+          </MeshVertex>
+          <MeshVertex x="438.0" y="702.8" u="0.16667" v="0.8" id="0:2880">
+            <Weight values="55845" indices="513" id="0:2881" />
+          </MeshVertex>
+          <MeshVertex x="482.0" y="702.8" u="0.33333" v="0.8" id="0:2882">
+            <Weight values="55845" indices="513" id="0:2883" />
+          </MeshVertex>
+          <MeshVertex x="526.0" y="702.8" u="0.5" v="0.8" id="0:2884">
+            <Weight values="55845" indices="513" id="0:2885" />
+          </MeshVertex>
+          <MeshVertex x="570.0" y="702.8" u="0.66667" v="0.8" id="0:2886">
+            <Weight values="55845" indices="513" id="0:2887" />
+          </MeshVertex>
+          <MeshVertex x="614.0" y="702.8" u="0.83333" v="0.8" id="0:2888">
+            <Weight values="55845" indices="513" id="0:2889" />
+          </MeshVertex>
+          <MeshVertex x="658.0" y="702.8" u="1.0" v="0.8" id="0:2890">
+            <Weight values="55845" indices="513" id="0:2891" />
+          </MeshVertex>
+          <MeshVertex x="394.0" y="733.4" u="0.0" v="0.9" id="0:2892">
+            <Weight values="62985" indices="513" id="0:2893" />
+          </MeshVertex>
+          <MeshVertex x="438.0" y="733.4" u="0.16667" v="0.9" id="0:2894">
+            <Weight values="62985" indices="513" id="0:2895" />
+          </MeshVertex>
+          <MeshVertex x="482.0" y="733.4" u="0.33333" v="0.9" id="0:2896">
+            <Weight values="62985" indices="513" id="0:2897" />
+          </MeshVertex>
+          <MeshVertex x="526.0" y="733.4" u="0.5" v="0.9" id="0:2898">
+            <Weight values="62985" indices="513" id="0:2899" />
+          </MeshVertex>
+          <MeshVertex x="570.0" y="733.4" u="0.66667" v="0.9" id="0:2900">
+            <Weight values="62985" indices="513" id="0:2901" />
+          </MeshVertex>
+          <MeshVertex x="614.0" y="733.4" u="0.83333" v="0.9" id="0:2902">
+            <Weight values="62985" indices="513" id="0:2903" />
+          </MeshVertex>
+          <MeshVertex x="658.0" y="733.4" u="1.0" v="0.9" id="0:2904">
+            <Weight values="62985" indices="513" id="0:2905" />
+          </MeshVertex>
+          <MeshVertex x="394.0" y="764.0" u="0.0" v="1.0" id="0:2906">
+            <Weight values="255" indices="2" id="0:2907" />
+          </MeshVertex>
+          <MeshVertex x="438.0" y="764.0" u="0.16667" v="1.0" id="0:2908">
+            <Weight values="255" indices="2" id="0:2909" />
+          </MeshVertex>
+          <MeshVertex x="482.0" y="764.0" u="0.33333" v="1.0" id="0:2910">
+            <Weight values="255" indices="2" id="0:2911" />
+          </MeshVertex>
+          <MeshVertex x="526.0" y="764.0" u="0.5" v="1.0" id="0:2912">
+            <Weight values="255" indices="2" id="0:2913" />
+          </MeshVertex>
+          <MeshVertex x="570.0" y="764.0" u="0.66667" v="1.0" id="0:2914">
+            <Weight values="255" indices="2" id="0:2915" />
+          </MeshVertex>
+          <MeshVertex x="614.0" y="764.0" u="0.83333" v="1.0" id="0:2916">
+            <Weight values="255" indices="2" id="0:2917" />
+          </MeshVertex>
+          <MeshVertex x="658.0" y="764.0" u="1.0" v="1.0" id="0:2918">
+            <Weight values="255" indices="2" id="0:2919" />
+          </MeshVertex>
+          <Skin name="Liv torso skin" tx="0" ty="0" id="0:2920">
+            <Tendon boneId="0:2004" name="spine" xx="-0.013635095969426868" xy="-0.9999070377579631" yx="0.9999070377579631" yy="-0.013635095969426868" tx="510" ty="912" id="0:2921" />
+            <Tendon boneId="0:2003" name="pelvis" xx="1.0" xy="0.0" yx="-0.0" yy="1.0" tx="510" ty="912" id="0:2922" />
+          </Skin>
+        </Mesh>
+      </Image>
+      <Image name="Liv skirt" assetId="0:100" originX="0" originY="0" id="0:2923">
+        <Mesh name="Liv skirt mesh" triangleIndexBytes="AAEMAAwLAQINAQ0MAgMOAg4NAwQPAw8OBAUQBBAPBQYRBREQBgcSBhIRBwgTBxMSCAkUCBQTCQoVCRUUCwwXCxcWDA0YDBgXDQ4ZDRkYDg8aDhoZDxAbDxsaEBEcEBwbERIdER0cEhMeEh4dExQfEx8eFBUgFCAfFhciFiIhFxgjFyMiGBkkGCQjGRolGSUkGhsmGiYlGxwnGycmHB0oHCgnHR4pHSkoHh8qHiopHyArHysqISItIS0sIiMuIi4tIyQvIy8uJCUwJDAvJSYxJTEwJicyJjIxJygzJzMyKCk0KDQzKSo1KTU0Kis2KjY1LC04LDg3LS45LTk4Li86Ljo5LzA7Lzs6MDE8MDw7MTI9MT08MjM+Mj49MzQ/Mz8+NDVANEA/NTZBNUFANzhDN0NCODlEOERDOTpFOUVEOjtGOkZFOzxHO0dGPD1IPEhHPT5JPUlIPj9KPkpJP0BLP0tKQEFMQExLQkNOQk5NQ0RPQ09OREVQRFBPRUZRRVFQRkdSRlJRR0hTR1NSSElUSFRTSUpVSVVUSktWSlZVS0xXS1dWTU5ZTVlYTk9aTlpZT1BbT1taUFFcUFxbUVJdUV1cUlNeUl5dU1RfU19eVFVgVGBfVVZhVWFgVldiVmJhWFlkWGRjWVplWWVkWltmWmZlW1xnW2dmXF1oXGhnXV5pXWloXl9qXmppX2BrX2tqYGFsYGxrYWJtYW1sY2RvY29uZGVwZHBvZWZxZXFwZmdyZnJxZ2hzZ3NyaGl0aHRzaWp1aXV0amt2anZ1a2x3a3d2bG14bHh3" id="0:2924">
+          <MeshVertex x="274.0" y="732.0" u="0.0" v="0.0" id="0:2925">
+            <Weight values="255" indices="1" id="0:2926" />
+          </MeshVertex>
+          <MeshVertex x="321.8" y="732.0" u="0.1" v="0.0" id="0:2927">
+            <Weight values="255" indices="1" id="0:2928" />
+          </MeshVertex>
+          <MeshVertex x="369.6" y="732.0" u="0.2" v="0.0" id="0:2929">
+            <Weight values="255" indices="1" id="0:2930" />
+          </MeshVertex>
+          <MeshVertex x="417.4" y="732.0" u="0.3" v="0.0" id="0:2931">
+            <Weight values="255" indices="1" id="0:2932" />
+          </MeshVertex>
+          <MeshVertex x="465.2" y="732.0" u="0.4" v="0.0" id="0:2933">
+            <Weight values="255" indices="1" id="0:2934" />
+          </MeshVertex>
+          <MeshVertex x="513.0" y="732.0" u="0.5" v="0.0" id="0:2935">
+            <Weight values="255" indices="1" id="0:2936" />
+          </MeshVertex>
+          <MeshVertex x="560.8" y="732.0" u="0.6" v="0.0" id="0:2937">
+            <Weight values="255" indices="1" id="0:2938" />
+          </MeshVertex>
+          <MeshVertex x="608.6" y="732.0" u="0.7" v="0.0" id="0:2939">
+            <Weight values="255" indices="1" id="0:2940" />
+          </MeshVertex>
+          <MeshVertex x="656.4" y="732.0" u="0.8" v="0.0" id="0:2941">
+            <Weight values="255" indices="1" id="0:2942" />
+          </MeshVertex>
+          <MeshVertex x="704.2" y="732.0" u="0.9" v="0.0" id="0:2943">
+            <Weight values="255" indices="1" id="0:2944" />
+          </MeshVertex>
+          <MeshVertex x="752.0" y="732.0" u="1.0" v="0.0" id="0:2945">
+            <Weight values="255" indices="1" id="0:2946" />
+          </MeshVertex>
+          <MeshVertex x="274.0" y="768.9" u="0.0" v="0.1" id="0:2947">
+            <Weight values="255" indices="513" id="0:2948" />
+          </MeshVertex>
+          <MeshVertex x="321.8" y="768.9" u="0.1" v="0.1" id="0:2949">
+            <Weight values="255" indices="513" id="0:2950" />
+          </MeshVertex>
+          <MeshVertex x="369.6" y="768.9" u="0.2" v="0.1" id="0:2951">
+            <Weight values="255" indices="513" id="0:2952" />
+          </MeshVertex>
+          <MeshVertex x="417.4" y="768.9" u="0.3" v="0.1" id="0:2953">
+            <Weight values="255" indices="197121" id="0:2954" />
+          </MeshVertex>
+          <MeshVertex x="465.2" y="768.9" u="0.4" v="0.1" id="0:2955">
+            <Weight values="255" indices="197121" id="0:2956" />
+          </MeshVertex>
+          <MeshVertex x="513.0" y="768.9" u="0.5" v="0.1" id="0:2957">
+            <Weight values="255" indices="197121" id="0:2958" />
+          </MeshVertex>
+          <MeshVertex x="560.8" y="768.9" u="0.6" v="0.1" id="0:2959">
+            <Weight values="255" indices="197121" id="0:2960" />
+          </MeshVertex>
+          <MeshVertex x="608.6" y="768.9" u="0.7" v="0.1" id="0:2961">
+            <Weight values="255" indices="197121" id="0:2962" />
+          </MeshVertex>
+          <MeshVertex x="656.4" y="768.9" u="0.8" v="0.1" id="0:2963">
+            <Weight values="255" indices="769" id="0:2964" />
+          </MeshVertex>
+          <MeshVertex x="704.2" y="768.9" u="0.9" v="0.1" id="0:2965">
+            <Weight values="255" indices="769" id="0:2966" />
+          </MeshVertex>
+          <MeshVertex x="752.0" y="768.9" u="1.0" v="0.1" id="0:2967">
+            <Weight values="255" indices="769" id="0:2968" />
+          </MeshVertex>
+          <MeshVertex x="274.0" y="805.8" u="0.0" v="0.2" id="0:2969">
+            <Weight values="1785" indices="513" id="0:2970" />
+          </MeshVertex>
+          <MeshVertex x="321.8" y="805.8" u="0.1" v="0.2" id="0:2971">
+            <Weight values="1785" indices="513" id="0:2972" />
+          </MeshVertex>
+          <MeshVertex x="369.6" y="805.8" u="0.2" v="0.2" id="0:2973">
+            <Weight values="1785" indices="197121" id="0:2974" />
+          </MeshVertex>
+          <MeshVertex x="417.4" y="805.8" u="0.3" v="0.2" id="0:2975">
+            <Weight values="67065" indices="197121" id="0:2976" />
+          </MeshVertex>
+          <MeshVertex x="465.2" y="805.8" u="0.4" v="0.2" id="0:2977">
+            <Weight values="132345" indices="197121" id="0:2978" />
+          </MeshVertex>
+          <MeshVertex x="513.0" y="805.8" u="0.5" v="0.2" id="0:2979">
+            <Weight values="197625" indices="197121" id="0:2980" />
+          </MeshVertex>
+          <MeshVertex x="560.8" y="805.8" u="0.6" v="0.2" id="0:2981">
+            <Weight values="262905" indices="197121" id="0:2982" />
+          </MeshVertex>
+          <MeshVertex x="608.6" y="805.8" u="0.7" v="0.2" id="0:2983">
+            <Weight values="328185" indices="197121" id="0:2984" />
+          </MeshVertex>
+          <MeshVertex x="656.4" y="805.8" u="0.8" v="0.2" id="0:2985">
+            <Weight values="393465" indices="197121" id="0:2986" />
+          </MeshVertex>
+          <MeshVertex x="704.2" y="805.8" u="0.9" v="0.2" id="0:2987">
+            <Weight values="1785" indices="769" id="0:2988" />
+          </MeshVertex>
+          <MeshVertex x="752.0" y="805.8" u="1.0" v="0.2" id="0:2989">
+            <Weight values="1785" indices="769" id="0:2990" />
+          </MeshVertex>
+          <MeshVertex x="274.0" y="842.7" u="0.0" v="0.3" id="0:2991">
+            <Weight values="4845" indices="513" id="0:2992" />
+          </MeshVertex>
+          <MeshVertex x="321.8" y="842.7" u="0.1" v="0.3" id="0:2993">
+            <Weight values="4845" indices="513" id="0:2994" />
+          </MeshVertex>
+          <MeshVertex x="369.6" y="842.7" u="0.2" v="0.3" id="0:2995">
+            <Weight values="70125" indices="197121" id="0:2996" />
+          </MeshVertex>
+          <MeshVertex x="417.4" y="842.7" u="0.3" v="0.3" id="0:2997">
+            <Weight values="200685" indices="197121" id="0:2998" />
+          </MeshVertex>
+          <MeshVertex x="465.2" y="842.7" u="0.4" v="0.3" id="0:2999">
+            <Weight values="396525" indices="197121" id="0:3000" />
+          </MeshVertex>
+          <MeshVertex x="513.0" y="842.7" u="0.5" v="0.3" id="0:3001">
+            <Weight values="592365" indices="197121" id="0:3002" />
+          </MeshVertex>
+          <MeshVertex x="560.8" y="842.7" u="0.6" v="0.3" id="0:3003">
+            <Weight values="788205" indices="197121" id="0:3004" />
+          </MeshVertex>
+          <MeshVertex x="608.6" y="842.7" u="0.7" v="0.3" id="0:3005">
+            <Weight values="984045" indices="197121" id="0:3006" />
+          </MeshVertex>
+          <MeshVertex x="656.4" y="842.7" u="0.8" v="0.3" id="0:3007">
+            <Weight values="1179885" indices="197121" id="0:3008" />
+          </MeshVertex>
+          <MeshVertex x="704.2" y="842.7" u="0.9" v="0.3" id="0:3009">
+            <Weight values="4845" indices="769" id="0:3010" />
+          </MeshVertex>
+          <MeshVertex x="752.0" y="842.7" u="1.0" v="0.3" id="0:3011">
+            <Weight values="4845" indices="769" id="0:3012" />
+          </MeshVertex>
+          <MeshVertex x="274.0" y="879.6" u="0.0" v="0.4" id="0:3013">
+            <Weight values="8925" indices="513" id="0:3014" />
+          </MeshVertex>
+          <MeshVertex x="321.8" y="879.6" u="0.1" v="0.4" id="0:3015">
+            <Weight values="8925" indices="513" id="0:3016" />
+          </MeshVertex>
+          <MeshVertex x="369.6" y="879.6" u="0.2" v="0.4" id="0:3017">
+            <Weight values="74205" indices="197121" id="0:3018" />
+          </MeshVertex>
+          <MeshVertex x="417.4" y="879.6" u="0.3" v="0.4" id="0:3019">
+            <Weight values="466140" indices="197121" id="0:3020" />
+          </MeshVertex>
+          <MeshVertex x="465.2" y="879.6" u="0.4" v="0.4" id="0:3021">
+            <Weight values="792285" indices="197121" id="0:3022" />
+          </MeshVertex>
+          <MeshVertex x="513.0" y="879.6" u="0.5" v="0.4" id="0:3023">
+            <Weight values="1118685" indices="197121" id="0:3024" />
+          </MeshVertex>
+          <MeshVertex x="560.8" y="879.6" u="0.6" v="0.4" id="0:3025">
+            <Weight values="1510365" indices="197121" id="0:3026" />
+          </MeshVertex>
+          <MeshVertex x="608.6" y="879.6" u="0.7" v="0.4" id="0:3027">
+            <Weight values="1836765" indices="197121" id="0:3028" />
+          </MeshVertex>
+          <MeshVertex x="656.4" y="879.6" u="0.8" v="0.4" id="0:3029">
+            <Weight values="2228445" indices="197121" id="0:3030" />
+          </MeshVertex>
+          <MeshVertex x="704.2" y="879.6" u="0.9" v="0.4" id="0:3031">
+            <Weight values="8925" indices="769" id="0:3032" />
+          </MeshVertex>
+          <MeshVertex x="752.0" y="879.6" u="1.0" v="0.4" id="0:3033">
+            <Weight values="8925" indices="769" id="0:3034" />
+          </MeshVertex>
+          <MeshVertex x="274.0" y="916.5" u="0.0" v="0.5" id="0:3035">
+            <Weight values="13770" indices="513" id="0:3036" />
+          </MeshVertex>
+          <MeshVertex x="321.8" y="916.5" u="0.1" v="0.5" id="0:3037">
+            <Weight values="13770" indices="513" id="0:3038" />
+          </MeshVertex>
+          <MeshVertex x="369.6" y="916.5" u="0.2" v="0.5" id="0:3039">
+            <Weight values="144330" indices="197121" id="0:3040" />
+          </MeshVertex>
+          <MeshVertex x="417.4" y="916.5" u="0.3" v="0.5" id="0:3041">
+            <Weight values="666570" indices="197121" id="0:3042" />
+          </MeshVertex>
+          <MeshVertex x="465.2" y="916.5" u="0.4" v="0.5" id="0:3043">
+            <Weight values="1254090" indices="197121" id="0:3044" />
+          </MeshVertex>
+          <MeshVertex x="513.0" y="916.5" u="0.5" v="0.5" id="0:3045">
+            <Weight values="1776330" indices="197121" id="0:3046" />
+          </MeshVertex>
+          <MeshVertex x="560.8" y="916.5" u="0.6" v="0.5" id="0:3047">
+            <Weight values="2298570" indices="197121" id="0:3048" />
+          </MeshVertex>
+          <MeshVertex x="608.6" y="916.5" u="0.7" v="0.5" id="0:3049">
+            <Weight values="2886090" indices="197121" id="0:3050" />
+          </MeshVertex>
+          <MeshVertex x="656.4" y="916.5" u="0.8" v="0.5" id="0:3051">
+            <Weight values="3408330" indices="197121" id="0:3052" />
+          </MeshVertex>
+          <MeshVertex x="704.2" y="916.5" u="0.9" v="0.5" id="0:3053">
+            <Weight values="13770" indices="769" id="0:3054" />
+          </MeshVertex>
+          <MeshVertex x="752.0" y="916.5" u="1.0" v="0.5" id="0:3055">
+            <Weight values="13770" indices="769" id="0:3056" />
+          </MeshVertex>
+          <MeshVertex x="274.0" y="953.4" u="0.0" v="0.6" id="0:3057">
+            <Weight values="18615" indices="513" id="0:3058" />
+          </MeshVertex>
+          <MeshVertex x="321.8" y="953.4" u="0.1" v="0.6" id="0:3059">
+            <Weight values="18615" indices="513" id="0:3060" />
+          </MeshVertex>
+          <MeshVertex x="369.6" y="953.4" u="0.2" v="0.6" id="0:3061">
+            <Weight values="149175" indices="197121" id="0:3062" />
+          </MeshVertex>
+          <MeshVertex x="417.4" y="953.4" u="0.3" v="0.6" id="0:3063">
+            <Weight values="932535" indices="197121" id="0:3064" />
+          </MeshVertex>
+          <MeshVertex x="465.2" y="953.4" u="0.4" v="0.6" id="0:3065">
+            <Weight values="1650615" indices="197121" id="0:3066" />
+          </MeshVertex>
+          <MeshVertex x="513.0" y="953.4" u="0.5" v="0.6" id="0:3067">
+            <Weight values="2433975" indices="197121" id="0:3068" />
+          </MeshVertex>
+          <MeshVertex x="560.8" y="953.4" u="0.6" v="0.6" id="0:3069">
+            <Weight values="3152055" indices="197121" id="0:3070" />
+          </MeshVertex>
+          <MeshVertex x="608.6" y="953.4" u="0.7" v="0.6" id="0:3071">
+            <Weight values="3935415" indices="197121" id="0:3072" />
+          </MeshVertex>
+          <MeshVertex x="656.4" y="953.4" u="0.8" v="0.6" id="0:3073">
+            <Weight values="4653495" indices="197121" id="0:3074" />
+          </MeshVertex>
+          <MeshVertex x="704.2" y="953.4" u="0.9" v="0.6" id="0:3075">
+            <Weight values="18615" indices="769" id="0:3076" />
+          </MeshVertex>
+          <MeshVertex x="752.0" y="953.4" u="1.0" v="0.6" id="0:3077">
+            <Weight values="18615" indices="769" id="0:3078" />
+          </MeshVertex>
+          <MeshVertex x="274.0" y="990.3" u="0.0" v="0.7" id="0:3079">
+            <Weight values="23205" indices="513" id="0:3080" />
+          </MeshVertex>
+          <MeshVertex x="321.8" y="990.3" u="0.1" v="0.7" id="0:3081">
+            <Weight values="23205" indices="513" id="0:3082" />
+          </MeshVertex>
+          <MeshVertex x="369.6" y="990.3" u="0.2" v="0.7" id="0:3083">
+            <Weight values="219045" indices="197121" id="0:3084" />
+          </MeshVertex>
+          <MeshVertex x="417.4" y="990.3" u="0.3" v="0.7" id="0:3085">
+            <Weight values="1132965" indices="197121" id="0:3086" />
+          </MeshVertex>
+          <MeshVertex x="465.2" y="990.3" u="0.4" v="0.7" id="0:3087">
+            <Weight values="2046630" indices="197121" id="0:3088" />
+          </MeshVertex>
+          <MeshVertex x="513.0" y="990.3" u="0.5" v="0.7" id="0:3089">
+            <Weight values="3026085" indices="197121" id="0:3090" />
+          </MeshVertex>
+          <MeshVertex x="560.8" y="990.3" u="0.6" v="0.7" id="0:3091">
+            <Weight values="3940005" indices="197121" id="0:3092" />
+          </MeshVertex>
+          <MeshVertex x="608.6" y="990.3" u="0.7" v="0.7" id="0:3093">
+            <Weight values="4853670" indices="197121" id="0:3094" />
+          </MeshVertex>
+          <MeshVertex x="656.4" y="990.3" u="0.8" v="0.7" id="0:3095">
+            <Weight values="5833125" indices="197121" id="0:3096" />
+          </MeshVertex>
+          <MeshVertex x="704.2" y="990.3" u="0.9" v="0.7" id="0:3097">
+            <Weight values="23205" indices="769" id="0:3098" />
+          </MeshVertex>
+          <MeshVertex x="752.0" y="990.3" u="1.0" v="0.7" id="0:3099">
+            <Weight values="23205" indices="769" id="0:3100" />
+          </MeshVertex>
+          <MeshVertex x="274.0" y="1027.2" u="0.0" v="0.8" id="0:3101">
+            <Weight values="26775" indices="513" id="0:3102" />
+          </MeshVertex>
+          <MeshVertex x="321.8" y="1027.2" u="0.1" v="0.8" id="0:3103">
+            <Weight values="26775" indices="513" id="0:3104" />
+          </MeshVertex>
+          <MeshVertex x="369.6" y="1027.2" u="0.2" v="0.8" id="0:3105">
+            <Weight values="222615" indices="197121" id="0:3106" />
+          </MeshVertex>
+          <MeshVertex x="417.4" y="1027.2" u="0.3" v="0.8" id="0:3107">
+            <Weight values="1332375" indices="197121" id="0:3108" />
+          </MeshVertex>
+          <MeshVertex x="465.2" y="1027.2" u="0.4" v="0.8" id="0:3109">
+            <Weight values="2376600" indices="197121" id="0:3110" />
+          </MeshVertex>
+          <MeshVertex x="513.0" y="1027.2" u="0.5" v="0.8" id="0:3111">
+            <Weight values="3486615" indices="197121" id="0:3112" />
+          </MeshVertex>
+          <MeshVertex x="560.8" y="1027.2" u="0.6" v="0.8" id="0:3113">
+            <Weight values="4596375" indices="197121" id="0:3114" />
+          </MeshVertex>
+          <MeshVertex x="608.6" y="1027.2" u="0.7" v="0.8" id="0:3115">
+            <Weight values="5640855" indices="197121" id="0:3116" />
+          </MeshVertex>
+          <MeshVertex x="656.4" y="1027.2" u="0.8" v="0.8" id="0:3117">
+            <Weight values="6750615" indices="197121" id="0:3118" />
+          </MeshVertex>
+          <MeshVertex x="704.2" y="1027.2" u="0.9" v="0.8" id="0:3119">
+            <Weight values="26775" indices="769" id="0:3120" />
+          </MeshVertex>
+          <MeshVertex x="752.0" y="1027.2" u="1.0" v="0.8" id="0:3121">
+            <Weight values="26775" indices="769" id="0:3122" />
+          </MeshVertex>
+          <MeshVertex x="274.0" y="1064.1" u="0.0" v="0.9" id="0:3123">
+            <Weight values="29070" indices="513" id="0:3124" />
+          </MeshVertex>
+          <MeshVertex x="321.8" y="1064.1" u="0.1" v="0.9" id="0:3125">
+            <Weight values="29070" indices="513" id="0:3126" />
+          </MeshVertex>
+          <MeshVertex x="369.6" y="1064.1" u="0.2" v="0.9" id="0:3127">
+            <Weight values="290190" indices="197121" id="0:3128" />
+          </MeshVertex>
+          <MeshVertex x="417.4" y="1064.1" u="0.3" v="0.9" id="0:3129">
+            <Weight values="1465230" indices="197121" id="0:3130" />
+          </MeshVertex>
+          <MeshVertex x="465.2" y="1064.1" u="0.4" v="0.9" id="0:3131">
+            <Weight values="2640270" indices="197121" id="0:3132" />
+          </MeshVertex>
+          <MeshVertex x="513.0" y="1064.1" u="0.5" v="0.9" id="0:3133">
+            <Weight values="3749775" indices="197121" id="0:3134" />
+          </MeshVertex>
+          <MeshVertex x="560.8" y="1064.1" u="0.6" v="0.9" id="0:3135">
+            <Weight values="4924815" indices="197121" id="0:3136" />
+          </MeshVertex>
+          <MeshVertex x="608.6" y="1064.1" u="0.7" v="0.9" id="0:3137">
+            <Weight values="6099855" indices="197121" id="0:3138" />
+          </MeshVertex>
+          <MeshVertex x="656.4" y="1064.1" u="0.8" v="0.9" id="0:3139">
+            <Weight values="7274895" indices="197121" id="0:3140" />
+          </MeshVertex>
+          <MeshVertex x="704.2" y="1064.1" u="0.9" v="0.9" id="0:3141">
+            <Weight values="29070" indices="769" id="0:3142" />
+          </MeshVertex>
+          <MeshVertex x="752.0" y="1064.1" u="1.0" v="0.9" id="0:3143">
+            <Weight values="29070" indices="769" id="0:3144" />
+          </MeshVertex>
+          <MeshVertex x="274.0" y="1101.0" u="0.0" v="1.0" id="0:3145">
+            <Weight values="29580" indices="513" id="0:3146" />
+          </MeshVertex>
+          <MeshVertex x="321.8" y="1101.0" u="0.1" v="1.0" id="0:3147">
+            <Weight values="29580" indices="513" id="0:3148" />
+          </MeshVertex>
+          <MeshVertex x="369.6" y="1101.0" u="0.2" v="1.0" id="0:3149">
+            <Weight values="290700" indices="197121" id="0:3150" />
+          </MeshVertex>
+          <MeshVertex x="417.4" y="1101.0" u="0.3" v="1.0" id="0:3151">
+            <Weight values="1465740" indices="197121" id="0:3152" />
+          </MeshVertex>
+          <MeshVertex x="465.2" y="1101.0" u="0.4" v="1.0" id="0:3153">
+            <Weight values="2640780" indices="197121" id="0:3154" />
+          </MeshVertex>
+          <MeshVertex x="513.0" y="1101.0" u="0.5" v="1.0" id="0:3155">
+            <Weight values="3881100" indices="197121" id="0:3156" />
+          </MeshVertex>
+          <MeshVertex x="560.8" y="1101.0" u="0.6" v="1.0" id="0:3157">
+            <Weight values="5056140" indices="197121" id="0:3158" />
+          </MeshVertex>
+          <MeshVertex x="608.6" y="1101.0" u="0.7" v="1.0" id="0:3159">
+            <Weight values="6231180" indices="197121" id="0:3160" />
+          </MeshVertex>
+          <MeshVertex x="656.4" y="1101.0" u="0.8" v="1.0" id="0:3161">
+            <Weight values="7405965" indices="197121" id="0:3162" />
+          </MeshVertex>
+          <MeshVertex x="704.2" y="1101.0" u="0.9" v="1.0" id="0:3163">
+            <Weight values="29580" indices="769" id="0:3164" />
+          </MeshVertex>
+          <MeshVertex x="752.0" y="1101.0" u="1.0" v="1.0" id="0:3165">
+            <Weight values="29580" indices="769" id="0:3166" />
+          </MeshVertex>
+          <Skin name="Liv skirt skin" tx="0" ty="0" id="0:3167">
+            <Tendon boneId="0:2003" name="pelvis" xx="1.0" xy="0.0" yx="-0.0" yy="1.0" tx="510" ty="912" id="0:3168" />
+            <Tendon boneId="0:2018" name="thighA" xx="-0.14002100472618154" xy="0.9901485334208553" yx="-0.9901485334208553" yy="-0.14002100472618154" tx="452" ty="930" id="0:3169" />
+            <Tendon boneId="0:2021" name="thighB" xx="0.026306682088232773" xy="0.9996539193528472" yx="-0.9996539193528472" yy="0.026306682088232773" tx="566" ty="930" id="0:3170" />
+          </Skin>
+        </Mesh>
+      </Image>
+      <Image name="Liv boot A" assetId="0:106" originX="0" originY="0" id="0:3325">
+        <Mesh name="Liv boot A mesh" triangleIndexBytes="AAECAAID" id="0:3326">
+          <MeshVertex x="339" y="1236" u="0" v="0" id="0:3327">
+            <Weight values="255" indices="1" id="0:3328" />
+          </MeshVertex>
+          <MeshVertex x="485" y="1236" u="1" v="0" id="0:3329">
+            <Weight values="255" indices="1" id="0:3330" />
+          </MeshVertex>
+          <MeshVertex x="485" y="1423" u="1" v="1" id="0:3331">
+            <Weight values="255" indices="1" id="0:3332" />
+          </MeshVertex>
+          <MeshVertex x="339" y="1423" u="0" v="1" id="0:3333">
+            <Weight values="255" indices="1" id="0:3334" />
+          </MeshVertex>
+          <Skin name="Liv boot A skin" tx="0" ty="0" id="0:3335">
+            <Tendon boneId="0:2020" name="footA" xx="0.6679097417772565" xy="0.7442422836946572" yx="-0.7442422836946572" yy="0.6679097417772565" tx="401" ty="1317" id="0:3336" />
+          </Skin>
+        </Mesh>
+      </Image>
+      <Image name="Liv sock A" assetId="0:105" originX="0" originY="0" id="0:3301">
+        <Mesh name="Liv sock A mesh" triangleIndexBytes="AAECAAID" id="0:3302">
+          <MeshVertex x="349" y="1175" u="0" v="0" id="0:3303">
+            <Weight values="255" indices="1" id="0:3304" />
+          </MeshVertex>
+          <MeshVertex x="453" y="1175" u="1" v="0" id="0:3305">
+            <Weight values="255" indices="1" id="0:3306" />
+          </MeshVertex>
+          <MeshVertex x="453" y="1250" u="1" v="1" id="0:3307">
+            <Weight values="255" indices="1" id="0:3308" />
+          </MeshVertex>
+          <MeshVertex x="349" y="1250" u="0" v="1" id="0:3309">
+            <Weight values="255" indices="1" id="0:3310" />
+          </MeshVertex>
+          <Skin name="Liv sock A skin" tx="0" ty="0" id="0:3311">
+            <Tendon boneId="0:2019" name="shinA" xx="-0.12080191823094467" xy="0.9926766324195025" yx="-0.9926766324195025" yy="-0.12080191823094467" tx="424" ty="1128" id="0:3312" />
+          </Skin>
+        </Mesh>
+      </Image>
+      <Image name="Liv leg A" assetId="0:117" originX="0" originY="0" id="0:3171">
+        <Mesh name="Liv leg A mesh" triangleIndexBytes="AAEDAAMCAgMFAgUEBAUHBAcGBgcJBgkICAkLCAsKCgsNCg0MDA0PDA8ODg8RDhEQEBETEBMSEhMVEhUUFBUXFBcWFhcZFhkYGBkbGBsaGhsdGh0c" id="0:3172">
+          <MeshVertex x="411.0" y="930.0" u="0" v="0.0" id="0:3173">
+            <Weight values="255" indices="1" id="0:3174" />
+          </MeshVertex>
+          <MeshVertex x="493.0" y="930.0" u="1" v="0.0" id="0:3175">
+            <Weight values="255" indices="1" id="0:3176" />
+          </MeshVertex>
+          <MeshVertex x="407.527" y="958.286" u="0" v="0.07143" id="0:3177">
+            <Weight values="255" indices="1" id="0:3178" />
+          </MeshVertex>
+          <MeshVertex x="488.473" y="958.286" u="1" v="0.07143" id="0:3179">
+            <Weight values="255" indices="1" id="0:3180" />
+          </MeshVertex>
+          <MeshVertex x="404.054" y="986.571" u="0" v="0.14286" id="0:3181">
+            <Weight values="255" indices="1" id="0:3182" />
+          </MeshVertex>
+          <MeshVertex x="483.946" y="986.571" u="1" v="0.14286" id="0:3183">
+            <Weight values="255" indices="1" id="0:3184" />
+          </MeshVertex>
+          <MeshVertex x="400.581" y="1014.857" u="0" v="0.21429" id="0:3185">
+            <Weight values="255" indices="1" id="0:3186" />
+          </MeshVertex>
+          <MeshVertex x="479.419" y="1014.857" u="1" v="0.21429" id="0:3187">
+            <Weight values="255" indices="1" id="0:3188" />
+          </MeshVertex>
+          <MeshVertex x="397.109" y="1043.143" u="0" v="0.28571" id="0:3189">
+            <Weight values="255" indices="1" id="0:3190" />
+          </MeshVertex>
+          <MeshVertex x="474.891" y="1043.143" u="1" v="0.28571" id="0:3191">
+            <Weight values="255" indices="1" id="0:3192" />
+          </MeshVertex>
+          <MeshVertex x="393.636" y="1071.429" u="0" v="0.35714" id="0:3193">
+            <Weight values="255" indices="1" id="0:3194" />
+          </MeshVertex>
+          <MeshVertex x="470.364" y="1071.429" u="1" v="0.35714" id="0:3195">
+            <Weight values="255" indices="1" id="0:3196" />
+          </MeshVertex>
+          <MeshVertex x="390.163" y="1099.714" u="0" v="0.42857" id="0:3197">
+            <Weight values="4080" indices="513" id="0:3198" />
+          </MeshVertex>
+          <MeshVertex x="465.837" y="1099.714" u="1" v="0.42857" id="0:3199">
+            <Weight values="4080" indices="513" id="0:3200" />
+          </MeshVertex>
+          <MeshVertex x="386.69" y="1128.0" u="0" v="0.5" id="0:3201">
+            <Weight values="32895" indices="513" id="0:3202" />
+          </MeshVertex>
+          <MeshVertex x="461.31" y="1128.0" u="1" v="0.5" id="0:3203">
+            <Weight values="32895" indices="513" id="0:3204" />
+          </MeshVertex>
+          <MeshVertex x="383.931" y="1155.0" u="0" v="0.57143" id="0:3205">
+            <Weight values="60690" indices="513" id="0:3206" />
+          </MeshVertex>
+          <MeshVertex x="457.497" y="1155.0" u="1" v="0.57143" id="0:3207">
+            <Weight values="60690" indices="513" id="0:3208" />
+          </MeshVertex>
+          <MeshVertex x="381.173" y="1182.0" u="0" v="0.64286" id="0:3209">
+            <Weight values="255" indices="2" id="0:3210" />
+          </MeshVertex>
+          <MeshVertex x="453.684" y="1182.0" u="1" v="0.64286" id="0:3211">
+            <Weight values="255" indices="2" id="0:3212" />
+          </MeshVertex>
+          <MeshVertex x="378.414" y="1209.0" u="0" v="0.71429" id="0:3213">
+            <Weight values="255" indices="2" id="0:3214" />
+          </MeshVertex>
+          <MeshVertex x="449.871" y="1209.0" u="1" v="0.71429" id="0:3215">
+            <Weight values="255" indices="2" id="0:3216" />
+          </MeshVertex>
+          <MeshVertex x="375.656" y="1236.0" u="0" v="0.78571" id="0:3217">
+            <Weight values="255" indices="2" id="0:3218" />
+          </MeshVertex>
+          <MeshVertex x="446.059" y="1236.0" u="1" v="0.78571" id="0:3219">
+            <Weight values="255" indices="2" id="0:3220" />
+          </MeshVertex>
+          <MeshVertex x="372.897" y="1263.0" u="0" v="0.85714" id="0:3221">
+            <Weight values="255" indices="2" id="0:3222" />
+          </MeshVertex>
+          <MeshVertex x="442.246" y="1263.0" u="1" v="0.85714" id="0:3223">
+            <Weight values="255" indices="2" id="0:3224" />
+          </MeshVertex>
+          <MeshVertex x="370.139" y="1290.0" u="0" v="0.92857" id="0:3225">
+            <Weight values="255" indices="2" id="0:3226" />
+          </MeshVertex>
+          <MeshVertex x="438.433" y="1290.0" u="1" v="0.92857" id="0:3227">
+            <Weight values="255" indices="2" id="0:3228" />
+          </MeshVertex>
+          <MeshVertex x="367.38" y="1317.0" u="0" v="1.0" id="0:3229">
+            <Weight values="255" indices="2" id="0:3230" />
+          </MeshVertex>
+          <MeshVertex x="434.62" y="1317.0" u="1" v="1.0" id="0:3231">
+            <Weight values="255" indices="2" id="0:3232" />
+          </MeshVertex>
+          <Skin name="Liv leg A skin" tx="0" ty="0" id="0:3233">
+            <Tendon boneId="0:2018" name="thighA" xx="-0.14002100472618154" xy="0.9901485334208553" yx="-0.9901485334208553" yy="-0.14002100472618154" tx="452" ty="930" id="0:3234" />
+            <Tendon boneId="0:2019" name="shinA" xx="-0.12080191823094467" xy="0.9926766324195025" yx="-0.9926766324195025" yy="-0.12080191823094467" tx="424" ty="1128" id="0:3235" />
+          </Skin>
+        </Mesh>
+      </Image>
+      <Image name="Liv boot B" assetId="0:108" originX="0" originY="0" id="0:3337">
+        <Mesh name="Liv boot B mesh" triangleIndexBytes="AAECAAID" id="0:3338">
+          <MeshVertex x="513" y="1232" u="0" v="0" id="0:3339">
+            <Weight values="255" indices="1" id="0:3340" />
+          </MeshVertex>
+          <MeshVertex x="692" y="1232" u="1" v="0" id="0:3341">
+            <Weight values="255" indices="1" id="0:3342" />
+          </MeshVertex>
+          <MeshVertex x="692" y="1412" u="1" v="1" id="0:3343">
+            <Weight values="255" indices="1" id="0:3344" />
+          </MeshVertex>
+          <MeshVertex x="513" y="1412" u="0" v="1" id="0:3345">
+            <Weight values="255" indices="1" id="0:3346" />
+          </MeshVertex>
+          <Skin name="Liv boot B skin" tx="0" ty="0" id="0:3347">
+            <Tendon boneId="0:2023" name="footB" xx="0.6679097417772565" xy="0.7442422836946572" yx="-0.7442422836946572" yy="0.6679097417772565" tx="575" ty="1310" id="0:3348" />
+          </Skin>
+        </Mesh>
+      </Image>
+      <Image name="Liv sock B" assetId="0:107" originX="0" originY="0" id="0:3313">
+        <Mesh name="Liv sock B mesh" triangleIndexBytes="AAECAAID" id="0:3314">
+          <MeshVertex x="512" y="1178" u="0" v="0" id="0:3315">
+            <Weight values="255" indices="1" id="0:3316" />
+          </MeshVertex>
+          <MeshVertex x="612" y="1178" u="1" v="0" id="0:3317">
+            <Weight values="255" indices="1" id="0:3318" />
+          </MeshVertex>
+          <MeshVertex x="612" y="1246" u="1" v="1" id="0:3319">
+            <Weight values="255" indices="1" id="0:3320" />
+          </MeshVertex>
+          <MeshVertex x="512" y="1246" u="0" v="1" id="0:3321">
+            <Weight values="255" indices="1" id="0:3322" />
+          </MeshVertex>
+          <Skin name="Liv sock B skin" tx="0" ty="0" id="0:3323">
+            <Tendon boneId="0:2022" name="shinB" xx="0.021047967726081324" xy="0.9997784669888634" yx="-0.9997784669888634" yy="0.021047967726081324" tx="571" ty="1120" id="0:3324" />
+          </Skin>
+        </Mesh>
+      </Image>
+      <Image name="Liv leg B" assetId="0:118" originX="0" originY="0" id="0:3236">
+        <Mesh name="Liv leg B mesh" triangleIndexBytes="AAEDAAMCAgMFAgUEBAUHBAcGBgcJBgkICAkLCAsKCgsNCg0MDA0PDA8ODg8RDhEQEBETEBMSEhMVEhUUFBUXFBcWFhcZFhkYGBkbGBsaGhsdGh0c" id="0:3237">
+          <MeshVertex x="526.5" y="930.0" u="0" v="0.0" id="0:3238">
+            <Weight values="255" indices="1" id="0:3239" />
+          </MeshVertex>
+          <MeshVertex x="605.5" y="930.0" u="1" v="0.0" id="0:3240">
+            <Weight values="255" indices="1" id="0:3241" />
+          </MeshVertex>
+          <MeshVertex x="527.722" y="957.143" u="0" v="0.07143" id="0:3242">
+            <Weight values="255" indices="1" id="0:3243" />
+          </MeshVertex>
+          <MeshVertex x="605.706" y="957.143" u="1" v="0.07143" id="0:3244">
+            <Weight values="255" indices="1" id="0:3245" />
+          </MeshVertex>
+          <MeshVertex x="528.944" y="984.286" u="0" v="0.14286" id="0:3246">
+            <Weight values="255" indices="1" id="0:3247" />
+          </MeshVertex>
+          <MeshVertex x="605.913" y="984.286" u="1" v="0.14286" id="0:3248">
+            <Weight values="255" indices="1" id="0:3249" />
+          </MeshVertex>
+          <MeshVertex x="530.166" y="1011.429" u="0" v="0.21429" id="0:3250">
+            <Weight values="255" indices="1" id="0:3251" />
+          </MeshVertex>
+          <MeshVertex x="606.119" y="1011.429" u="1" v="0.21429" id="0:3252">
+            <Weight values="255" indices="1" id="0:3253" />
+          </MeshVertex>
+          <MeshVertex x="531.389" y="1038.571" u="0" v="0.28571" id="0:3254">
+            <Weight values="255" indices="1" id="0:3255" />
+          </MeshVertex>
+          <MeshVertex x="606.326" y="1038.571" u="1" v="0.28571" id="0:3256">
+            <Weight values="255" indices="1" id="0:3257" />
+          </MeshVertex>
+          <MeshVertex x="532.611" y="1065.714" u="0" v="0.35714" id="0:3258">
+            <Weight values="255" indices="1" id="0:3259" />
+          </MeshVertex>
+          <MeshVertex x="606.532" y="1065.714" u="1" v="0.35714" id="0:3260">
+            <Weight values="255" indices="1" id="0:3261" />
+          </MeshVertex>
+          <MeshVertex x="533.833" y="1092.857" u="0" v="0.42857" id="0:3262">
+            <Weight values="4845" indices="513" id="0:3263" />
+          </MeshVertex>
+          <MeshVertex x="606.739" y="1092.857" u="1" v="0.42857" id="0:3264">
+            <Weight values="4845" indices="513" id="0:3265" />
+          </MeshVertex>
+          <MeshVertex x="535.055" y="1120.0" u="0" v="0.5" id="0:3266">
+            <Weight values="32895" indices="513" id="0:3267" />
+          </MeshVertex>
+          <MeshVertex x="606.945" y="1120.0" u="1" v="0.5" id="0:3268">
+            <Weight values="32895" indices="513" id="0:3269" />
+          </MeshVertex>
+          <MeshVertex x="536.134" y="1147.143" u="0" v="0.57143" id="0:3270">
+            <Weight values="60690" indices="513" id="0:3271" />
+          </MeshVertex>
+          <MeshVertex x="607.009" y="1147.143" u="1" v="0.57143" id="0:3272">
+            <Weight values="60690" indices="513" id="0:3273" />
+          </MeshVertex>
+          <MeshVertex x="537.214" y="1174.286" u="0" v="0.64286" id="0:3274">
+            <Weight values="255" indices="2" id="0:3275" />
+          </MeshVertex>
+          <MeshVertex x="607.072" y="1174.286" u="1" v="0.64286" id="0:3276">
+            <Weight values="255" indices="2" id="0:3277" />
+          </MeshVertex>
+          <MeshVertex x="538.293" y="1201.429" u="0" v="0.71429" id="0:3278">
+            <Weight values="255" indices="2" id="0:3279" />
+          </MeshVertex>
+          <MeshVertex x="607.136" y="1201.429" u="1" v="0.71429" id="0:3280">
+            <Weight values="255" indices="2" id="0:3281" />
+          </MeshVertex>
+          <MeshVertex x="539.372" y="1228.571" u="0" v="0.78571" id="0:3282">
+            <Weight values="255" indices="2" id="0:3283" />
+          </MeshVertex>
+          <MeshVertex x="607.199" y="1228.571" u="1" v="0.78571" id="0:3284">
+            <Weight values="255" indices="2" id="0:3285" />
+          </MeshVertex>
+          <MeshVertex x="540.451" y="1255.714" u="0" v="0.85714" id="0:3286">
+            <Weight values="255" indices="2" id="0:3287" />
+          </MeshVertex>
+          <MeshVertex x="607.263" y="1255.714" u="1" v="0.85714" id="0:3288">
+            <Weight values="255" indices="2" id="0:3289" />
+          </MeshVertex>
+          <MeshVertex x="541.531" y="1282.857" u="0" v="0.92857" id="0:3290">
+            <Weight values="255" indices="2" id="0:3291" />
+          </MeshVertex>
+          <MeshVertex x="607.326" y="1282.857" u="1" v="0.92857" id="0:3292">
+            <Weight values="255" indices="2" id="0:3293" />
+          </MeshVertex>
+          <MeshVertex x="542.61" y="1310.0" u="0" v="1.0" id="0:3294">
+            <Weight values="255" indices="2" id="0:3295" />
+          </MeshVertex>
+          <MeshVertex x="607.39" y="1310.0" u="1" v="1.0" id="0:3296">
+            <Weight values="255" indices="2" id="0:3297" />
+          </MeshVertex>
+          <Skin name="Liv leg B skin" tx="0" ty="0" id="0:3298">
+            <Tendon boneId="0:2021" name="thighB" xx="0.026306682088232773" xy="0.9996539193528472" yx="-0.9996539193528472" yy="0.026306682088232773" tx="566" ty="930" id="0:3299" />
+            <Tendon boneId="0:2022" name="shinB" xx="0.021047967726081324" xy="0.9997784669888634" yx="-0.9997784669888634" yy="0.021047967726081324" tx="571" ty="1120" id="0:3300" />
+          </Skin>
+        </Mesh>
+      </Image>
+      <Image name="Liv hand B relaxed" assetId="0:121" originX="0" originY="0" id="0:2692">
+        <Mesh name="Liv hand B relaxed mesh" triangleIndexBytes="AAECAAID" id="0:2693">
+          <MeshVertex x="721.322" y="749.862" u="0" v="0" id="0:2694">
+            <Weight values="255" indices="1" id="0:2695" />
+          </MeshVertex>
+          <MeshVertex x="808.684" y="833.584" u="1" v="0" id="0:2696">
+            <Weight values="255" indices="1" id="0:2697" />
+          </MeshVertex>
+          <MeshVertex x="853.573" y="786.743" u="1" v="1" id="0:2698">
+            <Weight values="255" indices="1" id="0:2699" />
+          </MeshVertex>
+          <MeshVertex x="766.211" y="703.021" u="0" v="1" id="0:2700">
+            <Weight values="255" indices="1" id="0:2701" />
+          </MeshVertex>
+          <Skin name="Liv hand B relaxed skin" tx="0" ty="0" id="0:2702">
+            <Tendon boneId="0:2015" name="handB" xx="0.7219882051154239" xy="0.6919053632356152" yx="-0.6919053632356152" yy="0.7219882051154239" tx="762.8976188803593" ty="734.506051427011" id="0:2703" />
+          </Skin>
+        </Mesh>
+        <DataBindContext sourcePathIds="0:40-0:3481" propertyKey="18" id="0:3551" />
+      </Image>
+      <Image name="Liv hand B palm" assetId="0:122" originX="0" originY="0" id="0:2704">
+        <Mesh name="Liv hand B palm mesh" triangleIndexBytes="AAECAAID" id="0:2705">
+          <MeshVertex x="705.708" y="626.105" u="0" v="0" id="0:2706">
+            <Weight values="255" indices="1" id="0:2707" />
+          </MeshVertex>
+          <MeshVertex x="639.443" y="695.251" u="1" v="0" id="0:2708">
+            <Weight values="255" indices="1" id="0:2709" />
+          </MeshVertex>
+          <MeshVertex x="725.69" y="777.904" u="1" v="1" id="0:2710">
+            <Weight values="255" indices="1" id="0:2711" />
+          </MeshVertex>
+          <MeshVertex x="791.955" y="708.758" u="0" v="1" id="0:2712">
+            <Weight values="255" indices="1" id="0:2713" />
+          </MeshVertex>
+          <Skin name="Liv hand B palm skin" tx="0" ty="0" id="0:2714">
+            <Tendon boneId="0:2015" name="handB" xx="0.7219882051154239" xy="0.6919053632356152" yx="-0.6919053632356152" yy="0.7219882051154239" tx="762.8976188803593" ty="734.506051427011" id="0:2715" />
+          </Skin>
+        </Mesh>
+        <DataBindContext sourcePathIds="0:40-0:3482" propertyKey="18" id="0:3552" />
+      </Image>
+      <Image name="Liv hand B fist" assetId="0:123" originX="0" originY="0" id="0:2716">
+        <Mesh name="Liv hand B fist mesh" triangleIndexBytes="AAECAAID" id="0:2717">
+          <MeshVertex x="712.848" y="762.602" u="0" v="0" id="0:2718">
+            <Weight values="255" indices="1" id="0:2719" />
+          </MeshVertex>
+          <MeshVertex x="778.649" y="825.661" u="1" v="0" id="0:2720">
+            <Weight values="255" indices="1" id="0:2721" />
+          </MeshVertex>
+          <MeshVertex x="830.663" y="771.385" u="1" v="1" id="0:2722">
+            <Weight values="255" indices="1" id="0:2723" />
+          </MeshVertex>
+          <MeshVertex x="764.863" y="708.326" u="0" v="1" id="0:2724">
+            <Weight values="255" indices="1" id="0:2725" />
+          </MeshVertex>
+          <Skin name="Liv hand B fist skin" tx="0" ty="0" id="0:2726">
+            <Tendon boneId="0:2015" name="handB" xx="0.7219882051154239" xy="0.6919053632356152" yx="-0.6919053632356152" yy="0.7219882051154239" tx="762.8976188803593" ty="734.506051427011" id="0:2727" />
+          </Skin>
+        </Mesh>
+        <DataBindContext sourcePathIds="0:40-0:3483" propertyKey="18" id="0:3553" />
+      </Image>
+      <Image name="Liv hand B point" assetId="0:124" originX="0" originY="0" id="0:2728">
+        <Mesh name="Liv hand B point mesh" triangleIndexBytes="AAECAAID" id="0:2729">
+          <MeshVertex x="720.149" y="750.985" u="0" v="0" id="0:2730">
+            <Weight values="255" indices="1" id="0:2731" />
+          </MeshVertex>
+          <MeshVertex x="807.883" y="835.064" u="1" v="0" id="0:2732">
+            <Weight values="255" indices="1" id="0:2733" />
+          </MeshVertex>
+          <MeshVertex x="853.485" y="787.479" u="1" v="1" id="0:2734">
+            <Weight values="255" indices="1" id="0:2735" />
+          </MeshVertex>
+          <MeshVertex x="765.751" y="703.401" u="0" v="1" id="0:2736">
+            <Weight values="255" indices="1" id="0:2737" />
+          </MeshVertex>
+          <Skin name="Liv hand B point skin" tx="0" ty="0" id="0:2738">
+            <Tendon boneId="0:2015" name="handB" xx="0.7219882051154239" xy="0.6919053632356152" yx="-0.6919053632356152" yy="0.7219882051154239" tx="762.8976188803593" ty="734.506051427011" id="0:2739" />
+          </Skin>
+        </Mesh>
+        <DataBindContext sourcePathIds="0:40-0:3484" propertyKey="18" id="0:3554" />
+      </Image>
+      <Image name="Liv hand B thumb" assetId="0:125" originX="0" originY="0" id="0:2740">
+        <Mesh name="Liv hand B thumb mesh" triangleIndexBytes="AAECAAID" id="0:2741">
+          <MeshVertex x="696.219" y="780.256" u="0" v="0" id="0:2742">
+            <Weight values="255" indices="1" id="0:2743" />
+          </MeshVertex>
+          <MeshVertex x="760.161" y="841.534" u="1" v="0" id="0:2744">
+            <Weight values="255" indices="1" id="0:2745" />
+          </MeshVertex>
+          <MeshVertex x="829.988" y="768.67" u="1" v="1" id="0:2746">
+            <Weight values="255" indices="1" id="0:2747" />
+          </MeshVertex>
+          <MeshVertex x="766.047" y="707.392" u="0" v="1" id="0:2748">
+            <Weight values="255" indices="1" id="0:2749" />
+          </MeshVertex>
+          <Skin name="Liv hand B thumb skin" tx="0" ty="0" id="0:2750">
+            <Tendon boneId="0:2015" name="handB" xx="0.7219882051154239" xy="0.6919053632356152" yx="-0.6919053632356152" yy="0.7219882051154239" tx="762.8976188803593" ty="734.506051427011" id="0:2751" />
+          </Skin>
+        </Mesh>
+        <DataBindContext sourcePathIds="0:40-0:3485" propertyKey="18" id="0:3555" />
+      </Image>
+      <Image name="Liv hand B back" assetId="0:126" originX="0" originY="0" id="0:2752">
+        <Mesh name="Liv hand B back mesh" triangleIndexBytes="AAECAAID" id="0:2753">
+          <MeshVertex x="716.813" y="614.924" u="0" v="0" id="0:2754">
+            <Weight values="255" indices="1" id="0:2755" />
+          </MeshVertex>
+          <MeshVertex x="650.548" y="684.07" u="1" v="0" id="0:2756">
+            <Weight values="255" indices="1" id="0:2757" />
+          </MeshVertex>
+          <MeshVertex x="736.795" y="766.723" u="1" v="1" id="0:2758">
+            <Weight values="255" indices="1" id="0:2759" />
+          </MeshVertex>
+          <MeshVertex x="803.06" y="697.577" u="0" v="1" id="0:2760">
+            <Weight values="255" indices="1" id="0:2761" />
+          </MeshVertex>
+          <Skin name="Liv hand B back skin" tx="0" ty="0" id="0:2762">
+            <Tendon boneId="0:2015" name="handB" xx="0.7219882051154239" xy="0.6919053632356152" yx="-0.6919053632356152" yy="0.7219882051154239" tx="762.8976188803593" ty="734.506051427011" id="0:2763" />
+          </Skin>
+        </Mesh>
+        <DataBindContext sourcePathIds="0:40-0:3486" propertyKey="18" id="0:3556" />
+      </Image>
+      <Image name="Liv forearm B" assetId="0:116" originX="0" originY="0" id="0:2608">
+        <Mesh name="Liv forearm B mesh" triangleIndexBytes="AAECAAID" id="0:2609">
+          <MeshVertex x="646" y="621" u="0" v="0" id="0:2610">
+            <Weight values="255" indices="1" id="0:2611" />
+          </MeshVertex>
+          <MeshVertex x="779" y="621" u="1" v="0" id="0:2612">
+            <Weight values="255" indices="1" id="0:2613" />
+          </MeshVertex>
+          <MeshVertex x="779" y="751" u="1" v="1" id="0:2614">
+            <Weight values="255" indices="1" id="0:2615" />
+          </MeshVertex>
+          <MeshVertex x="646" y="751" u="0" v="1" id="0:2616">
+            <Weight values="255" indices="1" id="0:2617" />
+          </MeshVertex>
+          <Skin name="Liv forearm B skin" tx="0" ty="0" id="0:2618">
+            <Tendon boneId="0:2014" name="foreB" xx="0.721988205115424" xy="0.691905363235615" yx="-0.691905363235615" yy="0.721988205115424" tx="672.6490932409313" ty="648.0178810225591" id="0:2619" />
+          </Skin>
+        </Mesh>
+        <DataBindContext sourcePathIds="0:40-0:3450" propertyKey="18" id="0:3566" />
+      </Image>
+      <Image name="Liv upper arm B" assetId="0:115" originX="0" originY="0" id="0:2596">
+        <Mesh name="Liv upper arm B mesh" triangleIndexBytes="AAECAAID" id="0:2597">
+          <MeshVertex x="538" y="518" u="0" v="0" id="0:2598">
+            <Weight values="255" indices="1" id="0:2599" />
+          </MeshVertex>
+          <MeshVertex x="704" y="518" u="1" v="0" id="0:2600">
+            <Weight values="255" indices="1" id="0:2601" />
+          </MeshVertex>
+          <MeshVertex x="704" y="680" u="1" v="1" id="0:2602">
+            <Weight values="255" indices="1" id="0:2603" />
+          </MeshVertex>
+          <MeshVertex x="538" y="680" u="0" v="1" id="0:2604">
+            <Weight values="255" indices="1" id="0:2605" />
+          </MeshVertex>
+          <Skin name="Liv upper arm B skin" tx="0" ty="0" id="0:2606">
+            <Tendon boneId="0:2013" name="upperB" xx="0.7224769554623351" xy="0.6913950020255245" yx="-0.6913950020255245" yy="0.7224769554623351" tx="565.0" ty="545.0" id="0:2607" />
+          </Skin>
+        </Mesh>
+        <DataBindContext sourcePathIds="0:40-0:3450" propertyKey="18" id="0:3565" />
+      </Image>
+    </Node>
+    <Text name="Liv · three-quarter view · rig test (Rive)" x="40" y="12" id="0:3577">
+      <TextStylePaint fontSize="18" fontAssetId="0:30" id="0:3578">
+        <Fill id="0:3579">
+          <SolidColor colorValue="FF4C4038" id="0:3580" />
+        </Fill>
+      </TextStylePaint>
+    </Text>
+    <Text name="click a pose" x="1105" y="84" id="0:3581">
+      <TextStylePaint fontSize="14" fontAssetId="0:30" id="0:3582">
+        <Fill id="0:3583">
+          <SolidColor colorValue="FF8B7460" id="0:3584" />
+        </Fill>
+      </TextStylePaint>
+    </Text>
+    <StateMachine name="Liv" id="0:7">
+      <StateMachineLayer name="Body" id="0:8">
+        <EntryState x="0" y="0" id="0:3681">
+          <StateTransition stateToId="0:12" id="0:3682" />
+        </EntryState>
+        <AnyState x="0" y="-150" id="0:3683" />
+        <ExitState x="650" y="-150" id="0:3684" />
+        <AnimationState animationId="0:60" id="0:12" x="180" y="0" />
+      </StateMachineLayer>
+      <StateMachineListenerSingle targetId="0:3585" listenerTypeValue="click" name="Rest" id="0:3593">
+        <ListenerViewModelChange id="0:3594">
+          <BindablePropertyNumber propertyValue="0" id="0:3595">
+            <DataBindContext sourcePathIds="0:40-0:3447" propertyKey="636" direction="true" id="0:3596" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+      </StateMachineListenerSingle>
+      <StateMachineListenerSingle targetId="0:3597" listenerTypeValue="click" name="Wave" id="0:3605">
+        <ListenerViewModelChange id="0:3606">
+          <BindablePropertyNumber propertyValue="1" id="0:3607">
+            <DataBindContext sourcePathIds="0:40-0:3447" propertyKey="636" direction="true" id="0:3608" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+      </StateMachineListenerSingle>
+      <StateMachineListenerSingle targetId="0:3609" listenerTypeValue="click" name="Reach" id="0:3617">
+        <ListenerViewModelChange id="0:3618">
+          <BindablePropertyNumber propertyValue="2" id="0:3619">
+            <DataBindContext sourcePathIds="0:40-0:3447" propertyKey="636" direction="true" id="0:3620" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+      </StateMachineListenerSingle>
+      <StateMachineListenerSingle targetId="0:3621" listenerTypeValue="click" name="Cheer" id="0:3629">
+        <ListenerViewModelChange id="0:3630">
+          <BindablePropertyNumber propertyValue="3" id="0:3631">
+            <DataBindContext sourcePathIds="0:40-0:3447" propertyKey="636" direction="true" id="0:3632" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+      </StateMachineListenerSingle>
+      <StateMachineListenerSingle targetId="0:3633" listenerTypeValue="click" name="Crouch" id="0:3641">
+        <ListenerViewModelChange id="0:3642">
+          <BindablePropertyNumber propertyValue="4" id="0:3643">
+            <DataBindContext sourcePathIds="0:40-0:3447" propertyKey="636" direction="true" id="0:3644" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+      </StateMachineListenerSingle>
+      <StateMachineListenerSingle targetId="0:3645" listenerTypeValue="click" name="Step" id="0:3653">
+        <ListenerViewModelChange id="0:3654">
+          <BindablePropertyNumber propertyValue="5" id="0:3655">
+            <DataBindContext sourcePathIds="0:40-0:3447" propertyKey="636" direction="true" id="0:3656" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+      </StateMachineListenerSingle>
+      <StateMachineListenerSingle targetId="0:3657" listenerTypeValue="click" name="Hands" id="0:3665">
+        <ListenerViewModelChange id="0:3666">
+          <BindablePropertyNumber propertyValue="6" id="0:3667">
+            <DataBindContext sourcePathIds="0:40-0:3447" propertyKey="636" direction="true" id="0:3668" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+      </StateMachineListenerSingle>
+      <StateMachineListenerSingle targetId="0:3669" listenerTypeValue="click" name="Bind" id="0:3677">
+        <ListenerViewModelChange id="0:3678">
+          <BindablePropertyNumber propertyValue="7" id="0:3679">
+            <DataBindContext sourcePathIds="0:40-0:3447" propertyKey="636" direction="true" id="0:3680" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+      </StateMachineListenerSingle>
+    </StateMachine>
+    <Text name="Rest" x="1070" y="108" id="0:3589">
+      <TextStylePaint fontSize="18" fontAssetId="0:30" id="0:3590">
+        <Fill id="0:3591">
+          <SolidColor colorValue="FF4C4038" id="0:3592" />
+        </Fill>
+      </TextStylePaint>
+    </Text>
+    <Text name="Wave" x="1070" y="170" id="0:3601">
+      <TextStylePaint fontSize="18" fontAssetId="0:30" id="0:3602">
+        <Fill id="0:3603">
+          <SolidColor colorValue="FF4C4038" id="0:3604" />
+        </Fill>
+      </TextStylePaint>
+    </Text>
+    <Text name="Reach" x="1070" y="232" id="0:3613">
+      <TextStylePaint fontSize="18" fontAssetId="0:30" id="0:3614">
+        <Fill id="0:3615">
+          <SolidColor colorValue="FF4C4038" id="0:3616" />
+        </Fill>
+      </TextStylePaint>
+    </Text>
+    <Text name="Cheer" x="1070" y="294" id="0:3625">
+      <TextStylePaint fontSize="18" fontAssetId="0:30" id="0:3626">
+        <Fill id="0:3627">
+          <SolidColor colorValue="FF4C4038" id="0:3628" />
+        </Fill>
+      </TextStylePaint>
+    </Text>
+    <Text name="Crouch" x="1070" y="356" id="0:3637">
+      <TextStylePaint fontSize="18" fontAssetId="0:30" id="0:3638">
+        <Fill id="0:3639">
+          <SolidColor colorValue="FF4C4038" id="0:3640" />
+        </Fill>
+      </TextStylePaint>
+    </Text>
+    <Text name="Step" x="1070" y="418" id="0:3649">
+      <TextStylePaint fontSize="18" fontAssetId="0:30" id="0:3650">
+        <Fill id="0:3651">
+          <SolidColor colorValue="FF4C4038" id="0:3652" />
+        </Fill>
+      </TextStylePaint>
+    </Text>
+    <Text name="Hands" x="1070" y="480" id="0:3661">
+      <TextStylePaint fontSize="18" fontAssetId="0:30" id="0:3662">
+        <Fill id="0:3663">
+          <SolidColor colorValue="FF4C4038" id="0:3664" />
+        </Fill>
+      </TextStylePaint>
+    </Text>
+    <Text name="Bind" x="1070" y="542" id="0:3673">
+      <TextStylePaint fontSize="18" fontAssetId="0:30" id="0:3674">
+        <Fill id="0:3675">
+          <SolidColor colorValue="FF4C4038" id="0:3676" />
+        </Fill>
+      </TextStylePaint>
+    </Text>
+    <LinearAnimation name="Idle" fps="60" duration="240" loopValue="loop" id="0:60">
+      <KeyedObject objectId="0:2004" id="0:3685">
+        <KeyedProperty property="scaleY" id="0:3686">
+          <KeyFrameDouble frame="0" value="1" interpolationType="cubic" id="0:3687" />
+          <KeyFrameDouble frame="120" value="1.004" interpolationType="cubic" id="0:3688" />
+          <KeyFrameDouble frame="240" value="1" interpolationType="cubic" id="0:3689" />
+        </KeyedProperty>
+      </KeyedObject>
+    </LinearAnimation>
+  </Artboard>
+  <ViewModel name="LivTq" defaultInstanceId="0:41" id="0:40">
+    <ViewModelPropertyNumber name="pelvisX" id="0:3445" />
+    <ViewModelPropertyNumber name="pelvisY" id="0:3446" />
+    <ViewModelPropertyNumber name="pose" id="0:3447" />
+    <ViewModelPropertyNumber name="rate" id="0:3448" />
+    <ViewModelPropertyNumber name="frontB" id="0:3449" />
+    <ViewModelPropertyNumber name="backB" id="0:3450" />
+    <ViewModelPropertyNumber name="handBFRelaxed" id="0:3451" />
+    <ViewModelPropertyNumber name="handBFPalm" id="0:3452" />
+    <ViewModelPropertyNumber name="handBFFist" id="0:3453" />
+    <ViewModelPropertyNumber name="handBFPoint" id="0:3454" />
+    <ViewModelPropertyNumber name="handBFThumb" id="0:3455" />
+    <ViewModelPropertyNumber name="handBFBack" id="0:3456" />
+    <ViewModelPropertyNumber name="spineRot" id="0:3457" />
+    <ViewModelPropertyNumber name="headRot" id="0:3458" />
+    <ViewModelPropertyNumber name="upperARot" id="0:3459" />
+    <ViewModelPropertyNumber name="upperBRot" id="0:3460" />
+    <ViewModelPropertyNumber name="foreARot" id="0:3461" />
+    <ViewModelPropertyNumber name="foreBRot" id="0:3462" />
+    <ViewModelPropertyNumber name="handARot" id="0:3463" />
+    <ViewModelPropertyNumber name="handBRot" id="0:3464" />
+    <ViewModelPropertyNumber name="handAX" id="0:3465" />
+    <ViewModelPropertyNumber name="handAY" id="0:3466" />
+    <ViewModelPropertyNumber name="footAX" id="0:3467" />
+    <ViewModelPropertyNumber name="footAY" id="0:3468" />
+    <ViewModelPropertyNumber name="footARot" id="0:3469" />
+    <ViewModelPropertyNumber name="handARelaxed" id="0:3470" />
+    <ViewModelPropertyNumber name="handAPalm" id="0:3471" />
+    <ViewModelPropertyNumber name="handAFist" id="0:3472" />
+    <ViewModelPropertyNumber name="handAPoint" id="0:3473" />
+    <ViewModelPropertyNumber name="handAThumb" id="0:3474" />
+    <ViewModelPropertyNumber name="handABack" id="0:3475" />
+    <ViewModelPropertyNumber name="handBX" id="0:3476" />
+    <ViewModelPropertyNumber name="handBY" id="0:3477" />
+    <ViewModelPropertyNumber name="footBX" id="0:3478" />
+    <ViewModelPropertyNumber name="footBY" id="0:3479" />
+    <ViewModelPropertyNumber name="footBRot" id="0:3480" />
+    <ViewModelPropertyNumber name="handBRelaxed" id="0:3481" />
+    <ViewModelPropertyNumber name="handBPalm" id="0:3482" />
+    <ViewModelPropertyNumber name="handBFist" id="0:3483" />
+    <ViewModelPropertyNumber name="handBPoint" id="0:3484" />
+    <ViewModelPropertyNumber name="handBThumb" id="0:3485" />
+    <ViewModelPropertyNumber name="handBBack" id="0:3486" />
+    <ViewModelInstance name="Default" exports="true" id="0:41">
+      <ViewModelInstanceNumber viewModelPropertyId="0:3445" propertyValue="510" id="0:3487" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:3446" propertyValue="912" id="0:3488" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:3447" propertyValue="0" id="0:3489" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:3448" propertyValue="1.0" id="0:3490" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:3449" propertyValue="0.0" id="0:3491" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:3450" propertyValue="1.0" id="0:3492" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:3451" propertyValue="0.0" id="0:3493" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:3452" propertyValue="0.0" id="0:3494" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:3453" propertyValue="0.0" id="0:3495" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:3454" propertyValue="0.0" id="0:3496" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:3455" propertyValue="0.0" id="0:3497" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:3456" propertyValue="0.0" id="0:3498" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:3457" propertyValue="-1.5844318452963992" id="0:3499" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:3458" propertyValue="0.027333291874368726" id="0:3500" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:3459" propertyValue="0.0" id="0:3501" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:3460" propertyValue="0.0" id="0:3502" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:3461" propertyValue="0.005596993303063957" id="0:3503" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:3462" propertyValue="0.0007066438191545288" id="0:3504" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:3463" propertyValue="4.440892098500626e-16" id="0:3505" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:3464" propertyValue="4.440892098500626e-16" id="0:3506" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:3465" propertyValue="256.7161029602517" id="0:3507" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:3466" propertyValue="741.6754982230057" id="0:3508" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:3467" propertyValue="401" id="0:3509" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:3468" propertyValue="1317" id="0:3510" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:3469" propertyValue="0.8393996637734166" id="0:3511" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:3470" propertyValue="1.0" id="0:3512" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:3471" propertyValue="0.0" id="0:3513" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:3472" propertyValue="0.0" id="0:3514" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:3473" propertyValue="0.0" id="0:3515" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:3474" propertyValue="0.0" id="0:3516" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:3475" propertyValue="0.0" id="0:3517" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:3476" propertyValue="762.8976188803593" id="0:3518" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:3477" propertyValue="734.506051427011" id="0:3519" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:3478" propertyValue="575" id="0:3520" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:3479" propertyValue="1310" id="0:3521" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:3480" propertyValue="0.8393996637734166" id="0:3522" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:3481" propertyValue="1.0" id="0:3523" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:3482" propertyValue="0.0" id="0:3524" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:3483" propertyValue="0.0" id="0:3525" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:3484" propertyValue="0.0" id="0:3526" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:3485" propertyValue="0.0" id="0:3527" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:3486" propertyValue="0.0" id="0:3528" />
+    </ViewModelInstance>
+  </ViewModel>
+  <ScriptAsset file="pose.luau" name="pose" id="0:80" />
+  <FontAsset file="Inter.ttf" name="Inter" id="0:30" />
+</Rive>
