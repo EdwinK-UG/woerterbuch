@@ -329,6 +329,9 @@ def emit_view(V):
     for sd in 'AB':
         vprop(f'foot{sd}X', T['ankle' + sd][0]); vprop(f'foot{sd}Y', T['ankle' + sd][1]); vprop(f'foot{sd}Rot', FOOT_W[sd])
         vbind(targets['foot' + sd], 13, f'foot{sd}X'); vbind(targets['foot' + sd], 14, f'foot{sd}Y'); vbind(targets['foot' + sd], 15, f'foot{sd}Rot')
+    for sd in 'AB':                                              # leg foreshortening (seen from the front or back a lifted leg gets shorter, its knee goes toward the camera)
+        vprop(f'leg{sd}Scale', 1.0); vprop(f'leg{sd}ScaleInv', 1.0)     # the shin and foot inherit the thigh's scale; the boot gets the inverse so it keeps its shape
+        vbind(bones[f'thigh{sd}'], 16, f'leg{sd}Scale'); vbind(bones[f'foot{sd}'], 16, f'leg{sd}ScaleInv')
     if far in SIDES:
         for p in HAND_POSES: vprop(f'hand{far}F{p.capitalize()}', 0.0); vbind(far_hand_front[p], 18, f'hand{far}F{p.capitalize()}')
         vprop('front', 0.0); vprop('back', 1.0)

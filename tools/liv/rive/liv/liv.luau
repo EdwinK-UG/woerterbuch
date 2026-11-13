@@ -73,7 +73,7 @@ local function init(self:St,context:Context):boolean
  for _,vw in ipairs(VIEWS) do
   local pre=vw.name..'_'
   for k,_ in pairs(vw.rest) do grab(pre..k) end
-  for _,k in ipairs({'opacity','pelvisX','pelvisY','front','back','blink','handAFlip','handBFlip','plA','plB','cAX','cAY','cBX','cBY'}) do grab(pre..k) end
+  for _,k in ipairs({'opacity','pelvisX','pelvisY','front','back','blink','legAScale','legBScale','legAScaleInv','legBScaleInv','handAFlip','handBFlip','plA','plB','cAX','cAY','cBX','cBY'}) do grab(pre..k) end
   for _,sd in ipairs({'A','B'}) do
    grab(pre..'hand'..sd..'X');grab(pre..'hand'..sd..'Y');grab(pre..'foot'..sd..'X');grab(pre..'foot'..sd..'Y');grab(pre..'foot'..sd..'Rot')
    for _,sh in ipairs(SHAPES) do grab(pre..'hand'..sd..sh);grab(pre..'hand'..sd..'F'..sh) end
@@ -311,6 +311,17 @@ local function advance(self:St,seconds:number):boolean
    put(pre..'foot'..sd..'Rot',(if sd=='A' then c.footWA else c.footWB)-(if sd=='A' then fA_p else fB_p)*.85*(.15+.85*sn))
   end
   local waveRot=if pi==1 then .42*math.sin(self.t*2*math.pi*2.3) else 0.0
+  -- seen from the front or back a lifted leg gets shorter (its knee goes toward the camera) instead of bending sideways:
+  -- the thigh bone is scaled along its length (the shin and foot inherit it, the boot gets the inverse)
+  local fz=smooth((cs*cs-.55)/.45)
+  local Lleg=c.legmax/.975
+  for _,sd in ipairs({'A','B'}) do
+   local hx=pelX+(if sd=='A' then c.hipAx else c.hipBx);local hy=pelY+c.hipdy
+   local fx=if sd=='A' then fA_x else fB_x;local fy=if sd=='A' then fA_y else fB_y
+   local d=math.sqrt((fx-hx)*(fx-hx)+(fy-hy)*(fy-hy))
+   local kk=lerp(1,math.clamp(d/Lleg,.5,1),fz)
+   put(pre..'leg'..sd..'Scale',kk);put(pre..'leg'..sd..'ScaleInv',1/kk)
+  end
   -- a hand turns over so its fingers curl down: the drawn hand curls to one side of the arm only
   local function smoothTo(k:string,target:number,wn:number):number
    local x=self.sx[pre..k] or target;local vel=self.sv[pre..k] or 0
