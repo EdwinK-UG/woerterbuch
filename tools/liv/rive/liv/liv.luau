@@ -23,7 +23,8 @@ type St = {context: Context, vm: ViewModel?, n: {[string]: Property<number>}, cu
   t: number, v: number, s: number, phi: number, frozen: boolean, rw: number, gw: number,
   fR: Foot, fL: Foot, yaw: number, yawV: number, flip: number, flipV: number, turnF: number,
   hands: {[string]: any}, face: Face.Face?, blinkT: number, blinkI: number, sx: {[string]: number}, sv: {[string]: number}, ready: boolean, prev: {[string]: number},
-  act: Actions.State}                           -- [liv-actions] action layers, props
+  act: Actions.State,                           -- [liv-actions] action layers, props
+  parkV: number, parkYaw: number, parkFlipT: number, simT: number, simI: number, parkRoute: number, actStarted: boolean}   -- [park] the scene's time drives everything
 
 local VIEWS: {View} = {
  {name='front',yaw=0,aR=true,farB=true,
@@ -43,6 +44,14 @@ local VIEWS: {View} = {
   rest={spineRot=-1.570796327,headRot=0,hairRot=-3.141592654,skirtRot=1.570796327,skirtLRot=1.71128857,skirtRRot=1.431256048,satchelRot=1.570796327,bow1Rot=1.760166377,bow2Rot=1.384834441,handARot=4.440892099e-16,slvA0Rot=0,slvA1Rot=0,slvA2Rot=0,slvA3Rot=0,slvA4Rot=0,slvA5Rot=0,handBRot=4.440892099e-16,slvB0Rot=0,slvB1Rot=0,slvB2Rot=0,slvB3Rot=0,slvB4Rot=0,slvB5Rot=0,headPX=448,headPY=-2.74320883e-14}}
 }
 -- hand shapes by number (poses use these): the names of hands/hand_pose.luau
+local PARK:boolean = false
+local PARK_PROFILE:{any}={}
+local PARK_CYCLE=8.0
+local PARK_ACT_START={0.0,0.0}
+local PARK_ACT={0,0}
+local PARK_CX,PARK_S,PARK_CS,PARK_GY,PARK_ZOOM=0.0,0.0,0.0,0.0,0.0
+local PARK_LAYERS:{{prop:string,m:number}}={}
+
 local HP = {'relaxed','open','flat','wave','fist','point','thumbsUp','pinch','gripSphere','gripHandle','carry','beckon','count1','count2','count3','count4','count5'}
 local PALMY: {[string]: number} = {open=1,flat=1,wave=1,beckon=1,count1=1,count2=1,count3=1,count4=1,count5=1}   -- shapes shown palm-first when she faces the viewer
 -- Poses: hand targets in body space (X left, Y up, Z forward, metres, relative to the standing pelvis); shapeR / shapeL
@@ -78,10 +87,12 @@ local function init(self:St,context:Context):boolean
  local function grab(k:string) local p=vm:getNumber(k);if p then self.n[k]=p end end
  for _,k in ipairs({'pose','rate','gait','view','mirror','yawOut','flipX','speedOut','sOut','phaseOut'}) do grab(k) end
  for i=0,7 do grab('mX'..i);grab('mY'..i) end
+ for _,k in ipairs({'t','route','goalVis','parkCharX','parkCharY','parkShadowX','parkMoving','parkT'}) do grab(k) end     -- [park]
+ for _,L in ipairs(PARK_LAYERS) do grab(L.prop) end
  for _,vw in ipairs(VIEWS) do
   local pre=vw.name..'_'
   for k,_ in pairs(vw.rest) do grab(pre..k) end
-  for _,k in ipairs({'opacity','pelvisX','pelvisY','front','back','frontN','backN','blink','legAScale','legBScale','legAScaleInv','legBScaleInv','plA','plB','cAX','cAY','cBX','cBY'}) do grab(pre..k) end
+  for _,k in ipairs({'opacity','pelvisX','pelvisY','front','back','frontN','backN','blink','legAScale','legBScale','legAScaleInv','legBScaleInv','breath','plA','plB','cAX','cAY','cBX','cBY'}) do grab(pre..k) end
   for _,sd in ipairs({'A','B'}) do
    grab(pre..'hand'..sd..'X');grab(pre..'hand'..sd..'Y');grab(pre..'foot'..sd..'X');grab(pre..'foot'..sd..'Y');grab(pre..'foot'..sd..'Rot')
   end
@@ -108,24 +119,23 @@ local function init(self:St,context:Context):boolean
  return true
 end
 
-local function advance(self:St,seconds:number):boolean
- if self.vm==nil then init(self,self.context);if self.vm==nil then return true end end
+local function core(self:St,seconds:number,full:boolean):boolean
  local function nv(k:string,d:number):number local p=self.n[k];if p==nil then return d end;return p.value end
  local function put(k:string,v:number) local p=self.n[k];if p then p.value=v end end
- local rate=math.clamp(nv('rate',1),.1,2)      -- time scale: 0.25 plays everything at quarter speed
+ local rate=if PARK then 1.0 else math.clamp(nv('rate',1),.1,2)      -- time scale: 0.25 plays everything at quarter speed
  local dt=math.min(seconds,1/20)*rate;self.t+=dt
- local fc=self.face;if fc then Face.update(fc,dt) end
+ local fc=self.face;if fc and full then Face.update(fc,dt) end
  local pi=math.floor(nv('pose',0)+.5)
- local mode=math.floor(nv('gait',0)+.5)         -- 0 stand, 1 walk, 2 run
+ local mode=if PARK then (if self.parkV>.06 then 2 else 0) else math.floor(nv('gait',0)+.5)         -- 0 stand, 1 walk, 2 run
  local P:{[string]:number}=POSES[pi+1] or POSES[1]
  local function pqd(k:string,d:number):number local x=P[k] :: number?;if x~=nil then return x end;return d end
 
  -- ------------------------------------------------------------------ the turn (yaw) and the mirror
  local vi=math.clamp(math.floor(nv('view',1)+.5),0,4)
  local yt=YAWS[vi+1]
- self.yawV+=(42*(yt-self.yaw)-2*6.5*self.yawV)*dt;self.yaw+=self.yawV*dt
+ if PARK then self.yaw=self.parkYaw else self.yawV+=(42*(yt-self.yaw)-2*6.5*self.yawV)*dt;self.yaw+=self.yawV*dt end
  self.yaw=math.clamp(self.yaw,0,180)
- local mt=if nv('mirror',0)>.5 then -1.0 else 1.0
+ local mt=if PARK then self.parkFlipT elseif nv('mirror',0)>.5 then -1.0 else 1.0
  self.flipV+=(150*(mt-self.flip)-2*12*self.flipV)*dt;self.flip+=self.flipV*dt
  local yaw=self.yaw
  -- the two views around the yaw, and how far we are from one to the other
@@ -142,7 +152,7 @@ local function advance(self:St,seconds:number):boolean
  -- ------------------------------------------------------------------ gait (shared): phase, speed, feet in the world
  local tv=if mode==1 then .9 elseif mode==2 then 2.5 else 0
  local acc=if mode==2 or self.v>1.0 then .85 else .75
- if tv>self.v then self.v=math.min(tv,self.v+acc*dt) else self.v=math.max(tv,self.v-acc*dt) end
+ if PARK then self.v=self.parkV elseif tv>self.v then self.v=math.min(tv,self.v+acc*dt) else self.v=math.max(tv,self.v-acc*dt) end
  local v=self.v
  local active=(mode>0) or (not self.frozen)
  local sg=stanceOf(v);local nu=cadence(v);local T=2/nu
@@ -226,12 +236,14 @@ local function advance(self:St,seconds:number):boolean
 
  -- ------------------------------------------------------------------ render the views that show
  for vi2,vw in ipairs(VIEWS) do
+  if not full then break end                                   -- [park] the fast steps of a replay only advance the shared state
   local op=0.0
   -- a turn: the views switch at the middle of the turn (both whole, never half-transparent: a group's opacity is applied to each
   -- picture on its own, so a fading figure shows its own layers through each other) with a squash of the whole figure
   if lo==hi then op=if vi2==lo then 1 else 0 elseif vi2==lo then op=if sf<.5 then 1 else 0 elseif vi2==hi then op=if sf>=.5 then 1 else 0 end
   local pre=vw.name..'_'
   put(pre..'opacity',op);put(pre..'blink',blink)
+  put(pre..'breath',1+.004*math.sin(self.t*2*math.pi/4))
   if op<.003 then continue end
   local c=vw.c
   local th=math.rad(vw.yaw);local cs=math.cos(th);local sn=math.sin(th)
@@ -484,9 +496,75 @@ local function advance(self:St,seconds:number):boolean
  put('speedOut',v);put('sOut',self.s);put('phaseOut',self.phi)
  return true
 end
+
+-- [park] the scene is a pure function of its time `t` (seconds, 0..8) and `route` (0 into, 1 within): the run is stored (the canvas
+-- engine's own recording of the run, tools/liv/rive/park/extract_profile.cjs) and the body is replayed from 0 in fixed steps of
+-- 1/60 s; only the last 1.5 s before `t` are rendered, the steps before it advance the gait state, so a seek costs little and the
+-- same `t` always gives the same picture. The camera follows her; the world layers scroll by -camX.
+local STEP=1/60
+local function resetBody(self:St)
+ self.t=0;self.v=0;self.s=0;self.phi=.05;self.frozen=true;self.rw=0;self.gw=0
+ local lat0=VIEWS[1].c.lat0
+ self.fR=newFoot(0,-lat0,.05);self.fL=newFoot(0,lat0,.55)
+ self.yaw=43;self.yawV=0;self.flip=1;self.flipV=0
+ self.sx={};self.sv={};self.prev={};self.ready=false;self.act=Actions.new()
+ self.simT=0;self.simI=0;self.actStarted=false;self.parkV=0
+ local vm=self.vm
+ if vm then
+  do local bn:{string}={};for _,vw in ipairs(VIEWS) do table.insert(bn,vw.name..'_ikInvA');table.insert(bn,vw.name..'_ikInvB');table.insert(bn,vw.name..'_legInvA') end;Actions.attach(self.act,vm,bn) end
+  self.face=Face.new(vm, {{pre = 'front_', cfg = FACE_CFG_FRONT}, {pre = 'tq_', cfg = FACE_CFG_TQ}, {pre = 'side_', cfg = FACE_CFG_SIDE}}, '')
+  for vi2,vw in ipairs(VIEWS) do
+   local pre=vw.name..'_'
+   for sdi,sd in ipairs({'A','B'}) do
+    for _,key in ipairs({sd,sd..'F',sd..'N'}) do
+     local h=HandPose.new((vi2*3+sdi)*1.37)
+     HandPose.attach(h,vm,pre..'hand'..key)
+     self.hands[pre..key]=h
+    end
+   end
+  end
+  local r0:{[string]:number}=POSES[1]
+  for _,k in ipairs(CH) do self.cur[k]=r0[k] or 0;self.vel[k]=0 end
+ end
+end
+local function advance(self:St,seconds:number):boolean
+ if self.vm==nil then init(self,self.context);if self.vm==nil then return true end end
+ if not PARK then return core(self,seconds,true) end
+ local function nv(k:string,d:number):number local p=self.n[k];if p==nil then return d end;return p.value end
+ local function put(k:string,v:number) local p=self.n[k];if p then p.value=v end end
+ local routeId=if nv('route',0)>.5 then 2 else 1
+ local prof=PARK_PROFILE[routeId]
+ local tt=math.clamp(nv('t',0),0,PARK_CYCLE)
+ if self.parkRoute~=routeId or tt<self.simT-STEP*.5 then resetBody(self);self.parkRoute=routeId end
+ local steps=0
+ local first=(self.simI==0)
+ while self.simT+STEP<=tt+1e-6 and steps<700 do
+  local i=self.simI+1
+  self.simI=i;self.simT=i*STEP;steps+=1
+  local v,yw,dr=prof.v[i+1],prof.yaw[i+1],prof.dir[i+1]
+  self.parkV=v;self.parkYaw=yw;self.parkFlipT=if dr<0 then -1.0 else 1.0
+  if (not self.actStarted) and self.simT>=PARK_ACT_START[routeId] then self.actStarted=true;put('action',PARK_ACT[routeId]) end
+  core(self,STEP,(tt-self.simT)<=1.5)
+ end
+ if steps==0 and first then   -- t = 0: the first picture
+  local v,yw,dr=prof.v[1],prof.yaw[1],prof.dir[1]
+  self.parkV=v;self.parkYaw=yw;self.parkFlipT=if dr<0 then -1.0 else 1.0
+  core(self,.0001,true)
+ end
+ -- where she is on the stage and how the world layers sit (the camera follows her)
+ local fi=math.clamp(self.simI,0,#prof.x-1)+1
+ local x,cam=prof.x[fi],prof.cam[fi]
+ local sx0=PARK_CX+(x-cam)*PARK_S
+ put('parkCharX',sx0-512*PARK_CS);put('parkCharY',PARK_GY-1412*PARK_CS);put('parkShadowX',sx0)
+ for _,L in ipairs(PARK_LAYERS) do put(L.prop,-cam*PARK_ZOOM*L.m) end
+ put('parkMoving',if prof.mv[fi]>.5 then 1 else 0);put('goalVis',if prof.mv[fi]>.5 then 1 else 0)
+ put('parkT',self.simT)
+ return true
+end
 return function(context:Context):Layout<St>
  local lat0=VIEWS[1].c.lat0
  return {context=context,vm=nil,n={},cur={},vel={},t=0,v=0,s=0,phi=.05,frozen=true,rw=0,gw=0,
   fR=newFoot(0,-lat0,.05),fL=newFoot(0,lat0,.55),yaw=43,yawV=0,flip=1,flipV=0,turnF=0,
+  parkV=0,parkYaw=43,parkFlipT=1,simT=0,simI=0,parkRoute=0,actStarted=false,
   hands={},face=nil,blinkT=0,blinkI=1,sx={},sv={},ready=false,prev={},act=Actions.new(),init=init,advance=advance,draw=function(self:St,renderer:Renderer) end}
 end

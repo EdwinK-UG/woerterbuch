@@ -23,16 +23,23 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE / 'face')); from face_tq import emit_face     # the face and expression rig (face/, from the pack's pixels)
 sys.path.insert(0, str(HERE / 'hands')); import hand_rig   # the painted articulated hand (hands/, from the generated parts sheet)
 import os
-OUTD = HERE / os.environ.get('LIV_OUT', 'liv'); OUTD.mkdir(exist_ok=True)      # LIV_OUT=liv-scratch builds an experiment next to the real project
+PARK = os.environ.get('LIV_PARK', '0') == '1'            # LIV_PARK=1 builds the park scene (tools/liv/rive/park-liv/) instead of the demo window
+OUTD = HERE / os.environ.get('LIV_OUT', 'park-liv' if PARK else 'liv'); OUTD.mkdir(exist_ok=True)      # LIV_OUT=liv-scratch builds an experiment next to the real project
 PARTS = json.loads((HERE / 'parts/parts.json').read_text())
 ALL_VIEWS = ['front', 'tq', 'side', 'tqb', 'back']
 DEFAULT_YAW = {'front': 0, 'tq': 43, 'side': 90, 'tqb': 137, 'back': 180}
 only = [a for a in sys.argv[1:] if a in ALL_VIEWS]
 VIEWS = [v for v in ALL_VIEWS if (HERE / v / f'{v}.json').exists() and (not only or v in only)]
+if PARK: VIEWS = [v for v in VIEWS if v in ('front', 'tq', 'side')]      # she runs along the street: side, turns through three-quarter to the viewer
 DEFAULT_VIEW = 'tq' if 'tq' in VIEWS else VIEWS[0]
 SCALE = .62
 STAGE_W, STAGE_H = 1240, 1020
 CHAR_X, CHAR_Y = 40, 36
+PARK_ZOOM = 400.0; PARK_CX, PARK_CY = 880.0, 432.0           # the canvas camera for a 1760 x 864 stage: pitch 7 degrees, 400 px per metre
+PARK_S = PARK_ZOOM * 60 / (60 + .93 * math.sin(math.radians(7)))       # pixels per metre where she stands (z = 0)
+PARK_CS = PARK_S / 996.0                                          # her art is 996 px per metre
+PARK_GY = PARK_CY + .93 * math.cos(math.radians(7)) * PARK_S         # the ground line under her
+if PARK: STAGE_W, STAGE_H, SCALE = 1760, 864, PARK_CS
 PPM = 996.0
 
 N = 2000
@@ -67,17 +74,28 @@ def artfile(V, name):
 ab = el('Artboard', root, name='Liv', width=STAGE_W, height=STAGE_H, defaultStateMachineId='0:7', styleId='0:5', id='0:2')
 el('LayoutComponentStyle', ab, name='Artboard style', id='0:5')
 f = el('Fill', ab, name='Studio'); el('SolidColor', f, colorValue='FFF3EBDD')
-char = el('Node', ab, name='Liv', x=CHAR_X, y=CHAR_Y, scaleX=SCALE, scaleY=SCALE, id='0:10')
-flip = el('Node', char, name='mirror', x=512)                  # she can face left: this node's scaleX goes to -1
-inner = el('Node', flip, name='Liv body', x=-512)
 
 # ---------------------------------------------------------------- view model (global + per view), bindings
 vm = el('ViewModel', root, name='Liv', defaultInstanceId='0:41', id='0:40')
 ab.set('viewModelId', '0:40'); ab.set('viewModelInstanceId', '0:41')
 props, defaults = {}, {}
 def prop(name, default):
+    if name in props: return
     props[name] = el('ViewModelPropertyNumber', vm, name=name).get('id'); defaults[name] = default
 def bindp(target, key, name): el('DataBindContext', target, sourcePathIds='0:40-' + props[name], propertyKey=key)
+PARK_LAYERS = []
+if PARK:                                      # the park: scenery behind her (layers scroll with the camera), she stands in its 'Liv slot'
+    sys.path.insert(0, str(HERE / 'park'))
+    try: from scenery import emit_scenery
+    except ImportError: from stub_scenery import emit_scenery
+    for k, v in {'t': 0.0, 'route': 0, 'goal': 0, 'goalVis': 0, 'parkCharX': 0.0, 'parkCharY': 0.0, 'parkShadowX': 0.0, 'parkMoving': 0, 'parkT': 0.0}.items(): prop(k, v)
+    slot, PARK_LAYERS = emit_scenery(el, ab, prop, bindp, root, PARK_GY)
+    char = el('Node', slot, name='Liv', x=0, y=0, scaleX=SCALE, scaleY=SCALE, id='0:10')
+    bindp(char, 13, 'parkCharX'); bindp(char, 14, 'parkCharY')
+else:
+    char = el('Node', ab, name='Liv', x=CHAR_X, y=CHAR_Y, scaleX=SCALE, scaleY=SCALE, id='0:10')
+flip = el('Node', char, name='mirror', x=512)                  # she can face left: this node's scaleX goes to -1
+inner = el('Node', flip, name='Liv body', x=-512)
 GLOBAL_DEFAULTS = {'pose': 0, 'rate': 1.0, 'gait': 0, 'view': ALL_VIEWS.index(DEFAULT_VIEW), 'mirror': 0, 'yawOut': DEFAULT_YAW[DEFAULT_VIEW], 'flipX': 1.0,
                    'speedOut': 0, 'sOut': 0, 'phaseOut': 0}
 for k, v in GLOBAL_DEFAULTS.items(): prop(k, v)
@@ -364,6 +382,7 @@ def emit_view(V):
     # ---------------------------------------------------------------- view-model numbers
     def rot_of(b): return float(bones[b].get('rotation'))
     vprop('opacity', 1.0 if V == DEFAULT_VIEW else 0.0); vbind(g, 18, 'opacity')
+    vprop('breath', 1.0); vbind(bones['spine'], 17, 'breath')       # the chest rises a little (set by the controller)
     vprop('pelvisX', pel[0]); vprop('pelvisY', pel[1]); vbind(bones['pelvis'], 90, 'pelvisX'); vbind(bones['pelvis'], 91, 'pelvisY')
     rest = {}
     rot_bones = ['spine', 'head', 'hair', 'skirt', 'skirtL', 'skirtR'] + (['apron1', 'apron2'] if has_apron else []) + (['satchel'] if bag_vis else []) + bows
@@ -421,20 +440,25 @@ def emit_view(V):
 
 for V in VIEWS: emit_view(V)
 
-# ---------------------------------------------------------------- ground markers, floor, shadow
-markers = []
-for i in range(8):
-    m = el('Shape', inner, name=f'ground marker {i}', x=0, y=0)
-    el('Rectangle', m, width=7, height=34, x=0, y=-17); el('Ellipse', m, width=46, height=9, y=1)
-    f = el('Fill', m); el('SolidColor', f, colorValue='FFBFAE92'); markers.append(m)
-    inner.remove(m); inner.append(m)                             # behind her
-for i, m in enumerate(markers): bindp(m, 13, f'mX{i}'); bindp(m, 14, f'mY{i}')
-c0 = CTRL[DEFAULT_VIEW]['c']
-floor = el('Shape', ab, name='Floor line', x=CHAR_X + 512 * SCALE, y=CHAR_Y + (c0['oyg'] - 72) * SCALE); el('Rectangle', floor, width=760, height=2)
-f = el('Fill', floor); el('SolidColor', f, colorValue='FFD9CDBA')
-shadow = el('Shape', ab, name='Contact shadow', x=CHAR_X + 500 * SCALE, y=CHAR_Y + (c0['oyg'] - 72) * SCALE); el('Ellipse', shadow, width=250, height=24)
-f = el('Fill', shadow, fillRule='clockwise'); el('SolidColor', f, colorValue='30402A10'); el('Feather', f, strength=9)
-ab.remove(floor); ab.insert(0, floor); ab.remove(shadow); ab.insert(1, shadow)
+if PARK:                                                        # a soft contact shadow under her (the stage's own floor is the scenery)
+    sh_ = el('Shape', slot, name='Contact shadow', x=880, y=PARK_GY - 2); el('Ellipse', sh_, width=170, height=15)
+    f = el('Fill', sh_, fillRule='clockwise'); el('SolidColor', f, colorValue='38402A10'); el('Feather', f, strength=6)
+    prop('parkShadowX', 0.0); bindp(sh_, 13, 'parkShadowX'); slot.remove(sh_); slot.insert(0, sh_)
+else:
+    # ---------------------------------------------------------------- ground markers, floor, shadow
+    markers = []
+    for i in range(8):
+        m = el('Shape', inner, name=f'ground marker {i}', x=0, y=0)
+        el('Rectangle', m, width=7, height=34, x=0, y=-17); el('Ellipse', m, width=46, height=9, y=1)
+        f = el('Fill', m); el('SolidColor', f, colorValue='FFBFAE92'); markers.append(m)
+        inner.remove(m); inner.append(m)                             # behind her
+    for i, m in enumerate(markers): bindp(m, 13, f'mX{i}'); bindp(m, 14, f'mY{i}')
+    c0 = CTRL[DEFAULT_VIEW]['c']
+    floor = el('Shape', ab, name='Floor line', x=CHAR_X + 512 * SCALE, y=CHAR_Y + (c0['oyg'] - 72) * SCALE); el('Rectangle', floor, width=760, height=2)
+    f = el('Fill', floor); el('SolidColor', f, colorValue='FFD9CDBA')
+    shadow = el('Shape', ab, name='Contact shadow', x=CHAR_X + 500 * SCALE, y=CHAR_Y + (c0['oyg'] - 72) * SCALE); el('Ellipse', shadow, width=250, height=24)
+    f = el('Fill', shadow, fillRule='clockwise'); el('SolidColor', f, colorValue='30402A10'); el('Feather', f, strength=9)
+    ab.remove(floor); ab.insert(0, floor); ab.remove(shadow); ab.insert(1, shadow)
 
 # ---------------------------------------------------------------- controller, buttons, state machine
 ins = el('ViewModelInstance', vm, name='Default', exports=True, id='0:41')
@@ -461,8 +485,8 @@ def text(content, x, y, size=18, color='FF4C4038', at=None):
     el('TextValueRun', t, styleId=st.get('id'), text=content)          # without a run the text is empty
     ab.remove(t); ab.insert(3 if at is None else at, t)          # above the buttons: the first child is drawn on top
     return t
-text('Liv · Rive rig · views, walk, run, poses', 40, 12, 18)
-text('Poses', 1088, 82, 14, 'FF8B7460'); text('Gait', 1088, 586, 14, 'FF8B7460'); text('View', 790, 82, 14, 'FF8B7460')
+if not PARK: text('Liv · Rive rig · views, walk, run, poses', 40, 12, 18)
+if not PARK: text('Poses', 1088, 82, 14, 'FF8B7460'); text('Gait', 1088, 586, 14, 'FF8B7460'); text('View', 790, 82, 14, 'FF8B7460')
 sm = el('StateMachine', ab, name='Liv', id='0:7'); layer = el('StateMachineLayer', sm, name='Body', id='0:8')
 def button(label, x, y, w, h, actions):
     sh = el('Shape', ab, x=x, y=y, name=label + ' button'); el('Rectangle', sh, width=w, height=h, cornerRadiusTL=10, cornerRadiusTR=10, cornerRadiusBL=10, cornerRadiusBR=10)
@@ -472,21 +496,23 @@ def button(label, x, y, w, h, actions):
     for p_, val in actions:
         act = el('ListenerViewModelChange', li); bp = el('BindablePropertyNumber', act, propertyValue=val)
         el('DataBindContext', bp, sourcePathIds='0:40-' + props[p_], propertyKey=636, direction=True)
-for i, n in enumerate(POSES): button(n, 1130, 120 + i * 54, 150, 42, [('pose', i), ('gait', 0)])
-button('Walk', 1130, 624, 150, 42, [('gait', 1), ('pose', 0)]); button('Run', 1130, 678, 150, 42, [('gait', 2), ('pose', 0)]); button('Stop', 1130, 732, 150, 42, [('gait', 0)])
-VIEW_BUTTONS = [('Front', 0), ('3/4 front', 1), ('Side', 2), ('3/4 back', 3), ('Back', 4)]
-for i, (n, vv) in enumerate(VIEW_BUTTONS): button(n, 860, 120 + i * 54, 150, 42, [('view', vv)])
-button('Face left', 860, 120 + 5 * 54 + 20, 150, 42, [('mirror', 1)]); button('Face right', 860, 120 + 6 * 54 + 20, 150, 42, [('mirror', 0)])
+if not PARK:
+    for i, n in enumerate(POSES): button(n, 1130, 120 + i * 54, 150, 42, [('pose', i), ('gait', 0)])
+if not PARK:
+    button('Walk', 1130, 624, 150, 42, [('gait', 1), ('pose', 0)]); button('Run', 1130, 678, 150, 42, [('gait', 2), ('pose', 0)]); button('Stop', 1130, 732, 150, 42, [('gait', 0)])
+if not PARK: VIEW_BUTTONS = [('Front', 0), ('3/4 front', 1), ('Side', 2), ('3/4 back', 3), ('Back', 4)]
+if not PARK:
+    for i, (n, vv) in enumerate(VIEW_BUTTONS): button(n, 860, 120 + i * 54, 150, 42, [('view', vv)])
+if not PARK:
+    button('Face left', 860, 120 + 5 * 54 + 20, 150, 42, [('mirror', 1)]); button('Face right', 860, 120 + 6 * 54 + 20, 150, 42, [('mirror', 0)])
 # [liv-actions] begin: action and prop buttons
-actions_rig.buttons(dict(el=el, ab=ab, sm=sm, props=props, text=text))
+if not PARK: actions_rig.buttons(dict(el=el, ab=ab, sm=sm, props=props, text=text))
 # [liv-actions] end
 entry = el('EntryState', layer, x=0, y=0); el('StateTransition', entry, stateToId='0:12')
 el('AnyState', layer, x=0, y=-150); el('ExitState', layer, x=650, y=-150)
 el('AnimationState', layer, animationId='0:60', id='0:12', x=180, y=0)
 an = el('LinearAnimation', ab, name='Idle', fps=60, duration=240, loopValue='loop', id='0:60')
-for V in VIEWS:                                                  # breathing: the chest rises a little (keeps the state machine running too)
-    ko = el('KeyedObject', an, objectId=SPINE_ID[V]); kp = el('KeyedProperty', ko, property='scaleY')
-    for fr, v in [(0, 1), (120, 1.004), (240, 1)]: el('KeyFrameDouble', kp, frame=fr, value=v, interpolationType='cubic')
+# (breathing is the bound number `<view>_breath`, set by the controller from its own clock: nothing runs by itself in this animation)
 
 # ---------------------------------------------------------------- controller text (template + generated values)
 sys.path.insert(0, str(HERE)); from poses3d import POSES3D   # the pose table as Luau text
@@ -495,7 +521,23 @@ def lua_tbl(d): return '{' + ','.join(f'{k}={lua_num(v)}' for k, v in d.items())
 view_lines = ',\n'.join(f" {{name='{V}',yaw={lua_num(CTRL[V]['yaw'])},aR={'true' if CTRL[V]['aR'] else 'false'},farB={'true' if CTRL[V]['farB'] else 'false'},\n  c={lua_tbl(CTRL[V]['c'])},\n  rest={lua_tbl(CTRL[V]['rest'])}}}" for V in VIEWS)
 face_req = ''.join(f"local FACE_CFG_{V.upper()} = require('face_cfg_{V}')\n" for V in FACE_VIEWS)
 face_list = ', '.join(f"{{pre = '{V}_', cfg = FACE_CFG_{V.upper()}}}" for V in FACE_VIEWS)
-luau = (HERE / 'liv.tmpl.luau').read_text().replace('@VIEWS@', view_lines).replace('@POSES@', POSES3D).replace('@FACEREQ@', face_req).replace('@FACEVIEWS@', face_list)
+def park_data():
+    if not PARK:
+        return ("local PARK_RAW:{any}={}\nlocal PARK_CYCLE=8.0\nlocal PARK_ACT_START={0.0,0.0}\nlocal PARK_ACT={0,0}\n"
+                "local PARK_CX,PARK_S,PARK_CS,PARK_GY,PARK_ZOOM=0.0,0.0,0.0,0.0,0.0\nlocal PARK_LAYERS:{{prop:string,m:number}}={}\n")
+    P = json.loads((HERE / 'park' / 'profile.json').read_text())
+    def arr(vals): return '"' + ','.join(f'{v:.5g}' for v in vals) + '"'       # a string, parsed at start (a big table literal is too much for the type checker)
+    rs = []
+    for key in ('into', 'within'):
+        F = P[key]['frames']
+        x = [f[0] for f in F]; v = [f[1] for f in F]; dr = [f[2] for f in F]; cam = [f[6] for f in F]; mv = [f[7] for f in F]
+        yw = [abs(f[4]) * 180 / math.pi for f in F]
+        rs.append(f"{{x={arr(x)},v={arr(v)},yaw={arr(yw)},dir={arr(dr)},cam={arr(cam)},mv={arr(mv)}}}")
+    acts = [P[k]['actionStart'] for k in ('into', 'within')]
+    layers = ','.join(f"{{prop='{L['prop']}',m={lua_num(L['m'])}}}" for L in PARK_LAYERS)
+    return (f"local PARK_RAW:{{any}}={{{rs[0]},{rs[1]}}}\nlocal PARK_CYCLE={P['cycle']}\nlocal PARK_ACT_START={{{acts[0]},{acts[1]}}}\nlocal PARK_ACT={{4,8}}\n"
+            f"local PARK_CX,PARK_S,PARK_CS,PARK_GY,PARK_ZOOM={PARK_CX},{PARK_S},{PARK_CS},{PARK_GY},{PARK_ZOOM}\nlocal PARK_LAYERS:{{{{prop:string,m:number}}}}={{{layers}}}\n")
+luau = (HERE / 'liv.tmpl.luau').read_text().replace('@PARK@', 'true' if PARK else 'false').replace('@PARKDATA@', park_data()).replace('@VIEWS@', view_lines).replace('@POSES@', POSES3D).replace('@FACEREQ@', face_req).replace('@FACEVIEWS@', face_list)
 (OUTD / 'liv.luau').write_text(luau)
 E.indent(root)
 (OUTD / 'scene.rml').write_text(E.tostring(root, encoding='unicode'))
