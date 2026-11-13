@@ -1,0 +1,40 @@
+{
+ "diff": {
+  "all_px": 33539,
+  "outside_cloth": 1977,
+  "fg_px": 373478,
+  "pct_outside_cloth_of_fg": 0.5293484489046208,
+  "pct_outside_cloth_of_image": 0.12569427490234375,
+  "unclaimed_residual_px": 1601,
+  "seal": {
+   "gap_px": 3840,
+   "left_open": 1706,
+   "edited": {
+    "sleeveB_c": 317,
+    "upperB": 25,
+    "sleeveA_c": 142,
+    "torso_c": 318,
+    "skirtred": 817,
+    "sockA_c": 252,
+    "sockB_c": 263
+   }
+  }
+ },
+ "colour_test": {
+  "sleeveA_c": 0,
+  "sleeveB_c": 79,
+  "torso_c": 0,
+  "bow1": 0,
+  "bow2": 0,
+  "sockA_c": 5,
+  "sockB_c": 4,
+  "upperA": 68,
+  "foreA": 47,
+  "upperB": 13,
+  "foreB": 33,
+  "thighA": 0,
+  "shinA": 20,
+  "thighB": 0,
+  "shinB": 20
+ }
+}
