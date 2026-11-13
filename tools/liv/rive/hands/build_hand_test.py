@@ -71,6 +71,7 @@ def capsule(parent, name, length, r0, color, ink=True, x0=0.0):
     return s
 
 hands = {}
+BIG = 1.25        # big arms: the hand pictures then show at 1:1 (rig pictures are 0.105 of the sheet)
 def arm(side, x, y, scale, sh, elb):
     """A bone chain: shoulder (root bone) -> forearm -> hand bone; the hand is attached by a world TransformConstraint."""
     holder = el('Node', ab, name=f'arm {side}', x=x, y=y, scaleX=scale, scaleY=scale)
@@ -84,28 +85,35 @@ def arm(side, x, y, scale, sh, elb):
     el('TransformConstraint', mount, name=f'follow hand_{side}', targetId=hb.get('id'), sourceSpaceValue='world', destSpaceValue='world', strength=1)
     return holder, mount
 
+ASSETS = {}
+def asset(rel):
+    if rel not in ASSETS:
+        ASSETS[rel] = el('ImageAsset', root, file=rel, name=Path(rel).stem, id=f'0:{300 + len(ASSETS)}').get('id')
+    return ASSETS[rel]
+def hand_props(prefix):
+    return {'prefix': prefix, 'root': root, 'bind': bind, 'asset': asset, 'pieces': '../pieces/rig', 'declare': prop}
 def add_hand(side, parent, scale, prefix):
-    pr = {'prefix': prefix, 'root': root, 'bind': bind}
+    pr = hand_props(prefix)
     node, names = hand_rig.emit_hand(el, parent, side, scale, pr)
     for n in names: prop(n, pr['defaults'][n])
     hands[prefix] = pr
     return node, pr
 
 # sleeves draw over the forearm; forearm under the hand: fix order below
-armR, mountR = arm('R', 70, 70, 2.0, .62, -.62)
-armL, mountL = arm('L', 70, 600, 2.0, -.62, .62)
+armR, mountR = arm('R', 140, 110, BIG, .62, -.62)
+armL, mountL = arm('L', 140, 640, BIG, -.62, .62)
 handR, prR = add_hand('R', mountR, 1.0, 'handR')
 handL, prL = add_hand('L', mountL, 1.0, 'handL')
 
 # grip props in the hand frame (behind the hand): an apple (40 px) and a saw handle (30 px)
 def grip_props(hand_node, tag):
     flip = hand_node.find('Node')
-    ap = el('Shape', flip, name=f'apple {tag}', x=58 * 1.1, y=24 * 1.1, opacity=0)
+    ap = el('Shape', flip, name=f'apple {tag}', x=70, y=0, opacity=0)
     el('Ellipse', ap, width=40 * 1.1, height=40 * 1.1)
     st = el('Stroke', ap, thickness=6); el('SolidColor', st, colorValue=INK)
     fl = el('Fill', ap); el('SolidColor', fl, colorValue='FFD8432E')
     bind(ap, 18, 'propApple')
-    hd = el('Shape', flip, name=f'handle {tag}', x=52 * 1.1, y=20 * 1.1, opacity=0, rotation=1.35)
+    hd = el('Shape', flip, name=f'handle {tag}', x=60, y=6, opacity=0, rotation=1.45)
     el('Rectangle', hd, width=120, height=30, cornerRadiusTL=12)
     st = el('Stroke', hd, thickness=6); el('SolidColor', st, colorValue=INK)
     fl = el('Fill', hd); el('SolidColor', fl, colorValue='FFB07A45')
@@ -122,7 +130,7 @@ small = {}
 for i, (side, prefix) in enumerate((('R', 'handR'), ('L', 'handL'))):
     holder = el('Node', ab, name=f'small {side}', x=60 + i * 170, y=row_y - (0 if side == 'R' else 30))
     capsule(holder, f'small forearm {side}', 60, 15.5 * CS, SKIN, x0=-60 * CS)
-    pr = {'prefix': prefix, 'root': root, 'bind': bind}
+    pr = hand_props(prefix)
     n, _ = hand_rig.emit_hand(el, holder, side, CS, pr)
     holder.remove(n); holder.insert(0, n)
 REF_S = 996 / PARTS['hand_relaxed']['ppm'] * 1.1 * CS
@@ -138,8 +146,8 @@ def text(content, x, y, size=18, color='FF4C4038', at=None):
     ab.remove(t); ab.insert(0, t)
     return t
 
-text('Liv hands - vector rig test (right hand above, left hand = mirror below)', 30, 14, 18)
-text('character scale x1.6: vector R, L   |   painted pack hands, same scale', 30, row_y - 118, 13, 'FF8B7460')
+text('Liv hands - painted-parts rig (right hand above, left hand = mirror below), arm x1.25', 30, 14, 18)
+text('character scale x1.6: rig R, L   |   the pack painted hands, same scale', 30, row_y - 118, 13, 'FF8B7460')
 
 sm = el('StateMachine', ab, name='Hands', id='0:7'); layer = el('StateMachineLayer', sm, name='Main', id='0:8')
 BX, BY, BW, BH = 1110, 64, 140, 36

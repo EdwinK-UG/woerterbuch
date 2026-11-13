@@ -68,19 +68,14 @@ local function advance(self: St, seconds: number): boolean
   put(self, 'propApple', if name == 'gripSphere' then 1 else 0)
   put(self, 'propHandle', if name == 'gripHandle' then 1 else 0)
 
-  -- turning over: the flip runs through zero (the hand goes edge-on and comes back mirrored)
+  -- turning over: the hand narrows to edge-on, the palm-side pictures take over there, and it widens again
   local turn = num(self, 'turn', 0)
-  self.turnCur += (turn - self.turnCur) * math.min(1, dt * 14)
-  local s = math.cos(math.pi * self.turnCur)
-  local function edge(x: number): number
-    if math.abs(x) < .06 then return if x < 0 then -.06 else .06 end
-    return x
-  end
-  put(self, 'handRFlip', edge(s))
-  put(self, 'handLFlip', edge(-s))
-  local palm = if self.turnCur > .5 then 1 else 0
-  put(self, 'handRPalmSide', palm)
-  put(self, 'handLPalmSide', palm)
+  self.turnCur += (turn - self.turnCur) * math.min(1, dt * 12)
+  local w = math.max(.08, math.abs(math.cos(math.pi * self.turnCur)))
+  put(self, 'handRFlip', w)
+  put(self, 'handLFlip', -w)
+  put(self, 'handRPalmSide', self.turnCur)
+  put(self, 'handLPalmSide', self.turnCur)
 
   -- arms: still, or a slow reach that shows the hands following the wrist bone
   local mv = num(self, 'move', 0)

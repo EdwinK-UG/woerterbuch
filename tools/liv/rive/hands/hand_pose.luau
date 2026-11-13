@@ -1,5 +1,5 @@
 --!strict
--- hand_pose: natural finger motion for Liv's vector hands (tools/liv/rive/hands/hand_rig.py).
+-- hand_pose: natural finger motion for Liv's rigged hands (tools/liv/rive/hands/hand_rig.py, painted parts).
 --
 -- Use it as a module (ScriptAsset isModule="true", declared before the script that requires it):
 --     local HandPose = require('hand_pose')
@@ -50,7 +50,7 @@ local FIXED: {[string]: {number}} = {
   fist     = {0.62, 0.62, 1.00, 1.00, 1.00, 1.00, 0.00},
   point    = {0.55, 0.62, 0.00, 0.97, 1.00, 1.00, 0.06},
   thumbsUp = {0.00, -1.00, 1.00, 1.00, 1.00, 1.00, 0.00},
-  pinch    = {0.45, 0.05, 0.58, 0.42, 0.46, 0.52, 0.20},
+  pinch    = {0.30, 0.55, 0.52, 0.30, 0.26, 0.24, 0.30},
   carry    = {0.30, 0.15, 0.66, 0.68, 0.70, 0.72, 0.00},
   beckon   = {0.30, 0.25, 0.10, 0.62, 0.80, 0.86, 0.10},
   count1   = {0.55, 0.62, 0.00, 0.97, 1.00, 1.00, 0.30},
