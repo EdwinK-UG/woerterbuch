@@ -110,6 +110,8 @@ Image.fromarray(STRAP, 'RGBA').save(OUTD / 'strap.png')
 HEAD_DX = {'front': 0, 'tq': 41, 'side': 30, 'tqb': 20, 'back': 0}   # where the head's centre sits relative to the neck, for the hair weights
 CTRL = {}                                                     # per view: constants and rest values for the controller
 SPINE_ID = {}
+import sleeve_field                                           # [liv-sleeves] the sleeve's bend field (weights and art)
+SLV = [str(k) for k in range(sleeve_field.LEVELS - 1)]        # [liv-sleeves] sleeve helper bones slv<sd>0..5
 
 def emit_view(V):
     T = json.loads((HERE / V / f'{V}.json').read_text())
@@ -181,7 +183,7 @@ def emit_view(V):
         bone(f'fore{sd}', tuple(a['elbow']), tuple(a['wrist']), f'upper{sd}', False)
         wr = np.array(a['wrist']); u = np.array(a['dir'])
         bone(f'hand{sd}', tuple(wr), tuple(wr + u * 70), f'fore{sd}', False)
-        for h in ('1', '2'): bone(f'slv{sd}{h}', tuple(a['sh']), tuple(a['elbow']), f'sh{sd}', rotation=0.0)
+        for h in SLV: bone(f'slv{sd}{h}', tuple(a['sh']), tuple(a['elbow']), f'sh{sd}', rotation=0.0)   # [liv-sleeves] six helpers, turned by the controller
     for sd in 'AB':
         hip, knee, ank = tuple(T['hip' + sd]), tuple(T['knee' + sd]), tuple(T['ankle' + sd])
         bone(f'thigh{sd}', hip, knee, 'pelvis'); bone(f'shin{sd}', knee, ank, f'thigh{sd}', False)
@@ -206,9 +208,8 @@ def emit_view(V):
         targets['foot' + sd] = el('Node', g, name=f'foot {sd} target', x=T['ankle' + sd][0], y=T['ankle' + sd][1], rotation=FOOT_W[sd])
     for sd in SIDES:
         el('IKConstraint', bones[f'fore{sd}'], name=f'arm {sd} IK', targetId=targets['hand' + sd].get('id'), parentBoneCount=1, invertDirection=False, strength=1)
-        for h, share in (('1', 1 / 3), ('2', 2 / 3)):
-            el('RotationConstraint', bones[f'slv{sd}{h}'], name=f'sleeve {sd} {h}', targetId=bones[f'upper{sd}'].get('id'), copyFactor=round(share, 4),
-               offset=True, sourceSpaceValue='local', destSpaceValue='local', strength=1)
+        # [liv-sleeves] no rotation constraints on the sleeve helpers: a constraint copies the IK's wrapped angle (a flip at
+        # +-180 degrees tore the puff when the arm went up past it); the controller turns them from the unwrapped arm angle
     for sd in 'AB':
         el('IKConstraint', bones[f'shin{sd}'], name=f'leg {sd} IK', targetId=targets['foot' + sd].get('id'), parentBoneCount=1, invertDirection=True, strength=1)
         el('RotationConstraint', bones[f'foot{sd}'], name=f'foot {sd} level', targetId=targets['foot' + sd].get('id'), copyFactor=1, offset=False, sourceSpaceValue='world', destSpaceValue='world', strength=1)
@@ -229,6 +230,13 @@ def emit_view(V):
         lids = [rigid(f'Liv closed eye {i}', A(f'blink{i}'), box_of(f'blink{i}'), 'head') for i in (0, 1) if has(f'blink{i}')]
 
     def sleeve(sd):
+        # [liv-sleeves] begin: the core of the sleeve on the bend field (sleeve_field.py): skinned to the helpers slv0..5 and the
+        # upper arm, two neighbouring levels per vertex, on a fine grid (the twirl about the joint needs it)
+        if has(f'sleeve{sd}_k'):                                  # (fix_sleeves.py: the sleeve with clean cut edges)
+            F = sleeve_field.Field(V, T, sd)
+            return grid(f'Liv sleeve {sd}', A(f'sleeve{sd}_k'), F.box, 18, 18, [*(f'slv{sd}{h}' for h in SLV), f'upper{sd}'],
+                        lambda px, py: sleeve_field.level_weights(F.f(px, py)))
+        # [liv-sleeves] end
         a = T[sd]; sh = np.array(a['sh']); u = np.array(a['dir'])
         def wts(px, py):
             t = ((px - sh[0]) * u[0] + (py - sh[1]) * u[1]); k = smooth((t + 4) / 62) * 3
@@ -238,8 +246,10 @@ def emit_view(V):
         full = A(f'sleeve{sd}_f')                                   # a completed far sleeve (fix_sleeves.py), with its own box
         return grid(f'Liv sleeve {sd}', full or A(f'sleeve{sd}_c') or A(f'sleeve{sd}_x') or A(f'sleeve{sd}'), T['boxes'][f'sleeve{sd}_f'] if full else box_of(f'sleeve{sd}'), 10, 10, [f'upper{sd}', f'slv{sd}1', f'slv{sd}2', 'spine'], wts)
     sleeves = {sd: sleeve(sd) for sd in SIDES if (has(f'sleeve{sd}_f') or has(f'sleeve{sd}_c') or has(f'sleeve{sd}_x') or has(f'sleeve{sd}'))}
-    caps = {sd: rigid(f'Liv shoulder cap {sd}', A(f'cap{sd}_f') or A(f'cap{sd}') or A(f'cap{sd}_x'), T['boxes'][f'sleeve{sd}_f'] if has(f'cap{sd}_f') else box_of(f'sleeve{sd}'), 'spine') for sd in sleeves if (has(f'cap{sd}_f') or has(f'cap{sd}') or has(f'cap{sd}_x'))}
-    arm_up = {sd: rigid(f'Liv upper arm {sd}', A(f'upper{sd}'), T[sd]['upper'], f'upper{sd}') for sd in SIDES}
+    caps = {sd: rigid(f'Liv shoulder cap {sd}', A(f'cap{sd}_k'), sleeve_field.Field(V, T, sd).box, 'spine') for sd in sleeves if has(f'cap{sd}_k')}   # [liv-sleeves]
+    caps.update({sd: rigid(f'Liv shoulder cap {sd}', A(f'cap{sd}_f') or A(f'cap{sd}') or A(f'cap{sd}_x'), T['boxes'][f'sleeve{sd}_f'] if has(f'cap{sd}_f') else box_of(f'sleeve{sd}'), 'spine') for sd in sleeves if sd not in caps and (has(f'cap{sd}_f') or has(f'cap{sd}') or has(f'cap{sd}_x'))})
+    def UP(sd): return A(f'upper{sd}_s') or A(f'upper{sd}')       # [liv-sleeves] the upper arm without the skin under the puff
+    arm_up = {sd: rigid(f'Liv upper arm {sd}', UP(sd), T[sd]['upper'], f'upper{sd}') for sd in SIDES}
     arm_fo = {sd: rigid(f'Liv forearm {sd}', A(f'fore{sd}'), T[sd]['fore'], f'fore{sd}') for sd in SIDES}
 
     # hands: the painted articulated hand (hands/hand_rig.py), one mount per side that follows the hand bone in world space;
@@ -257,7 +267,20 @@ def emit_view(V):
         return m
     hand_mounts = {sd: hand_mount(sd) for sd in SIDES}
     far_hand_front = hand_mount(far, 'F') if far in SIDES else None
-    far_up_front = rigid(f'Liv upper arm {far} (front)', A(f'upper{far}'), T[far]['upper'], f'upper{far}') if far in SIDES else None
+    far_up_front = rigid(f'Liv upper arm {far} (front)', A(f'upper{far}_sf') or UP(far), T[far]['upper'], f'upper{far}') if far in SIDES else None
+    # [liv-sleeves] begin: where the far sleeve is a sliver (three-quarter view: the bodice hides the rest) it goes behind the torso
+    # with the far arm's back copy (the bodice covers its cut edge, as in the picture), and the front copy gets a whole sleeve
+    # (fix_sleeves.py: the near one mirrored), faded in with the front copy
+    far_ff = None
+    if far in sleeves and has(f'sleeve{far}_ff'):
+        Fff = sleeve_field.Field(V, T, far, HERE / V / f'{V}_sleeve{far}_ff.png', T['boxes'][f'sleeve{far}_ff'], like=sleeve_field.Field(V, T, far))
+        far_ff = grid(f'Liv sleeve {far} (front)', A(f'sleeve{far}_ff'), Fff.box, 18, 18, [*(f'slv{far}{h}' for h in SLV), f'upper{far}'],
+                      lambda px, py: sleeve_field.level_weights(Fff.f(px, py)))
+        far_h = grid(f'Liv sleeve {far} (hidden part)', A(f'sleeve{far}_h'), Fff.box, 18, 18, [*(f'slv{far}{h}' for h in SLV), f'upper{far}'],
+                     lambda px, py: sleeve_field.level_weights(Fff.f(px, py))) if has(f'sleeve{far}_h') else None
+        far_g = grid(f'Liv sleeve {far} (gap fill)', A(f'sleeve{far}_g'), Fff.box, 18, 18, [*(f'slv{far}{h}' for h in SLV), f'upper{far}'],
+                     lambda px, py: sleeve_field.level_weights(Fff.f(px, py))) if has(f'sleeve{far}_g') else None
+    # [liv-sleeves] end
     far_fo_front = rigid(f'Liv forearm {far} (front)', A(f'fore{far}'), T[far]['fore'], f'fore{far}') if far in SIDES else None
     # [back views] seen from behind, an arm whose hand is in front of her chest must go behind the torso: the near arm gets a back copy too
     back_view = yaw > 100
@@ -267,7 +290,8 @@ def emit_view(V):
     # torso, skirt (red), apron, base layers
     def torso_ws(px, py):
         t = smooth((py - 520) / 240); return [(0, 1 - t), (1, t)]
-    torso = grid('Liv torso', A('torso_c') or A('torso'), box_of('torso'), 6, 10, ['spine', 'pelvis'], torso_ws)
+    if has('torso_s'): torso = grid('Liv torso', A('torso_s'), T['boxes']['torso_s'], 6, 10, ['spine', 'pelvis'], torso_ws)   # [liv-sleeves] with the shoulders under the sleeves
+    else: torso = grid('Liv torso', A('torso_c') or A('torso'), box_of('torso'), 6, 10, ['spine', 'pelvis'], torso_ws)
     chemise = grid('Liv chemise (base layer)', A('chemise'), box_of('torso'), 4, 6, ['spine', 'pelvis'], torso_ws) if has('chemise') else None
     sk_l, sk_r = rig['skirt_L'][1][0], rig['skirt_R'][1][0]
     cx_ = rig['skirt'][0][0]
@@ -323,11 +347,17 @@ def emit_view(V):
     # the near arm is in front of everything (and of the head when raised); the far arm is behind the torso, with a second copy in
     # front faded in when it swings forward or up; the far arm's back copy is at the very bottom
     def arm_group(sd, up, fo, hand): return [hand, fo, *( [sleeves[sd]] if sd in sleeves else []), *( [caps[sd]] if sd in caps else []), up]
+    far_front = arm_group(far, far_up_front, far_fo_front, far_hand_front) if far in SIDES else []
+    far_back = [hand_mounts[far], arm_fo[far], arm_up[far]] if far in SIDES else []
+    if far_ff is not None:                                       # [liv-sleeves] sliver behind the torso, whole sleeve on the front copy
+        far_front = [far_hand_front, far_fo_front, far_ff, far_up_front]
+        far_back = [hand_mounts[far], arm_fo[far], sleeves[far], *([far_h] if far_h is not None else []), *([far_g] if far_g is not None else []),
+                    *([caps[far]] if far in caps else []), arm_up[far]]
     order = [*(arm_group(near, arm_up[near], arm_fo[near], hand_mounts[near]) if near in SIDES else []), *lids, head,
-             *(arm_group(far, far_up_front, far_fo_front, far_hand_front) if far in SIDES else []),
+             *far_front,
              *[x for x in (satchel, strap) if x is not None], *bow_imgs, torso, *[x for x in (apron,) if x is not None], skirt, *[x for x in (slip, chemise) if x is not None],
              boots['A'], socks['A'], shins['A'], thighs['A'], boots['B'], socks['B'], shins['B'], thighs['B'],
-             *([hand_mounts[far], arm_fo[far], arm_up[far]] if far in SIDES else []), *(list(near_back) if near_back else [])]
+             *far_back, *(list(near_back) if near_back else [])]       # [back views] near arm's copy behind the torso
     for im in order:
         g.remove(im); g.append(im)
 
@@ -340,7 +370,7 @@ def emit_view(V):
     for k in rot_bones: rest[k + 'Rot'] = rot_of(k); vprop(k + 'Rot', rest[k + 'Rot']); vbind(bones[k], 15, k + 'Rot')
     for sd in SIDES:
         rest[f'hand{sd}Rot'] = rot_of(f'hand{sd}'); vprop(f'hand{sd}Rot', rest[f'hand{sd}Rot']); vbind(bones[f'hand{sd}'], 15, f'hand{sd}Rot')
-        for h in ('1', '2'):
+        for h in SLV:                                             # [liv-sleeves]
             rest[f'slv{sd}{h}Rot'] = 0.0; vprop(f'slv{sd}{h}Rot', 0.0); vbind(bones[f'slv{sd}{h}'], 15, f'slv{sd}{h}Rot')
         vprop(f'hand{sd}X', T[sd]['wrist'][0]); vprop(f'hand{sd}Y', T[sd]['wrist'][1]); vbind(targets['hand' + sd], 13, f'hand{sd}X'); vbind(targets['hand' + sd], 14, f'hand{sd}Y')
     for sd in 'AB':
@@ -351,6 +381,9 @@ def emit_view(V):
     if far in SIDES:
         vprop('front', 0.0); vprop('back', 1.0)
         vbind(far_up_front, 18, 'front'); vbind(far_fo_front, 18, 'front'); vbind(far_hand_front, 18, 'front')
+        if far_ff is not None: vbind(far_ff, 18, 'front')        # [liv-sleeves]
+        if far_ff is not None and far_g is not None:             # [liv-sleeves] (in rest, so the controller grabs it)
+            vprop(f'slvFill{far}', 0.0); vbind(far_g, 18, f'slvFill{far}'); rest[f'slvFill{far}'] = 0.0
         vbind(arm_up[far], 18, 'back'); vbind(arm_fo[far], 18, 'back'); vbind(hand_mounts[far], 18, 'back')
     if near_back:
         vprop('frontN', 1.0); vprop('backN', 0.0)
@@ -380,6 +413,8 @@ def emit_view(V):
         s_ = T[sd]['sh'] if sd in T else T[near]['sh']
         c[f'sh{sd}x'] = s_[0] - pel[0]; c[f'sh{sd}y'] = s_[1] - pel[1]; c[f'sh{sd}x0'] = s_[0]; c[f'sh{sd}y0'] = s_[1]
         w_ = T[sd]['wrist'] if sd in T else T[near]['wrist']; c[f'w{sd}x'] = w_[0]; c[f'w{sd}y'] = w_[1]
+        a_ = T[sd] if sd in T else T[near]                         # [liv-sleeves] the arm's bone lengths and bind direction (sleeve turn)
+        c[f'L1{sd}'] = math.dist(a_['sh'], a_['elbow']); c[f'L2{sd}'] = math.dist(a_['elbow'], a_['wrist']); c[f'bd{sd}'] = ang(a_['sh'], a_['elbow'])
     SPINE_ID[V] = bones['spine'].get('id')
     CTRL[V] = dict(yaw=yaw, aR=A_is_R, farB=(far == 'B'), c=c, rest=rest)
     print(f'{V}: bones {len(bones)}, images {len(order)}, far arm {far}, apron {has_apron}, bag {bag_vis}')

@@ -57,12 +57,17 @@ cd tools/liv/rive/liv && rive . --verify && rive .       # live window: poses, g
 
 ## Not done / weak spots
 
-- Hands: pinch does not make the thumb and index tips meet; grips are finger shapes only (the props are in front of or behind the
-  hand, not wrapped); from the back, curled fingers hide behind the palm; palm-side half-curled fingers look short; a faint dashed
-  line at the wrist; flatter than the pack's painted hands; no side view of the hand.
-- Actions: sleeves still tear in the side view when the upper arm goes forward and up past about 70 degrees; in the back views
-  the near arm is always drawn on top, so hands in front of her chest (clap, think, sit) show on her back; in the front view
-  push, pull, stop, thumbs-up and kick are foreshortened (no wrist roll); holding a crate does not block one-hand actions.
+- Hands (`docs/liv-hands.md` polish section): pinch meets from the palm side but is hidden behind the palm from the back; the props
+  are pictures behind the hand, not wrapped by the fingers; a strong fist from the back is the back of the hand with its knuckle
+  bumps; a faint stripe on the left fist from the palm side; a small notch at the wrist with a large thumbs-up bend; softly shaded,
+  still flatter than the pack's painted hands; no side view of the hand pieces. Thumbs-up in the front view uses a roll (verified
+  right hand; the left hand's roll sign is assumed).
+- Actions: in the front view push, pull, stop and kick are foreshortened; holding a crate does not block one-hand actions.
+- Sleeves (`sleeve_field.py`, `fix_sleeves.py`, `docs` of the helper): six helper bones per arm turned by the controller with the wrap-safe
+  arm angle; no tearing in any view. Still soft: the neck-side edge of a raised puff in the front, back and three-quarter views has no ink
+  line, a small linen armpit triangle under a raised arm, a few stray ink ticks at the side view's back shoulder, blouse bits at the
+  three-quarter-back far armhole, far sleeves mirrored (lit from the wrong side).
+- Back views: an arm goes behind the torso when its hand is in front of her chest (hard switch, margin 12 px).
 - The cross-fade between views is a dissolve with a small squash, not a drawn turn.
 - Quarter-speed playback (`measure_all.py --slow`) was not re-measured after the multi-view rewrite. The front and back pixel
   numbers need a tracker that follows the sole in y as well.

@@ -409,18 +409,36 @@ local function advance(self:St,seconds:number):boolean
   spring('bow1',.0002*aW+.00008*swv+.1*rw*kf+.5*flut*math.sin(2*stride+.4),11,.3)
   spring('bow2',.0002*aW+.00008*swv+.1*rw*kf-.5*flut*math.sin(2*stride+1.2),10,.3)
   spring('satchel',.00016*aW+.00008*swv+.06*rw*kf,8.5,.3)
-  -- sleeves: the puff trails the arm's swing (angular speed of the hand about the shoulder) and settles with a small overshoot
+  -- [liv-sleeves] begin: the sleeve helpers slv<sd>0..5 (sleeve_field.py). The upper arm's turn from its bind direction is worked
+  -- out here as the rig's IK makes it (law of cosines, the elbow side from the IK-inversion boolean), so it is the same angle the
+  -- arm shows; helper k takes the share k/6 of it, and the shares go to 1 as the turn passes 90 degrees (at +-180 the whole sleeve
+  -- turns with the arm, so the wrap from +180 to -180 changes nothing and the puff never flips). On top, the puff trails the arm's
+  -- swing (angular speed about the shoulder) and settles with a small overshoot, most in the middle of the puff.
   for _,sd in ipairs({'A','B'}) do
-   local shx=(if sd=='A' then c.shAx0 else c.shBx0)+(pelX-c.pelx)
-   local shy=(if sd=='A' then c.shAy0 else c.shBy0)+(pelY-c.pely)
-   local th2=math.atan2(handX[sd]-shx,handY[sd]-shy);local pt=self.sx[pre..'th'..sd] or th2
+   local rx=if sd=='A' then c.shAx else c.shBx;local ry=if sd=='A' then c.shAy else c.shBy
+   local shx=pelX+rx*cr-ry*sr;local shy=pelY+rx*sr+ry*cr
+   local vx=handX[sd]-shx;local vy=handY[sd]-shy;local dd=math.max(math.sqrt(vx*vx+vy*vy),.001)
+   local L1=c['L1'..sd];local L2=c['L2'..sd]
+   local al=math.acos(math.clamp((L1*L1+dd*dd-L2*L2)/(2*L1*dd),-1,1))
+   local inv=act.bools[pre..'ikInv'..sd];if inv and inv.value then al=-al end
+   local sth=math.atan2(vy,vx)+al-c['bd'..sd]-spineA
+   sth=(sth+math.pi)%(2*math.pi)-math.pi
+   local q=smooth((math.abs(sth)-math.pi*.5)/(math.pi*.5))
+   put(pre..'slvFill'..sd,smooth((math.abs(sth)-.06)/.2))      -- (three-quarter far sleeve: the gap fill, see build_liv.py)
+   local th2=math.atan2(vx,vy);local pt=self.sx[pre..'th'..sd] or th2
    local d=th2-pt;if d>math.pi then d-=2*math.pi elseif d<-math.pi then d+=2*math.pi end
    self.sx[pre..'th'..sd]=th2
    local om=math.clamp(d/math.max(dt,.0005),-14,14)
    local ws=lerp(self.sx[pre..'om'..sd] or 0,om,.35);self.sx[pre..'om'..sd]=ws
-   spring('slv'..sd..'1',math.clamp(.018*ws,-.28,.28),15,.45)
-   spring('slv'..sd..'2',math.clamp(.032*ws,-.4,.4),13,.4)
+   for k=0,5 do
+    local sh_=k/6;local key=pre..'slvL'..sd..k
+    local x=self.sx[key] or 0;local vel=self.sv[key] or 0
+    local target=math.clamp(.13*ws*sh_*(1-sh_)*(1-q),-.4,.4)
+    vel+=(14*14*(target-x)-2*.42*14*vel)*dt;x+=vel*dt;self.sx[key]=x;self.sv[key]=vel
+    put(pre..'slv'..sd..k..'Rot',sth*(sh_+(1-sh_)*q)+math.clamp(x,-.4,.4))
+   end
   end
+  -- [liv-sleeves] end
   -- read-outs for measuring (the view that is showing most)
   if op>=.5 then
    put(pre..'plA',if (if vw.aR then self.fR.planted else self.fL.planted) and gw>.001 then 1 else 0)
