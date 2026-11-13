@@ -179,7 +179,7 @@ Blink: every 2.2 to 5.4 s, about 0.2 s. Idle: slow breathing (chest and shoulder
 
 ## Motion targets
 
-- Walk about 1.36 m/s, run about 3.8 m/s for her leg length. Cadence rises with speed; stance takes 62 % of the cycle
+- Walk about 0.9 m/s, run about 2.5 m/s for her leg length (0.4 and 1.12 times the square root of g times hip height). Cadence rises with speed; stance takes 62 % of the cycle
   walking and 36 % running (so running has a flight phase).
 - Heel strikes first, foot rolls flat, heel lifts, toe pushes off. Knee lift in the swing: low walking, high running.
 - Pelvis rises over the standing leg when walking; when running it sinks on landing and rises in flight.
@@ -207,7 +207,7 @@ in three-quarter view and turns to the viewer for results. The verb lies on the 
 tinted `#f0a98a`. Page look as the 3D workshop: background `#f3e9d8`, ink `#2a2f3a`, green `#2f7d5b`, coral `#c8503d`,
 headings Fraunces, text Inter. Controls: Zuschauen, Selbst sägen, Ton an/aus, Nur Bühne (hides controls for screen
 recording, also key H), Schließen; then Zurück, Pause, Weiter, 1×/0,5× or Sägen, Ganz einbauen, Nächstes Verb.
-One round, about 13 s: block slides in (0.55 s) → Liv thinks with a caption naming the stressed syllable (2.4 s) →
+One round, about 10 s: block slides in (0.55 s) → Liv thinks with a caption naming the stressed syllable (2.4 s) →
 grips the handle, motor starts (1 s) → saw comes down (0.65 s) → separable: cuts through (0.7 s), halves part, prefix
 then verb fly to their slots; inseparable: grinds, sparks, saw kicks back, Liv shakes her hand, the whole verb flies to
 its slot → rule caption → Liv turns to the viewer and gestures (2 s). Sounds are generated (`grammatik/werkstatt/sfx.js`).
