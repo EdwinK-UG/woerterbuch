@@ -10,16 +10,31 @@
 --   screen x = (X cos yaw + Z sin yaw), depth toward the viewer = (Z cos yaw - X sin yaw).
 -- Every view has its own rig (art + bones + IK) in the same artboard. `yaw` turns toward the target of the `view`
 -- number (0..4); the two views around the current yaw cross-fade, the others are hidden and not computed.
+local Face = require('face')
+local FACE_CFG_TQ = require('face_cfg_tq')
+
 type Foot = {u: number, w: number, fu: number, fw: number, planted: boolean, ph: number}
 type View = {name: string, yaw: number, aR: boolean, farB: boolean, c: {[string]: number}, rest: {[string]: number}}
 type St = {context: Context, vm: ViewModel?, n: {[string]: Property<number>}, cur: {[string]: number}, vel: {[string]: number},
   t: number, v: number, s: number, phi: number, frozen: boolean, rw: number, gw: number,
   fR: Foot, fL: Foot, yaw: number, yawV: number, flip: number, flipV: number, turnF: number,
-  blinkT: number, blinkI: number, sx: {[string]: number}, sv: {[string]: number}, ready: boolean, prev: {[string]: number}}
+  face: Face.Face?, blinkT: number, blinkI: number, sx: {[string]: number}, sv: {[string]: number}, ready: boolean, prev: {[string]: number}}
 local VIEWS: {View} = {
+ {name='front',yaw=0,aR=true,farB=true,
+  c={oxg=511.5,oyg=1420.5,pelx=513,pely=912,legmax=383.2845912,hipdy=18,hipAx=-87.6,hipBx=79.7,lat0=0.09588353414,footWA=1.570796327,footWB=1.570796327,ffbias=1,shAx=-99,shAy=-377,shAx0=414,shAy0=535,wAx=223.8152155,wAy=732.2471664,shBx=97,shBy=-377,shBx0=610,shBy0=535,wBx=799.8318433,wBy=732.5854017},
+  rest={spineRot=-1.570796327,headRot=0,hairRot=-3.141592654,skirtRot=1.570796327,skirtLRot=1.712961742,skirtRRot=1.434270751,apron1Rot=1.570796327,apron2Rot=0,satchelRot=1.570796327,handARot=4.440892099e-16,slvA1Rot=0,slvA2Rot=0,handBRot=-4.440892099e-16,slvB1Rot=0,slvB2Rot=0}},
  {name='tq',yaw=43,aR=true,farB=true,
   c={oxg=488,oyg=1411.5,pelx=510,pely=912,legmax=380.6052173,hipdy=18,hipAx=-58,hipBx=56,lat0=0.11943523,footWA=0.8523306928,footWB=0.8523306928,ffbias=0,shAx=-70,shAy=-374,shAx0=440,shAy0=538,wAx=256.716103,wAy=741.6754982,shBx=55,shBy=-367,shBx0=565,shBy0=545,wBx=762.8976189,wBy=734.5060514},
-  rest={spineRot=-1.584431845,headRot=0.02733329187,hairRot=-3.091547114,skirtRot=1.570796327,skirtLRot=1.844963778,skirtRRot=1.267911458,apron1Rot=1.570796327,apron2Rot=0,satchelRot=1.570796327,handARot=4.440892099e-16,slvA1Rot=0,slvA2Rot=0,handBRot=4.440892099e-16,slvB1Rot=0,slvB2Rot=0}}
+  rest={spineRot=-1.584431845,headRot=0.02733329187,hairRot=-3.091547114,skirtRot=1.570796327,skirtLRot=1.844963778,skirtRRot=1.267911458,apron1Rot=1.570796327,apron2Rot=0,satchelRot=1.570796327,handARot=4.440892099e-16,slvA1Rot=0,slvA2Rot=0,handBRot=4.440892099e-16,slvB1Rot=0,slvB2Rot=0}},
+ {name='side',yaw=90,aR=true,farB=true,
+  c={oxg=480.5,oyg=1417,pelx=505,pely=912,legmax=388.05,hipdy=22.873865,hipAx=-77.11698744,hipBx=72.15140464,lat0=0.13,footWA=0.6624262938,footWB=0.6624262938,ffbias=0,shAx=-9,shAy=-383,shAx0=496,shAy0=529,wAx=309.7512354,wAy=743.4000926,shBx=28.80745031,shBy=-383,shBx0=533.8074503,shBy0=529,wBx=711.3157894,wBy=740.3453352},
+  rest={spineRot=-1.545858187,headRot=-0.02493813961,hairRot=-2.624897515,skirtRot=1.55992719,skirtLRot=1.687451762,skirtRRot=1.432619982,apron1Rot=1.39216532,apron2Rot=-0.016760548,satchelRot=1.570796327,bow1Rot=2.296436664,handARot=0,slvA1Rot=0,slvA2Rot=0,handBRot=4.440892099e-16,slvB1Rot=0,slvB2Rot=0}},
+ {name='tqb',yaw=137,aR=false,farB=false,
+  c={oxg=465.5,oyg=1414.5,pelx=500,pely=912,legmax=388.05,hipdy=2.417016382,hipAx=-70.83640145,hipBx=18.41315008,lat0=0.1009021771,footWA=0.8523306928,footWB=0.8523306928,ffbias=0,shAx=-58,shAy=-378,shAx0=442,shAy0=534,wAx=269.8329369,wAy=734.137643,shBx=34,shBy=-368,shBx0=534,shBy0=544,wBx=727.8304346,wBy=748.8339318},
+  rest={spineRot=-1.566312052,headRot=-0.004484274875,hairRot=-3.079173844,skirtRot=1.62991738,skirtLRot=1.685649135,skirtRRot=1.574558065,satchelRot=1.570796327,bow1Rot=2.289626326,bow2Rot=1.642103792,handARot=-8.881784197e-16,slvA1Rot=0,slvA2Rot=0,handBRot=0,slvB1Rot=0,slvB2Rot=0}},
+ {name='back',yaw=180,aR=false,farB=true,
+  c={oxg=511,oyg=1419,pelx=512,pely=912,legmax=381.3650651,hipdy=18,hipAx=-83.4,hipBx=82.6,lat0=0.09337349398,footWA=1.570796327,footWB=1.570796327,ffbias=1,shAx=-97,shAy=-379,shAx0=415,shAy0=533,wAx=227.5456573,wAy=732.8443679,shBx=96,shBy=-379,shBx0=608,shBy0=533,wBx=796.4609161,wBy=731.893433},
+  rest={spineRot=-1.570796327,headRot=0,hairRot=-3.141592654,skirtRot=1.570796327,skirtLRot=1.71128857,skirtRRot=1.431256048,satchelRot=1.570796327,bow1Rot=1.760166377,bow2Rot=1.384834441,handARot=4.440892099e-16,slvA1Rot=0,slvA2Rot=0,handBRot=4.440892099e-16,slvB1Rot=0,slvB2Rot=0}}
 }
 local SHAPES = {'Relaxed','Palm','Fist','Point','Thumb','Back'}
 -- Poses: hand targets in body space (X left, Y up, Z forward, metres, relative to the standing pelvis); shapeR / shapeL
@@ -27,9 +42,9 @@ local SHAPES = {'Relaxed','Palm','Fist','Point','Thumb','Back'}
 -- dRu / dRup / dLu / dLup lift a foot (forward m, up m); ff 1 puts the far arm in front of the torso; bind 1 = the art's pose
 local POSES: {{[string]: number}} = {
  {hRX=-.10,hRY=.106,hRZ=-.02,hLX=.10,hLY=.122,hLZ=.12},                                                  -- 0 Rest: arms hang
- {hRX=-.458,hRY=.596,hRZ=.05,hLX=.10,hLY=.122,hLZ=.12,shapeR=2,lean=-.03},                                   -- 1 Wave
+ {hRX=-.43,hRY=.596,hRZ=.14,hLX=.10,hLY=.122,hLZ=.12,shapeR=2,lean=-.03},                                   -- 1 Wave
  {hRX=-.513,hRY=.313,hRZ=.05,hLX=.384,hLY=.263,hLZ=0,shapeR=4,lean=.04,headR=.04},                           -- 2 Reach
- {hRX=-.291,hRY=.6225,hRZ=0,hLX=.302,hLY=.6225,hLZ=0,shapeR=2,shapeL=2,pelDY=.016,headR=-.03},               -- 3 Cheer
+ {hRX=-.291,hRY=.6225,hRZ=.06,hLX=.302,hLY=.6225,hLZ=.06,shapeR=2,shapeL=2,pelDY=.016,headR=-.03},               -- 3 Cheer
  {hRX=-.154,hRY=-.018,hRZ=0,hLX=.14,hLY=-.018,hLZ=0,pelDY=-.092,ff=1,lean=.1,headR=-.07},                    -- 4 Crouch
  {hRX=-.178,hRY=.1225,hRZ=0,hLX=.178,hLY=.112,hLZ=0,dRu=.0766,dRup=.0905,ff=1,lean=.05},                     -- 5 Step
  {hRX=-.247,hRY=.4438,hRZ=0,hLX=.2636,hLY=.4438,hLZ=0,shapeR=3,shapeL=5,ff=1,lean=-.04},                     -- 6 Hands
@@ -64,6 +79,7 @@ local function init(self:St,context:Context):boolean
    for _,sh in ipairs(SHAPES) do grab(pre..'hand'..sd..sh);grab(pre..'hand'..sd..'F'..sh) end
   end
  end
+ self.face=Face.new(vm, {{pre = 'tq_', cfg = FACE_CFG_TQ}}, '')
  -- start in the Rest pose, not in the drawn A-pose
  local r0:{[string]:number}=POSES[1]
  for _,k in ipairs(CH) do self.cur[k]=r0[k] or 0;self.vel[k]=0 end
@@ -76,6 +92,7 @@ local function advance(self:St,seconds:number):boolean
  local function put(k:string,v:number) local p=self.n[k];if p then p.value=v end end
  local rate=math.clamp(nv('rate',1),.1,2)      -- time scale: 0.25 plays everything at quarter speed
  local dt=math.min(seconds,1/20)*rate;self.t+=dt
+ local fc=self.face;if fc then Face.update(fc,dt) end
  local pi=math.floor(nv('pose',0)+.5)
  local mode=math.floor(nv('gait',0)+.5)         -- 0 stand, 1 walk, 2 run
  local P:{[string]:number}=POSES[pi+1] or POSES[1]
@@ -169,13 +186,12 @@ local function advance(self:St,seconds:number):boolean
   track('sR'..i,if shR==i-1 then 1 else 0,40,1.0);track('sL'..i,if shL==i-1 then 1 else 0,40,1.0)
  end
 
- -- blink: every 2.2 to 5.4 s, about 0.2 s (closing 70 ms, held 30 ms, opening 100 ms)
+ -- blink for the views without the expression rig (front, side): every 2.2 to 5.4 s, about 0.2 s; the face rig has its own
  local blink=0.0
  do
   local GAPS={2.6,4.1,3.3,5.4,2.9,3.8,2.2,4.6}
   self.blinkT+=dt
-  local gap=GAPS[self.blinkI]
-  local u=self.blinkT-gap
+  local u=self.blinkT-GAPS[self.blinkI]
   if u>=0 then
    if u>=.2 then self.blinkT=0;self.blinkI=(self.blinkI % #GAPS)+1
    elseif u<.07 then blink=smooth(u/.07) elseif u<.1 then blink=1.0 else blink=1-smooth((u-.1)/.1) end
@@ -192,7 +208,7 @@ local function advance(self:St,seconds:number):boolean
   local op=0.0
   if lo==hi then op=if vi2==lo then 1 else 0 elseif vi2==lo then op=1-sf elseif vi2==hi then op=sf end
   local pre=vw.name..'_'
-  put(pre..'opacity',op)
+  put(pre..'opacity',op);put(pre..'blink',blink)
   if op<.003 then continue end
   local c=vw.c
   local th=math.rad(vw.yaw);local cs=math.cos(th);local sn=math.sin(th)
@@ -294,7 +310,6 @@ local function advance(self:St,seconds:number):boolean
    put(pre..'foot'..sd..'X',if sd=='A' then fA_x else fB_x);put(pre..'foot'..sd..'Y',if sd=='A' then fA_y else fB_y)
    put(pre..'foot'..sd..'Rot',(if sd=='A' then c.footWA else c.footWB)-(if sd=='A' then fA_p else fB_p)*.85*(.15+.85*sn))
   end
-  put(pre..'blink',blink)
   local waveRot=if pi==1 then .42*math.sin(self.t*2*math.pi*2.3) else 0.0
   -- a hand turns over so its fingers curl down: the drawn hand curls to one side of the arm only
   local function smoothTo(k:string,target:number,wn:number):number
@@ -394,5 +409,5 @@ return function(context:Context):Layout<St>
  local lat0=VIEWS[1].c.lat0
  return {context=context,vm=nil,n={},cur={},vel={},t=0,v=0,s=0,phi=.05,frozen=true,rw=0,gw=0,
   fR=newFoot(0,-lat0,.05),fL=newFoot(0,lat0,.55),yaw=43,yawV=0,flip=1,flipV=0,turnF=0,
-  blinkT=0,blinkI=1,sx={},sv={},ready=false,prev={},init=init,advance=advance,draw=function(self:St,renderer:Renderer) end}
+  face=nil,blinkT=0,blinkI=1,sx={},sv={},ready=false,prev={},init=init,advance=advance,draw=function(self:St,renderer:Renderer) end}
 end

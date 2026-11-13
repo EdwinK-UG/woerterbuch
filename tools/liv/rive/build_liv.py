@@ -20,6 +20,7 @@ import numpy as np
 from PIL import Image
 
 HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE / 'face')); from face_tq import emit_face     # the face and expression rig (face/, from the pack's pixels)
 OUTD = HERE / 'liv'; OUTD.mkdir(exist_ok=True)
 PARTS = json.loads((HERE / 'parts/parts.json').read_text())
 ALL_VIEWS = ['front', 'tq', 'side', 'tqb', 'back']
@@ -71,6 +72,8 @@ def bindp(target, key, name): el('DataBindContext', target, sourcePathIds='0:40-
 GLOBAL_DEFAULTS = {'pose': 0, 'rate': 1.0, 'gait': 0, 'view': ALL_VIEWS.index(DEFAULT_VIEW), 'mirror': 0, 'yawOut': DEFAULT_YAW[DEFAULT_VIEW], 'flipX': 1.0,
                    'speedOut': 0, 'sOut': 0, 'phaseOut': 0}
 for k, v in GLOBAL_DEFAULTS.items(): prop(k, v)
+for k, v in {'expression': 0, 'expressionAmount': 1.0, 'lookX': 0.0, 'lookY': 0.0, 'blinkNow': 0, 'winkNow': 0, 'faceIdle': 1, 'autoBlink': 1}.items(): prop(k, v)
+FACE_VIEWS = []
 for i in range(8): prop(f'mX{i}', 0.0); prop(f'mY{i}', 0.0)
 bindp(flip, 16, 'flipX')
 
@@ -145,7 +148,9 @@ def emit_view(V):
     def rigid(name, rel, box, bone_name):
         x, y, w, h = box
         return mesh(name, rel, [(x, y), (x + w, y), (x + w, y + h), (x, y + h)], [(0, 0), (1, 0), (1, 1), (0, 1)], [(0, 1, 2), (0, 2, 3)], [bone_name], lambda *_: [(0, 1)])
-    def box_of(n): p = PARTS[f'{V}_{n}']; return [p['x'], p['y'], p['w'], p['h']]
+    def box_of(n):
+        if f'{V}_{n}' in PARTS: p = PARTS[f'{V}_{n}']; return [p['x'], p['y'], p['w'], p['h']]
+        return list(T['boxes'][n.replace('_c', '')])               # a cut piece without a pack part (e.g. the side view's far sleeve)
     def has(name): return artfile(V, name) is not None
     def A(name): return artfile(V, name)
 
@@ -202,7 +207,14 @@ def emit_view(V):
         w = smooth((math.hypot(dx, dy) - 1.0) / .55) * (1.0 if (px < neck[0] + HEAD_DX.get(V, 41) + 15 or py < 230) else .35) * smooth((py - 150) / 90)
         return [(0, 1 - w), (1, w)]
     head = grid('Liv head', A('head'), box_of('head'), 12, 12, ['head', 'hair'], head_w)
-    lids = [rigid(f'Liv closed eye {i}', A(f'blink{i}'), box_of(f'blink{i}'), 'head') for i in (0, 1) if has(f'blink{i}')]
+    lids = []; face = None
+    if (HERE / 'face' / 'art' / f'{V}_face.json').exists():       # a view with face art gets the full expression rig
+        face = emit_face(el, bones['head'], {'char': g, 'head_world': (world['head'][0], world['head'][2]),
+                                             'add_asset': lambda key, rel: asset(rel), 'art_rel': '../face/art', 'view': V}, pre=pre)
+        lids = face['drawables']                                  # first = on top; they take the old lids' place just above the head
+        (OUTD / f'face_cfg_{V}.luau').write_text(face['luau_cfg']); FACE_VIEWS.append(V)
+    else:                                                         # the other views: the pack's closed-eye patches, opacity = blink
+        lids = [rigid(f'Liv closed eye {i}', A(f'blink{i}'), box_of(f'blink{i}'), 'head') for i in (0, 1) if has(f'blink{i}')]
 
     def sleeve(sd):
         a = T[sd]; sh = np.array(a['sh']); u = np.array(a['dir'])
@@ -211,9 +223,9 @@ def emit_view(V):
             if k <= 1: return [(3, 1 - k), (1, k)]
             if k <= 2: return [(1, 2 - k), (2, k - 1)]
             return [(2, 3 - k), (0, k - 2)]
-        return grid(f'Liv sleeve {sd}', A(f'sleeve{sd}_c') or A(f'sleeve{sd}'), box_of(f'sleeve{sd}'), 10, 10, [f'upper{sd}', f'slv{sd}1', f'slv{sd}2', 'spine'], wts)
-    sleeves = {sd: sleeve(sd) for sd in SIDES if (has(f'sleeve{sd}_c') or has(f'sleeve{sd}'))}
-    caps = {sd: rigid(f'Liv shoulder cap {sd}', A(f'cap{sd}'), box_of(f'sleeve{sd}'), 'spine') for sd in sleeves if has(f'cap{sd}')}
+        return grid(f'Liv sleeve {sd}', A(f'sleeve{sd}_c') or A(f'sleeve{sd}_x') or A(f'sleeve{sd}'), box_of(f'sleeve{sd}'), 10, 10, [f'upper{sd}', f'slv{sd}1', f'slv{sd}2', 'spine'], wts)
+    sleeves = {sd: sleeve(sd) for sd in SIDES if (has(f'sleeve{sd}_c') or has(f'sleeve{sd}_x') or has(f'sleeve{sd}'))}
+    caps = {sd: rigid(f'Liv shoulder cap {sd}', A(f'cap{sd}') or A(f'cap{sd}_x'), box_of(f'sleeve{sd}'), 'spine') for sd in sleeves if (has(f'cap{sd}') or has(f'cap{sd}_x'))}
     arm_up = {sd: rigid(f'Liv upper arm {sd}', A(f'upper{sd}'), T[sd]['upper'], f'upper{sd}') for sd in SIDES}
     arm_fo = {sd: rigid(f'Liv forearm {sd}', A(f'fore{sd}'), T[sd]['fore'], f'fore{sd}') for sd in SIDES}
 
@@ -321,8 +333,12 @@ def emit_view(V):
         for p in HAND_POSES: vprop(f'hand{far}F{p.capitalize()}', 0.0); vbind(far_hand_front[p], 18, f'hand{far}F{p.capitalize()}')
         vprop('front', 0.0); vprop('back', 1.0)
         vbind(far_up_front, 18, 'front'); vbind(far_fo_front, 18, 'front'); vbind(arm_up[far], 18, 'back'); vbind(arm_fo[far], 18, 'back')
-    vprop('blink', 0.0)
-    for lid in lids: vbind(lid, 18, 'blink')
+    if face:
+        for n, d in face['props'].items(): vprop(n, d)
+        for e_, key, n in face['bindings']: vbind(e_, key, n)
+    else:
+        vprop('blink', 0.0)
+        for lid in lids: vbind(lid, 18, 'blink')
     for k in ('plA', 'plB', 'cAX', 'cAY', 'cBX', 'cBY'): vprop(k, 1 if k.startswith('pl') else 0)
 
     # constants for the controller (view pixels)
@@ -360,6 +376,9 @@ ab.remove(floor); ab.insert(0, floor); ab.remove(shadow); ab.insert(1, shadow)
 # ---------------------------------------------------------------- controller, buttons, state machine
 ins = el('ViewModelInstance', vm, name='Default', exports=True, id='0:41')
 for name, value in defaults.items(): el('ViewModelInstanceNumber', ins, viewModelPropertyId=props[name], propertyValue=value)
+import shutil; shutil.copy(HERE / 'face' / 'face.luau', OUTD / 'face.luau')
+el('ScriptAsset', root, file='face.luau', name='face', isModule=True, id='0:77')
+for i, V in enumerate(FACE_VIEWS): el('ScriptAsset', root, file=f'face_cfg_{V}.luau', name=f'face_cfg_{V}', isModule=True, id=f'0:{70 + i}')
 el('ScriptAsset', root, file='liv.luau', name='liv', id='0:80')
 layout = el('LayoutComponent', ab, name='Liv controller', width=STAGE_W, height=STAGE_H, styleId='0:82', id='0:81')
 el('LayoutComponentStyle', layout, name='Fill stage', layoutWidthScaleType='fill', layoutHeightScaleType='fill', widthUnitsValue='auto', heightUnitsValue='auto', id='0:82')
@@ -402,7 +421,9 @@ sys.path.insert(0, str(HERE)); from poses3d import POSES3D   # the pose table as
 def lua_num(v): return f'{v:.10g}'
 def lua_tbl(d): return '{' + ','.join(f'{k}={lua_num(v)}' for k, v in d.items()) + '}'
 view_lines = ',\n'.join(f" {{name='{V}',yaw={lua_num(CTRL[V]['yaw'])},aR={'true' if CTRL[V]['aR'] else 'false'},farB={'true' if CTRL[V]['farB'] else 'false'},\n  c={lua_tbl(CTRL[V]['c'])},\n  rest={lua_tbl(CTRL[V]['rest'])}}}" for V in VIEWS)
-luau = (HERE / 'liv.tmpl.luau').read_text().replace('@VIEWS@', view_lines).replace('@POSES@', POSES3D)
+face_req = ''.join(f"local FACE_CFG_{V.upper()} = require('face_cfg_{V}')\n" for V in FACE_VIEWS)
+face_list = ', '.join(f"{{pre = '{V}_', cfg = FACE_CFG_{V.upper()}}}" for V in FACE_VIEWS)
+luau = (HERE / 'liv.tmpl.luau').read_text().replace('@VIEWS@', view_lines).replace('@POSES@', POSES3D).replace('@FACEREQ@', face_req).replace('@FACEVIEWS@', face_list)
 (OUTD / 'liv.luau').write_text(luau)
 E.indent(root)
 (OUTD / 'scene.rml').write_text(E.tostring(root, encoding='unicode'))

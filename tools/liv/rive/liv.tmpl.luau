@@ -10,12 +10,14 @@
 --   screen x = (X cos yaw + Z sin yaw), depth toward the viewer = (Z cos yaw - X sin yaw).
 -- Every view has its own rig (art + bones + IK) in the same artboard. `yaw` turns toward the target of the `view`
 -- number (0..4); the two views around the current yaw cross-fade, the others are hidden and not computed.
+local Face = require('face')
+@FACEREQ@
 type Foot = {u: number, w: number, fu: number, fw: number, planted: boolean, ph: number}
 type View = {name: string, yaw: number, aR: boolean, farB: boolean, c: {[string]: number}, rest: {[string]: number}}
 type St = {context: Context, vm: ViewModel?, n: {[string]: Property<number>}, cur: {[string]: number}, vel: {[string]: number},
   t: number, v: number, s: number, phi: number, frozen: boolean, rw: number, gw: number,
   fR: Foot, fL: Foot, yaw: number, yawV: number, flip: number, flipV: number, turnF: number,
-  blinkT: number, blinkI: number, sx: {[string]: number}, sv: {[string]: number}, ready: boolean, prev: {[string]: number}}
+  face: Face.Face?, blinkT: number, blinkI: number, sx: {[string]: number}, sv: {[string]: number}, ready: boolean, prev: {[string]: number}}
 local VIEWS: {View} = {
 @VIEWS@
 }
@@ -55,6 +57,7 @@ local function init(self:St,context:Context):boolean
    for _,sh in ipairs(SHAPES) do grab(pre..'hand'..sd..sh);grab(pre..'hand'..sd..'F'..sh) end
   end
  end
+ self.face=Face.new(vm, {@FACEVIEWS@}, '')
  -- start in the Rest pose, not in the drawn A-pose
  local r0:{[string]:number}=POSES[1]
  for _,k in ipairs(CH) do self.cur[k]=r0[k] or 0;self.vel[k]=0 end
@@ -67,6 +70,7 @@ local function advance(self:St,seconds:number):boolean
  local function put(k:string,v:number) local p=self.n[k];if p then p.value=v end end
  local rate=math.clamp(nv('rate',1),.1,2)      -- time scale: 0.25 plays everything at quarter speed
  local dt=math.min(seconds,1/20)*rate;self.t+=dt
+ local fc=self.face;if fc then Face.update(fc,dt) end
  local pi=math.floor(nv('pose',0)+.5)
  local mode=math.floor(nv('gait',0)+.5)         -- 0 stand, 1 walk, 2 run
  local P:{[string]:number}=POSES[pi+1] or POSES[1]
@@ -160,13 +164,12 @@ local function advance(self:St,seconds:number):boolean
   track('sR'..i,if shR==i-1 then 1 else 0,40,1.0);track('sL'..i,if shL==i-1 then 1 else 0,40,1.0)
  end
 
- -- blink: every 2.2 to 5.4 s, about 0.2 s (closing 70 ms, held 30 ms, opening 100 ms)
+ -- blink for the views without the expression rig (front, side): every 2.2 to 5.4 s, about 0.2 s; the face rig has its own
  local blink=0.0
  do
   local GAPS={2.6,4.1,3.3,5.4,2.9,3.8,2.2,4.6}
   self.blinkT+=dt
-  local gap=GAPS[self.blinkI]
-  local u=self.blinkT-gap
+  local u=self.blinkT-GAPS[self.blinkI]
   if u>=0 then
    if u>=.2 then self.blinkT=0;self.blinkI=(self.blinkI % #GAPS)+1
    elseif u<.07 then blink=smooth(u/.07) elseif u<.1 then blink=1.0 else blink=1-smooth((u-.1)/.1) end
@@ -183,7 +186,7 @@ local function advance(self:St,seconds:number):boolean
   local op=0.0
   if lo==hi then op=if vi2==lo then 1 else 0 elseif vi2==lo then op=1-sf elseif vi2==hi then op=sf end
   local pre=vw.name..'_'
-  put(pre..'opacity',op)
+  put(pre..'opacity',op);put(pre..'blink',blink)
   if op<.003 then continue end
   local c=vw.c
   local th=math.rad(vw.yaw);local cs=math.cos(th);local sn=math.sin(th)
@@ -285,7 +288,6 @@ local function advance(self:St,seconds:number):boolean
    put(pre..'foot'..sd..'X',if sd=='A' then fA_x else fB_x);put(pre..'foot'..sd..'Y',if sd=='A' then fA_y else fB_y)
    put(pre..'foot'..sd..'Rot',(if sd=='A' then c.footWA else c.footWB)-(if sd=='A' then fA_p else fB_p)*.85*(.15+.85*sn))
   end
-  put(pre..'blink',blink)
   local waveRot=if pi==1 then .42*math.sin(self.t*2*math.pi*2.3) else 0.0
   -- a hand turns over so its fingers curl down: the drawn hand curls to one side of the arm only
   local function smoothTo(k:string,target:number,wn:number):number
@@ -385,5 +387,5 @@ return function(context:Context):Layout<St>
  local lat0=VIEWS[1].c.lat0
  return {context=context,vm=nil,n={},cur={},vel={},t=0,v=0,s=0,phi=.05,frozen=true,rw=0,gw=0,
   fR=newFoot(0,-lat0,.05),fL=newFoot(0,lat0,.55),yaw=43,yawV=0,flip=1,flipV=0,turnF=0,
-  blinkT=0,blinkI=1,sx={},sv={},ready=false,prev={},init=init,advance=advance,draw=function(self:St,renderer:Renderer) end}
+  face=nil,blinkT=0,blinkI=1,sx={},sv={},ready=false,prev={},init=init,advance=advance,draw=function(self:St,renderer:Renderer) end}
 end
