@@ -27,20 +27,20 @@ type St = {context: Context, vm: ViewModel?, n: {[string]: Property<number>}, cu
 
 local VIEWS: {View} = {
  {name='front',yaw=0,aR=true,farB=true,
-  c={oxg=511.5,oyg=1420.5,pelx=513,pely=912,legmax=383.2845912,hipdy=18,hipAx=-87.6,hipBx=79.7,lat0=0.09588353414,footWA=1.570796327,footWB=1.570796327,ffbias=1,shAx=-99,shAy=-377,shAx0=414,shAy0=535,wAx=223.8152155,wAy=732.2471664,shBx=97,shBy=-377,shBx0=610,shBy0=535,wBx=799.8318433,wBy=732.5854017},
-  rest={spineRot=-1.570796327,headRot=0,hairRot=-3.141592654,skirtRot=1.570796327,skirtLRot=1.712961742,skirtRRot=1.434270751,apron1Rot=1.570796327,apron2Rot=0,satchelRot=1.570796327,handARot=4.440892099e-16,slvA1Rot=0,slvA2Rot=0,handBRot=-4.440892099e-16,slvB1Rot=0,slvB2Rot=0,headPX=451,headPY=-2.761578532e-14}},
+  c={oxg=511.5,oyg=1420.5,pelx=513,pely=912,legmax=383.2845912,hipdy=18,hipAx=-87.6,hipBx=79.7,lat0=0.09588353414,footWA=1.570796327,footWB=1.570796327,ffbias=1,shAx=-99,shAy=-377,shAx0=414,shAy0=535,wAx=223.8152155,wAy=732.2471664,L1A=149.0023385,L2A=125,bdA=2.340523722,shBx=97,shBy=-377,shBx0=610,shBy0=535,wBx=799.8318433,wBy=732.5854017,L1B=149.0004016,L2B=125,bdB=0.8043497235},
+  rest={spineRot=-1.570796327,headRot=0,hairRot=-3.141592654,skirtRot=1.570796327,skirtLRot=1.712961742,skirtRRot=1.434270751,apron1Rot=1.570796327,apron2Rot=0,satchelRot=1.570796327,handARot=4.440892099e-16,slvA0Rot=0,slvA1Rot=0,slvA2Rot=0,slvA3Rot=0,slvA4Rot=0,slvA5Rot=0,handBRot=-4.440892099e-16,slvB0Rot=0,slvB1Rot=0,slvB2Rot=0,slvB3Rot=0,slvB4Rot=0,slvB5Rot=0,headPX=451,headPY=-2.761578532e-14}},
  {name='tq',yaw=43,aR=true,farB=true,
-  c={oxg=488,oyg=1411.5,pelx=510,pely=912,legmax=380.6052173,hipdy=18,hipAx=-58,hipBx=56,lat0=0.11943523,footWA=0.8523306928,footWB=0.8523306928,ffbias=0,shAx=-70,shAy=-374,shAx0=440,shAy0=538,wAx=256.716103,wAy=741.6754982,shBx=55,shBy=-367,shBx0=565,shBy0=545,wBx=762.8976189,wBy=734.5060514},
-  rest={spineRot=-1.584431845,headRot=0.02733329187,hairRot=-3.091547114,skirtRot=1.570796327,skirtLRot=1.844963778,skirtRRot=1.267911458,apron1Rot=1.570796327,apron2Rot=0,satchelRot=1.570796327,handARot=4.440892099e-16,slvA1Rot=0,slvA2Rot=0,handBRot=4.440892099e-16,slvB1Rot=0,slvB2Rot=0,headPX=440.0409072,headPY=4.440892099e-14}},
+  c={oxg=488,oyg=1411.5,pelx=510,pely=912,legmax=380.6052173,hipdy=18,hipAx=-58,hipBx=56,lat0=0.11943523,footWA=0.8523306928,footWB=0.8523306928,ffbias=0,shAx=-70,shAy=-374,shAx0=440,shAy0=538,wAx=256.716103,wAy=741.6754982,L1A=149.0023338,L2A=125,bdA=2.300992833,shBx=55,shBy=-367,shBx0=565,shBy0=545,wBx=762.8976189,wBy=734.5060514,L1B=149.0000372,L2B=125,bdB=0.7634181336},
+  rest={spineRot=-1.584431845,headRot=0.02733329187,hairRot=-3.091547114,skirtRot=1.570796327,skirtLRot=1.844963778,skirtRRot=1.267911458,apron1Rot=1.570796327,apron2Rot=0,satchelRot=1.570796327,handARot=4.440892099e-16,slvA0Rot=0,slvA1Rot=0,slvA2Rot=0,slvA3Rot=0,slvA4Rot=0,slvA5Rot=0,handBRot=4.440892099e-16,slvB0Rot=0,slvB1Rot=0,slvB2Rot=0,slvB3Rot=0,slvB4Rot=0,slvB5Rot=0,slvFillB=0,headPX=440.0409072,headPY=4.440892099e-14}},
  {name='side',yaw=90,aR=true,farB=true,
-  c={oxg=480.5,oyg=1417,pelx=505,pely=912,legmax=388.05,hipdy=22.873865,hipAx=-77.11698744,hipBx=72.15140464,lat0=0.13,footWA=0.6624262938,footWB=0.6624262938,ffbias=0,shAx=-9,shAy=-383,shAx0=496,shAy0=529,wAx=309.7512354,wAy=743.4000926,shBx=28.80745031,shBy=-383,shBx0=533.8074503,shBy0=529,wBx=711.3157894,wBy=740.3453352},
-  rest={spineRot=-1.545858187,headRot=-0.02493813961,hairRot=-2.624897515,skirtRot=1.55992719,skirtLRot=1.687451762,skirtRRot=1.432619982,apron1Rot=1.39216532,apron2Rot=-0.016760548,satchelRot=1.570796327,bow1Rot=2.296436664,handARot=0,slvA1Rot=0,slvA2Rot=0,handBRot=4.440892099e-16,slvB1Rot=0,slvB2Rot=0,headPX=441.1371669,headPY=-2.131628207e-14}},
+  c={oxg=480.5,oyg=1417,pelx=505,pely=912,legmax=388.05,hipdy=22.873865,hipAx=-77.11698744,hipBx=72.15140464,lat0=0.13,footWA=0.6624262938,footWB=0.6624262938,ffbias=0,shAx=-9,shAy=-383,shAx0=496,shAy0=529,wAx=309.7512354,wAy=743.4000926,L1A=149.0000067,L2A=135,bdA=2.286188066,shBx=28.80745031,shBy=-383,shBx0=533.8074503,shBy0=529,wBx=711.3157894,wBy=740.3453352,L1B=149.0002052,L2B=127,bdB=0.8729604558},
+  rest={spineRot=-1.545858187,headRot=-0.02493813961,hairRot=-2.624897515,skirtRot=1.55992719,skirtLRot=1.687451762,skirtRRot=1.432619982,apron1Rot=1.39216532,apron2Rot=-0.016760548,satchelRot=1.570796327,bow1Rot=2.296436664,handARot=0,slvA0Rot=0,slvA1Rot=0,slvA2Rot=0,slvA3Rot=0,slvA4Rot=0,slvA5Rot=0,handBRot=4.440892099e-16,slvB0Rot=0,slvB1Rot=0,slvB2Rot=0,slvB3Rot=0,slvB4Rot=0,slvB5Rot=0,headPX=441.1371669,headPY=-2.131628207e-14}},
  {name='tqb',yaw=137,aR=false,farB=false,
-  c={oxg=465.5,oyg=1414.5,pelx=500,pely=912,legmax=388.05,hipdy=2.417016382,hipAx=-70.83640145,hipBx=18.41315008,lat0=0.1009021771,footWA=0.8523306928,footWB=0.8523306928,ffbias=0,shAx=-58,shAy=-378,shAx0=442,shAy0=534,wAx=269.8329369,wAy=734.137643,shBx=34,shBy=-368,shBx0=534,shBy0=544,wBx=727.8304346,wBy=748.8339318},
-  rest={spineRot=-1.566312052,headRot=-0.004484274875,hairRot=-3.079173844,skirtRot=1.62991738,skirtLRot=1.685649135,skirtRRot=1.574558065,satchelRot=1.570796327,bow1Rot=2.289626326,bow2Rot=1.642103792,handARot=-8.881784197e-16,slvA1Rot=0,slvA2Rot=0,handBRot=0,slvB1Rot=0,slvB2Rot=0,headPX=446.0044843,headPY=-1.576516695e-14}},
+  c={oxg=465.5,oyg=1414.5,pelx=500,pely=912,legmax=388.05,hipdy=2.417016382,hipAx=-70.83640145,hipBx=18.41315008,lat0=0.1009021771,footWA=0.8523306928,footWB=0.8523306928,ffbias=0,shAx=-58,shAy=-378,shAx0=442,shAy0=534,wAx=269.8329369,wAy=734.137643,L1A=149.0019253,L2A=115,bdA=2.283421595,shBx=34,shBy=-368,shBx0=534,shBy0=544,wBx=727.8304346,wBy=748.8339318,L1B=149.0106606,L2B=133,bdB=0.8186334512},
+  rest={spineRot=-1.566312052,headRot=-0.004484274875,hairRot=-3.079173844,skirtRot=1.62991738,skirtLRot=1.685649135,skirtRRot=1.574558065,satchelRot=1.570796327,bow1Rot=2.289626326,bow2Rot=1.642103792,handARot=-8.881784197e-16,slvA0Rot=0,slvA1Rot=0,slvA2Rot=0,slvA3Rot=0,slvA4Rot=0,slvA5Rot=0,handBRot=0,slvB0Rot=0,slvB1Rot=0,slvB2Rot=0,slvB3Rot=0,slvB4Rot=0,slvB5Rot=0,headPX=446.0044843,headPY=-1.576516695e-14}},
  {name='back',yaw=180,aR=false,farB=true,
-  c={oxg=511,oyg=1419,pelx=512,pely=912,legmax=381.3650651,hipdy=18,hipAx=-83.4,hipBx=82.6,lat0=0.09337349398,footWA=1.570796327,footWB=1.570796327,ffbias=1,shAx=-97,shAy=-379,shAx0=415,shAy0=533,wAx=227.5456573,wAy=732.8443679,shBx=96,shBy=-379,shBx0=608,shBy0=533,wBx=796.4609161,wBy=731.893433},
-  rest={spineRot=-1.570796327,headRot=0,hairRot=-3.141592654,skirtRot=1.570796327,skirtLRot=1.71128857,skirtRRot=1.431256048,satchelRot=1.570796327,bow1Rot=1.760166377,bow2Rot=1.384834441,handARot=4.440892099e-16,slvA1Rot=0,slvA2Rot=0,handBRot=4.440892099e-16,slvB1Rot=0,slvB2Rot=0,headPX=448,headPY=-2.74320883e-14}}
+  c={oxg=511,oyg=1419,pelx=512,pely=912,legmax=381.3650651,hipdy=18,hipAx=-83.4,hipBx=82.6,lat0=0.09337349398,footWA=1.570796327,footWB=1.570796327,ffbias=1,shAx=-97,shAy=-379,shAx0=415,shAy0=533,wAx=227.5456573,wAy=732.8443679,L1A=149.0030268,L2A=125,bdA=2.327122321,shBx=96,shBy=-379,shBx0=608,shBy0=533,wBx=796.4609161,wBy=731.893433,L1B=149.0003845,L2B=125,bdB=0.8112880548},
+  rest={spineRot=-1.570796327,headRot=0,hairRot=-3.141592654,skirtRot=1.570796327,skirtLRot=1.71128857,skirtRRot=1.431256048,satchelRot=1.570796327,bow1Rot=1.760166377,bow2Rot=1.384834441,handARot=4.440892099e-16,slvA0Rot=0,slvA1Rot=0,slvA2Rot=0,slvA3Rot=0,slvA4Rot=0,slvA5Rot=0,handBRot=4.440892099e-16,slvB0Rot=0,slvB1Rot=0,slvB2Rot=0,slvB3Rot=0,slvB4Rot=0,slvB5Rot=0,headPX=448,headPY=-2.74320883e-14}}
 }
 -- hand shapes by number (poses use these): the names of hands/hand_pose.luau
 local HP = {'relaxed','open','flat','wave','fist','point','thumbsUp','pinch','gripSphere','gripHandle','carry','beckon','count1','count2','count3','count4','count5'}
@@ -423,18 +423,36 @@ local function advance(self:St,seconds:number):boolean
   spring('bow1',.0002*aW+.00008*swv+.1*rw*kf+.5*flut*math.sin(2*stride+.4),11,.3)
   spring('bow2',.0002*aW+.00008*swv+.1*rw*kf-.5*flut*math.sin(2*stride+1.2),10,.3)
   spring('satchel',.00016*aW+.00008*swv+.06*rw*kf,8.5,.3)
-  -- sleeves: the puff trails the arm's swing (angular speed of the hand about the shoulder) and settles with a small overshoot
+  -- [liv-sleeves] begin: the sleeve helpers slv<sd>0..5 (sleeve_field.py). The upper arm's turn from its bind direction is worked
+  -- out here as the rig's IK makes it (law of cosines, the elbow side from the IK-inversion boolean), so it is the same angle the
+  -- arm shows; helper k takes the share k/6 of it, and the shares go to 1 as the turn passes 90 degrees (at +-180 the whole sleeve
+  -- turns with the arm, so the wrap from +180 to -180 changes nothing and the puff never flips). On top, the puff trails the arm's
+  -- swing (angular speed about the shoulder) and settles with a small overshoot, most in the middle of the puff.
   for _,sd in ipairs({'A','B'}) do
-   local shx=(if sd=='A' then c.shAx0 else c.shBx0)+(pelX-c.pelx)
-   local shy=(if sd=='A' then c.shAy0 else c.shBy0)+(pelY-c.pely)
-   local th2=math.atan2(handX[sd]-shx,handY[sd]-shy);local pt=self.sx[pre..'th'..sd] or th2
+   local rx=if sd=='A' then c.shAx else c.shBx;local ry=if sd=='A' then c.shAy else c.shBy
+   local shx=pelX+rx*cr-ry*sr;local shy=pelY+rx*sr+ry*cr
+   local vx=handX[sd]-shx;local vy=handY[sd]-shy;local dd=math.max(math.sqrt(vx*vx+vy*vy),.001)
+   local L1=c['L1'..sd];local L2=c['L2'..sd]
+   local al=math.acos(math.clamp((L1*L1+dd*dd-L2*L2)/(2*L1*dd),-1,1))
+   local inv=act.bools[pre..'ikInv'..sd];if inv and inv.value then al=-al end
+   local sth=math.atan2(vy,vx)+al-c['bd'..sd]-spineA
+   sth=(sth+math.pi)%(2*math.pi)-math.pi
+   local q=smooth((math.abs(sth)-math.pi*.5)/(math.pi*.5))
+   put(pre..'slvFill'..sd,smooth((math.abs(sth)-.06)/.2))      -- (three-quarter far sleeve: the gap fill, see build_liv.py)
+   local th2=math.atan2(vx,vy);local pt=self.sx[pre..'th'..sd] or th2
    local d=th2-pt;if d>math.pi then d-=2*math.pi elseif d<-math.pi then d+=2*math.pi end
    self.sx[pre..'th'..sd]=th2
    local om=math.clamp(d/math.max(dt,.0005),-14,14)
    local ws=lerp(self.sx[pre..'om'..sd] or 0,om,.35);self.sx[pre..'om'..sd]=ws
-   spring('slv'..sd..'1',math.clamp(.018*ws,-.28,.28),15,.45)
-   spring('slv'..sd..'2',math.clamp(.032*ws,-.4,.4),13,.4)
+   for k=0,5 do
+    local sh_=k/6;local key=pre..'slvL'..sd..k
+    local x=self.sx[key] or 0;local vel=self.sv[key] or 0
+    local target=math.clamp(.13*ws*sh_*(1-sh_)*(1-q),-.4,.4)
+    vel+=(14*14*(target-x)-2*.42*14*vel)*dt;x+=vel*dt;self.sx[key]=x;self.sv[key]=vel
+    put(pre..'slv'..sd..k..'Rot',sth*(sh_+(1-sh_)*q)+math.clamp(x,-.4,.4))
+   end
   end
+  -- [liv-sleeves] end
   -- read-outs for measuring (the view that is showing most)
   if op>=.5 then
    put(pre..'plA',if (if vw.aR then self.fR.planted else self.fL.planted) and gw>.001 then 1 else 0)
