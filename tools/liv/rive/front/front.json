@@ -1,0 +1,630 @@
+{
+ "_ppm": 996,
+ "A": {
+  "sh": [
+   414.0,
+   535.0
+  ],
+  "elbow": [
+   310.3033859457667,
+   641.9986407522434
+  ],
+  "wrist": [
+   223.81521554131484,
+   732.2471663916715
+  ],
+  "dir": [
+   -0.6919053632356148,
+   0.7219882051154242
+  ],
+  "half": 28.292912787960688,
+  "axis_offset": 0.8347988621647104,
+  "upper": [
+   283,
+   520,
+   147,
+   150
+  ],
+  "fore": [
+   207,
+   618,
+   128,
+   133
+  ]
+ },
+ "B": {
+  "sh": [
+   610.0,
+   535.0
+  ],
+  "elbow": [
+   713.3436728777626,
+   642.3368760463611
+  ],
+  "wrist": [
+   799.8318432822145,
+   732.5854016857892
+  ],
+  "dir": [
+   0.6919053632356148,
+   0.7219882051154242
+  ],
+  "half": 28.29291278796068,
+  "axis_offset": -0.3459526816178098,
+  "upper": [
+   596,
+   521,
+   146,
+   150
+  ],
+  "fore": [
+   690,
+   619,
+   128,
+   132
+  ]
+ },
+ "legA": {
+  "x0": 380,
+  "x1": 460
+ },
+ "legB": {
+  "x0": 562,
+  "x1": 643
+ },
+ "pelvis": [
+  513.0,
+  912.0
+ ],
+ "hipA": [
+  425.4,
+  930.0
+ ],
+ "kneeA": [
+  420.7,
+  1126.5
+ ],
+ "ankleA": [
+  416,
+  1323
+ ],
+ "hipB": [
+  592.7,
+  930.0
+ ],
+ "kneeB": [
+  599.9,
+  1126.0
+ ],
+ "ankleB": [
+  607,
+  1322
+ ],
+ "neck": [
+  513,
+  461
+ ],
+ "legpiece": {
+  "A": {
+   "thigh": {
+    "rows": 276,
+    "cols": 124,
+    "top_ext": 34,
+    "length": 196.55620061448073
+   },
+   "shin": {
+    "rows": 252,
+    "cols": 99,
+    "top_ext": 44,
+    "length": 206.55620061448073
+   },
+   "hw": 43.96,
+   "knee_axis_offset": 0.52,
+   "edge_fit": {
+    "lo": [
+     0.04664,
+     -52.61285
+    ],
+    "hi": [
+     -0.06558,
+     57.36919
+    ]
+   }
+  },
+  "B": {
+   "thigh": {
+    "rows": 276,
+    "cols": 125,
+    "top_ext": 34,
+    "length": 196.1322003139719
+   },
+   "shin": {
+    "rows": 253,
+    "cols": 100,
+    "top_ext": 45,
+    "length": 206.12855477976683
+   },
+   "hw": 44.39,
+   "knee_axis_offset": -0.12,
+   "edge_fit": {
+    "lo": [
+     0.0692,
+     -58.08116
+    ],
+    "hi": [
+     -0.05147,
+     54.36529
+    ]
+   }
+  }
+ },
+ "rig": {
+  "head_top": [
+   513.0,
+   131.0
+  ],
+  "hair": [
+   [
+    513.0,
+    191.0
+   ],
+   [
+    513.0,
+    434.0
+   ]
+  ],
+  "skirt": [
+   [
+    513.0,
+    770
+   ],
+   [
+    513.0,
+    1100.0
+   ]
+  ],
+  "skirt_L": [
+   [
+    405.8,
+    770
+   ],
+   [
+    361.0,
+    1083.0
+   ]
+  ],
+  "skirt_R": [
+   [
+    618.0,
+    770
+   ],
+   [
+    661.0,
+    1083.0
+   ]
+  ],
+  "apron": [
+   [
+    512.0,
+    748.0
+   ],
+   [
+    512.0,
+    891.0
+   ],
+   [
+    512.0,
+    1028.0
+   ]
+  ],
+  "bag": {
+   "a": [
+    566,
+    474
+   ],
+   "b": [
+    416,
+    800
+   ]
+  },
+  "bag_visible": true
+ },
+ "hand": {
+  "A": {
+   "wrist": [
+    223.81521554131484,
+    732.2471663916715
+   ],
+   "dir": [
+    -0.6919053632356148,
+    0.7219882051154242
+   ],
+   "length": 154.0,
+   "tip": [
+    120,
+    846
+   ],
+   "centroid": [
+    177.3,
+    780.4
+   ]
+  },
+  "B": {
+   "wrist": [
+    799.8318432822145,
+    732.5854016857892
+   ],
+   "dir": [
+    0.6919053632356148,
+    0.7219882051154242
+   ],
+   "length": 153.3,
+   "tip": [
+    902,
+    847
+   ],
+   "centroid": [
+    846.2,
+    780.6
+   ]
+  }
+ },
+ "hand_length": 154.0,
+ "yaw_deg": 0,
+ "facing": "toward",
+ "A_is": "R",
+ "far_arm": "B",
+ "boxes": {
+  "apron": [
+   251,
+   732,
+   521,
+   381
+  ],
+  "capA": [
+   294,
+   474,
+   140,
+   156
+  ],
+  "capB": [
+   591,
+   474,
+   138,
+   153
+  ],
+  "chemise": [
+   374,
+   447,
+   276,
+   317
+  ],
+  "foreA": [
+   207,
+   618,
+   128,
+   133
+  ],
+  "foreB": [
+   690,
+   619,
+   128,
+   132
+  ],
+  "skirtred": [
+   251,
+   732,
+   521,
+   381
+  ],
+  "sleeveA_c": [
+   294,
+   474,
+   140,
+   156
+  ],
+  "sleeveB_c": [
+   591,
+   474,
+   138,
+   153
+  ],
+  "slip": [
+   251,
+   732,
+   521,
+   381
+  ],
+  "sockA_c": [
+   366,
+   1189,
+   106,
+   70
+  ],
+  "sockB_c": [
+   551,
+   1189,
+   106,
+   69
+  ],
+  "torso_c": [
+   374,
+   447,
+   276,
+   317
+  ],
+  "upperA": [
+   283,
+   520,
+   147,
+   150
+  ],
+  "upperB": [
+   596,
+   521,
+   146,
+   150
+  ]
+ },
+ "parts": [
+  "front_blink0",
+  "front_blink1",
+  "front_bootA",
+  "front_bootB",
+  "front_brow0",
+  "front_brow1",
+  "front_head",
+  "front_mouth",
+  "front_skirt",
+  "front_sleeveA",
+  "front_sleeveB",
+  "front_sockA",
+  "front_sockB",
+  "front_torso"
+ ],
+ "_notes": {
+  "arm": {
+   "A": {
+    "t_cap": 18.0,
+    "clipped": 0,
+    "half": 28.292912787960688,
+    "sleeve_px_added": 2526,
+    "sleeve_px_outside_box": 394
+   },
+   "B": {
+    "t_cap": 20.0,
+    "clipped": 0,
+    "half": 28.29291278796068,
+    "sleeve_px_added": 2763,
+    "sleeve_px_outside_box": 469
+   },
+   "torso_cream_components": [
+    [
+     4314,
+     44,
+     138,
+     "skin"
+    ],
+    [
+     2876,
+     85,
+     139,
+     "cloth"
+    ],
+    [
+     3400,
+     234,
+     137,
+     "cloth"
+    ],
+    [
+     12379,
+     284,
+     139,
+     "cloth"
+    ]
+   ],
+   "outline_px_added_to_torso": 76,
+   "hem_ink_px_added_to_skirt": 796
+  },
+  "legs": "thigh/shin: tq-format rigid pieces with a round knee; outline follows the drawn leg (linear taper fit, legpiece.*.edge_fit), skin is the drawing itself where the leg shows (hem shadow, knee light) and the strip colours elsewhere; knee lies on the hip-ankle line (leg straight at bind)",
+  "sleeves": "pack sleeve part plus the sleeve pixels the pack left out (inside the pack box); cuff pixels outside the box ride on the upper arm piece",
+  "torso": "torso_c uses the view pixels where the view shows the torso (pack part had painted-over spots); missing dress outline at the waist corners added"
+ },
+ "_checks": {
+  "assembly": {
+   "image_pct_gt24_outside_cloth": 0.258,
+   "silhouette_pct_gt24_outside_cloth": 1.347,
+   "silhouette_pct_gt24_outside_cloth_and_legs": 0.61,
+   "raw_silhouette_pct_gt24_all": 0.967,
+   "raw_silhouette_pct_gt24_without_legs": 0.436,
+   "bare_leg_pct_gt24": 10.99
+  },
+  "diff_blobs": [
+   {
+    "x": [
+     439,
+     469
+    ],
+    "y": [
+     266,
+     279
+    ],
+    "px": 92
+   },
+   {
+    "x": [
+     566,
+     591
+    ],
+    "y": [
+     479,
+     486
+    ],
+    "px": 80
+   },
+   {
+    "x": [
+     434,
+     457
+    ],
+    "y": [
+     479,
+     489
+    ],
+    "px": 77
+   },
+   {
+    "x": [
+     510,
+     521
+    ],
+    "y": [
+     404,
+     407
+    ],
+    "px": 29
+   },
+   {
+    "x": [
+     467,
+     496
+    ],
+    "y": [
+     1037,
+     1038
+    ],
+    "px": 29
+   }
+  ],
+  "retone": {
+   "foreA": {
+    "kind": "skin",
+    "body_px": 7813,
+    "wrong_px": 0,
+    "wrong_pct": 0.0
+   },
+   "foreB": {
+    "kind": "skin",
+    "body_px": 7793,
+    "wrong_px": 0,
+    "wrong_pct": 0.0
+   },
+   "shinA": {
+    "kind": "skin",
+    "body_px": 16936,
+    "wrong_px": 0,
+    "wrong_pct": 0.0
+   },
+   "shinB": {
+    "kind": "skin",
+    "body_px": 16987,
+    "wrong_px": 0,
+    "wrong_pct": 0.0
+   },
+   "thighA": {
+    "kind": "skin",
+    "body_px": 24313,
+    "wrong_px": 0,
+    "wrong_pct": 0.0
+   },
+   "thighB": {
+    "kind": "skin",
+    "body_px": 24749,
+    "wrong_px": 0,
+    "wrong_pct": 0.0
+   },
+   "upperA": {
+    "kind": "skin",
+    "body_px": 8949,
+    "wrong_px": 0,
+    "wrong_pct": 0.0
+   },
+   "upperB": {
+    "kind": "skin",
+    "body_px": 8871,
+    "wrong_px": 0,
+    "wrong_pct": 0.0
+   },
+   "apron": {
+    "kind": "cloth",
+    "body_px": 82648,
+    "wrong_px": 0,
+    "wrong_pct": 0.0
+   },
+   "capA": {
+    "kind": "cloth",
+    "body_px": 3203,
+    "wrong_px": 0,
+    "wrong_pct": 0.0
+   },
+   "capB": {
+    "kind": "cloth",
+    "body_px": 3152,
+    "wrong_px": 0,
+    "wrong_pct": 0.0
+   },
+   "sleeveA_c": {
+    "kind": "cloth",
+    "body_px": 12981,
+    "wrong_px": 0,
+    "wrong_pct": 0.0
+   },
+   "sleeveB_c": {
+    "kind": "cloth",
+    "body_px": 12770,
+    "wrong_px": 0,
+    "wrong_pct": 0.0
+   },
+   "sockA_c": {
+    "kind": "cloth",
+    "body_px": 4521,
+    "wrong_px": 0,
+    "wrong_pct": 0.0
+   },
+   "sockB_c": {
+    "kind": "cloth",
+    "body_px": 4514,
+    "wrong_px": 0,
+    "wrong_pct": 0.0
+   },
+   "torso_c": {
+    "kind": "cloth",
+    "body_px": 27606,
+    "wrong_px": 0,
+    "wrong_pct": 0.0,
+    "note": "cloth region checked for skin colour, neck region checked for linen",
+    "skin_region_px": 4474
+   }
+  },
+  "draw_order_top_first": [
+   "HAND_A",
+   "foreA",
+   "sleeveA_c",
+   "capA",
+   "upperA",
+   "brow0",
+   "brow1",
+   "mouth",
+   "head",
+   "HAND_B",
+   "foreB",
+   "sleeveB_c",
+   "capB",
+   "upperB",
+   "torso_c",
+   "apron",
+   "skirtred",
+   "slip",
+   "chemise",
+   "bootA",
+   "sockA_c",
+   "shinA",
+   "thighA",
+   "bootB",
+   "sockB_c",
+   "shinB",
+   "thighB"
+  ]
+ }
+}
