@@ -2,6 +2,7 @@
 // Each is fn(t, a) -> partial pose, blended over standing or walking. Hand targets are in arm lengths from the
 // shoulder, [out, up, forward] in the chest frame ("out" = away from the body's midline for that arm); m = 1 measures
 // from the breastbone instead. e = the direction the elbow points, palm = palm normal, row = hand shape (hands.js).
+// at: 'chin' puts the hand at the chin instead (h then in metres for a 0.39 m leg, scaled).
 // a = { n: 'aR'|'aL' (the gesturing arm), f: the other arm, fn / ff: the matching feet, H: hip height in metres }.
 import { shapeRow } from './hands.js';
 import { clamp, lerp, smooth, seg } from './rig.js';
@@ -10,7 +11,7 @@ const PI = Math.PI, TAU = 2 * PI;
 const pulse = (t, a, b, c, d) => seg(t, a, b) * (1 - seg(t, c, d));
 const mix = (a, b, t) => a.map((x, i) => lerp(x, b[i], t));
 const mixRow = (a, b, t) => mix(shapeRow(a), shapeRow(b), t);
-const arm = (h, e, palm, shape, o = {}) => ({ h, e, palm, row: typeof shape === 'string' ? shapeRow(shape, o.grip || 0) : shape, bend: o.bend || 0, m: o.m || 0, free: o.free ? 1 : 0 });
+const arm = (h, e, palm, shape, o = {}) => ({ h, e, palm, row: typeof shape === 'string' ? shapeRow(shape, o.grip || 0) : shape, bend: o.bend || 0, m: o.m || 0, free: o.free ? 1 : 0, chin: o.at === 'chin' ? 1 : 0 });
 
 export const ACTIONS = {};
 const def = (name, dur, fn, o = {}) => { ACTIONS[name] = Object.assign(fn, { dur, tin: 0.22, tout: 0.25, key: 'act' }, o); };
@@ -21,7 +22,7 @@ def('pointUp', 2.0, (t, a) => ({ [a.n]: arm([0.6, 0.62, 0.3], [0.9, -0.6, 0], [-
 def('thumb', 2.0, (t, a) => { const b = 0.03 * Math.sin(t * 11) * pulse(t, 0.2, 0.5, 1.2, 1.5); return { [a.n]: arm([0.3, -0.12 + b, 0.66], [0.7, -0.8, -0.2], [-1, 0, 0.15], 'thumbsUp'), hr: 0.05 }; }, { expr: 'wink' });
 def('clap', 2.4, (t) => { const g = Math.abs(Math.sin(t * PI / 0.3)), A = arm([0.03 + 0.14 * g, -0.22, 0.62], [0.9, -0.7, 0], [-1, 0, 0], 'flat', { m: 1 }); return { aL: A, aR: A, py: 0.985 + 0.006 * g }; }, { expr: 'laugh' });
 def('shrug', 2.2, () => { const A = arm([0.5, -0.46, 0.42], [0.5, -0.9, -0.3], [0, 1, 0.2], 'open'); return { aL: A, aR: A, shL: 1.3, shR: 1.3, hr: 0.1 }; }, { expr: 'think' });
-def('think', 3.0, (t, a) => ({ [a.n]: arm([0.14, 0.24, 0.44], [0.9, -0.8, 0.2], [-0.3, 0, -1], mixRow('point', 'fist', 0.35), { m: 0.85, free: 1 }), [a.f]: arm([-0.05, -0.62, 0.32], [0.9, -0.6, -0.2], [0, 0, -1], 'relaxed', { m: 0.5 }), hr: -0.09, hp: -0.04 }), { expr: 'think' });
+def('think', 3.0, (t, a) => ({ [a.n]: arm([-0.01, -0.03, 0.04], [0.9, -0.8, 0.2], [-0.3, 0, -1], mixRow('point', 'fist', 0.35), { at: 'chin', bend: 0.1, free: 1 }), [a.f]: arm([-0.05, -0.62, 0.32], [0.9, -0.6, -0.2], [0, 0, -1], 'relaxed', { m: 0.5 }), hr: -0.09, hp: -0.04 }), { expr: 'think' });
 def('cheer', 2.4, (t, a) => { const b = Math.abs(Math.sin(t * PI / 0.42)), A = arm([0.42, 0.92 + 0.04 * b, 0.12], [1, 0.2, 0], [0, 0, 1], 'open'); return { aL: A, aR: A, hop: 0.05 * b * a.H, hp: -0.1 }; }, { expr: 'laugh' });
 def('hips', 2.4, () => { const A = arm([0.34, -0.62, 0.0], [1, -0.15, -0.7], [0, 0, -1], 'fist'); return { aL: A, aR: A }; });
 def('present', 2.6, (t, a) => ({ [a.f]: arm([0.85, 0.1, 0.3], [0.3, -1, -0.3], [0, 1, 0.2], 'open') }));

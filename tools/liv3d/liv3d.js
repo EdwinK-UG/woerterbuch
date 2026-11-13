@@ -20,7 +20,7 @@ const D2R = Math.PI / 180;
 const cadence0 = (vN) => 1.9 + (1.0 * Math.min(vN, 0.9)) / 0.9 + Math.max(0, vN - 0.9) * 0.45;      // steps per second
 const stanceOf = (vN) => 0.62 - 0.26 * smooth((vN - 0.9) / 1.1);                                    // share of the stride on the ground
 
-const restArm = () => ({ h: [0.09, -0.985, 0.04], e: [0.25, -0.2, -1], palm: [-1, 0, 0], row: shapeRow('relaxed'), bend: 0, m: 0, free: 0 });
+const restArm = () => ({ h: [0.09, -0.985, 0.04], e: [0.25, -0.2, -1], palm: [-1, 0, 0], row: shapeRow('relaxed'), bend: 0, m: 0, free: 0, chin: 0 });
 const basePose = () => ({ py: 0.985, psx: 0, psf: 0, ptw: 0, prl: 0, lean: 0, cpitch: 0, ctw: 0, crl: 0, hy: 0, hp: 0, hr: 0, shL: 0, shR: 0, hop: 0, knees: 0,
   aL: restArm(), aR: restArm(), fL: { p: [1, 0, 0], pitch: 0 }, fR: { p: [1, 0, 0], pitch: 0 } });
 const LOWER = new Set(['py', 'psx', 'psf', 'prl', 'hop', 'fL', 'fR', 'knees']);
@@ -87,7 +87,7 @@ export class LivActor {
     }
     if (this.prop && this.prop.flying) this.prop = null;
     this.flying = [];
-    this.stats = { maxOver: 0 };
+    this.stats = { maxOver: 0 }; this._pelY = null;
     this._place(); this.update(0);
     this.springCenter.position.set(this.x, 0, this.z); this.springCenter.updateMatrixWorld();
     const sb = this.vrm.springBoneManager; if (sb) { for (const j of sb.joints) j.center = this.springCenter; sb.reset(); }
@@ -207,7 +207,10 @@ export class LivActor {
     this.leanA = lerp(this.leanA, clamp(this.acc * 0.03, -0.12, 0.12), 1 - Math.exp(-dt * 6));
     // gait parameters at this speed
     const v = this.v, vn = v * k;
-    this.vN = vn; this.sg = stanceOf(vn); this.cad = k * cadence0(vn); this.T = 2 / this.cad;
+    this.vN = vn; this.cad = k * cadence0(vn); this.T = 2 / this.cad;
+    // stance share from the 2D rig (62 % walking .. 36 % running), limited so the body travels at most ~1.05 leg
+    // lengths over a planted foot (a straight-ish leg cannot reach further without the hips dropping)
+    this.sg = Math.max(0.24, Math.min(stanceOf(vn), (1.05 * M.leg) / Math.max(1e-3, v * this.T)));
     this.rw = lerp(this.rw, smooth((vn - 1.2) / 0.8), 1 - Math.exp(-dt * 8));
     this.move = smooth(vn / 0.5);
     this._lat = lerp(1, 0.85, smooth(vn / 0.9)) * lerp(1, 0.65, this.rw);
@@ -225,7 +228,18 @@ export class LivActor {
     this.gw = lerp(this.gw, this.frozen ? 0 : 1, 1 - Math.exp(-dt * (this.frozen ? 6 : 10)));
     if (this.frozen) return;
     const phi0 = this.phi;
-    this.phi = (this.phi + dt * this.cad / 2) % 1;
+    // the next step comes early when a planted foot is left further behind than the stride it landed for (slowing
+    // down: the stance share grows and would leave the foot behind out of reach)
+    let boost = 1;
+    const fx = Math.sin(this.yaw), fz = Math.cos(this.yaw);
+    for (const S of ['L', 'R']) {
+      const f = F[S]; if (!f.planted || f.expBack == null) continue;
+      const back = -((f.ax - this.x) * fx + (f.az - this.z) * fz);
+      boost = Math.max(boost, 1 + clamp((back - f.expBack) / (0.1 * M.leg), 0, 0.6));
+    }
+    this.boost = lerp(this.boost || 1, boost, 1 - Math.exp(-dt * 12));
+    boost = this.boost;
+    this.phi = (this.phi + dt * boost * this.cad / 2) % 1;
     this._stepFoot('R', this.phi, (phi0) % 1, dt);
     this._stepFoot('L', (this.phi + 0.5) % 1, (phi0 + 0.5) % 1, dt);
     const settled = eL[0] < 0.025 && eR[0] < 0.025 && eL[1] < 0.1 && eR[1] < 0.1;
@@ -247,15 +261,18 @@ export class LivActor {
     if (f.planted) {
       const u = clamp(ph / sg, 0, 1);
       f.pitch = this._stancePitch(u); f.flat = f.pitch < 0 ? 1 : 0;
-      if (ph >= sg && ph0 < sg + 1e-9 && ph >= ph0) {           // toe-off
+      const fx = Math.sin(this.yaw), fz = Math.cos(this.yaw), back = -((f.ax - this.x) * fx + (f.az - this.z) * fz);
+      const late = f.expBack != null && back > f.expBack + 0.05 * M.leg && ph > 0.15;    // left behind (slowing from a run)
+      if ((ph >= sg || late) && ph >= ph0) {           // toe-off
         f.planted = false; f.sp = 0; f.lx = f.ax; f.lz = f.az; f.lyaw = f.yaw; f.lpitch = f.pitch;
       }
     }
     if (!f.planted) {
-      const spC = ph >= sg && ph >= ph0 ? (ph - sg) / (1 - sg) : 1;
-      f.sp = clamp(Math.max(f.sp + dt / Math.max(0.05, (1 - sg) * this.T) * 0.35, spC), 0, 1);
+      // the swing ends exactly when the phase wraps, whatever happens to the stance share meanwhile (no snapping)
+      const tw = (1 - ph) * this.T;
+      f.sp = ph < ph0 ? 1 : clamp(f.sp + (dt * (1 - f.sp)) / Math.max(tw + dt, dt), 0, 1);
       // where it lands: the body's spot at landing, half a stance ahead, at the stance width
-      const tRem = (1 - f.sp) * (1 - sg) * this.T, yawL = this.yaw + clamp(this.yawRate * tRem, -0.6, 0.6);
+      const tRem = ph < ph0 ? 0 : tw, yawL = this.yaw + clamp(this.yawRate * tRem, -0.6, 0.6);
       const px = this.x + Math.sin(this.yaw) * this.v * tRem, pz = this.z + Math.cos(this.yaw) * this.v * tRem;
       const lead = this.v * sg * this.T * lerp(0.37, 0.3, this.rw), a = M[S].ankle;
       const [lx, lz] = toWorld(a.x * this._lat, a.z + lead, px, pz, yawL);
@@ -268,7 +285,7 @@ export class LivActor {
       const Hs = lerp(0.05, 0.17, this.rw) * M.ls * Math.max(smooth(this.vN / 0.25), 0.5);
       f.lift = Hs * Math.pow(Math.sin(Math.PI * Math.pow(sp, lerp(0.85, 0.55, this.rw))), 2);
       f.offA = this._pivot(S, f.lpitch); f.offB = this._pivot(S, land);
-      if (sp >= 1) { f.planted = true; f.ax = lx; f.az = lz; f.yaw = yawL + toe; f.pitch = land; }
+      if (sp >= 1) { f.planted = true; f.ax = lx; f.az = lz; f.yaw = yawL + toe; f.pitch = land; f.expBack = this.v * sg * this.T * (1 - lerp(0.37, 0.3, this.rw)) + 0.06 * M.leg; }
     }
   }
   // the ankle target of one foot in world space and its yaw: planted feet never move
@@ -380,10 +397,13 @@ export class LivActor {
       const m = M[S], o = rig.rest[(S === 'L' ? 'left' : 'right') + 'UpperLeg'].clone().sub(rig.rest.hips).applyQuaternion(hipsQ);
       const a = feet[S].p, dx = hp.x + o.x - a.x, dz = hp.z + o.z - a.z, L = 0.998 * m.leg;
       // planted feet bound the pelvis; a swinging foot only just after toe-off and just before landing
-      const f = this.feet[S], wS = f.planted || this.frozen ? 1 : Math.max(1 - smooth(f.sp / 0.2), smooth((f.sp - 0.8) / 0.2));
+      const f = this.feet[S], wS = f.planted || this.frozen ? 1 : Math.max(1 - smooth(f.sp / 0.45), smooth((f.sp - 0.7) / 0.3));
       const ymax = a.y + Math.sqrt(Math.max(0, L * L - dx * dx - dz * dz)) - o.y + (1 - wS) * M.leg, k = 0.006 * M.leg;
       y = (y + ymax - Math.sqrt((y - ymax) * (y - ymax) + k * k)) / 2;
     }
+    // the pelvis drops at once when it must, but rises smoothly (no jolt when a foot lets go)
+    if (this._pelY != null && y > this._pelY && dt > 0) y = Math.min(y, lerp(this._pelY, y, 1 - Math.exp(-dt * 22)));
+    this._pelY = y;
     hp.y = y; rig.hipsPos.copy(hp); rig.P = {};
     // legs
     for (const S of ['L', 'R']) {
@@ -409,7 +429,8 @@ export class LivActor {
     for (const S of ['L', 'R']) {
       const p = S === 'L' ? 'left' : 'right', m = M[S], a = pose['a' + S], s = m.sgn, sv = (v) => V3(v[0] * s, v[1], v[2]);
       const sh0 = rig.rest[p + 'UpperArm'], O = sh0.clone().lerp(V3(0, sh0.y, sh0.z), a.m || 0);
-      const tr = O.clone().add(sv(a.h).multiplyScalar(m.arm));
+      let tr = O.clone().add(sv(a.h).multiplyScalar(m.arm));
+      if (a.chin > 0) { const B = this._bodyShape || (this._bodyShape = this._measureBody()); tr.lerp(B.chin.clone().add(sv(a.h).multiplyScalar(M.ls)), a.chin); }
       if (!a.free) this._avoidBody(tr, s);
       const target = rig.carry(C, tr), pole = sv(a.e).applyQuaternion(dC), palm = sv(a.palm).applyQuaternion(dC);
       const sh = rig.pos(p + 'UpperArm'), r = solve2(sh, m.A1, m.A2, target, pole.lengthSq() > 1e-6 ? pole : V3(0, 0, -1));
@@ -456,7 +477,8 @@ export class LivActor {
     let top = 0, hf = 0;
     for (const p of pts) if (p.y > M.headY) { top = Math.max(top, p.y); if (Math.abs(p.x) < 0.03 * M.ls) hf = Math.max(hf, p.z - r.head.z); }
     const hh = Math.max(0.08 * M.ls, (top - M.headY) * 0.5);
-    return { y0: M.hipsY - 0.25 * M.leg, y1: M.shY - 0.02 * M.ls, lo, hi, head: V3(r.head.x, M.headY + hh, r.head.z), hr: Math.max(hh, hf) + 0.06 * M.ls };
+    const chin = V3(0, M.headY - 0.02 * M.ls, r.head.z + Math.max(hf, 0.04 * M.ls) * 0.75);
+    return { chin, y0: M.hipsY - 0.25 * M.leg, y1: M.shY - 0.02 * M.ls, lo, hi, head: V3(r.head.x, M.headY + hh, r.head.z), hr: Math.max(hh, hf) + 0.06 * M.ls };
   }
   /** Rest-pose surface points of the body in body space (skinned vertices, hair excluded; cached). */
   surfacePoints() {
