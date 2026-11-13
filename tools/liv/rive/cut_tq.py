@@ -138,5 +138,10 @@ info['ankleA'] = META['A']['ankle']; info['ankleB'] = META['B']['ankle']
 info['kneeA'] = [424, 1128]; info['kneeB'] = [571, 1120]
 info['neck'] = META['neck']
 info['_ppm'] = 996
+# satchel strap: the canvas rig strokes it 30 px wide in the strap colour with an ink edge
+strap = np.zeros((8, 30, 4), np.float32)
+strap[..., :3] = np.array([0xe6, 0x9d, 0x43], np.float32); strap[..., 3] = 255
+strap[:, :3, :3] = INK; strap[:, -3:, :3] = INK
+Image.fromarray(strap.astype(np.uint8), 'RGBA').save(OUT / 'tq_strap.png')
 (OUT / 'tq.json').write_text(json.dumps(info, indent=1))
 print('ok', {k: (v if not isinstance(v, dict) else {kk: vv for kk, vv in v.items() if kk in ('half',)}) for k, v in info.items() if k in ('A', 'B')})

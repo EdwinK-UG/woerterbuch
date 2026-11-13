@@ -44,10 +44,11 @@ aid = 100
 for n in ['tq_skirt', 'tq_torso', 'tq_head', 'tq_sleeveA', 'tq_sleeveB', 'tq_sockA', 'tq_bootA', 'tq_sockB', 'tq_bootB',
           'tq_blink0', 'tq_blink1', 'tq_brow0', 'tq_mouth']:
     asset(n, f'../parts/{n}.png', aid); aid += 1
-for n in ['tq_upperA', 'tq_foreA', 'tq_upperB', 'tq_foreB', 'tq_legA', 'tq_legB', 'tq_capA', 'tq_capB']:
+for n in ['tq_upperA', 'tq_foreA', 'tq_upperB', 'tq_foreB', 'tq_legA', 'tq_legB', 'tq_capA', 'tq_capB', 'tq_strap']:
     asset(n, f'../tq/{n}.png', aid); aid += 1
 for n in ['relaxed', 'palm', 'fist', 'point', 'thumb', 'back']:
     asset('hand_' + n, f'../parts/hand_{n}.png', aid); aid += 1
+asset('satchel', '../parts/satchel.png', aid); aid += 1
 
 ab = el('Artboard', root, name='Liv three-quarter', width=STAGE_W, height=STAGE_H, defaultStateMachineId='0:7', styleId='0:5', id='0:2')
 el('LayoutComponentStyle', ab, name='Artboard style', id='0:5')
@@ -102,6 +103,11 @@ for sd in SIDES:
     bone(f'foot{sd}', ank, toe, f'shin{sd}', False)
     FOOT_W[sd] = ang(ank, toe)
 
+# secondary motion: hair (child of the head), skirt (child of the pelvis), satchel on its strap (child of the pelvis)
+bone('hair', (452, 232), (440, 420), 'head')
+bone('skirt', (510, 770), (510, 1090), 'pelvis')
+BAG_B = (438, 800)                                      # where the strap ends (the pack's bag point for this view)
+bone('satchel', (BAG_B[0], BAG_B[1] + 2), (BAG_B[0], BAG_B[1] + 110), 'pelvis')
 # IK targets: nodes in character space, driven by the controller (view model)
 targets = {}
 for sd in SIDES:
@@ -156,7 +162,14 @@ def box_of(n): p = PARTS[n]; return [p['x'], p['y'], p['w'], p['h']]
 def img_size(path): return Image.open(path).size
 
 # head: rigid on the head bone. Face overlays (blink, brow, mouth) come with the expression step.
-head = rigid('Liv head', 'tq_head', box_of('tq_head'), 'head')
+def head_w(px, py):
+    # the face and scalp follow the head; the hair away from the face (back, side, ends) hangs from a hair bone
+    dx, dy = (px - 545) / 120, (py - 335) / 150
+    d = math.hypot(dx, dy)
+    w = smooth((d - 1.0) / .55) * (1.0 if (px < 560 or py < 230) else .35) * smooth((py - 150) / 90)
+    return [(0, 1 - w), (1, w)]
+head = grid('Liv head', 'tq_head', box_of('tq_head'), 12, 12, ['head', 'hair'], head_w)
+lids = [rigid(f'Liv closed eye {i}', f'tq_blink{i}', box_of(f'tq_blink{i}'), 'head') for i in (0, 1)]    # skin patches with the closed lash line, over the open eyes
 
 # sleeves: torso at the seam (shoulder side), helpers along the sleeve, upper arm from the cuff
 def sleeve(sd):
@@ -205,7 +218,30 @@ def skirt_w(px, py):
     t = smooth((py - 760) / 330)                                # waist on the pelvis, hem swings with the thighs a little
     side = cl((px - 360) / 300)
     return [(0, 1 - t * .45), (1, t * .45 * (1 - side)), (2, t * .45 * side)]
-skirt = grid('Liv skirt', 'tq_skirt', box_of('tq_skirt'), 10, 10, ['pelvis', 'thighA', 'thighB'], skirt_w)
+def skirt_w(px, py):
+    t = smooth((py - 760) / 330)                                # waist on the pelvis, hem swings with the thighs and trails a little
+    side = cl((px - 360) / 300)
+    return [(0, 1 - t * .6), (1, t * .18 * (1 - side)), (2, t * .18 * side), (3, t * .24)]
+skirt = grid('Liv skirt', 'tq_skirt', box_of('tq_skirt'), 10, 10, ['pelvis', 'thighA', 'thighB', 'skirt'], skirt_w)
+# satchel and strap
+SAT_S = 996 / PARTS['satchel']['ppm']
+sx0, sy0 = BAG_B[0] - PARTS['satchel']['ax'] * SAT_S, BAG_B[1] - PARTS['satchel']['ay'] * SAT_S
+satchel = rigid('Liv satchel', 'satchel', [sx0, sy0, PARTS['satchel']['w'] * SAT_S, PARTS['satchel']['h'] * SAT_S], 'satchel')
+STRAP_A, STRAP_B = (556, 478), (BAG_B[0], BAG_B[1] + 14)
+def strap_mesh():
+    a, b = np.array(STRAP_A, float), np.array(STRAP_B, float); u = (b - a) / np.linalg.norm(b - a); n = np.array([-u[1], u[0]]) * 15
+    pts = [tuple(a + n), tuple(a - n), tuple(b - n), tuple(b + n)]
+    # weights: the top follows the chest, the bottom the satchel; four rows so it bends
+    rows = 6; pts = []; uvs = []; tris = []
+    for r in range(rows + 1):
+        t = r / rows; c = a + (b - a) * t
+        pts += [tuple(c + n), tuple(c - n)]; uvs += [(1, 0), (0, 0)]
+        if r < rows: i = r * 2; tris += [(i, i + 1, i + 3), (i, i + 3, i + 2)]
+    def wts(px, py):
+        t = cl(np.dot(np.array([px, py]) - a, u) / np.linalg.norm(b - a)); t = smooth((t - .55) / .45)
+        return [(0, 1 - t), (1, t)]
+    return mesh('Liv satchel strap', 'tq_strap', pts, uvs, tris, ['spine', 'satchel'], wts)
+strap = strap_mesh()
 
 # legs: a skin tube hip -> knee -> ankle (strip of leg skin stretched along it), then sock and boot on the foot
 def leg_tube(sd):
@@ -239,10 +275,9 @@ def dup_arm(sd):
     return up, fo
 bf_up, bf_fo = dup_arm('B')
 hands_front_B = {p: make_hand('B', p, ' (front)') for p in HAND_POSES}
-order = [head,
-         *[hand_imgs['A'][p] for p in HAND_POSES], arm_imgs['A']['fore'], sleeves['A'], caps['A'], arm_imgs['A']['upper'],
+order = [*[hand_imgs['A'][p] for p in HAND_POSES], arm_imgs['A']['fore'], sleeves['A'], caps['A'], arm_imgs['A']['upper'], *lids, head,   # her near arm is in front of the head when it goes up
          *[hands_front_B[p] for p in HAND_POSES], bf_fo, sleeves['B'], caps['B'], bf_up,
-         torso, skirt,
+         satchel, strap, torso, skirt,
          boots['A'], socks['A'], legs['A'], boots['B'], socks['B'], legs['B'],
          *[hand_imgs['B'][p] for p in HAND_POSES], arm_imgs['B']['fore'], arm_imgs['B']['upper']]
 for im in order:
@@ -251,9 +286,11 @@ for im in order:
 # ---------------------------------------------------------------- view model
 REST = {}
 def rot_of(b): return float(bones[b].get('rotation'))
-defaults = {'pelvisX': pel[0], 'pelvisY': pel[1], 'pose': 0, 'rate': 1.0, 'frontB': 0.0, 'backB': 1.0}
+defaults = {'pelvisX': pel[0], 'pelvisY': pel[1], 'pose': 0, 'rate': 1.0, 'frontB': 0.0, 'backB': 1.0, 'handAFlip': 1.0, 'handBFlip': 1.0, 'gait': 0, 'blink': 0.0, 'speedOut': 0, 'sOut': 0, 'phaseOut': 0,
+            'plA': 1, 'plB': 1, 'cAX': 0, 'cAY': 0, 'cBX': 0, 'cBY': 0}
+for i in range(8): defaults[f'mX{i}'] = 0.0; defaults[f'mY{i}'] = 0.0
 for p in HAND_POSES: defaults['handBF' + p.capitalize()] = 0.0
-for k in ['spine', 'head', 'upperA', 'upperB', 'foreA', 'foreB', 'handA', 'handB']: defaults[k + 'Rot'] = rot_of(k)
+for k in ['spine', 'head', 'upperA', 'upperB', 'foreA', 'foreB', 'handA', 'handB', 'hair', 'skirt', 'satchel']: defaults[k + 'Rot'] = rot_of(k)
 for sd in SIDES:
     defaults[f'hand{sd}X'], defaults[f'hand{sd}Y'] = T[sd]['wrist']
     defaults[f'foot{sd}X'], defaults[f'foot{sd}Y'] = T['ankle' + sd]
@@ -267,7 +304,9 @@ ins = el('ViewModelInstance', vm, name='Default', exports=True, id='0:41')
 for name, value in defaults.items(): el('ViewModelInstanceNumber', ins, viewModelPropertyId=props[name], propertyValue=value)
 def bindp(target, key, name): el('DataBindContext', target, sourcePathIds='0:40-' + props[name], propertyKey=key)
 bindp(bones['pelvis'], 90, 'pelvisX'); bindp(bones['pelvis'], 91, 'pelvisY')
-for k in ['spine', 'head', 'handA', 'handB']: bindp(bones[k], 15, k + 'Rot')
+for k in ['spine', 'head', 'handA', 'handB', 'hair', 'skirt', 'satchel']: bindp(bones[k], 15, k + 'Rot')
+for lid in lids: bindp(lid, 18, 'blink')
+bindp(bones['handA'], 17, 'handAFlip'); bindp(bones['handB'], 17, 'handBFlip')       # a hand turns over (mirrors) so its fingers curl the way gravity wants
 for sd in SIDES:
     bindp(targets['hand' + sd], 13, f'hand{sd}X'); bindp(targets['hand' + sd], 14, f'hand{sd}Y')
     bindp(targets['foot' + sd], 13, f'foot{sd}X'); bindp(targets['foot' + sd], 14, f'foot{sd}Y')
@@ -280,6 +319,15 @@ bindp(bf_up, 18, 'frontB'); bindp(bf_fo, 18, 'frontB')
 bindp(arm_imgs['B']['upper'], 18, 'backB'); bindp(arm_imgs['B']['fore'], 18, 'backB')
 for p in HAND_POSES: pass
 
+# ground markers: small posts on the floor that slide past while she walks (a planted boot stays on its marker)
+markers = []
+for i in range(8):
+    m = el('Shape', char, name=f'ground marker {i}', x=0, y=0)
+    el('Rectangle', m, width=7, height=34, x=0, y=-17)
+    el('Ellipse', m, width=46, height=9, y=1)
+    f = el('Fill', m); el('SolidColor', f, colorValue='FFBFAE92'); markers.append(m)
+    char.remove(m); char.append(m)                               # behind her
+for i, m in enumerate(markers): bindp(m, 13, f'mX{i}'); bindp(m, 14, f'mY{i}')
 # ---------------------------------------------------------------- floor, shadow
 floor = el('Shape', ab, name='Floor line', x=CHAR_X + 512 * SCALE, y=CHAR_Y + 1340 * SCALE); el('Rectangle', floor, width=760, height=2)
 f = el('Fill', floor); el('SolidColor', f, colorValue='FFD9CDBA')
@@ -295,21 +343,30 @@ el('ScriptedLayout', layout, name='Liv pose controller', scriptAssetId='0:80')
 ab.remove(layout); ab.insert(0, layout)
 POSES = ['Rest', 'Wave', 'Reach', 'Cheer', 'Crouch', 'Step', 'Hands', 'Bind']
 el('FontAsset', root, file='Inter.ttf', name='Inter', id='0:30')
-def text(content, x, y, size=18, color='FF4C4038'):
+def text(content, x, y, size=18, color='FF4C4038', at=None):
     t = el('Text', ab, name=content, x=x, y=y)
     st = el('TextStylePaint', t, fontSize=size, fontAssetId='0:30'); f = el('Fill', st); el('SolidColor', f, colorValue=color)
+    el('TextValueRun', t, styleId=st.get('id'), text=content)          # without a run the text is empty
+    ab.remove(t); ab.insert(3 if at is None else at, t)          # above the buttons: the first child is drawn on top
     return t
-text('Liv · three-quarter view · rig test (Rive)', 40, 12, 18)
-text('click a pose', 1105, 84, 14, 'FF8B7460')
+text('Liv · three-quarter view · Rive rig', 40, 12, 18)
+text('Poses', 1088, 82, 14, 'FF8B7460')
+text('Gait', 1088, 586, 14, 'FF8B7460')
 sm = el('StateMachine', ab, name='Liv', id='0:7'); layer = el('StateMachineLayer', sm, name='Body', id='0:8')
-for i, label in enumerate(POSES):
-    x, y = 1130, 120 + i * 62
-    sh = el('Shape', ab, x=x, y=y, name=label + ' button'); el('Rectangle', sh, width=150, height=46, cornerRadiusTL=10, cornerRadiusTR=10, cornerRadiusBL=10, cornerRadiusBR=10)
+BUTTONS = [(n, 'pose', i, 0) for i, n in enumerate(POSES)] + [('Walk', 'gait', 1, 0), ('Run', 'gait', 2, 0), ('Stop', 'gait', 0, None)]
+def button(label, x, y, w, h, actions):
+    sh = el('Shape', ab, x=x, y=y, name=label + ' button'); el('Rectangle', sh, width=w, height=h, cornerRadiusTL=10, cornerRadiusTR=10, cornerRadiusBL=10, cornerRadiusBR=10)
     f = el('Fill', sh); el('SolidColor', f, colorValue='FFE6D8C6'); ab.remove(sh); ab.insert(3, sh)
-    text(label, x - 60, y - 12, 18)
+    text(label, x - (len(label) * 5.2), y - 11, 18, at=3)
     li = el('StateMachineListenerSingle', sm, targetId=sh.get('id'), listenerTypeValue='click', name=label)
-    act = el('ListenerViewModelChange', li); bp = el('BindablePropertyNumber', act, propertyValue=i)
-    el('DataBindContext', bp, sourcePathIds='0:40-' + props['pose'], propertyKey=636, direction=True)
+    for prop, val in actions:
+        act = el('ListenerViewModelChange', li); bp = el('BindablePropertyNumber', act, propertyValue=val)
+        el('DataBindContext', bp, sourcePathIds='0:40-' + props[prop], propertyKey=636, direction=True)
+for i, n in enumerate(POSES):
+    button(n, 1130, 120 + i * 54, 150, 42, [('pose', i), ('gait', 0)])
+button('Walk', 1130, 624, 150, 42, [('gait', 1), ('pose', 0)])
+button('Run', 1130, 678, 150, 42, [('gait', 2), ('pose', 0)])
+button('Stop', 1130, 732, 150, 42, [('gait', 0)])
 entry = el('EntryState', layer, x=0, y=0); el('StateTransition', entry, stateToId='0:12')
 el('AnyState', layer, x=0, y=-150); el('ExitState', layer, x=650, y=-150)
 el('AnimationState', layer, animationId='0:60', id='0:12', x=180, y=0)
@@ -318,98 +375,20 @@ ko = el('KeyedObject', an, objectId=bones['spine'].get('id')); kp = el('KeyedPro
 for fr, v in [(0, 1), (120, 1.004), (240, 1)]: el('KeyFrameDouble', kp, frame=fr, value=v, interpolationType='cubic')
 
 
-# ---------------------------------------------------------------- controller (generated: rest values + pose logic)
-LUAU = """-- Liv three-quarter pose controller (generated by tools/liv/rive/build_tq.py).
--- Sets view-model numbers only: IK targets, spine/head rotation, hand shapes. The native rig does the rest.
--- Poses are targets in view pixels (1024 x 1536 art, 996 px = 1 m); every channel follows its target through a
--- critically damped spring, so a pose change is a motion, not a cut.
-type St = {context: Context, vm: ViewModel?, n: {[string]: Property<number>}, cur: {[string]: number}, vel: {[string]: number}, t: number, last: number}
-local REST: {[string]: number} = {
-@REST@
-}
-local SHAPES = {'Relaxed','Palm','Fist','Point','Thumb','Back'}
--- per pose: channel overrides, and hand shapes (1 relaxed, 2 palm, 3 fist, 4 point, 5 thumb, 6 back of hand)
-local POSES: {{[string]: number}} = {
- {handAX=424,handAY=806,handBX=668,handBY=790},                                         -- 0 Rest: arms hang
- {handAX=262,handAY=330,handBX=582,handBY=818,shapeA=2,spineRot=-.03},               -- 1 Wave
+# ---------------------------------------------------------------- controller (template + generated values)
+POSE_LINES = """ {handAX=424,handAY=806,handBX=668,handBY=790},                                         -- 0 Rest: arms hang
+ {handAX=210,handAY=318,handBX=582,handBY=818,shapeA=2,spineRot=-.03},               -- 1 Wave
  {handAX=170,handAY=600,handBX=790,handBY=650,shapeA=4,spineRot=.04,headRot=.04}, -- 2 Reach
  {handAX=298,handAY=292,handBX=730,handBY=292,shapeA=2,shapeB=2,pelvisY=-16,headRot=-.03}, -- 3 Cheer
- {pelvisY=110,handAX=392,handAY=950,handBX=618,handBY=950,frontB=1,spineRot=.14,headRot=-.1}, -- 4 Crouch
- {footAX=452,footAY=1228,pelvisX=530,handAX=380,handAY=790,handBX=640,handBY=800,frontB=1,spineRot=.05}, -- 5 Step
+ {pelvisY=92,handAX=398,handAY=930,handBX=612,handBY=930,frontB=1,spineRot=.1,headRot=-.07}, -- 4 Crouch
+ {dfootAX=52,dfootAY=-90,handAX=380,handAY=790,handBX=640,handBY=800,frontB=1,spineRot=.05}, -- 5 Step
  {handAX=330,handAY=470,handBX=702,handBY=470,shapeA=3,shapeB=5,frontB=1,spineRot=-.04}, -- 6 Hands
- {},                                                                                   -- 7 Bind: the art as drawn
-}
-local function init(self:St,context:Context):boolean
- self.context=context
- local vm=context:viewModel();if vm==nil then return true end
- self.vm=vm
- for k,v in pairs(REST) do
-  local p=vm:getNumber(k);if p then self.n[k]=p;self.cur[k]=v;self.vel[k]=0 end
- end
- for _,sd in ipairs({'A','B'}) do for _,sh in ipairs(SHAPES) do
-  for _,pre in ipairs({'hand','handF'}) do
-   local k=pre..sd..sh
-   if sd=='A' and pre=='handF' then continue end
-   local p=vm:getNumber(k);if p then self.n[k]=p;self.cur[k]=if sh=='Relaxed' and pre=='hand' then 1 else 0;self.vel[k]=0 end
-  end
- end end
- for _,k in ipairs({'pose','rate','frontB','backB'}) do local p=vm:getNumber(k);if p then self.n[k]=p end end
- return true
-end
-local function advance(self:St,seconds:number):boolean
- if self.vm==nil then init(self,self.context);if self.vm==nil then return true end end
- local dt=math.min(seconds,1/20);self.t+=dt
- local function nv(k:string,d:number):number local p=self.n[k];if p==nil then return d end;return p.value end
- local rate=math.clamp(nv('rate',1),.25,2)
- local pi=math.floor(nv('pose',0)+.5)
- local P:{[string]:number}=POSES[pi+1] or POSES[1]
- local function pq(k:string):number? return (P[k] :: number?) end
- local w=13*rate
- local function track(k:string,target:number,wk:number)
-  local p=self.n[k];if p==nil then return end
-  local c=self.cur[k] or target;local v=self.vel[k] or 0
-  v+=(wk*wk*(target-c)-2*wk*v)*dt;c+=v*dt
-  self.cur[k]=c;self.vel[k]=v;p.value=c
- end
- local breath=math.sin(self.t*2*math.pi/3.8)
- local sway=math.sin(self.t*2*math.pi/6.1)
- for k,rest in pairs(REST) do
-  if k=='pose' or k=='rate' or k=='frontB' or k=='backB' then continue end
-  local o=pq(k)
-  local target=if o~=nil then o else rest
-  -- the pose keys that are offsets (pelvis, rotations) are given absolute for hands/feet and relative for the body
-  if k=='pelvisY' and o~=nil then target=rest+o end
-  if k=='spineRot' or k=='headRot' then target=rest+(if o~=nil then o else 0) end
-  if k=='pelvisY' then target+=1.6*breath end
-  if k=='spineRot' then target+=.004*breath end
-  if k=='headRot' then target+=.012*sway end
-  local wk=w
-  if pi==1 and (k=='handAX' or k=='handAY' or k=='handARot') then
-   local ph=math.sin(self.t*2*math.pi*2.3)
-   if k=='handAX' then target+=16*ph elseif k=='handAY' then target-=4*math.abs(ph) else target+=.34*ph end
-   wk=w*1.6
-  end
-  if string.sub(k,1,4)=='hand' or string.sub(k,1,4)=='foot' then wk=w end
-  track(k,target,wk)
- end
- -- hand shapes: a quick cross-fade
- local sa=pq('shapeA');local sb=pq('shapeB');local fq=pq('frontB')
- local shA=(if sa~=nil then sa else 1)-1;local shB=(if sb~=nil then sb else 1)-1
- local fb=if fq~=nil then fq else 0
- for i,sh in ipairs(SHAPES) do
-  track('handA'..sh,if shA==i-1 then 1 else 0,40)
-  local on=if shB==i-1 then 1 else 0
-  track('handB'..sh,on*(1-fb),40);track('handBF'..sh,on*fb,40)
- end
- track('frontB',fb,30);track('backB',1-fb,30)
- return true
-end
-return function(context:Context):Layout<St>
- return {context=context,vm=nil,n={},cur={},vel={},t=0,last=0,init=init,advance=advance,draw=function(self:St,renderer:Renderer) end}
-end
-"""
+ {},                                                                                   -- 7 Bind: the art as drawn"""
+tmpl = (HERE / 'pose.tmpl.luau').read_text()
 rest_lines = ''.join(f' ["{k}"] = {v:.10g},\n' for k, v in defaults.items())
-(OUTD / 'pose.luau').write_text(LUAU.replace('@REST@', rest_lines.rstrip('\n')))
+luau = (tmpl.replace('@REST@', rest_lines.rstrip('\n')).replace('@POSES@', POSE_LINES).replace('@FOOTW@', f"{FOOT_W['A']:.6f}")
+        .replace('@HOLDAX@', str(T['ankleA'][0])).replace('@HOLDAY@', str(T['ankleA'][1])).replace('@HOLDBX@', str(T['ankleB'][0])).replace('@HOLDBY@', str(T['ankleB'][1])))
+(OUTD / 'pose.luau').write_text(luau)
 
 # Bone names follow the handoff's proposed shared skeleton, so another character's images can be bound to the same names.
 # (A is her right arm and leg, B her left: the pack's near side in the three-quarter view.)
