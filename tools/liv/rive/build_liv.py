@@ -92,6 +92,7 @@ STRAP = np.zeros((8, 30, 4), np.uint8); STRAP[..., :3] = (0xe6, 0x9d, 0x43); STR
 STRAP[:, :3, :3] = (0x3a, 0x1c, 0x0c); STRAP[:, -3:, :3] = (0x3a, 0x1c, 0x0c)
 Image.fromarray(STRAP, 'RGBA').save(OUTD / 'strap.png')
 
+HEAD_DX = {'front': 0, 'tq': 41, 'side': 30, 'tqb': 20, 'back': 0}   # where the head's centre sits relative to the neck, for the hair weights
 CTRL = {}                                                     # per view: constants and rest values for the controller
 SPINE_ID = {}
 
@@ -197,8 +198,8 @@ def emit_view(V):
 
     # ---------------------------------------------------------------- meshes
     def head_w(px, py):
-        dx, dy = (px - (neck[0] + 41)) / 120, (py - 335) / 150
-        w = smooth((math.hypot(dx, dy) - 1.0) / .55) * (1.0 if (px < neck[0] + 56 or py < 230) else .35) * smooth((py - 150) / 90)
+        dx, dy = (px - (neck[0] + HEAD_DX.get(V, 41))) / 120, (py - 335) / 150
+        w = smooth((math.hypot(dx, dy) - 1.0) / .55) * (1.0 if (px < neck[0] + HEAD_DX.get(V, 41) + 15 or py < 230) else .35) * smooth((py - 150) / 90)
         return [(0, 1 - w), (1, w)]
     head = grid('Liv head', A('head'), box_of('head'), 12, 12, ['head', 'hair'], head_w)
     lids = [rigid(f'Liv closed eye {i}', A(f'blink{i}'), box_of(f'blink{i}'), 'head') for i in (0, 1) if has(f'blink{i}')]
@@ -330,7 +331,7 @@ def emit_view(V):
     c = dict(oxg=(ankA[0] + ankB[0]) / 2, oyg=(ankA[1] + ankB[1]) / 2 + 98, pelx=pel[0], pely=pel[1],
              legmax=.975 * (math.dist(T['hipA'], T['kneeA']) + math.dist(T['kneeA'], ankA)), hipdy=T['hipA'][1] - pel[1],
              hipAx=T['hipA'][0] - pel[0], hipBx=T['hipB'][0] - pel[0], lat0=min(.13, max(.08, half / max(abs(math.cos(math.radians(yaw))), .35))),
-             footWA=FOOT_W['A'], footWB=FOOT_W['B'])
+             footWA=FOOT_W['A'], footWB=FOOT_W['B'], ffbias=1.0 if yaw in (0, 180) else 0.0)     # ffbias: seen from the front or back the far arm is in front of the torso at rest
     for sd in 'AB':
         s_ = T[sd]['sh'] if sd in T else T[near]['sh']
         c[f'sh{sd}x'] = s_[0] - pel[0]; c[f'sh{sd}y'] = s_[1] - pel[1]; c[f'sh{sd}x0'] = s_[0]; c[f'sh{sd}y0'] = s_[1]

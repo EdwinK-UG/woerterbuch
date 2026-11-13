@@ -18,7 +18,7 @@ type St = {context: Context, vm: ViewModel?, n: {[string]: Property<number>}, cu
   blinkT: number, blinkI: number, sx: {[string]: number}, sv: {[string]: number}, ready: boolean, prev: {[string]: number}}
 local VIEWS: {View} = {
  {name='tq',yaw=43,aR=true,farB=true,
-  c={oxg=488,oyg=1411.5,pelx=510,pely=912,legmax=380.6052173,hipdy=18,hipAx=-58,hipBx=56,lat0=0.11943523,footWA=0.8523306928,footWB=0.8523306928,shAx=-70,shAy=-374,shAx0=440,shAy0=538,wAx=256.716103,wAy=741.6754982,shBx=55,shBy=-367,shBx0=565,shBy0=545,wBx=762.8976189,wBy=734.5060514},
+  c={oxg=488,oyg=1411.5,pelx=510,pely=912,legmax=380.6052173,hipdy=18,hipAx=-58,hipBx=56,lat0=0.11943523,footWA=0.8523306928,footWB=0.8523306928,ffbias=0,shAx=-70,shAy=-374,shAx0=440,shAy0=538,wAx=256.716103,wAy=741.6754982,shBx=55,shBy=-367,shBx0=565,shBy0=545,wBx=762.8976189,wBy=734.5060514},
   rest={spineRot=-1.584431845,headRot=0.02733329187,hairRot=-3.091547114,skirtRot=1.570796327,skirtLRot=1.844963778,skirtRRot=1.267911458,apron1Rot=1.570796327,apron2Rot=0,satchelRot=1.570796327,handARot=4.440892099e-16,slvA1Rot=0,slvA2Rot=0,handBRot=4.440892099e-16,slvB1Rot=0,slvB2Rot=0}}
 }
 local SHAPES = {'Relaxed','Palm','Fist','Point','Thumb','Back'}
@@ -317,7 +317,7 @@ local function advance(self:St,seconds:number):boolean
   end
   -- the far arm: behind the torso (back) or in front of it (front); hands: shape weight times that
   local farSlot=if vw.farB then 'B' else 'A'
-  local ffv=math.clamp(cur.ff,0,1)
+  local ffv=math.max(math.clamp(cur.ff,0,1),c.ffbias)
   put(pre..'front',ffv);put(pre..'back',1-ffv)
   for _,sd in ipairs({'A','B'}) do
    local isRight=(sd==sideR)

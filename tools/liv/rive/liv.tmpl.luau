@@ -308,7 +308,7 @@ local function advance(self:St,seconds:number):boolean
   end
   -- the far arm: behind the torso (back) or in front of it (front); hands: shape weight times that
   local farSlot=if vw.farB then 'B' else 'A'
-  local ffv=math.clamp(cur.ff,0,1)
+  local ffv=math.max(math.clamp(cur.ff,0,1),c.ffbias)
   put(pre..'front',ffv);put(pre..'back',1-ffv)
   for _,sd in ipairs({'A','B'}) do
    local isRight=(sd==sideR)
