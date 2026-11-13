@@ -1,0 +1,380 @@
+{
+ "A": {
+  "sh": [
+   442.0,
+   534.0
+  ],
+  "elbow": [
+   344.57919970108634,
+   646.7420126571914
+  ],
+  "wrist": [
+   269.8329369207972,
+   734.137642984914
+  ],
+  "dir": [
+   -0.649967502437297,
+   0.7599620028497626
+  ],
+  "half": 29.131543459239655,
+  "axis_offset": 0.7574621278403875,
+  "upper": [
+   316,
+   508,
+   152,
+   169
+  ],
+  "fore": [
+   250,
+   621,
+   121,
+   129
+  ],
+  "_tw": 264.0
+ },
+ "B": {
+  "sh": [
+   534.0,
+   544.0
+  ],
+  "elbow": [
+   635.8070212940522,
+   652.8095004807502
+  ],
+  "wrist": [
+   727.8304346043891,
+   748.8339317611017
+  ],
+  "dir": [
+   0.6919053632356148,
+   0.7219882051154242
+  ],
+  "half": 36.59698046046325,
+  "axis_offset": 1.7824083813786977,
+  "upper": [
+   500,
+   512,
+   173,
+   178
+  ],
+  "fore": [
+   603,
+   620,
+   147,
+   149
+  ],
+  "_tw": 282.0
+ },
+ "pelvis": [
+  500,
+  912
+ ],
+ "hipA": [
+  429.16359855002645,
+  914.4170163821716
+ ],
+ "hipB": [
+  518.4131500780212,
+  926.0657815723871
+ ],
+ "kneeA": [
+  399.0462865075434,
+  1111.1247882554144
+ ],
+ "kneeB": [
+  518.4319465180532,
+  1125.0657806846832
+ ],
+ "ankleA": [
+  392.0,
+  1310.0
+ ],
+ "ankleB": [
+  539.0,
+  1323.0
+ ],
+ "neck": [
+  502,
+  466
+ ],
+ "legA": {
+  "x0": 353,
+  "x1": 457
+ },
+ "legB": {
+  "x0": 474,
+  "x1": 566
+ },
+ "legpiece": {
+  "A": {
+   "thigh": {
+    "rows": 275,
+    "cols": 116,
+    "top_ext": 34,
+    "length": 199.00000000000006
+   },
+   "shin": {
+    "rows": 252,
+    "cols": 120,
+    "top_ext": 41,
+    "length": 209.0000000000004
+   },
+   "hw": 58.0,
+   "_axis_offset": -0.125,
+   "_knee_r": 40.625
+  },
+  "B": {
+   "thigh": {
+    "rows": 277,
+    "cols": 100,
+    "top_ext": 34,
+    "length": 199.00000000000003
+   },
+   "shin": {
+    "rows": 254,
+    "cols": 106,
+    "top_ext": 43,
+    "length": 209.0000000000004
+   },
+   "hw": 50.0,
+   "_axis_offset": 0.0,
+   "_knee_r": 43.0
+  }
+ },
+ "yaw_deg": 137,
+ "facing": "right",
+ "A_is": "L",
+ "far_arm": "A",
+ "rig": {
+  "head_top": [
+   502.0,
+   180.0
+  ],
+  "hair": [
+   [
+    485,
+    200
+   ],
+   [
+    470,
+    440
+   ]
+  ],
+  "skirt_L": [
+   [
+    421.4,
+    770
+   ],
+   [
+    384.6,
+    1089
+   ]
+  ],
+  "skirt": [
+   [
+    494.0,
+    770
+   ],
+   [
+    475.0,
+    1091
+   ]
+  ],
+  "skirt_R": [
+   [
+    566.6,
+    770
+   ],
+   [
+    565.4,
+    1089
+   ]
+  ],
+  "apron": null,
+  "bag": {
+   "a": [
+    470,
+    478
+   ],
+   "b": [
+    592,
+    800
+   ]
+  },
+  "bag_visible": true,
+  "bag_mirror": {
+   "a": [
+    552,
+    478
+   ],
+   "b": [
+    398,
+    792
+   ],
+   "behind": true
+  },
+  "bow1": [
+   [
+    430.0,
+    698.0
+   ],
+   [
+    388.0,
+    746.0
+   ]
+  ],
+  "bow2": [
+   [
+    440.0,
+    696.0
+   ],
+   [
+    436.0,
+    752.0
+   ]
+  ],
+  "bow_knot": [
+   437.0,
+   682.0
+  ]
+ },
+ "boxes": {
+  "bow2": [
+   420,
+   693,
+   34,
+   62
+  ],
+  "bow1": [
+   379,
+   697,
+   50,
+   60
+  ],
+  "torso": [
+   378,
+   452,
+   235,
+   312
+  ],
+  "skirt": [
+   261,
+   732,
+   455,
+   366
+  ],
+  "sleeveA": [
+   354,
+   480,
+   87,
+   137
+  ],
+  "sleeveB": [
+   504,
+   474,
+   143,
+   148
+  ],
+  "sockA": [
+   340,
+   1179,
+   97,
+   70
+  ],
+  "sockB": [
+   471,
+   1187,
+   104,
+   73
+  ],
+  "bootA": [
+   335,
+   1235,
+   141,
+   172
+  ],
+  "bootB": [
+   478,
+   1246,
+   194,
+   177
+  ],
+  "head": [
+   289,
+   113,
+   385,
+   355
+  ]
+ },
+ "parts": [
+  "tqb_bootA",
+  "tqb_bootB",
+  "tqb_head",
+  "tqb_skirt",
+  "tqb_sleeveA",
+  "tqb_sleeveB",
+  "tqb_sockA",
+  "tqb_sockB",
+  "tqb_torso"
+ ],
+ "hand": {
+  "A": {
+   "wrist": [
+    269.8329369207972,
+    734.137642984914
+   ],
+   "dir": [
+    -0.649967502437297,
+    0.7599620028497626
+   ]
+  },
+  "B": {
+   "wrist": [
+    727.8304346043891,
+    748.8339317611017
+   ],
+   "dir": [
+    0.6919053632356148,
+    0.7219882051154242
+   ]
+  }
+ },
+ "far_arm_detail": {
+  "side": "A",
+  "behind_torso": true,
+  "sleeve": "tqb_sleeveA_c holds only the visible sleeve pixels, so it may be drawn in front of the bodice (as build_liv.py does) and still match the picture at rest"
+ },
+ "draw_order_hint": [
+  "upperA",
+  "foreA",
+  "handA",
+  "thighA",
+  "shinA",
+  "sockA_c",
+  "bootA",
+  "thighB",
+  "shinB",
+  "sockB_c",
+  "bootB",
+  "chemise",
+  "slip",
+  "skirtred",
+  "torso_c",
+  "bow1",
+  "bow2",
+  "capA",
+  "sleeveA_c",
+  "head",
+  "upperB",
+  "capB",
+  "sleeveB_c",
+  "foreB",
+  "handB"
+ ],
+ "notes": {
+  "legs": "near leg is B (her right); build_liv.py draws leg A over B. They do not overlap at rest; in a stride B should be in front.",
+  "wrist": "wrist = where the drawn hand starts; A._tw/B._tw are the distances from the shoulder",
+  "bow": "bow1 = left tail (behind), bow2 = right tail (in front); bones from the knot to the tail tips; knot and loops stay on tqb_torso_c"
+ },
+ "_ppm": 996
+}
