@@ -12,7 +12,9 @@
 -- number (0..4); the two views around the current yaw cross-fade, the others are hidden and not computed.
 local Face = require('face')
 local HandPose = require('hand_pose')
+local FACE_CFG_FRONT = require('face_cfg_front')
 local FACE_CFG_TQ = require('face_cfg_tq')
+local FACE_CFG_SIDE = require('face_cfg_side')
 
 type Foot = {u: number, w: number, fu: number, fw: number, planted: boolean, ph: number}
 type View = {name: string, yaw: number, aR: boolean, farB: boolean, c: {[string]: number}, rest: {[string]: number}}
@@ -81,7 +83,7 @@ local function init(self:St,context:Context):boolean
    grab(pre..'hand'..sd..'X');grab(pre..'hand'..sd..'Y');grab(pre..'foot'..sd..'X');grab(pre..'foot'..sd..'Y');grab(pre..'foot'..sd..'Rot')
   end
  end
- self.face=Face.new(vm, {{pre = 'tq_', cfg = FACE_CFG_TQ}}, '')
+ self.face=Face.new(vm, {{pre = 'front_', cfg = FACE_CFG_FRONT}, {pre = 'tq_', cfg = FACE_CFG_TQ}, {pre = 'side_', cfg = FACE_CFG_SIDE}}, '')
  for vi2,vw in ipairs(VIEWS) do                                   -- one painted hand per side (and the far arm's copy in front) per view
   local pre=vw.name..'_'
   for sdi,sd in ipairs({'A','B'}) do
