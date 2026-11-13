@@ -21,15 +21,15 @@
  "stats": {
   "handR": {
    "images": 26,
-   "nodes": 67,
-   "binds": 58,
-   "converters": 42
+   "nodes": 68,
+   "binds": 59,
+   "converters": 40
   },
   "handL": {
    "images": 26,
-   "nodes": 67,
-   "binds": 58,
-   "converters": 42
+   "nodes": 68,
+   "binds": 59,
+   "converters": 40
   }
  }
 }

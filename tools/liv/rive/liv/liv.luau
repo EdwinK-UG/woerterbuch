@@ -399,6 +399,7 @@ local function advance(self:St,seconds:number):boolean
     if h then
      if name=='relaxed' and rw>.05 then HandPose.setBlend(h,'relaxed','fist',math.clamp(rw*.9,0,.9),0,0)       -- running: loose fists
      else HandPose.setShape(h,name,grip) end
+     HandPose.setRoll(h,if name=='thumbsUp' and vw.name=='front' then (if isRight then -1 else 1) else 0)     -- [hands polish] a thumbs-up from the front: the hand rolls so the thumb points up
      HandPose.update(h,dt);HandPose.write(h);wrist=HandPose.wrist(h)
      put(pre..'hand'..key..'PalmSide',smoothTo('palm'..key,Actions.palm(act,if isRight then 'r' else 'l',cs,sn,(if (PALMY[name] or 0)>0 then palmFace else 0.0)),12))   -- [liv-actions] palm from the action
     end

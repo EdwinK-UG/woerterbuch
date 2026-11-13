@@ -125,31 +125,73 @@ def clean_piece(rgb, ink_line):
 
 
 def remove_wrist_line(rgba, inside):
-    """Paint skin over the ink of the flat wrist cut-off (the bottom edge) and cut the alpha just inside it."""
+    """The flat wrist cut-off: the hand must end in plain skin over the forearm, with no ink line and no notch.
+    Every ink pixel of the bottom band between the two side outlines becomes skin (or shade where the shade stripe
+    runs), the picture is cut straight across above the old line, and the last rows fade out in skin colour.
+    Returns the info and a mask of the faded band (its colour must stay skin, not ink)."""
     h, w = inside.shape
     rows = np.nonzero(inside.any(1))[0]; yb = rows.max()
-    ink = color_mask(rgba[..., :3].astype(np.uint8), INK) & (rgba[..., 3] > 0)
-    # the flat bottom: columns whose lowest piece pixel is within 3 px of the lowest row
-    cols = [x for x in range(w) if inside[:, x].any() and np.nonzero(inside[:, x])[0].max() >= yb - 3]
-    x0, x1 = min(cols), max(cols)
-    band = 60
-    side = 26                                              # keep the side outlines
-    sub = ink[yb - band:, x0 + side:x1 - side + 1]
-    reg = rgba[yb - band:, x0 + side:x1 - side + 1]
-    # skin from the row just above the line
-    for x in range(sub.shape[1]):
-        col = np.nonzero(sub[:, x])[0]
-        if len(col) == 0: continue
-        top = col.min()
-        reg[top:, x, :3] = SKIN if not color_mask(reg[max(0, top - 4), x, :3].astype(np.uint8)[None], SHADE)[0] else SHADE
-    # cut off everything below the inner edge of the old line (the picture ends with skin, no ink)
-    ys = [np.nonzero(sub[:, x])[0].min() for x in range(sub.shape[1]) if sub[:, x].any()]
-    cut = yb - band + int(np.median(ys)) - 5
+    rgb = rgba[..., :3].astype(np.uint8)
+    ink = color_mask(rgb, INK)
+    line = 10 + GROW                                          # the (thickened) wrist line
+    cut = yb - line - 6
+    band_top = cut - 70
+    fade_rows = 22
+    keep = np.zeros((h, w), bool)
+    for y in range(band_top, yb + 1):
+        xs = np.nonzero(inside[y])[0]
+        if len(xs) == 0: continue
+        # the side outlines at this height: the ink runs touching the outside on the left and on the right
+        xl, xr = xs.min(), xs.max()
+        l = xl
+        while l < xr and ink[y, l]: l += 1
+        r = xr
+        while r > xl and ink[y, r]: r -= 1
+        for x in range(l, r + 1):
+            if ink[y, x]:
+                up = y
+                while up > band_top - 40 and ink[up, x]: up -= 1
+                rgba[y, x, :3] = SHADE if color_mask(rgba[up, x, :3].astype(np.uint8)[None], SHADE)[0] else SKIN
     rgba[cut:, :, 3] = 0
-    # a short fade at the cut, so the hand blends into the forearm drawn under it
-    for i in range(1, 26):
-        rgba[cut - i, x0 + side - 4:x1 - side + 5, 3] *= min(1.0, (i / 25.0) ** 1.5)
-    return {'wristCut': cut, 'wristX': [int(x0), int(x1)]}
+    for i in range(1, fade_rows + 1):
+        rgba[cut - i, :, 3] *= (i / fade_rows) ** 1.3
+        keep[cut - i, :] = rgba[cut - i, :, 3] > 0
+    return {'wristCut': int(cut)}, keep
+
+
+def shade_piece(rgba, kind, side):
+    """The pack's soft shade (#F0A56E at low strength), painted by formula on the skin of a piece (ink untouched):
+    finger pieces darken toward their left edge (where the sheet's tips already carry a shade stripe) and toward the
+    root; the palm gets a soft band under the knuckles (where the fingers start) and along the outer edge; the thumb
+    toward its root. Strength 0.45 at most: the look stays the sheet's flat colours."""
+    a = rgba[..., 3] >= 254
+    rgb = rgba[..., :3]
+    skin = a & ~color_mask(rgb.astype(np.uint8), INK, 60)
+    if not skin.any(): return
+    h, w = skin.shape
+    din = ndi.distance_transform_edt(skin)                     # distance to the outline (inside the skin)
+    wgt = np.zeros((h, w))
+    ys, xs = np.nonzero(skin)
+    if kind in ('base', 'tip'):
+        x0 = np.array([np.nonzero(skin[y])[0].min() if skin[y].any() else 0 for y in range(h)])
+        x1 = np.array([np.nonzero(skin[y])[0].max() if skin[y].any() else w for y in range(h)])
+        u = (np.arange(w)[None, :] - x0[:, None]) / np.maximum(1, (x1 - x0)[:, None])
+        wgt += .42 * np.clip(1 - u / .34, 0, 1) ** 1.6                # left side: the gap to the next finger
+        wgt += .16 * np.clip(1 - (1 - u) / .14, 0, 1)                 # a thin rim on the right
+        if kind == 'base':
+            v = np.arange(h)[:, None] / h                              # 1 at the root end (bottom)
+            wgt += .30 * np.clip((v - .72) / .28, 0, 1) ** 1.5         # where the finger goes under the knuckles
+    elif kind == 'palm':
+        top = np.array([np.nonzero(skin[:, x])[0].min() if skin[:, x].any() else h for x in range(w)])
+        dy = np.arange(h)[:, None] - top[None, :]
+        wgt += .28 * np.exp(-(dy - 55) ** 2 / (2 * 38.0 ** 2))       # under the knuckles: the fingers' roots
+        wgt += .30 * np.clip(1 - din / 70.0, 0, 1) ** 1.4             # rounding toward the outline
+    elif kind == 'thumb':
+        wgt += .32 * np.clip(1 - din / 60.0, 0, 1) ** 1.3
+    wgt = ndi.gaussian_filter(wgt, 6) * skin
+    wgt = np.clip(wgt, 0, .45)
+    for c in range(3):
+        rgb[..., c] = np.where(skin, rgb[..., c] * (1 - wgt) + SHADE[c] * wgt, rgb[..., c])
 
 
 def remove_nail(rgba, inside, line):
@@ -211,10 +253,12 @@ def main():
             crop[~ndi.binary_dilation(mine, iterations=3)] = 255
             rgba, grown, inside = clean_piece(crop, 10)
             info = {}
+            wrist_keep = None
             if name == 'palm':
-                info.update(remove_wrist_line(rgba, grown))
+                wi, wrist_keep = remove_wrist_line(rgba, grown); info.update(wi)
             if side == 'palm' and name.endswith('_tip'):
                 info['nailPixels'] = remove_nail(rgba, grown, GROW + 11)
+            shade_piece(rgba, 'palm' if name == 'palm' else ('thumb' if name.startswith('thumb') else name.split('_')[1]), side)
             if side == 'palm' and name.startswith('thumb'):
                 rgba = rgba[:, ::-1].copy(); grown = grown[:, ::-1].copy()
                 info['mirrored'] = True
@@ -222,10 +266,13 @@ def main():
             a = rgba[..., 3] > 0
             ys, xs = np.nonzero(a); ty0, ty1, tx0, tx1 = ys.min(), ys.max() + 1, xs.min(), xs.max() + 1
             rgba = rgba[ty0:ty1, tx0:tx1]; grown = grown[ty0:ty1, tx0:tx1]
+            if wrist_keep is not None: wrist_keep = np.pad(wrist_keep[ty0:ty1, tx0:tx1], PADN)
             # a transparent margin (so no edge pixel sits on the texture border) and ink colour under the soft edge
             # (so bilinear sampling never pulls in the white of the sheet)
             rgba = np.pad(rgba, ((PADN, PADN), (PADN, PADN), (0, 0))); grown = np.pad(grown, PADN)
-            rgba[rgba[..., 3] < 255, :3] = INK
+            soft = rgba[..., 3] < 255
+            if wrist_keep is not None: soft &= ~wrist_keep                 # the faded wrist stays skin coloured
+            rgba[soft, :3] = INK
             tx0 -= PADN; ty0 -= PADN
             img = Image.fromarray(np.clip(rgba, 0, 255).astype(np.uint8), 'RGBA')
             img.save(OUT / 'native' / f'{side}_{name}.png')

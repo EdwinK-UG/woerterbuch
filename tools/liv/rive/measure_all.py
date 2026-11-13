@@ -17,6 +17,7 @@ secs = 2
 if '--secs' in sys.argv: secs = float(sys.argv[sys.argv.index('--secs') + 1])
 runs = [('walk', 'data gait=1', 3.5, 1.0), ('run', 'data gait=2', 5.0, 1.0)]
 if '--slow' in sys.argv: runs.append(('slow', 'data gait=2', 5.0, 0.25))
+if '--only' in sys.argv: runs = [r for r in runs if r[0] == sys.argv[sys.argv.index('--only') + 1]] or runs
 for V in args:
     c = DEF['ctrl'][V]; yaw = c['yaw']; footw = c['c']['footWA']; vi = VIEWS.index(V)
     for name, gait, warm, rate in runs:

@@ -22,7 +22,7 @@ if '--yaw' in args: i = args.index('--yaw'); YAW = float(args[i + 1]); del args[
 if '--prefix' in args: i = args.index('--prefix'); prefix = args[i + 1]; del args[i:i + 2]
 D, OUT = Path(args[0]), args[1]
 SCALE, CX, CY = .62, 40, 36
-FX = math.sin(math.radians(YAW)); PPM = 996
+FX = math.sin(math.radians(YAW)); FZ = math.cos(math.radians(YAW)); KD = .07; PPM = 996
 
 def vals(p):
     out = {}
@@ -45,7 +45,8 @@ for a, b in zip(V, V[1:]):
     for f in 'AB':
         if a['pl' + f] > .5 and b['pl' + f] > .5:
             da = (b['c%sX' % f] + b['sOut'] * FX * PPM) - (a['c%sX' % f] + a['sOut'] * FX * PPM)
-            slide[f] = max(slide[f], abs(da)); pairs[f] += 1
+            dy_ = (b['c%sY' % f] + b['sOut'] * FZ * KD * PPM) - (a['c%sY' % f] + a['sOut'] * FZ * KD * PPM)
+            slide[f] = max(slide[f], math.hypot(da, dy_)); pairs[f] += 1
 res['plantedPairs'] = pairs; res['maxControllerSlideViewPx'] = {k: round(v, 4) for k, v in slide.items()}
 # --- pixel slide: the sole of each boot while its foot is flat on the ground
 def boot_bottom(img, x, y):
@@ -67,14 +68,14 @@ for i, p in enumerate(files):
         near_other = abs(v['foot%sX' % f] - v['foot%sX' % other]) < 125       # the other boot is in the window: not measurable
         r = boot_bottom(im, v['foot%sX' % f], v['foot%sY' % f]) if (flat and not near_other) else None
         if r is not None:
-            wx = r[0] + v['sOut'] * FX * PPM * SCALE
-            if f in prev and prev[f][0] == i - 1: pix[f].append(abs(wx - prev[f][1]))
+            wx = r[0] + v['sOut'] * FX * PPM * SCALE; wy = r[1] + v['sOut'] * FZ * KD * PPM * SCALE      # the sole in the world: x and y (she runs toward the camera in front views)
+            if f in prev and prev[f][0] == i - 1: pix[f].append(math.hypot(wx - prev[f][1], wy - prev[f][2]))
             else:
-                if len(cur[f]) > 3: runs[f].append(max(cur[f]) - min(cur[f]))
+                if len(cur[f]) > 3: runs[f].append(math.hypot(max(c_[0] for c_ in cur[f]) - min(c_[0] for c_ in cur[f]), max(c_[1] for c_ in cur[f]) - min(c_[1] for c_ in cur[f])))
                 cur[f] = []
-            cur[f].append(wx); prev[f] = (i, wx)
+            cur[f].append((wx, wy)); prev[f] = (i, wx, wy)
 for f in 'AB':
-    if len(cur[f]) > 3: runs[f].append(max(cur[f]) - min(cur[f]))
+    if len(cur[f]) > 3: runs[f].append(math.hypot(max(c_[0] for c_ in cur[f]) - min(c_[0] for c_ in cur[f]), max(c_[1] for c_ in cur[f]) - min(c_[1] for c_ in cur[f])))
 res['maxFlatStanceDriftStagePx'] = {k: round(max(v), 2) if v else None for k, v in runs.items()}   # world drift of the sole over one whole flat stance
 res['pixelPairs'] = {k: len(v) for k, v in pix.items()}
 res['maxPixelSlideStagePx'] = {k: round(max(v), 2) if v else None for k, v in pix.items()}

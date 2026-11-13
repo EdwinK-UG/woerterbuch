@@ -47,13 +47,14 @@ ART_S = .09            # sheet px -> view px (a whole hand, wrist to middle tip,
 FIN_SX, FIN_SY = P['_meta']['fingerScaleX'], P['_meta']['fingerScaleY'] # finger pieces: narrower than drawn (the sheet's fingers are too wide for its palm)
 THUMB_S = .70           # thumb pieces (the sheet's thumb base is a cupcake)
 ROOT_DEPTH = P['_meta']['rootDepth']  # the base piece's root END sits this many (scaled) finger widths below the knuckle bump's top
-ROOT_FADE = (.42, .60)  # palm side: the root patch fades out between these curls (the finger then folds over the palm)
+ROOT_FADE = (.58, .80)  # palm side: the root patch fades out between these curls (the finger then folds over the palm)
 TIP_ENDON = (.20, .25)   # palm side: tips fade out when seen this end-on (|foreshortening| below)
-BASE_ENDON = (.03, .12)
+BASE_ENDON = (.12, .20)
 CLIP_BELOW = 200.0      # native px below the lowest knuckle top: fingers are clipped there on the back view
 TIP_HIDE = 70.0         # native px: a tip seen end-on slides this far INSIDE the base (no double edge)
 JOINT_OVERLAP = 34.0    # native px: the tip's root end tucks this far under the base's end (one knuckle line, no notch)
-TILT = math.radians(16)  # the camera looks a little along the fingers: a finger at 74 deg is seen end-on
+TILT = math.radians(16)  # back of the hand: the camera looks a little along the fingers (a finger at 74 deg is end-on)
+TILT_P = math.radians(-20)  # palm side: seen a little from the fingertips' side, so a half-curled finger stays long
 BASE_MAX = 118.0        # degrees at curl 1: MCP + PIP together (the base piece is the proximal + middle phalanx)
 TIP_MAX = 128.0         # DIP on top of that, growing with curl^2 (it lags at small curls); 246 in a fist
 T_TIP_MAX = 95.0        # thumb IP
@@ -66,14 +67,15 @@ REST = {'index': -.03, 'middle': 0.0, 'ring': .02, 'pinky': .05}
 CONVERGE = {'index': .10, 'middle': .02, 'ring': -.05, 'pinky': -.12}   # radians at curl 1 (fingers close up in a fist)
 
 BASE_DEFAULTS = {'thumbCurl': .2, 'thumbOpp': 0.0, 'indexCurl': .22, 'middleCurl': .28, 'ringCurl': .33,
-                 'pinkyCurl': .38, 'spread': .15, 'flip': 1.0, 'palmSide': 0.0}
+                 'pinkyCurl': .38, 'spread': .15, 'flip': 1.0, 'palmSide': 0.0, 'roll': 0.0}
 NAMES = list(BASE_DEFAULTS)
 _CONV = {}
 
 
-def _s(c, deg, deg2=0.0):
+def _s(c, deg, deg2=0.0, tilt=None):
     """Foreshortening of a piece at curl c: its angle is deg * c + deg2 * c^2 (deg2: the end joint lags at small curls)."""
-    return math.cos(math.radians(deg) * c + math.radians(deg2) * c * c + TILT) / math.cos(TILT)
+    t = TILT if tilt is None else tilt
+    return math.cos(math.radians(deg) * c + math.radians(deg2) * c * c + t) / math.cos(t)
 
 
 OPS = {'+': 0, '-': 1, '*': 2, '/': 3}
@@ -96,18 +98,22 @@ def _tokens(el, conv, e):
     el('FormulaTokenParenthesisClose', conv)
 
 
-def _ex_s(deg, mul=1.0, deg2=0.0):
+def _ex_s(deg, mul=1.0, deg2=0.0, tilt=None):
+    t = TILT if tilt is None else tilt
     a = ('*', ('in',), math.radians(deg))
     if deg2: a = ('+', a, ('*', ('*', ('in',), ('in',)), math.radians(deg2)))
-    return ('*', ('cos', ('+', a, TILT)), mul / math.cos(TILT))
+    return ('*', ('cos', ('+', a, t)), mul / math.cos(t))
 
 
 def _ex_slide(deg, L, deg2=0.0):
-    """Back of the hand: how far a piece slides back under the piece in front of it, L * (1 - max(s, 0))."""
-    return ('*', L, ('-', 1.0, ('max', _ex_s(deg, 1.0, deg2), 0.0)))
+    """Back of the hand: how far a piece slides back under the piece in front of it, L * (1 - max(s, 0))^2. Squared:
+    a slightly curled finger (relaxed, carry) stays almost whole and visible over the knuckles; only a strongly
+    curled one (fist) goes behind the back of the hand."""
+    u = ('-', 1.0, ('max', _ex_s(deg, 1.0, deg2), 0.0))
+    return ('*', L, ('*', u, u))
 
 
-def _slide(c, deg, L, deg2=0.0): return L * (1 - max(_s(c, deg, deg2), 0))
+def _slide(c, deg, L, deg2=0.0): return L * (1 - max(_s(c, deg, deg2), 0)) ** 2
 
 
 def _tip_len(f):
@@ -125,6 +131,62 @@ def _ex_endon(ex, a, b):
 
 
 def _endon(sv, a, b): return min(1.0, max(0.0, (abs(sv) - a) / (b - a)))
+
+
+def _roll_swap_ex(r):
+    """0 while |roll| < 0.45, 1 past 0.55 (the other side of the hand shows)."""
+    ab = ('max', r, ('*', -1.0, r))
+    return ('min', 1.0, ('max', 0.0, ('/', ('-', ab, .45), .1)))
+
+
+def _ex_roll_width():
+    """max(0.08, |cos(pi * roll)|), input = roll."""
+    c = ('cos', ('*', ('in',), math.pi))
+    return ('max', .08, ('max', c, ('*', -1.0, c)))
+
+
+def _roll_width(r): return max(.08, abs(math.cos(math.pi * r)))
+
+
+def _ex_side_op(hs):
+    """Opacity of one side set from palmSide (input) and roll (a bound token): the effective palm side is
+    p + w - 2 p w with w the roll swap, then the 0.4..0.6 cross-fade."""
+    w = _roll_swap_ex(('var',))
+    pe = ('-', ('+', ('in',), w), ('*', 2.0, ('*', ('in',), w)))
+    x = ('/', ('-', .6, pe), .2) if hs == 'back' else ('/', ('-', pe, .4), .2)
+    return ('min', 1.0, ('max', 0.0, x))
+
+
+def _side_op(hs, p, r):
+    w = min(1.0, max(0.0, (abs(r) - .45) / .1)); pe = p + w - 2 * p * w
+    return min(1, max(0, (.6 - pe) / .2)) if hs == 'back' else min(1, max(0, (pe - .4) / .2))
+
+
+def _per_hand(el, root, name, ex, var_name, bind_raw):
+    """A formula converter of one hand; ('var',) tokens read the view-model number var_name."""
+    conv = el('DataConverterFormula', root, name=name)
+
+    def emit(e):
+        if isinstance(e, tuple) and e and e[0] == 'var':
+            t = el('FormulaTokenValue', conv, operationValue=0); bind_raw(t, 777, var_name, None); return True
+        return False
+    _tokens_v(el, conv, ex, emit)
+    return conv.get('id')
+
+
+def _tokens_v(el, conv, e, hook):
+    if hook(e): return
+    if isinstance(e, (int, float)) or e[0] == 'in':
+        _tokens(el, conv, e); return
+    if e[0] in OPS:
+        el('FormulaTokenParenthesisOpen', conv); _tokens_v(el, conv, e[1], hook)
+        el('FormulaTokenOperation', conv, operationType=OPS[e[0]]); _tokens_v(el, conv, e[2], hook)
+        el('FormulaTokenParenthesisClose', conv); return
+    el('FormulaTokenFunction', conv, functionType=FUN[e[0]])
+    for i, a in enumerate(e[1:]):
+        if i: el('FormulaTokenArgumentSeparator', conv)
+        _tokens_v(el, conv, a, hook)
+    el('FormulaTokenParenthesisClose', conv)
 
 
 def _thumb_angle(o):
@@ -155,16 +217,17 @@ def _converters(el, root):
         kw = {'clampLower': True, 'clampUpper': True} if clamp else {}
         C[name] = el('DataConverterRangeMapper', root, name=name, minInput=a, maxInput=b, minOutput=c, maxOutput=d, **kw).get('id')
 
-    formula('hand base fold', _ex_s(BASE_MAX))
-    formula('hand tip fold', _ex_s(BASE_MAX, 1.0, TIP_MAX))
-    formula('hand thumb tip fold', _ex_s(T_TIP_MAX))
+    # palm side (its own tilt): foreshortened pieces
+    formula('hand base fold', _ex_s(BASE_MAX, tilt=TILT_P))
+    formula('hand tip fold', _ex_s(BASE_MAX, 1.0, TIP_MAX, TILT_P))
+    formula('hand thumb tip fold', _ex_s(T_TIP_MAX, tilt=TILT_P))
     # palm side: a piece seen nearly end-on would be a smeared sliver; it fades out over the last bit instead
-    formula('hand tip end-on', _ex_endon(_ex_s(BASE_MAX, 1.0, TIP_MAX), *TIP_ENDON))
-    formula('hand base end-on', _ex_endon(_ex_s(BASE_MAX), *BASE_ENDON))
-    formula('hand thumb tip end-on', _ex_endon(_ex_s(T_TIP_MAX), *TIP_ENDON))
+    formula('hand tip end-on', _ex_endon(_ex_s(BASE_MAX, 1.0, TIP_MAX, TILT_P), *TIP_ENDON))
+    formula('hand base end-on', _ex_endon(_ex_s(BASE_MAX, tilt=TILT_P), *BASE_ENDON))
+    formula('hand thumb tip end-on', _ex_endon(_ex_s(T_TIP_MAX, tilt=TILT_P), *TIP_ENDON))
     formula('hand thumb slide tip', _ex_slide(T_TIP_MAX, _thumb_tip_len()))
     for f in FINGERS:
-        formula(f'hand {f} tip joint', _ex_s(BASE_MAX, -_base_len(f)))
+        formula(f'hand {f} tip joint', _ex_s(BASE_MAX, -_base_len(f), tilt=TILT_P))
         formula(f'hand {f} slide base', _ex_slide(BASE_MAX, _base_len(f)))
         formula(f'hand {f} slide tip', _ex_slide(BASE_MAX, _tip_len(f) + TIP_HIDE, TIP_MAX))
         for side, sg in (('back', 1), ('palm', -1)):
@@ -176,8 +239,6 @@ def _converters(el, root):
                                                                ('*', a1 - a0, ('min', ('in',), 0.0))))))
         mapper(f'hand thumb mcp {side}', 0, 1, 0, sg * T_MCP)
     mapper('hand root patch', ROOT_FADE[0], ROOT_FADE[1], 1, 0, clamp=True)
-    mapper('hand back opacity', .4, .6, 1, 0, clamp=True)
-    mapper('hand palm opacity', .4, .6, 0, 1, clamp=True)
     _CONV[key] = C
     return C
 
@@ -210,13 +271,19 @@ def emit_hand(el, parent, side, scale, props, pre=''):
 
     hand = node(parent, 'hand', x=-WRIST_BACK, scaleX=scale, scaleY=scale)       # the stump overlaps the forearm's end (no gap at the wrist)
     mirror = node(hand, 'mirror', scaleY=base['flip']); bind(mirror, 17, 'flip')
-    art = node(mirror, 'art', rotation=math.pi / 2, scaleX=ART_S, scaleY=ART_S)    # sheet up -> along the hand bone
+    # roll: the hand turns about its own axis. Its width follows |cos(pi * roll)| (edge-on at +-0.5), and past
+    # |roll| 0.5 the other side of the hand (palm <-> back) is shown, which also puts the thumb on the other side.
+    rollw = node(mirror, 'roll', scaleY=round(_roll_width(base['roll']), 4))
+    bind(rollw, 17, 'roll', _per_hand(el, root, f'{pre}{prefix} roll width', _ex_roll_width(), None, None))
+    art = node(rollw, 'art', rotation=math.pi / 2, scaleX=ART_S, scaleY=ART_S)    # sheet up -> along the hand bone
 
     p = base['palmSide']
     for hs in ('back', 'palm'):
         sg = 1 if hs == 'back' else -1
         op = (min(1, max(0, (.6 - p) / .2)) if hs == 'back' else min(1, max(0, (p - .4) / .2)))
-        S = node(art, f'{hs} side', opacity=op); bind(S, 18, 'palmSide', C[f'hand {hs} opacity'])
+        op = _side_op(hs, p, base['roll'])
+        S = node(art, f'{hs} side', opacity=op)
+        bind(S, 18, 'palmSide', _per_hand(el, root, f'{pre}{prefix} {hs} opacity', _ex_side_op(hs), vm['roll'], bind_raw))
         pm = P[f'{hs}_palm']; wx, wy = pm['wrist']
         fingers = node(S, f'{hs} fingers')
         groups = {'thumb': node(S, f'{hs} thumb')}
@@ -247,7 +314,7 @@ def emit_hand(el, parent, side, scale, props, pre=''):
             bind(r, 15, 'spread', C[f'hand {f} fan {hs}'])
             cv = node(r, f'{hs} {f} converge', rotation=sg * CONVERGE[f] * c0)
             bind(cv, 15, f + 'Curl', C[f'hand {f} converge {hs}'])
-            s1, s2 = _s(c0, BASE_MAX), _s(c0, BASE_MAX, TIP_MAX)
+            s1, s2 = _s(c0, BASE_MAX, tilt=TILT_P), _s(c0, BASE_MAX, TIP_MAX, TILT_P)
             if hs == 'back':
                 # back of the hand: a curling finger turns away; each piece slides back under the one in front of it
                 # (the palm hides the base, the base hides the tip), so ends stay round and lines stay even
@@ -297,7 +364,7 @@ def emit_hand(el, parent, side, scale, props, pre=''):
             ts = node(tj, f'{hs} thumb tip', y=round(_slide(tc0, T_TIP_MAX, _thumb_tip_len()), 3))
             bind(ts, 14, 'thumbCurl', C['hand thumb slide tip'])
         else:
-            st = _s(tc0, T_TIP_MAX)
+            st = _s(tc0, T_TIP_MAX, tilt=TILT_P)
             ts = node(tj, f'{hs} thumb tip', scaleY=st, opacity=round(_endon(st, *TIP_ENDON), 4))
             bind(ts, 17, 'thumbCurl', C['hand thumb tip fold']); bind(ts, 18, 'thumbCurl', C['hand thumb tip end-on'])
         tr = node(ts, f'{hs} thumb tip unturn', rotation=round(-ax, 5))

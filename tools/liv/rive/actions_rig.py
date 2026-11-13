@@ -122,7 +122,7 @@ def view(ctx):
     mounts = [ctx['hand_mounts'][rs]] + ([ctx['far_hand_front']] if rs == ctx['far'] and ctx['far_hand_front'] is not None else [])
     for i, m in enumerate(mounts):
         # grip point: in the mount's frame x runs from the wrist along the hand, the palm side is -y for the right hand
-        a = apple(el, m, f'Liv {V} apple in hand {i}', x=54, y=-24, r=26)
+        a = apple(el, m, f'Liv {V} apple in hand {i}', x=84, y=6, r=26)       # [hands polish] where the fingers lie over it
         bindp(a, 18, 'propApple')
         s = saw_handle(el, m, f'Liv {V} saw handle {i}', x=50, y=-6)
         bindp(s, 18, 'propSaw')
