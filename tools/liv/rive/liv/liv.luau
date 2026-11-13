@@ -213,6 +213,7 @@ local function advance(self:St,seconds:number):boolean
   local c=vw.c
   local th=math.rad(vw.yaw);local cs=math.cos(th);local sn=math.sin(th)
   local OXG=c.oxg;local OYG=c.oyg
+  local liftK=lerp(.45,1,smooth(sn/.6))                  -- a lifted foot in front or back view: the leg shortens instead of the foot rising high
   local sideR=if vw.aR then 'A' else 'B'                       -- the image slot of her right limbs
   -- ankle on screen, with the heel / ball rocker of a planted foot and the lift of a swinging one
   local function ankle(F:Foot,ph:number):(number,number,number)
@@ -231,7 +232,7 @@ local function advance(self:St,seconds:number):boolean
     local sp=math.clamp((ph-sg)/(1-sg),0,1)
     local p0=lerp(-.62,-.8,rw)
     pitch=if sp<.5 then lerp(p0,.05,smooth(sp/.5)) else lerp(.05,lerp(.26,.06,rw),smooth((sp-.5)/.5))
-    dup=Hs*smooth(v/.25)*(math.sin(math.pi*sp^.85))^2
+    dup=Hs*liftK*smooth(v/.25)*(math.sin(math.pi*sp^.85))^2
    end
    local du=F.u-self.s
    local X=OXG+(du*sn+F.w*cs+dfwd*sn)*PPM
@@ -312,15 +313,16 @@ local function advance(self:St,seconds:number):boolean
   end
   local waveRot=if pi==1 then .42*math.sin(self.t*2*math.pi*2.3) else 0.0
   -- seen from the front or back a lifted leg gets shorter (its knee goes toward the camera) instead of bending sideways:
-  -- the thigh bone is scaled along its length (the shin and foot inherit it, the boot gets the inverse)
+  -- the thigh bone is scaled along its length (the shin and foot inherit it: a boot squashed by up to 20 %, a swing foot that rises
+  -- less than in profile, so the rest of the shortening is within what the knee can absorb)
   local fz=smooth((cs*cs-.55)/.45)
   local Lleg=c.legmax/.975
   for _,sd in ipairs({'A','B'}) do
    local hx=pelX+(if sd=='A' then c.hipAx else c.hipBx);local hy=pelY+c.hipdy
    local fx=if sd=='A' then fA_x else fB_x;local fy=if sd=='A' then fA_y else fB_y
    local d=math.sqrt((fx-hx)*(fx-hx)+(fy-hy)*(fy-hy))
-   local kk=lerp(1,math.clamp(d/Lleg,.5,1),fz)
-   put(pre..'leg'..sd..'Scale',kk);put(pre..'leg'..sd..'ScaleInv',1/kk)
+   local kk=lerp(1,math.clamp(d/Lleg,.8,1),fz)
+   put(pre..'leg'..sd..'Scale',kk)
   end
   -- a hand turns over so its fingers curl down: the drawn hand curls to one side of the arm only
   local function smoothTo(k:string,target:number,wn:number):number

@@ -224,9 +224,10 @@ def emit_view(V):
             if k <= 1: return [(3, 1 - k), (1, k)]
             if k <= 2: return [(1, 2 - k), (2, k - 1)]
             return [(2, 3 - k), (0, k - 2)]
-        return grid(f'Liv sleeve {sd}', A(f'sleeve{sd}_c') or A(f'sleeve{sd}_x') or A(f'sleeve{sd}'), box_of(f'sleeve{sd}'), 10, 10, [f'upper{sd}', f'slv{sd}1', f'slv{sd}2', 'spine'], wts)
-    sleeves = {sd: sleeve(sd) for sd in SIDES if (has(f'sleeve{sd}_c') or has(f'sleeve{sd}_x') or has(f'sleeve{sd}'))}
-    caps = {sd: rigid(f'Liv shoulder cap {sd}', A(f'cap{sd}') or A(f'cap{sd}_x'), box_of(f'sleeve{sd}'), 'spine') for sd in sleeves if (has(f'cap{sd}') or has(f'cap{sd}_x'))}
+        full = A(f'sleeve{sd}_f')                                   # a completed far sleeve (fix_sleeves.py), with its own box
+        return grid(f'Liv sleeve {sd}', full or A(f'sleeve{sd}_c') or A(f'sleeve{sd}_x') or A(f'sleeve{sd}'), T['boxes'][f'sleeve{sd}_f'] if full else box_of(f'sleeve{sd}'), 10, 10, [f'upper{sd}', f'slv{sd}1', f'slv{sd}2', 'spine'], wts)
+    sleeves = {sd: sleeve(sd) for sd in SIDES if (has(f'sleeve{sd}_f') or has(f'sleeve{sd}_c') or has(f'sleeve{sd}_x') or has(f'sleeve{sd}'))}
+    caps = {sd: rigid(f'Liv shoulder cap {sd}', A(f'cap{sd}_f') or A(f'cap{sd}') or A(f'cap{sd}_x'), T['boxes'][f'sleeve{sd}_f'] if has(f'cap{sd}_f') else box_of(f'sleeve{sd}'), 'spine') for sd in sleeves if (has(f'cap{sd}_f') or has(f'cap{sd}') or has(f'cap{sd}_x'))}
     arm_up = {sd: rigid(f'Liv upper arm {sd}', A(f'upper{sd}'), T[sd]['upper'], f'upper{sd}') for sd in SIDES}
     arm_fo = {sd: rigid(f'Liv forearm {sd}', A(f'fore{sd}'), T[sd]['fore'], f'fore{sd}') for sd in SIDES}
 
@@ -331,8 +332,7 @@ def emit_view(V):
         vprop(f'foot{sd}X', T['ankle' + sd][0]); vprop(f'foot{sd}Y', T['ankle' + sd][1]); vprop(f'foot{sd}Rot', FOOT_W[sd])
         vbind(targets['foot' + sd], 13, f'foot{sd}X'); vbind(targets['foot' + sd], 14, f'foot{sd}Y'); vbind(targets['foot' + sd], 15, f'foot{sd}Rot')
     for sd in 'AB':                                              # leg foreshortening (seen from the front or back a lifted leg gets shorter, its knee goes toward the camera)
-        vprop(f'leg{sd}Scale', 1.0); vprop(f'leg{sd}ScaleInv', 1.0)     # the shin and foot inherit the thigh's scale; the boot gets the inverse so it keeps its shape
-        vbind(bones[f'thigh{sd}'], 16, f'leg{sd}Scale'); vbind(bones[f'foot{sd}'], 16, f'leg{sd}ScaleInv')
+        vprop(f'leg{sd}Scale', 1.0); vbind(bones[f'thigh{sd}'], 16, f'leg{sd}Scale')     # the shin and foot inherit the thigh's scale
     if far in SIDES:
         for p in HAND_POSES: vprop(f'hand{far}F{p.capitalize()}', 0.0); vbind(far_hand_front[p], 18, f'hand{far}F{p.capitalize()}')
         vprop('front', 0.0); vprop('back', 1.0)
