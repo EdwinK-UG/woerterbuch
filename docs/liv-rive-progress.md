@@ -43,6 +43,7 @@ cd tools/liv/rive/liv && rive . --verify && rive .       # live window: poses, g
 | `rive . --verify` (all five views, 378 view-model numbers) | 0 errors, 0 warnings |
 | Cut art assembled at the bind pose vs the pack's pictures (front, back, side, three-quarter back) | under 1 % of pixels differ outside the re-toned cloth |
 | Poses, walk, run rendered in the three-quarter, front, back, side, three-quarter-back views | looked at, see weak spots |
+| Foot sliding, all five views, walking and running (`measure_all.py`) | controller: planted contact points fixed to under 0.001 view px in every run. Rendered sole: at most about 1 px between frames walking in all views (three-quarter back 4 px once), and at most 1.2 px running in the side and three-quarter views. Front and back running read 30 to 45 px: the planted foot's screen y moves with the ground by design (she runs toward or away from the camera) and the sole tracker is x-only and unreliable there; the contact sheets of the front run show the feet staying on the ground markers. Not re-measured at quarter speed after the multi-view rewrite. |
 | Foot sliding, three-quarter walk | see above |
 | Turn between views | cross-fades (looked at one front to three-quarter turn) |
 
@@ -52,10 +53,11 @@ cd tools/liv/rive/liv && rive . --verify && rive .       # live window: poses, g
   view needs a profile mouth drawn in code).
 - Only seven test poses (Rest, Wave, Reach, Cheer, Crouch, Step, Hands, Bind), not the handoff's 26 actions; no gripping yet.
 - The cross-fade between views is a dissolve with a small squash, not a drawn turn.
-- Foot sliding was measured in the three-quarter view only; the other views use the same model but were not measured; run and
-  0.25x playback were not re-measured after the multi-view rewrite.
+- Quarter-speed playback (`measure_all.py --slow`) was not re-measured after the multi-view rewrite. The front and back pixel
+  numbers need a tracker that follows the sole in y as well.
 - Side view: the legs are drawn spread about 150 px at the hips (the pack's stride); the pack's side torso part is wrong at the
   waist, so the cut uses the picture's pixels.
 - Park and Werkstatt scenes in Rive, the state machine the web app drives, phone and Safari testing: not started. The canvas
   versions are untouched and remain the fallback.
-- Crouch is stiff; the pack's neck at the top of the back torso has hair-coloured paint (hidden by the head).
+- Far sleeves in the side and three-quarter-back views are the near sleeve mirrored (`fix_sleeves.py`): whole, but lit from the wrong side.
+- Crouch is better (hips push back) but still the stiffest pose; the pack's neck at the top of the back torso has hair-coloured paint (hidden by the head).
