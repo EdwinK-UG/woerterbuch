@@ -1,0 +1,2495 @@
+<Rive version="1" kind="fragment">
+  <ScriptAsset file="hand_pose.luau" name="hand_pose" isModule="true" id="0:79" />
+  <ScriptAsset file="controller.luau" name="controller" id="0:80" />
+  <FontAsset file="../../liv-tq/Inter.ttf" name="Inter" id="0:30" />
+  <ImageAsset file="../../parts/hand_relaxed.png" name="hand_relaxed" id="0:100" />
+  <ImageAsset file="../../parts/hand_point.png" name="hand_point" id="0:101" />
+  <ImageAsset file="../../parts/hand_fist.png" name="hand_fist" id="0:102" />
+  <ImageAsset file="../../parts/hand_thumb.png" name="hand_thumb" id="0:103" />
+  <ImageAsset file="../../parts/hand_palm.png" name="hand_palm" id="0:104" />
+  <ImageAsset file="../../parts/hand_back.png" name="hand_back" id="0:105" />
+  <Artboard name="Liv hands" width="1440" height="1000" defaultStateMachineId="0:7" styleId="0:5" id="0:2" viewModelId="0:40" viewModelInstanceId="0:41">
+    <LayoutComponent name="Hand controller" width="1440" height="1000" styleId="0:82" id="0:81">
+      <LayoutComponentStyle name="Fill stage" layoutWidthScaleType="fill" layoutHeightScaleType="fill" widthUnitsValue="auto" heightUnitsValue="auto" id="0:82" />
+      <ScriptedLayout name="Hand controller" scriptAssetId="0:80" id="0:3573" />
+    </LayoutComponent>
+    <Text name="Shapes" x="1050" y="20" id="0:3568">
+      <TextStylePaint fontSize="14" fontAssetId="0:30" id="0:3569">
+        <Fill id="0:3570">
+          <SolidColor colorValue="FF8B7460" id="0:3571" />
+        </Fill>
+      </TextStylePaint>
+      <TextValueRun styleId="0:3569" text="Shapes" id="0:3572" />
+    </Text>
+    <Text name="Speed 1x" x="1233.2" y="616" id="0:3559">
+      <TextStylePaint fontSize="16" fontAssetId="0:30" id="0:3560">
+        <Fill id="0:3561">
+          <SolidColor colorValue="FF4C4038" id="0:3562" />
+        </Fill>
+      </TextStylePaint>
+      <TextValueRun styleId="0:3560" text="Speed 1x" id="0:3563" />
+    </Text>
+    <Shape x="1270" y="626" name="Speed 1x button" id="0:3555">
+      <Rectangle width="140" height="36" cornerRadiusTL="9" id="0:3556" />
+      <Fill id="0:3557">
+        <SolidColor colorValue="FFE6D8C6" id="0:3558" />
+      </Fill>
+    </Shape>
+    <Text name="Slow 0.25x" x="1224.0" y="570" id="0:3546">
+      <TextStylePaint fontSize="16" fontAssetId="0:30" id="0:3547">
+        <Fill id="0:3548">
+          <SolidColor colorValue="FF4C4038" id="0:3549" />
+        </Fill>
+      </TextStylePaint>
+      <TextValueRun styleId="0:3547" text="Slow 0.25x" id="0:3550" />
+    </Text>
+    <Shape x="1270" y="580" name="Slow 0.25x button" id="0:3542">
+      <Rectangle width="140" height="36" cornerRadiusTL="9" id="0:3543" />
+      <Fill id="0:3544">
+        <SolidColor colorValue="FFE6D8C6" id="0:3545" />
+      </Fill>
+    </Shape>
+    <Text name="Sequence" x="1073.2" y="570" id="0:3533">
+      <TextStylePaint fontSize="16" fontAssetId="0:30" id="0:3534">
+        <Fill id="0:3535">
+          <SolidColor colorValue="FF4C4038" id="0:3536" />
+        </Fill>
+      </TextStylePaint>
+      <TextValueRun styleId="0:3534" text="Sequence" id="0:3537" />
+    </Text>
+    <Shape x="1110" y="580" name="Sequence button" id="0:3529">
+      <Rectangle width="140" height="36" cornerRadiusTL="9" id="0:3530" />
+      <Fill id="0:3531">
+        <SolidColor colorValue="FFE6D8C6" id="0:3532" />
+      </Fill>
+    </Shape>
+    <Text name="Arm moves" x="1228.6" y="524" id="0:3520">
+      <TextStylePaint fontSize="16" fontAssetId="0:30" id="0:3521">
+        <Fill id="0:3522">
+          <SolidColor colorValue="FF4C4038" id="0:3523" />
+        </Fill>
+      </TextStylePaint>
+      <TextValueRun styleId="0:3521" text="Arm moves" id="0:3524" />
+    </Text>
+    <Shape x="1270" y="534" name="Arm moves button" id="0:3516">
+      <Rectangle width="140" height="36" cornerRadiusTL="9" id="0:3517" />
+      <Fill id="0:3518">
+        <SolidColor colorValue="FFE6D8C6" id="0:3519" />
+      </Fill>
+    </Shape>
+    <Text name="Arm still" x="1068.6" y="524" id="0:3507">
+      <TextStylePaint fontSize="16" fontAssetId="0:30" id="0:3508">
+        <Fill id="0:3509">
+          <SolidColor colorValue="FF4C4038" id="0:3510" />
+        </Fill>
+      </TextStylePaint>
+      <TextValueRun styleId="0:3508" text="Arm still" id="0:3511" />
+    </Text>
+    <Shape x="1110" y="534" name="Arm still button" id="0:3503">
+      <Rectangle width="140" height="36" cornerRadiusTL="9" id="0:3504" />
+      <Fill id="0:3505">
+        <SolidColor colorValue="FFE6D8C6" id="0:3506" />
+      </Fill>
+    </Shape>
+    <Text name="Palm side" x="1228.6" y="478" id="0:3494">
+      <TextStylePaint fontSize="16" fontAssetId="0:30" id="0:3495">
+        <Fill id="0:3496">
+          <SolidColor colorValue="FF4C4038" id="0:3497" />
+        </Fill>
+      </TextStylePaint>
+      <TextValueRun styleId="0:3495" text="Palm side" id="0:3498" />
+    </Text>
+    <Shape x="1270" y="488" name="Palm side button" id="0:3490">
+      <Rectangle width="140" height="36" cornerRadiusTL="9" id="0:3491" />
+      <Fill id="0:3492">
+        <SolidColor colorValue="FFE6D8C6" id="0:3493" />
+      </Fill>
+    </Shape>
+    <Text name="Back of hand" x="1054.8" y="478" id="0:3481">
+      <TextStylePaint fontSize="16" fontAssetId="0:30" id="0:3482">
+        <Fill id="0:3483">
+          <SolidColor colorValue="FF4C4038" id="0:3484" />
+        </Fill>
+      </TextStylePaint>
+      <TextValueRun styleId="0:3482" text="Back of hand" id="0:3485" />
+    </Text>
+    <Shape x="1110" y="488" name="Back of hand button" id="0:3477">
+      <Rectangle width="140" height="36" cornerRadiusTL="9" id="0:3478" />
+      <Fill id="0:3479">
+        <SolidColor colorValue="FFE6D8C6" id="0:3480" />
+      </Fill>
+    </Shape>
+    <Text name="View" x="1050" y="458" id="0:3472">
+      <TextStylePaint fontSize="14" fontAssetId="0:30" id="0:3473">
+        <Fill id="0:3474">
+          <SolidColor colorValue="FF8B7460" id="0:3475" />
+        </Fill>
+      </TextStylePaint>
+      <TextValueRun styleId="0:3473" text="View" id="0:3476" />
+    </Text>
+    <Text name="Count 5" x="1077.8" y="422" id="0:3460">
+      <TextStylePaint fontSize="16" fontAssetId="0:30" id="0:3461">
+        <Fill id="0:3462">
+          <SolidColor colorValue="FF4C4038" id="0:3463" />
+        </Fill>
+      </TextStylePaint>
+      <TextValueRun styleId="0:3461" text="Count 5" id="0:3464" />
+    </Text>
+    <Shape x="1110" y="432" name="Count 5 button" id="0:3456">
+      <Rectangle width="140" height="36" cornerRadiusTL="9" id="0:3457" />
+      <Fill id="0:3458">
+        <SolidColor colorValue="FFE6D8C6" id="0:3459" />
+      </Fill>
+    </Shape>
+    <Text name="Count 4" x="1237.8" y="376" id="0:3444">
+      <TextStylePaint fontSize="16" fontAssetId="0:30" id="0:3445">
+        <Fill id="0:3446">
+          <SolidColor colorValue="FF4C4038" id="0:3447" />
+        </Fill>
+      </TextStylePaint>
+      <TextValueRun styleId="0:3445" text="Count 4" id="0:3448" />
+    </Text>
+    <Shape x="1270" y="386" name="Count 4 button" id="0:3440">
+      <Rectangle width="140" height="36" cornerRadiusTL="9" id="0:3441" />
+      <Fill id="0:3442">
+        <SolidColor colorValue="FFE6D8C6" id="0:3443" />
+      </Fill>
+    </Shape>
+    <Text name="Count 3" x="1077.8" y="376" id="0:3428">
+      <TextStylePaint fontSize="16" fontAssetId="0:30" id="0:3429">
+        <Fill id="0:3430">
+          <SolidColor colorValue="FF4C4038" id="0:3431" />
+        </Fill>
+      </TextStylePaint>
+      <TextValueRun styleId="0:3429" text="Count 3" id="0:3432" />
+    </Text>
+    <Shape x="1110" y="386" name="Count 3 button" id="0:3424">
+      <Rectangle width="140" height="36" cornerRadiusTL="9" id="0:3425" />
+      <Fill id="0:3426">
+        <SolidColor colorValue="FFE6D8C6" id="0:3427" />
+      </Fill>
+    </Shape>
+    <Text name="Count 2" x="1237.8" y="330" id="0:3412">
+      <TextStylePaint fontSize="16" fontAssetId="0:30" id="0:3413">
+        <Fill id="0:3414">
+          <SolidColor colorValue="FF4C4038" id="0:3415" />
+        </Fill>
+      </TextStylePaint>
+      <TextValueRun styleId="0:3413" text="Count 2" id="0:3416" />
+    </Text>
+    <Shape x="1270" y="340" name="Count 2 button" id="0:3408">
+      <Rectangle width="140" height="36" cornerRadiusTL="9" id="0:3409" />
+      <Fill id="0:3410">
+        <SolidColor colorValue="FFE6D8C6" id="0:3411" />
+      </Fill>
+    </Shape>
+    <Text name="Count 1" x="1077.8" y="330" id="0:3396">
+      <TextStylePaint fontSize="16" fontAssetId="0:30" id="0:3397">
+        <Fill id="0:3398">
+          <SolidColor colorValue="FF4C4038" id="0:3399" />
+        </Fill>
+      </TextStylePaint>
+      <TextValueRun styleId="0:3397" text="Count 1" id="0:3400" />
+    </Text>
+    <Shape x="1110" y="340" name="Count 1 button" id="0:3392">
+      <Rectangle width="140" height="36" cornerRadiusTL="9" id="0:3393" />
+      <Fill id="0:3394">
+        <SolidColor colorValue="FFE6D8C6" id="0:3395" />
+      </Fill>
+    </Shape>
+    <Text name="Beckon" x="1242.4" y="284" id="0:3380">
+      <TextStylePaint fontSize="16" fontAssetId="0:30" id="0:3381">
+        <Fill id="0:3382">
+          <SolidColor colorValue="FF4C4038" id="0:3383" />
+        </Fill>
+      </TextStylePaint>
+      <TextValueRun styleId="0:3381" text="Beckon" id="0:3384" />
+    </Text>
+    <Shape x="1270" y="294" name="Beckon button" id="0:3376">
+      <Rectangle width="140" height="36" cornerRadiusTL="9" id="0:3377" />
+      <Fill id="0:3378">
+        <SolidColor colorValue="FFE6D8C6" id="0:3379" />
+      </Fill>
+    </Shape>
+    <Text name="Carry" x="1087.0" y="284" id="0:3364">
+      <TextStylePaint fontSize="16" fontAssetId="0:30" id="0:3365">
+        <Fill id="0:3366">
+          <SolidColor colorValue="FF4C4038" id="0:3367" />
+        </Fill>
+      </TextStylePaint>
+      <TextValueRun styleId="0:3365" text="Carry" id="0:3368" />
+    </Text>
+    <Shape x="1110" y="294" name="Carry button" id="0:3360">
+      <Rectangle width="140" height="36" cornerRadiusTL="9" id="0:3361" />
+      <Fill id="0:3362">
+        <SolidColor colorValue="FFE6D8C6" id="0:3363" />
+      </Fill>
+    </Shape>
+    <Text name="Grip handle" x="1219.4" y="238" id="0:3348">
+      <TextStylePaint fontSize="16" fontAssetId="0:30" id="0:3349">
+        <Fill id="0:3350">
+          <SolidColor colorValue="FF4C4038" id="0:3351" />
+        </Fill>
+      </TextStylePaint>
+      <TextValueRun styleId="0:3349" text="Grip handle" id="0:3352" />
+    </Text>
+    <Shape x="1270" y="248" name="Grip handle button" id="0:3344">
+      <Rectangle width="140" height="36" cornerRadiusTL="9" id="0:3345" />
+      <Fill id="0:3346">
+        <SolidColor colorValue="FFE6D8C6" id="0:3347" />
+      </Fill>
+    </Shape>
+    <Text name="Grip apple" x="1064.0" y="238" id="0:3332">
+      <TextStylePaint fontSize="16" fontAssetId="0:30" id="0:3333">
+        <Fill id="0:3334">
+          <SolidColor colorValue="FF4C4038" id="0:3335" />
+        </Fill>
+      </TextStylePaint>
+      <TextValueRun styleId="0:3333" text="Grip apple" id="0:3336" />
+    </Text>
+    <Shape x="1110" y="248" name="Grip apple button" id="0:3328">
+      <Rectangle width="140" height="36" cornerRadiusTL="9" id="0:3329" />
+      <Fill id="0:3330">
+        <SolidColor colorValue="FFE6D8C6" id="0:3331" />
+      </Fill>
+    </Shape>
+    <Text name="Pinch" x="1247.0" y="192" id="0:3316">
+      <TextStylePaint fontSize="16" fontAssetId="0:30" id="0:3317">
+        <Fill id="0:3318">
+          <SolidColor colorValue="FF4C4038" id="0:3319" />
+        </Fill>
+      </TextStylePaint>
+      <TextValueRun styleId="0:3317" text="Pinch" id="0:3320" />
+    </Text>
+    <Shape x="1270" y="202" name="Pinch button" id="0:3312">
+      <Rectangle width="140" height="36" cornerRadiusTL="9" id="0:3313" />
+      <Fill id="0:3314">
+        <SolidColor colorValue="FFE6D8C6" id="0:3315" />
+      </Fill>
+    </Shape>
+    <Text name="Thumbs up" x="1068.6" y="192" id="0:3300">
+      <TextStylePaint fontSize="16" fontAssetId="0:30" id="0:3301">
+        <Fill id="0:3302">
+          <SolidColor colorValue="FF4C4038" id="0:3303" />
+        </Fill>
+      </TextStylePaint>
+      <TextValueRun styleId="0:3301" text="Thumbs up" id="0:3304" />
+    </Text>
+    <Shape x="1110" y="202" name="Thumbs up button" id="0:3296">
+      <Rectangle width="140" height="36" cornerRadiusTL="9" id="0:3297" />
+      <Fill id="0:3298">
+        <SolidColor colorValue="FFE6D8C6" id="0:3299" />
+      </Fill>
+    </Shape>
+    <Text name="Point" x="1247.0" y="146" id="0:3284">
+      <TextStylePaint fontSize="16" fontAssetId="0:30" id="0:3285">
+        <Fill id="0:3286">
+          <SolidColor colorValue="FF4C4038" id="0:3287" />
+        </Fill>
+      </TextStylePaint>
+      <TextValueRun styleId="0:3285" text="Point" id="0:3288" />
+    </Text>
+    <Shape x="1270" y="156" name="Point button" id="0:3280">
+      <Rectangle width="140" height="36" cornerRadiusTL="9" id="0:3281" />
+      <Fill id="0:3282">
+        <SolidColor colorValue="FFE6D8C6" id="0:3283" />
+      </Fill>
+    </Shape>
+    <Text name="Fist" x="1091.6" y="146" id="0:3268">
+      <TextStylePaint fontSize="16" fontAssetId="0:30" id="0:3269">
+        <Fill id="0:3270">
+          <SolidColor colorValue="FF4C4038" id="0:3271" />
+        </Fill>
+      </TextStylePaint>
+      <TextValueRun styleId="0:3269" text="Fist" id="0:3272" />
+    </Text>
+    <Shape x="1110" y="156" name="Fist button" id="0:3264">
+      <Rectangle width="140" height="36" cornerRadiusTL="9" id="0:3265" />
+      <Fill id="0:3266">
+        <SolidColor colorValue="FFE6D8C6" id="0:3267" />
+      </Fill>
+    </Shape>
+    <Text name="Wave" x="1251.6" y="100" id="0:3252">
+      <TextStylePaint fontSize="16" fontAssetId="0:30" id="0:3253">
+        <Fill id="0:3254">
+          <SolidColor colorValue="FF4C4038" id="0:3255" />
+        </Fill>
+      </TextStylePaint>
+      <TextValueRun styleId="0:3253" text="Wave" id="0:3256" />
+    </Text>
+    <Shape x="1270" y="110" name="Wave button" id="0:3248">
+      <Rectangle width="140" height="36" cornerRadiusTL="9" id="0:3249" />
+      <Fill id="0:3250">
+        <SolidColor colorValue="FFE6D8C6" id="0:3251" />
+      </Fill>
+    </Shape>
+    <Text name="Flat" x="1091.6" y="100" id="0:3236">
+      <TextStylePaint fontSize="16" fontAssetId="0:30" id="0:3237">
+        <Fill id="0:3238">
+          <SolidColor colorValue="FF4C4038" id="0:3239" />
+        </Fill>
+      </TextStylePaint>
+      <TextValueRun styleId="0:3237" text="Flat" id="0:3240" />
+    </Text>
+    <Shape x="1110" y="110" name="Flat button" id="0:3232">
+      <Rectangle width="140" height="36" cornerRadiusTL="9" id="0:3233" />
+      <Fill id="0:3234">
+        <SolidColor colorValue="FFE6D8C6" id="0:3235" />
+      </Fill>
+    </Shape>
+    <Text name="Open" x="1251.6" y="54" id="0:3220">
+      <TextStylePaint fontSize="16" fontAssetId="0:30" id="0:3221">
+        <Fill id="0:3222">
+          <SolidColor colorValue="FF4C4038" id="0:3223" />
+        </Fill>
+      </TextStylePaint>
+      <TextValueRun styleId="0:3221" text="Open" id="0:3224" />
+    </Text>
+    <Shape x="1270" y="64" name="Open button" id="0:3216">
+      <Rectangle width="140" height="36" cornerRadiusTL="9" id="0:3217" />
+      <Fill id="0:3218">
+        <SolidColor colorValue="FFE6D8C6" id="0:3219" />
+      </Fill>
+    </Shape>
+    <Text name="Relaxed" x="1077.8" y="54" id="0:3204">
+      <TextStylePaint fontSize="16" fontAssetId="0:30" id="0:3205">
+        <Fill id="0:3206">
+          <SolidColor colorValue="FF4C4038" id="0:3207" />
+        </Fill>
+      </TextStylePaint>
+      <TextValueRun styleId="0:3205" text="Relaxed" id="0:3208" />
+    </Text>
+    <Shape x="1110" y="64" name="Relaxed button" id="0:3200">
+      <Rectangle width="140" height="36" cornerRadiusTL="9" id="0:3201" />
+      <Fill id="0:3202">
+        <SolidColor colorValue="FFE6D8C6" id="0:3203" />
+      </Fill>
+    </Shape>
+    <Text name="character scale x1.6: rig R, L   |   the pack painted hands, same scale" x="30" y="787" id="0:3195">
+      <TextStylePaint fontSize="13" fontAssetId="0:30" id="0:3196">
+        <Fill id="0:3197">
+          <SolidColor colorValue="FF8B7460" id="0:3198" />
+        </Fill>
+      </TextStylePaint>
+      <TextValueRun styleId="0:3196" text="character scale x1.6: rig R, L   |   the pack painted hands, same scale" id="0:3199" />
+    </Text>
+    <Text name="Liv hands - painted-parts rig (right hand above, left hand = mirror below), arm x1.25" x="30" y="14" id="0:3190">
+      <TextStylePaint fontSize="18" fontAssetId="0:30" id="0:3191">
+        <Fill id="0:3192">
+          <SolidColor colorValue="FF4C4038" id="0:3193" />
+        </Fill>
+      </TextStylePaint>
+      <TextValueRun styleId="0:3191" text="Liv hands - painted-parts rig (right hand above, left hand = mirror below), arm x1.25" id="0:3194" />
+    </Text>
+    <LayoutComponentStyle name="Artboard style" id="0:5" />
+    <Fill name="Paper" id="0:2001">
+      <SolidColor colorValue="FFF3EBDD" id="0:2002" />
+    </Fill>
+    <Node name="hand mount R" id="0:2033">
+      <TransformConstraint name="follow hand_R" targetId="0:2020" sourceSpaceValue="world" destSpaceValue="world" strength="1" id="0:2034" />
+      <Node name="handR hand" scaleX="1.0" scaleY="1.0" id="0:2753">
+        <Node name="handR mirror" scaleY="1.0" id="0:2754">
+          <Node name="handR art" rotation="1.5707963267948966" scaleX="0.084" scaleY="0.084" id="0:2755">
+            <Node name="handR back side" opacity="1" id="0:2756">
+              <Image name="handR back palm" assetId="0:300" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-409.5" y="-748.0" scaleX="9.57831" scaleY="9.4878" id="0:2763" />
+              <Node name="handR back thumb" id="0:2758">
+                <Node name="handR back thumb root" x="-284.5" y="-356.0" rotation="-0.06" id="0:2795">
+                  <Node name="handR back thumb mcp" rotation="0.07600000000000001" id="0:2796">
+                    <Image name="handR back thumb base picture" assetId="0:309" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-233.591" y="-292.497" scaleX="6.73556" scaleY="6.692" id="0:2797" />
+                    <Node name="handR back thumb tip joint" x="-142.365" y="-213.029" rotation="-0.64321" id="0:2798">
+                      <Node name="handR back thumb tip" y="25.519" id="0:2799">
+                        <Node name="handR back thumb tip unturn" rotation="0.64321" id="0:2800">
+                          <Image name="handR back thumb tip picture" assetId="0:310" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-148.392" y="-171.675" scaleX="6.62812" scaleY="6.63939" id="0:2801" />
+                        </Node>
+                        <DataBindContext sourcePathIds="0:40-0:2744" propertyKey="14" converterId="0:2299" id="0:3636" />
+                      </Node>
+                    </Node>
+                    <DataBindContext sourcePathIds="0:40-0:2744" propertyKey="15" converterId="0:2709" id="0:3635" />
+                  </Node>
+                  <DataBindContext sourcePathIds="0:40-0:2745" propertyKey="15" converterId="0:2679" id="0:3634" />
+                </Node>
+              </Node>
+              <Node name="handR back fingers" id="0:2757">
+                <Node name="handR back index" id="0:2759">
+                  <Node name="handR back index root" x="-185.5" y="-540.69" rotation="-0.054" id="0:2767">
+                    <Node name="handR back index converge" rotation="0.022000000000000002" id="0:2768">
+                      <Node name="handR back index slide" y="102.4" id="0:2769">
+                        <Image name="handR back index base picture" assetId="0:301" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-98.656" y="-519.797" scaleX="9.3381" scaleY="9.55862" id="0:2770" />
+                        <Node name="handR back index tip joint" y="-452.253" id="0:2771">
+                          <Node name="handR back index tip slide" y="105.851" id="0:2772">
+                            <Image name="handR back index tip picture" assetId="0:302" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-86.751" y="-309.428" scaleX="9.74333" scaleY="9.55111" id="0:2773" />
+                            <DataBindContext sourcePathIds="0:40-0:2746" propertyKey="14" converterId="0:2371" id="0:3621" />
+                          </Node>
+                        </Node>
+                        <DataBindContext sourcePathIds="0:40-0:2746" propertyKey="14" converterId="0:2343" id="0:3620" />
+                      </Node>
+                      <DataBindContext sourcePathIds="0:40-0:2746" propertyKey="15" converterId="0:2412" id="0:3619" />
+                    </Node>
+                    <DataBindContext sourcePathIds="0:40-0:2750" propertyKey="15" converterId="0:2411" id="0:3618" />
+                  </Node>
+                </Node>
+                <Node name="handR back middle" id="0:2760">
+                  <Node name="handR back middle root" x="-39.5" y="-587.62" rotation="-0.006" id="0:2774">
+                    <Node name="handR back middle converge" rotation="0.005600000000000001" id="0:2775">
+                      <Node name="handR back middle slide" y="159.883" id="0:2776">
+                        <Image name="handR back middle base picture" assetId="0:303" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-103.844" y="-570.194" scaleX="9.35091" scaleY="9.45" id="0:2777" />
+                        <Node name="handR back middle tip joint" y="-502.696" id="0:2778">
+                          <Node name="handR back middle tip slide" y="175.804" id="0:2779">
+                            <Image name="handR back middle tip picture" assetId="0:304" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-89.217" y="-341.16" scaleX="9.58105" scaleY="9.62051" id="0:2780" />
+                            <DataBindContext sourcePathIds="0:40-0:2747" propertyKey="14" converterId="0:2459" id="0:3625" />
+                          </Node>
+                        </Node>
+                        <DataBindContext sourcePathIds="0:40-0:2747" propertyKey="14" converterId="0:2431" id="0:3624" />
+                      </Node>
+                      <DataBindContext sourcePathIds="0:40-0:2747" propertyKey="15" converterId="0:2500" id="0:3623" />
+                    </Node>
+                    <DataBindContext sourcePathIds="0:40-0:2750" propertyKey="15" converterId="0:2499" id="0:3622" />
+                  </Node>
+                </Node>
+                <Node name="handR back ring" id="0:2761">
+                  <Node name="handR back ring root" x="119.5" y="-591.31" rotation="0.0305" id="0:2781">
+                    <Node name="handR back ring converge" rotation="-0.0165" id="0:2782">
+                      <Node name="handR back ring slide" y="185.558" id="0:2783">
+                        <Image name="handR back ring base picture" assetId="0:305" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-103.453" y="-528.677" scaleX="9.35091" scaleY="9.54847" id="0:2784" />
+                        <Node name="handR back ring tip joint" y="-461.109" id="0:2785">
+                          <Node name="handR back ring tip slide" y="222.431" id="0:2786">
+                            <Image name="handR back ring tip picture" assetId="0:306" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-93.566" y="-319.242" scaleX="9.472" scaleY="9.56541" id="0:2787" />
+                            <DataBindContext sourcePathIds="0:40-0:2748" propertyKey="14" converterId="0:2547" id="0:3629" />
+                          </Node>
+                        </Node>
+                        <DataBindContext sourcePathIds="0:40-0:2748" propertyKey="14" converterId="0:2519" id="0:3628" />
+                      </Node>
+                      <DataBindContext sourcePathIds="0:40-0:2748" propertyKey="15" converterId="0:2588" id="0:3627" />
+                    </Node>
+                    <DataBindContext sourcePathIds="0:40-0:2750" propertyKey="15" converterId="0:2587" id="0:3626" />
+                  </Node>
+                </Node>
+                <Node name="handR back pinky" id="0:2762">
+                  <Node name="handR back pinky root" x="251.5" y="-581.88" rotation="0.0785" id="0:2788">
+                    <Node name="handR back pinky converge" rotation="-0.0456" id="0:2789">
+                      <Node name="handR back pinky slide" y="183.985" id="0:2790">
+                        <Image name="handR back pinky base picture" assetId="0:307" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-91.971" y="-440.388" scaleX="9.50316" scaleY="9.4976" id="0:2791" />
+                        <Node name="handR back pinky tip joint" y="-373.108" id="0:2792">
+                          <Node name="handR back pinky tip slide" y="244.598" id="0:2793">
+                            <Image name="handR back pinky tip picture" assetId="0:308" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-78.141" y="-265.913" scaleX="9.53294" scaleY="9.38" id="0:2794" />
+                            <DataBindContext sourcePathIds="0:40-0:2749" propertyKey="14" converterId="0:2635" id="0:3633" />
+                          </Node>
+                        </Node>
+                        <DataBindContext sourcePathIds="0:40-0:2749" propertyKey="14" converterId="0:2607" id="0:3632" />
+                      </Node>
+                      <DataBindContext sourcePathIds="0:40-0:2749" propertyKey="15" converterId="0:2676" id="0:3631" />
+                    </Node>
+                    <DataBindContext sourcePathIds="0:40-0:2750" propertyKey="15" converterId="0:2675" id="0:3630" />
+                  </Node>
+                </Node>
+                <ClippingShape sourceId="0:2764" name="handR back finger clip" id="0:2766" />
+              </Node>
+              <Shape name="handR back finger clip" id="0:2764">
+                <Rectangle x="-4000" y="-8459.98070574089" originX="0" originY="0" width="8000" height="8000" id="0:2765" />
+              </Shape>
+              <DataBindContext sourcePathIds="0:40-0:2752" propertyKey="18" converterId="0:2742" id="0:3617" />
+            </Node>
+            <Node name="handR palm side" opacity="0" id="0:2802">
+              <Node name="handR palm thumb" id="0:2804">
+                <Node name="handR palm thumb root" x="299.5" y="-367.0" rotation="0.06" id="0:2842">
+                  <Node name="handR palm thumb mcp" rotation="-0.07600000000000001" id="0:2843">
+                    <Image name="handR palm thumb base picture" assetId="0:324" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-68.809" y="-292.497" scaleX="6.73556" scaleY="6.692" id="0:2844" />
+                    <Node name="handR palm thumb tip joint" x="142.365" y="-213.029" rotation="0.64321" id="0:2845">
+                      <Node name="handR palm thumb tip" scaleY="0.8521634095587163" opacity="1.0" id="0:2846">
+                        <Node name="handR palm thumb tip unturn" rotation="-0.64321" id="0:2847">
+                          <Image name="handR palm thumb tip picture" assetId="0:325" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-63.008" y="-171.675" scaleX="6.62812" scaleY="6.63939" id="0:2848" />
+                        </Node>
+                        <DataBindContext sourcePathIds="0:40-0:2744" propertyKey="17" converterId="0:2097" id="0:3672" />
+                        <DataBindContext sourcePathIds="0:40-0:2744" propertyKey="18" converterId="0:2245" id="0:3673" />
+                      </Node>
+                    </Node>
+                    <DataBindContext sourcePathIds="0:40-0:2744" propertyKey="15" converterId="0:2740" id="0:3671" />
+                  </Node>
+                  <DataBindContext sourcePathIds="0:40-0:2745" propertyKey="15" converterId="0:2710" id="0:3670" />
+                </Node>
+              </Node>
+              <Node name="handR palm fingers" id="0:2803">
+                <Node name="handR palm index" id="0:2805">
+                  <Image name="handR palm index root patch" assetId="0:314" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="117.5" y="-751.0" scaleX="9.52381" scaleY="9.52381" id="0:2817" opacity="1">
+                    <DataBindContext sourcePathIds="0:40-0:2746" propertyKey="18" converterId="0:2741" id="0:3645" />
+                  </Image>
+                  <Node name="handR palm index root" x="210.5" y="-546.09" rotation="0.054" id="0:2810">
+                    <Node name="handR palm index converge" rotation="-0.022000000000000002" id="0:2811">
+                      <Node name="handR palm index base" scaleY="0.7735789210886813" opacity="1.0" id="0:2812">
+                        <Image name="handR palm index base picture" assetId="0:312" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-98.656" y="-519.797" scaleX="9.3381" scaleY="9.55862" id="0:2813" />
+                        <DataBindContext sourcePathIds="0:40-0:2746" propertyKey="17" converterId="0:2053" id="0:3640" />
+                        <DataBindContext sourcePathIds="0:40-0:2746" propertyKey="18" converterId="0:2191" id="0:3641" />
+                      </Node>
+                      <Node name="handR palm index tip joint" y="-349.854" id="0:2814">
+                        <Node name="handR palm index tip" scaleY="0.6939995243081564" opacity="1.0" id="0:2815">
+                          <Image name="handR palm index tip picture" assetId="0:313" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-86.751" y="-309.428" scaleX="9.74333" scaleY="9.55111" id="0:2816" />
+                          <DataBindContext sourcePathIds="0:40-0:2746" propertyKey="17" converterId="0:2069" id="0:3643" />
+                          <DataBindContext sourcePathIds="0:40-0:2746" propertyKey="18" converterId="0:2113" id="0:3644" />
+                        </Node>
+                        <DataBindContext sourcePathIds="0:40-0:2746" propertyKey="14" converterId="0:2327" id="0:3642" />
+                      </Node>
+                      <DataBindContext sourcePathIds="0:40-0:2746" propertyKey="15" converterId="0:2414" id="0:3639" />
+                    </Node>
+                    <DataBindContext sourcePathIds="0:40-0:2750" propertyKey="15" converterId="0:2413" id="0:3638" />
+                  </Node>
+                </Node>
+                <Node name="handR palm middle" id="0:2806">
+                  <Image name="handR palm middle root patch" assetId="0:317" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-37.5" y="-751.0" scaleX="9.52381" scaleY="9.52381" id="0:2825" opacity="1">
+                    <DataBindContext sourcePathIds="0:40-0:2747" propertyKey="18" converterId="0:2741" id="0:3653" />
+                  </Image>
+                  <Node name="handR palm middle root" x="60.5" y="-589.65" rotation="0.006" id="0:2818">
+                    <Node name="handR palm middle converge" rotation="-0.005600000000000001" id="0:2819">
+                      <Node name="handR palm middle base" scaleY="0.681949551555751" opacity="1.0" id="0:2820">
+                        <Image name="handR palm middle base picture" assetId="0:315" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-103.844" y="-570.194" scaleX="9.35091" scaleY="9.45" id="0:2821" />
+                        <DataBindContext sourcePathIds="0:40-0:2747" propertyKey="17" converterId="0:2053" id="0:3648" />
+                        <DataBindContext sourcePathIds="0:40-0:2747" propertyKey="18" converterId="0:2191" id="0:3649" />
+                      </Node>
+                      <Node name="handR palm middle tip joint" y="-342.813" id="0:2822">
+                        <Node name="handR palm middle tip" scaleY="0.5346229984457247" opacity="1.0" id="0:2823">
+                          <Image name="handR palm middle tip picture" assetId="0:316" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-89.217" y="-341.16" scaleX="9.58105" scaleY="9.62051" id="0:2824" />
+                          <DataBindContext sourcePathIds="0:40-0:2747" propertyKey="17" converterId="0:2069" id="0:3651" />
+                          <DataBindContext sourcePathIds="0:40-0:2747" propertyKey="18" converterId="0:2113" id="0:3652" />
+                        </Node>
+                        <DataBindContext sourcePathIds="0:40-0:2747" propertyKey="14" converterId="0:2415" id="0:3650" />
+                      </Node>
+                      <DataBindContext sourcePathIds="0:40-0:2747" propertyKey="15" converterId="0:2502" id="0:3647" />
+                    </Node>
+                    <DataBindContext sourcePathIds="0:40-0:2750" propertyKey="15" converterId="0:2501" id="0:3646" />
+                  </Node>
+                </Node>
+                <Node name="handR palm ring" id="0:2807">
+                  <Image name="handR palm ring root patch" assetId="0:320" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-202.5" y="-751.0" scaleX="9.52381" scaleY="9.52381" id="0:2833" opacity="1">
+                    <DataBindContext sourcePathIds="0:40-0:2748" propertyKey="18" converterId="0:2741" id="0:3661" />
+                  </Image>
+                  <Node name="handR palm ring root" x="-103.5" y="-594.09" rotation="-0.0305" id="0:2826">
+                    <Node name="handR palm ring converge" rotation="0.0165" id="0:2827">
+                      <Node name="handR palm ring base" scaleY="0.5975832992595547" opacity="1.0" id="0:2828">
+                        <Image name="handR palm ring base picture" assetId="0:318" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-103.453" y="-528.677" scaleX="9.35091" scaleY="9.54847" id="0:2829" />
+                        <DataBindContext sourcePathIds="0:40-0:2748" propertyKey="17" converterId="0:2053" id="0:3656" />
+                        <DataBindContext sourcePathIds="0:40-0:2748" propertyKey="18" converterId="0:2191" id="0:3657" />
+                      </Node>
+                      <Node name="handR palm ring tip joint" y="-275.551" id="0:2830">
+                        <Node name="handR palm ring tip" scaleY="0.3748567893852484" opacity="1.0" id="0:2831">
+                          <Image name="handR palm ring tip picture" assetId="0:319" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-93.566" y="-319.242" scaleX="9.472" scaleY="9.56541" id="0:2832" />
+                          <DataBindContext sourcePathIds="0:40-0:2748" propertyKey="17" converterId="0:2069" id="0:3659" />
+                          <DataBindContext sourcePathIds="0:40-0:2748" propertyKey="18" converterId="0:2113" id="0:3660" />
+                        </Node>
+                        <DataBindContext sourcePathIds="0:40-0:2748" propertyKey="14" converterId="0:2503" id="0:3658" />
+                      </Node>
+                      <DataBindContext sourcePathIds="0:40-0:2748" propertyKey="15" converterId="0:2590" id="0:3655" />
+                    </Node>
+                    <DataBindContext sourcePathIds="0:40-0:2750" propertyKey="15" converterId="0:2589" id="0:3654" />
+                  </Node>
+                </Node>
+                <Node name="handR palm pinky" id="0:2808">
+                  <Image name="handR palm pinky root patch" assetId="0:323" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-322.5" y="-751.0" scaleX="9.52381" scaleY="9.52381" id="0:2841" opacity="1">
+                    <DataBindContext sourcePathIds="0:40-0:2749" propertyKey="18" converterId="0:2741" id="0:3669" />
+                  </Image>
+                  <Node name="handR palm pinky root" x="-239.5" y="-583.03" rotation="-0.0785" id="0:2834">
+                    <Node name="handR palm pinky converge" rotation="0.0456" id="0:2835">
+                      <Node name="handR palm pinky base" scaleY="0.5068860309155578" opacity="1.0" id="0:2836">
+                        <Image name="handR palm pinky base picture" assetId="0:321" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-91.971" y="-440.388" scaleX="9.50316" scaleY="9.4976" id="0:2837" />
+                        <DataBindContext sourcePathIds="0:40-0:2749" propertyKey="17" converterId="0:2053" id="0:3664" />
+                        <DataBindContext sourcePathIds="0:40-0:2749" propertyKey="18" converterId="0:2191" id="0:3665" />
+                      </Node>
+                      <Node name="handR palm pinky tip joint" y="-189.123" id="0:2838">
+                        <Node name="handR palm pinky tip" scaleY="0.19273494921904472" opacity="0.0" id="0:2839">
+                          <Image name="handR palm pinky tip picture" assetId="0:322" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-78.141" y="-265.913" scaleX="9.53294" scaleY="9.38" id="0:2840" />
+                          <DataBindContext sourcePathIds="0:40-0:2749" propertyKey="17" converterId="0:2069" id="0:3667" />
+                          <DataBindContext sourcePathIds="0:40-0:2749" propertyKey="18" converterId="0:2113" id="0:3668" />
+                        </Node>
+                        <DataBindContext sourcePathIds="0:40-0:2749" propertyKey="14" converterId="0:2591" id="0:3666" />
+                      </Node>
+                      <DataBindContext sourcePathIds="0:40-0:2749" propertyKey="15" converterId="0:2678" id="0:3663" />
+                    </Node>
+                    <DataBindContext sourcePathIds="0:40-0:2750" propertyKey="15" converterId="0:2677" id="0:3662" />
+                  </Node>
+                </Node>
+              </Node>
+              <Image name="handR palm palm" assetId="0:311" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-379.5" y="-751.0" scaleX="9.47059" scaleY="9.52439" id="0:2809" />
+              <DataBindContext sourcePathIds="0:40-0:2752" propertyKey="18" converterId="0:2743" id="0:3637" />
+            </Node>
+          </Node>
+          <Shape name="apple R" x="70" y="0" opacity="0" id="0:2954">
+            <Ellipse width="44.0" height="44.0" id="0:2955" />
+            <Stroke thickness="6" id="0:2956">
+              <SolidColor colorValue="FF3A1C0C" id="0:2957" />
+            </Stroke>
+            <Fill id="0:2958">
+              <SolidColor colorValue="FFD8432E" id="0:2959" />
+            </Fill>
+            <DataBindContext sourcePathIds="0:40-0:2015" propertyKey="18" id="0:3732" />
+          </Shape>
+          <Shape name="handle R" x="60" y="6" opacity="0" rotation="1.45" id="0:2960">
+            <Rectangle width="120" height="30" cornerRadiusTL="12" id="0:2961" />
+            <Stroke thickness="6" id="0:2962">
+              <SolidColor colorValue="FF3A1C0C" id="0:2963" />
+            </Stroke>
+            <Fill id="0:2964">
+              <SolidColor colorValue="FFB07A45" id="0:2965" />
+            </Fill>
+            <DataBindContext sourcePathIds="0:40-0:2016" propertyKey="18" id="0:3733" />
+          </Shape>
+          <DataBindContext sourcePathIds="0:40-0:2751" propertyKey="17" id="0:3616" />
+        </Node>
+      </Node>
+    </Node>
+    <Node name="hand mount L" id="0:2051">
+      <TransformConstraint name="follow hand_L" targetId="0:2038" sourceSpaceValue="world" destSpaceValue="world" strength="1" id="0:2052" />
+      <Node name="handL hand" scaleX="1.0" scaleY="1.0" id="0:2858">
+        <Node name="handL mirror" scaleY="-1.0" id="0:2859">
+          <Node name="handL art" rotation="1.5707963267948966" scaleX="0.084" scaleY="0.084" id="0:2860">
+            <Node name="handL back side" opacity="1" id="0:2861">
+              <Image name="handL back palm" assetId="0:300" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-409.5" y="-748.0" scaleX="9.57831" scaleY="9.4878" id="0:2868" />
+              <Node name="handL back thumb" id="0:2863">
+                <Node name="handL back thumb root" x="-284.5" y="-356.0" rotation="-0.06" id="0:2900">
+                  <Node name="handL back thumb mcp" rotation="0.07600000000000001" id="0:2901">
+                    <Image name="handL back thumb base picture" assetId="0:309" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-233.591" y="-292.497" scaleX="6.73556" scaleY="6.692" id="0:2902" />
+                    <Node name="handL back thumb tip joint" x="-142.365" y="-213.029" rotation="-0.64321" id="0:2903">
+                      <Node name="handL back thumb tip" y="25.519" id="0:2904">
+                        <Node name="handL back thumb tip unturn" rotation="0.64321" id="0:2905">
+                          <Image name="handL back thumb tip picture" assetId="0:310" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-148.392" y="-171.675" scaleX="6.62812" scaleY="6.63939" id="0:2906" />
+                        </Node>
+                        <DataBindContext sourcePathIds="0:40-0:2849" propertyKey="14" converterId="0:2299" id="0:3694" />
+                      </Node>
+                    </Node>
+                    <DataBindContext sourcePathIds="0:40-0:2849" propertyKey="15" converterId="0:2709" id="0:3693" />
+                  </Node>
+                  <DataBindContext sourcePathIds="0:40-0:2850" propertyKey="15" converterId="0:2679" id="0:3692" />
+                </Node>
+              </Node>
+              <Node name="handL back fingers" id="0:2862">
+                <Node name="handL back index" id="0:2864">
+                  <Node name="handL back index root" x="-185.5" y="-540.69" rotation="-0.054" id="0:2872">
+                    <Node name="handL back index converge" rotation="0.022000000000000002" id="0:2873">
+                      <Node name="handL back index slide" y="102.4" id="0:2874">
+                        <Image name="handL back index base picture" assetId="0:301" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-98.656" y="-519.797" scaleX="9.3381" scaleY="9.55862" id="0:2875" />
+                        <Node name="handL back index tip joint" y="-452.253" id="0:2876">
+                          <Node name="handL back index tip slide" y="105.851" id="0:2877">
+                            <Image name="handL back index tip picture" assetId="0:302" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-86.751" y="-309.428" scaleX="9.74333" scaleY="9.55111" id="0:2878" />
+                            <DataBindContext sourcePathIds="0:40-0:2851" propertyKey="14" converterId="0:2371" id="0:3679" />
+                          </Node>
+                        </Node>
+                        <DataBindContext sourcePathIds="0:40-0:2851" propertyKey="14" converterId="0:2343" id="0:3678" />
+                      </Node>
+                      <DataBindContext sourcePathIds="0:40-0:2851" propertyKey="15" converterId="0:2412" id="0:3677" />
+                    </Node>
+                    <DataBindContext sourcePathIds="0:40-0:2855" propertyKey="15" converterId="0:2411" id="0:3676" />
+                  </Node>
+                </Node>
+                <Node name="handL back middle" id="0:2865">
+                  <Node name="handL back middle root" x="-39.5" y="-587.62" rotation="-0.006" id="0:2879">
+                    <Node name="handL back middle converge" rotation="0.005600000000000001" id="0:2880">
+                      <Node name="handL back middle slide" y="159.883" id="0:2881">
+                        <Image name="handL back middle base picture" assetId="0:303" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-103.844" y="-570.194" scaleX="9.35091" scaleY="9.45" id="0:2882" />
+                        <Node name="handL back middle tip joint" y="-502.696" id="0:2883">
+                          <Node name="handL back middle tip slide" y="175.804" id="0:2884">
+                            <Image name="handL back middle tip picture" assetId="0:304" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-89.217" y="-341.16" scaleX="9.58105" scaleY="9.62051" id="0:2885" />
+                            <DataBindContext sourcePathIds="0:40-0:2852" propertyKey="14" converterId="0:2459" id="0:3683" />
+                          </Node>
+                        </Node>
+                        <DataBindContext sourcePathIds="0:40-0:2852" propertyKey="14" converterId="0:2431" id="0:3682" />
+                      </Node>
+                      <DataBindContext sourcePathIds="0:40-0:2852" propertyKey="15" converterId="0:2500" id="0:3681" />
+                    </Node>
+                    <DataBindContext sourcePathIds="0:40-0:2855" propertyKey="15" converterId="0:2499" id="0:3680" />
+                  </Node>
+                </Node>
+                <Node name="handL back ring" id="0:2866">
+                  <Node name="handL back ring root" x="119.5" y="-591.31" rotation="0.0305" id="0:2886">
+                    <Node name="handL back ring converge" rotation="-0.0165" id="0:2887">
+                      <Node name="handL back ring slide" y="185.558" id="0:2888">
+                        <Image name="handL back ring base picture" assetId="0:305" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-103.453" y="-528.677" scaleX="9.35091" scaleY="9.54847" id="0:2889" />
+                        <Node name="handL back ring tip joint" y="-461.109" id="0:2890">
+                          <Node name="handL back ring tip slide" y="222.431" id="0:2891">
+                            <Image name="handL back ring tip picture" assetId="0:306" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-93.566" y="-319.242" scaleX="9.472" scaleY="9.56541" id="0:2892" />
+                            <DataBindContext sourcePathIds="0:40-0:2853" propertyKey="14" converterId="0:2547" id="0:3687" />
+                          </Node>
+                        </Node>
+                        <DataBindContext sourcePathIds="0:40-0:2853" propertyKey="14" converterId="0:2519" id="0:3686" />
+                      </Node>
+                      <DataBindContext sourcePathIds="0:40-0:2853" propertyKey="15" converterId="0:2588" id="0:3685" />
+                    </Node>
+                    <DataBindContext sourcePathIds="0:40-0:2855" propertyKey="15" converterId="0:2587" id="0:3684" />
+                  </Node>
+                </Node>
+                <Node name="handL back pinky" id="0:2867">
+                  <Node name="handL back pinky root" x="251.5" y="-581.88" rotation="0.0785" id="0:2893">
+                    <Node name="handL back pinky converge" rotation="-0.0456" id="0:2894">
+                      <Node name="handL back pinky slide" y="183.985" id="0:2895">
+                        <Image name="handL back pinky base picture" assetId="0:307" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-91.971" y="-440.388" scaleX="9.50316" scaleY="9.4976" id="0:2896" />
+                        <Node name="handL back pinky tip joint" y="-373.108" id="0:2897">
+                          <Node name="handL back pinky tip slide" y="244.598" id="0:2898">
+                            <Image name="handL back pinky tip picture" assetId="0:308" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-78.141" y="-265.913" scaleX="9.53294" scaleY="9.38" id="0:2899" />
+                            <DataBindContext sourcePathIds="0:40-0:2854" propertyKey="14" converterId="0:2635" id="0:3691" />
+                          </Node>
+                        </Node>
+                        <DataBindContext sourcePathIds="0:40-0:2854" propertyKey="14" converterId="0:2607" id="0:3690" />
+                      </Node>
+                      <DataBindContext sourcePathIds="0:40-0:2854" propertyKey="15" converterId="0:2676" id="0:3689" />
+                    </Node>
+                    <DataBindContext sourcePathIds="0:40-0:2855" propertyKey="15" converterId="0:2675" id="0:3688" />
+                  </Node>
+                </Node>
+                <ClippingShape sourceId="0:2869" name="handL back finger clip" id="0:2871" />
+              </Node>
+              <Shape name="handL back finger clip" id="0:2869">
+                <Rectangle x="-4000" y="-8459.98070574089" originX="0" originY="0" width="8000" height="8000" id="0:2870" />
+              </Shape>
+              <DataBindContext sourcePathIds="0:40-0:2857" propertyKey="18" converterId="0:2742" id="0:3675" />
+            </Node>
+            <Node name="handL palm side" opacity="0" id="0:2907">
+              <Node name="handL palm thumb" id="0:2909">
+                <Node name="handL palm thumb root" x="299.5" y="-367.0" rotation="0.06" id="0:2947">
+                  <Node name="handL palm thumb mcp" rotation="-0.07600000000000001" id="0:2948">
+                    <Image name="handL palm thumb base picture" assetId="0:324" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-68.809" y="-292.497" scaleX="6.73556" scaleY="6.692" id="0:2949" />
+                    <Node name="handL palm thumb tip joint" x="142.365" y="-213.029" rotation="0.64321" id="0:2950">
+                      <Node name="handL palm thumb tip" scaleY="0.8521634095587163" opacity="1.0" id="0:2951">
+                        <Node name="handL palm thumb tip unturn" rotation="-0.64321" id="0:2952">
+                          <Image name="handL palm thumb tip picture" assetId="0:325" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-63.008" y="-171.675" scaleX="6.62812" scaleY="6.63939" id="0:2953" />
+                        </Node>
+                        <DataBindContext sourcePathIds="0:40-0:2849" propertyKey="17" converterId="0:2097" id="0:3730" />
+                        <DataBindContext sourcePathIds="0:40-0:2849" propertyKey="18" converterId="0:2245" id="0:3731" />
+                      </Node>
+                    </Node>
+                    <DataBindContext sourcePathIds="0:40-0:2849" propertyKey="15" converterId="0:2740" id="0:3729" />
+                  </Node>
+                  <DataBindContext sourcePathIds="0:40-0:2850" propertyKey="15" converterId="0:2710" id="0:3728" />
+                </Node>
+              </Node>
+              <Node name="handL palm fingers" id="0:2908">
+                <Node name="handL palm index" id="0:2910">
+                  <Image name="handL palm index root patch" assetId="0:314" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="117.5" y="-751.0" scaleX="9.52381" scaleY="9.52381" id="0:2922" opacity="1">
+                    <DataBindContext sourcePathIds="0:40-0:2851" propertyKey="18" converterId="0:2741" id="0:3703" />
+                  </Image>
+                  <Node name="handL palm index root" x="210.5" y="-546.09" rotation="0.054" id="0:2915">
+                    <Node name="handL palm index converge" rotation="-0.022000000000000002" id="0:2916">
+                      <Node name="handL palm index base" scaleY="0.7735789210886813" opacity="1.0" id="0:2917">
+                        <Image name="handL palm index base picture" assetId="0:312" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-98.656" y="-519.797" scaleX="9.3381" scaleY="9.55862" id="0:2918" />
+                        <DataBindContext sourcePathIds="0:40-0:2851" propertyKey="17" converterId="0:2053" id="0:3698" />
+                        <DataBindContext sourcePathIds="0:40-0:2851" propertyKey="18" converterId="0:2191" id="0:3699" />
+                      </Node>
+                      <Node name="handL palm index tip joint" y="-349.854" id="0:2919">
+                        <Node name="handL palm index tip" scaleY="0.6939995243081564" opacity="1.0" id="0:2920">
+                          <Image name="handL palm index tip picture" assetId="0:313" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-86.751" y="-309.428" scaleX="9.74333" scaleY="9.55111" id="0:2921" />
+                          <DataBindContext sourcePathIds="0:40-0:2851" propertyKey="17" converterId="0:2069" id="0:3701" />
+                          <DataBindContext sourcePathIds="0:40-0:2851" propertyKey="18" converterId="0:2113" id="0:3702" />
+                        </Node>
+                        <DataBindContext sourcePathIds="0:40-0:2851" propertyKey="14" converterId="0:2327" id="0:3700" />
+                      </Node>
+                      <DataBindContext sourcePathIds="0:40-0:2851" propertyKey="15" converterId="0:2414" id="0:3697" />
+                    </Node>
+                    <DataBindContext sourcePathIds="0:40-0:2855" propertyKey="15" converterId="0:2413" id="0:3696" />
+                  </Node>
+                </Node>
+                <Node name="handL palm middle" id="0:2911">
+                  <Image name="handL palm middle root patch" assetId="0:317" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-37.5" y="-751.0" scaleX="9.52381" scaleY="9.52381" id="0:2930" opacity="1">
+                    <DataBindContext sourcePathIds="0:40-0:2852" propertyKey="18" converterId="0:2741" id="0:3711" />
+                  </Image>
+                  <Node name="handL palm middle root" x="60.5" y="-589.65" rotation="0.006" id="0:2923">
+                    <Node name="handL palm middle converge" rotation="-0.005600000000000001" id="0:2924">
+                      <Node name="handL palm middle base" scaleY="0.681949551555751" opacity="1.0" id="0:2925">
+                        <Image name="handL palm middle base picture" assetId="0:315" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-103.844" y="-570.194" scaleX="9.35091" scaleY="9.45" id="0:2926" />
+                        <DataBindContext sourcePathIds="0:40-0:2852" propertyKey="17" converterId="0:2053" id="0:3706" />
+                        <DataBindContext sourcePathIds="0:40-0:2852" propertyKey="18" converterId="0:2191" id="0:3707" />
+                      </Node>
+                      <Node name="handL palm middle tip joint" y="-342.813" id="0:2927">
+                        <Node name="handL palm middle tip" scaleY="0.5346229984457247" opacity="1.0" id="0:2928">
+                          <Image name="handL palm middle tip picture" assetId="0:316" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-89.217" y="-341.16" scaleX="9.58105" scaleY="9.62051" id="0:2929" />
+                          <DataBindContext sourcePathIds="0:40-0:2852" propertyKey="17" converterId="0:2069" id="0:3709" />
+                          <DataBindContext sourcePathIds="0:40-0:2852" propertyKey="18" converterId="0:2113" id="0:3710" />
+                        </Node>
+                        <DataBindContext sourcePathIds="0:40-0:2852" propertyKey="14" converterId="0:2415" id="0:3708" />
+                      </Node>
+                      <DataBindContext sourcePathIds="0:40-0:2852" propertyKey="15" converterId="0:2502" id="0:3705" />
+                    </Node>
+                    <DataBindContext sourcePathIds="0:40-0:2855" propertyKey="15" converterId="0:2501" id="0:3704" />
+                  </Node>
+                </Node>
+                <Node name="handL palm ring" id="0:2912">
+                  <Image name="handL palm ring root patch" assetId="0:320" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-202.5" y="-751.0" scaleX="9.52381" scaleY="9.52381" id="0:2938" opacity="1">
+                    <DataBindContext sourcePathIds="0:40-0:2853" propertyKey="18" converterId="0:2741" id="0:3719" />
+                  </Image>
+                  <Node name="handL palm ring root" x="-103.5" y="-594.09" rotation="-0.0305" id="0:2931">
+                    <Node name="handL palm ring converge" rotation="0.0165" id="0:2932">
+                      <Node name="handL palm ring base" scaleY="0.5975832992595547" opacity="1.0" id="0:2933">
+                        <Image name="handL palm ring base picture" assetId="0:318" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-103.453" y="-528.677" scaleX="9.35091" scaleY="9.54847" id="0:2934" />
+                        <DataBindContext sourcePathIds="0:40-0:2853" propertyKey="17" converterId="0:2053" id="0:3714" />
+                        <DataBindContext sourcePathIds="0:40-0:2853" propertyKey="18" converterId="0:2191" id="0:3715" />
+                      </Node>
+                      <Node name="handL palm ring tip joint" y="-275.551" id="0:2935">
+                        <Node name="handL palm ring tip" scaleY="0.3748567893852484" opacity="1.0" id="0:2936">
+                          <Image name="handL palm ring tip picture" assetId="0:319" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-93.566" y="-319.242" scaleX="9.472" scaleY="9.56541" id="0:2937" />
+                          <DataBindContext sourcePathIds="0:40-0:2853" propertyKey="17" converterId="0:2069" id="0:3717" />
+                          <DataBindContext sourcePathIds="0:40-0:2853" propertyKey="18" converterId="0:2113" id="0:3718" />
+                        </Node>
+                        <DataBindContext sourcePathIds="0:40-0:2853" propertyKey="14" converterId="0:2503" id="0:3716" />
+                      </Node>
+                      <DataBindContext sourcePathIds="0:40-0:2853" propertyKey="15" converterId="0:2590" id="0:3713" />
+                    </Node>
+                    <DataBindContext sourcePathIds="0:40-0:2855" propertyKey="15" converterId="0:2589" id="0:3712" />
+                  </Node>
+                </Node>
+                <Node name="handL palm pinky" id="0:2913">
+                  <Image name="handL palm pinky root patch" assetId="0:323" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-322.5" y="-751.0" scaleX="9.52381" scaleY="9.52381" id="0:2946" opacity="1">
+                    <DataBindContext sourcePathIds="0:40-0:2854" propertyKey="18" converterId="0:2741" id="0:3727" />
+                  </Image>
+                  <Node name="handL palm pinky root" x="-239.5" y="-583.03" rotation="-0.0785" id="0:2939">
+                    <Node name="handL palm pinky converge" rotation="0.0456" id="0:2940">
+                      <Node name="handL palm pinky base" scaleY="0.5068860309155578" opacity="1.0" id="0:2941">
+                        <Image name="handL palm pinky base picture" assetId="0:321" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-91.971" y="-440.388" scaleX="9.50316" scaleY="9.4976" id="0:2942" />
+                        <DataBindContext sourcePathIds="0:40-0:2854" propertyKey="17" converterId="0:2053" id="0:3722" />
+                        <DataBindContext sourcePathIds="0:40-0:2854" propertyKey="18" converterId="0:2191" id="0:3723" />
+                      </Node>
+                      <Node name="handL palm pinky tip joint" y="-189.123" id="0:2943">
+                        <Node name="handL palm pinky tip" scaleY="0.19273494921904472" opacity="0.0" id="0:2944">
+                          <Image name="handL palm pinky tip picture" assetId="0:322" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-78.141" y="-265.913" scaleX="9.53294" scaleY="9.38" id="0:2945" />
+                          <DataBindContext sourcePathIds="0:40-0:2854" propertyKey="17" converterId="0:2069" id="0:3725" />
+                          <DataBindContext sourcePathIds="0:40-0:2854" propertyKey="18" converterId="0:2113" id="0:3726" />
+                        </Node>
+                        <DataBindContext sourcePathIds="0:40-0:2854" propertyKey="14" converterId="0:2591" id="0:3724" />
+                      </Node>
+                      <DataBindContext sourcePathIds="0:40-0:2854" propertyKey="15" converterId="0:2678" id="0:3721" />
+                    </Node>
+                    <DataBindContext sourcePathIds="0:40-0:2855" propertyKey="15" converterId="0:2677" id="0:3720" />
+                  </Node>
+                </Node>
+              </Node>
+              <Image name="handL palm palm" assetId="0:311" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-379.5" y="-751.0" scaleX="9.47059" scaleY="9.52439" id="0:2914" />
+              <DataBindContext sourcePathIds="0:40-0:2857" propertyKey="18" converterId="0:2743" id="0:3695" />
+            </Node>
+          </Node>
+          <Shape name="apple L" x="70" y="0" opacity="0" id="0:2966">
+            <Ellipse width="44.0" height="44.0" id="0:2967" />
+            <Stroke thickness="6" id="0:2968">
+              <SolidColor colorValue="FF3A1C0C" id="0:2969" />
+            </Stroke>
+            <Fill id="0:2970">
+              <SolidColor colorValue="FFD8432E" id="0:2971" />
+            </Fill>
+            <DataBindContext sourcePathIds="0:40-0:2015" propertyKey="18" id="0:3734" />
+          </Shape>
+          <Shape name="handle L" x="60" y="6" opacity="0" rotation="1.45" id="0:2972">
+            <Rectangle width="120" height="30" cornerRadiusTL="12" id="0:2973" />
+            <Stroke thickness="6" id="0:2974">
+              <SolidColor colorValue="FF3A1C0C" id="0:2975" />
+            </Stroke>
+            <Fill id="0:2976">
+              <SolidColor colorValue="FFB07A45" id="0:2977" />
+            </Fill>
+            <DataBindContext sourcePathIds="0:40-0:2016" propertyKey="18" id="0:3735" />
+          </Shape>
+          <DataBindContext sourcePathIds="0:40-0:2856" propertyKey="17" id="0:3674" />
+        </Node>
+      </Node>
+    </Node>
+    <Node name="arm R" x="140" y="110" scaleX="1.25" scaleY="1.25" id="0:2017">
+      <RootBone name="upperArm_R" x="0" y="0" rotation="0.62" length="150" id="0:2018">
+        <Bone name="foreArm_R" rotation="-0.62" length="140" id="0:2019">
+          <Bone name="hand_R" rotation="0" length="45" id="0:2020">
+            <DataBindContext sourcePathIds="0:40-0:2011" propertyKey="15" id="0:3612" />
+          </Bone>
+          <Shape name="forearm R" id="0:2021">
+            <Rectangle x="-16.6" y="0" originX="0" originY="0.5" width="173.2" height="33.2" cornerRadiusTL="16.6" id="0:2022" />
+            <Fill id="0:2025">
+              <SolidColor colorValue="FFFDC28D" id="0:2026" />
+            </Fill>
+            <Stroke thickness="6" cap="round" join="round" id="0:2023">
+              <SolidColor colorValue="FF3A1C0C" id="0:2024" />
+            </Stroke>
+          </Shape>
+          <DataBindContext sourcePathIds="0:40-0:2010" propertyKey="15" id="0:3611" />
+        </Bone>
+        <Shape name="sleeve R" id="0:2027">
+          <Rectangle x="-27.0" y="0" originX="0" originY="0.5" width="204" height="54" cornerRadiusTL="27" id="0:2028" />
+          <Fill id="0:2031">
+            <SolidColor colorValue="FFFED9A6" id="0:2032" />
+          </Fill>
+          <Stroke thickness="6" cap="round" join="round" id="0:2029">
+            <SolidColor colorValue="FF3A1C0C" id="0:2030" />
+          </Stroke>
+        </Shape>
+        <DataBindContext sourcePathIds="0:40-0:2009" propertyKey="15" id="0:3610" />
+      </RootBone>
+    </Node>
+    <Node name="arm L" x="140" y="640" scaleX="1.25" scaleY="1.25" id="0:2035">
+      <RootBone name="upperArm_L" x="0" y="0" rotation="-0.62" length="150" id="0:2036">
+        <Bone name="foreArm_L" rotation="0.62" length="140" id="0:2037">
+          <Bone name="hand_L" rotation="0" length="45" id="0:2038">
+            <DataBindContext sourcePathIds="0:40-0:2014" propertyKey="15" id="0:3615" />
+          </Bone>
+          <Shape name="forearm L" id="0:2039">
+            <Rectangle x="-16.6" y="0" originX="0" originY="0.5" width="173.2" height="33.2" cornerRadiusTL="16.6" id="0:2040" />
+            <Fill id="0:2043">
+              <SolidColor colorValue="FFFDC28D" id="0:2044" />
+            </Fill>
+            <Stroke thickness="6" cap="round" join="round" id="0:2041">
+              <SolidColor colorValue="FF3A1C0C" id="0:2042" />
+            </Stroke>
+          </Shape>
+          <DataBindContext sourcePathIds="0:40-0:2013" propertyKey="15" id="0:3614" />
+        </Bone>
+        <Shape name="sleeve L" id="0:2045">
+          <Rectangle x="-27.0" y="0" originX="0" originY="0.5" width="204" height="54" cornerRadiusTL="27" id="0:2046" />
+          <Fill id="0:2049">
+            <SolidColor colorValue="FFFED9A6" id="0:2050" />
+          </Fill>
+          <Stroke thickness="6" cap="round" join="round" id="0:2047">
+            <SolidColor colorValue="FF3A1C0C" id="0:2048" />
+          </Stroke>
+        </Shape>
+        <DataBindContext sourcePathIds="0:40-0:2012" propertyKey="15" id="0:3613" />
+      </RootBone>
+    </Node>
+    <Node name="small R" x="60" y="905" id="0:2978">
+      <Node name="handR hand" scaleX="0.992" scaleY="0.992" id="0:2985">
+        <Node name="handR mirror" scaleY="1.0" id="0:2986">
+          <Node name="handR art" rotation="1.5707963267948966" scaleX="0.084" scaleY="0.084" id="0:2987">
+            <Node name="handR back side" opacity="1" id="0:2988">
+              <Image name="handR back palm" assetId="0:300" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-409.5" y="-748.0" scaleX="9.57831" scaleY="9.4878" id="0:2995" />
+              <Node name="handR back thumb" id="0:2990">
+                <Node name="handR back thumb root" x="-284.5" y="-356.0" rotation="-0.06" id="0:3027">
+                  <Node name="handR back thumb mcp" rotation="0.07600000000000001" id="0:3028">
+                    <Image name="handR back thumb base picture" assetId="0:309" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-233.591" y="-292.497" scaleX="6.73556" scaleY="6.692" id="0:3029" />
+                    <Node name="handR back thumb tip joint" x="-142.365" y="-213.029" rotation="-0.64321" id="0:3030">
+                      <Node name="handR back thumb tip" y="25.519" id="0:3031">
+                        <Node name="handR back thumb tip unturn" rotation="0.64321" id="0:3032">
+                          <Image name="handR back thumb tip picture" assetId="0:310" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-148.392" y="-171.675" scaleX="6.62812" scaleY="6.63939" id="0:3033" />
+                        </Node>
+                        <DataBindContext sourcePathIds="0:40-0:2744" propertyKey="14" converterId="0:2299" id="0:3756" />
+                      </Node>
+                    </Node>
+                    <DataBindContext sourcePathIds="0:40-0:2744" propertyKey="15" converterId="0:2709" id="0:3755" />
+                  </Node>
+                  <DataBindContext sourcePathIds="0:40-0:2745" propertyKey="15" converterId="0:2679" id="0:3754" />
+                </Node>
+              </Node>
+              <Node name="handR back fingers" id="0:2989">
+                <Node name="handR back index" id="0:2991">
+                  <Node name="handR back index root" x="-185.5" y="-540.69" rotation="-0.054" id="0:2999">
+                    <Node name="handR back index converge" rotation="0.022000000000000002" id="0:3000">
+                      <Node name="handR back index slide" y="102.4" id="0:3001">
+                        <Image name="handR back index base picture" assetId="0:301" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-98.656" y="-519.797" scaleX="9.3381" scaleY="9.55862" id="0:3002" />
+                        <Node name="handR back index tip joint" y="-452.253" id="0:3003">
+                          <Node name="handR back index tip slide" y="105.851" id="0:3004">
+                            <Image name="handR back index tip picture" assetId="0:302" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-86.751" y="-309.428" scaleX="9.74333" scaleY="9.55111" id="0:3005" />
+                            <DataBindContext sourcePathIds="0:40-0:2746" propertyKey="14" converterId="0:2371" id="0:3741" />
+                          </Node>
+                        </Node>
+                        <DataBindContext sourcePathIds="0:40-0:2746" propertyKey="14" converterId="0:2343" id="0:3740" />
+                      </Node>
+                      <DataBindContext sourcePathIds="0:40-0:2746" propertyKey="15" converterId="0:2412" id="0:3739" />
+                    </Node>
+                    <DataBindContext sourcePathIds="0:40-0:2750" propertyKey="15" converterId="0:2411" id="0:3738" />
+                  </Node>
+                </Node>
+                <Node name="handR back middle" id="0:2992">
+                  <Node name="handR back middle root" x="-39.5" y="-587.62" rotation="-0.006" id="0:3006">
+                    <Node name="handR back middle converge" rotation="0.005600000000000001" id="0:3007">
+                      <Node name="handR back middle slide" y="159.883" id="0:3008">
+                        <Image name="handR back middle base picture" assetId="0:303" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-103.844" y="-570.194" scaleX="9.35091" scaleY="9.45" id="0:3009" />
+                        <Node name="handR back middle tip joint" y="-502.696" id="0:3010">
+                          <Node name="handR back middle tip slide" y="175.804" id="0:3011">
+                            <Image name="handR back middle tip picture" assetId="0:304" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-89.217" y="-341.16" scaleX="9.58105" scaleY="9.62051" id="0:3012" />
+                            <DataBindContext sourcePathIds="0:40-0:2747" propertyKey="14" converterId="0:2459" id="0:3745" />
+                          </Node>
+                        </Node>
+                        <DataBindContext sourcePathIds="0:40-0:2747" propertyKey="14" converterId="0:2431" id="0:3744" />
+                      </Node>
+                      <DataBindContext sourcePathIds="0:40-0:2747" propertyKey="15" converterId="0:2500" id="0:3743" />
+                    </Node>
+                    <DataBindContext sourcePathIds="0:40-0:2750" propertyKey="15" converterId="0:2499" id="0:3742" />
+                  </Node>
+                </Node>
+                <Node name="handR back ring" id="0:2993">
+                  <Node name="handR back ring root" x="119.5" y="-591.31" rotation="0.0305" id="0:3013">
+                    <Node name="handR back ring converge" rotation="-0.0165" id="0:3014">
+                      <Node name="handR back ring slide" y="185.558" id="0:3015">
+                        <Image name="handR back ring base picture" assetId="0:305" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-103.453" y="-528.677" scaleX="9.35091" scaleY="9.54847" id="0:3016" />
+                        <Node name="handR back ring tip joint" y="-461.109" id="0:3017">
+                          <Node name="handR back ring tip slide" y="222.431" id="0:3018">
+                            <Image name="handR back ring tip picture" assetId="0:306" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-93.566" y="-319.242" scaleX="9.472" scaleY="9.56541" id="0:3019" />
+                            <DataBindContext sourcePathIds="0:40-0:2748" propertyKey="14" converterId="0:2547" id="0:3749" />
+                          </Node>
+                        </Node>
+                        <DataBindContext sourcePathIds="0:40-0:2748" propertyKey="14" converterId="0:2519" id="0:3748" />
+                      </Node>
+                      <DataBindContext sourcePathIds="0:40-0:2748" propertyKey="15" converterId="0:2588" id="0:3747" />
+                    </Node>
+                    <DataBindContext sourcePathIds="0:40-0:2750" propertyKey="15" converterId="0:2587" id="0:3746" />
+                  </Node>
+                </Node>
+                <Node name="handR back pinky" id="0:2994">
+                  <Node name="handR back pinky root" x="251.5" y="-581.88" rotation="0.0785" id="0:3020">
+                    <Node name="handR back pinky converge" rotation="-0.0456" id="0:3021">
+                      <Node name="handR back pinky slide" y="183.985" id="0:3022">
+                        <Image name="handR back pinky base picture" assetId="0:307" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-91.971" y="-440.388" scaleX="9.50316" scaleY="9.4976" id="0:3023" />
+                        <Node name="handR back pinky tip joint" y="-373.108" id="0:3024">
+                          <Node name="handR back pinky tip slide" y="244.598" id="0:3025">
+                            <Image name="handR back pinky tip picture" assetId="0:308" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-78.141" y="-265.913" scaleX="9.53294" scaleY="9.38" id="0:3026" />
+                            <DataBindContext sourcePathIds="0:40-0:2749" propertyKey="14" converterId="0:2635" id="0:3753" />
+                          </Node>
+                        </Node>
+                        <DataBindContext sourcePathIds="0:40-0:2749" propertyKey="14" converterId="0:2607" id="0:3752" />
+                      </Node>
+                      <DataBindContext sourcePathIds="0:40-0:2749" propertyKey="15" converterId="0:2676" id="0:3751" />
+                    </Node>
+                    <DataBindContext sourcePathIds="0:40-0:2750" propertyKey="15" converterId="0:2675" id="0:3750" />
+                  </Node>
+                </Node>
+                <ClippingShape sourceId="0:2996" name="handR back finger clip" id="0:2998" />
+              </Node>
+              <Shape name="handR back finger clip" id="0:2996">
+                <Rectangle x="-4000" y="-8459.98070574089" originX="0" originY="0" width="8000" height="8000" id="0:2997" />
+              </Shape>
+              <DataBindContext sourcePathIds="0:40-0:2752" propertyKey="18" converterId="0:2742" id="0:3737" />
+            </Node>
+            <Node name="handR palm side" opacity="0" id="0:3034">
+              <Node name="handR palm thumb" id="0:3036">
+                <Node name="handR palm thumb root" x="299.5" y="-367.0" rotation="0.06" id="0:3074">
+                  <Node name="handR palm thumb mcp" rotation="-0.07600000000000001" id="0:3075">
+                    <Image name="handR palm thumb base picture" assetId="0:324" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-68.809" y="-292.497" scaleX="6.73556" scaleY="6.692" id="0:3076" />
+                    <Node name="handR palm thumb tip joint" x="142.365" y="-213.029" rotation="0.64321" id="0:3077">
+                      <Node name="handR palm thumb tip" scaleY="0.8521634095587163" opacity="1.0" id="0:3078">
+                        <Node name="handR palm thumb tip unturn" rotation="-0.64321" id="0:3079">
+                          <Image name="handR palm thumb tip picture" assetId="0:325" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-63.008" y="-171.675" scaleX="6.62812" scaleY="6.63939" id="0:3080" />
+                        </Node>
+                        <DataBindContext sourcePathIds="0:40-0:2744" propertyKey="17" converterId="0:2097" id="0:3792" />
+                        <DataBindContext sourcePathIds="0:40-0:2744" propertyKey="18" converterId="0:2245" id="0:3793" />
+                      </Node>
+                    </Node>
+                    <DataBindContext sourcePathIds="0:40-0:2744" propertyKey="15" converterId="0:2740" id="0:3791" />
+                  </Node>
+                  <DataBindContext sourcePathIds="0:40-0:2745" propertyKey="15" converterId="0:2710" id="0:3790" />
+                </Node>
+              </Node>
+              <Node name="handR palm fingers" id="0:3035">
+                <Node name="handR palm index" id="0:3037">
+                  <Image name="handR palm index root patch" assetId="0:314" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="117.5" y="-751.0" scaleX="9.52381" scaleY="9.52381" id="0:3049" opacity="1">
+                    <DataBindContext sourcePathIds="0:40-0:2746" propertyKey="18" converterId="0:2741" id="0:3765" />
+                  </Image>
+                  <Node name="handR palm index root" x="210.5" y="-546.09" rotation="0.054" id="0:3042">
+                    <Node name="handR palm index converge" rotation="-0.022000000000000002" id="0:3043">
+                      <Node name="handR palm index base" scaleY="0.7735789210886813" opacity="1.0" id="0:3044">
+                        <Image name="handR palm index base picture" assetId="0:312" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-98.656" y="-519.797" scaleX="9.3381" scaleY="9.55862" id="0:3045" />
+                        <DataBindContext sourcePathIds="0:40-0:2746" propertyKey="17" converterId="0:2053" id="0:3760" />
+                        <DataBindContext sourcePathIds="0:40-0:2746" propertyKey="18" converterId="0:2191" id="0:3761" />
+                      </Node>
+                      <Node name="handR palm index tip joint" y="-349.854" id="0:3046">
+                        <Node name="handR palm index tip" scaleY="0.6939995243081564" opacity="1.0" id="0:3047">
+                          <Image name="handR palm index tip picture" assetId="0:313" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-86.751" y="-309.428" scaleX="9.74333" scaleY="9.55111" id="0:3048" />
+                          <DataBindContext sourcePathIds="0:40-0:2746" propertyKey="17" converterId="0:2069" id="0:3763" />
+                          <DataBindContext sourcePathIds="0:40-0:2746" propertyKey="18" converterId="0:2113" id="0:3764" />
+                        </Node>
+                        <DataBindContext sourcePathIds="0:40-0:2746" propertyKey="14" converterId="0:2327" id="0:3762" />
+                      </Node>
+                      <DataBindContext sourcePathIds="0:40-0:2746" propertyKey="15" converterId="0:2414" id="0:3759" />
+                    </Node>
+                    <DataBindContext sourcePathIds="0:40-0:2750" propertyKey="15" converterId="0:2413" id="0:3758" />
+                  </Node>
+                </Node>
+                <Node name="handR palm middle" id="0:3038">
+                  <Image name="handR palm middle root patch" assetId="0:317" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-37.5" y="-751.0" scaleX="9.52381" scaleY="9.52381" id="0:3057" opacity="1">
+                    <DataBindContext sourcePathIds="0:40-0:2747" propertyKey="18" converterId="0:2741" id="0:3773" />
+                  </Image>
+                  <Node name="handR palm middle root" x="60.5" y="-589.65" rotation="0.006" id="0:3050">
+                    <Node name="handR palm middle converge" rotation="-0.005600000000000001" id="0:3051">
+                      <Node name="handR palm middle base" scaleY="0.681949551555751" opacity="1.0" id="0:3052">
+                        <Image name="handR palm middle base picture" assetId="0:315" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-103.844" y="-570.194" scaleX="9.35091" scaleY="9.45" id="0:3053" />
+                        <DataBindContext sourcePathIds="0:40-0:2747" propertyKey="17" converterId="0:2053" id="0:3768" />
+                        <DataBindContext sourcePathIds="0:40-0:2747" propertyKey="18" converterId="0:2191" id="0:3769" />
+                      </Node>
+                      <Node name="handR palm middle tip joint" y="-342.813" id="0:3054">
+                        <Node name="handR palm middle tip" scaleY="0.5346229984457247" opacity="1.0" id="0:3055">
+                          <Image name="handR palm middle tip picture" assetId="0:316" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-89.217" y="-341.16" scaleX="9.58105" scaleY="9.62051" id="0:3056" />
+                          <DataBindContext sourcePathIds="0:40-0:2747" propertyKey="17" converterId="0:2069" id="0:3771" />
+                          <DataBindContext sourcePathIds="0:40-0:2747" propertyKey="18" converterId="0:2113" id="0:3772" />
+                        </Node>
+                        <DataBindContext sourcePathIds="0:40-0:2747" propertyKey="14" converterId="0:2415" id="0:3770" />
+                      </Node>
+                      <DataBindContext sourcePathIds="0:40-0:2747" propertyKey="15" converterId="0:2502" id="0:3767" />
+                    </Node>
+                    <DataBindContext sourcePathIds="0:40-0:2750" propertyKey="15" converterId="0:2501" id="0:3766" />
+                  </Node>
+                </Node>
+                <Node name="handR palm ring" id="0:3039">
+                  <Image name="handR palm ring root patch" assetId="0:320" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-202.5" y="-751.0" scaleX="9.52381" scaleY="9.52381" id="0:3065" opacity="1">
+                    <DataBindContext sourcePathIds="0:40-0:2748" propertyKey="18" converterId="0:2741" id="0:3781" />
+                  </Image>
+                  <Node name="handR palm ring root" x="-103.5" y="-594.09" rotation="-0.0305" id="0:3058">
+                    <Node name="handR palm ring converge" rotation="0.0165" id="0:3059">
+                      <Node name="handR palm ring base" scaleY="0.5975832992595547" opacity="1.0" id="0:3060">
+                        <Image name="handR palm ring base picture" assetId="0:318" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-103.453" y="-528.677" scaleX="9.35091" scaleY="9.54847" id="0:3061" />
+                        <DataBindContext sourcePathIds="0:40-0:2748" propertyKey="17" converterId="0:2053" id="0:3776" />
+                        <DataBindContext sourcePathIds="0:40-0:2748" propertyKey="18" converterId="0:2191" id="0:3777" />
+                      </Node>
+                      <Node name="handR palm ring tip joint" y="-275.551" id="0:3062">
+                        <Node name="handR palm ring tip" scaleY="0.3748567893852484" opacity="1.0" id="0:3063">
+                          <Image name="handR palm ring tip picture" assetId="0:319" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-93.566" y="-319.242" scaleX="9.472" scaleY="9.56541" id="0:3064" />
+                          <DataBindContext sourcePathIds="0:40-0:2748" propertyKey="17" converterId="0:2069" id="0:3779" />
+                          <DataBindContext sourcePathIds="0:40-0:2748" propertyKey="18" converterId="0:2113" id="0:3780" />
+                        </Node>
+                        <DataBindContext sourcePathIds="0:40-0:2748" propertyKey="14" converterId="0:2503" id="0:3778" />
+                      </Node>
+                      <DataBindContext sourcePathIds="0:40-0:2748" propertyKey="15" converterId="0:2590" id="0:3775" />
+                    </Node>
+                    <DataBindContext sourcePathIds="0:40-0:2750" propertyKey="15" converterId="0:2589" id="0:3774" />
+                  </Node>
+                </Node>
+                <Node name="handR palm pinky" id="0:3040">
+                  <Image name="handR palm pinky root patch" assetId="0:323" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-322.5" y="-751.0" scaleX="9.52381" scaleY="9.52381" id="0:3073" opacity="1">
+                    <DataBindContext sourcePathIds="0:40-0:2749" propertyKey="18" converterId="0:2741" id="0:3789" />
+                  </Image>
+                  <Node name="handR palm pinky root" x="-239.5" y="-583.03" rotation="-0.0785" id="0:3066">
+                    <Node name="handR palm pinky converge" rotation="0.0456" id="0:3067">
+                      <Node name="handR palm pinky base" scaleY="0.5068860309155578" opacity="1.0" id="0:3068">
+                        <Image name="handR palm pinky base picture" assetId="0:321" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-91.971" y="-440.388" scaleX="9.50316" scaleY="9.4976" id="0:3069" />
+                        <DataBindContext sourcePathIds="0:40-0:2749" propertyKey="17" converterId="0:2053" id="0:3784" />
+                        <DataBindContext sourcePathIds="0:40-0:2749" propertyKey="18" converterId="0:2191" id="0:3785" />
+                      </Node>
+                      <Node name="handR palm pinky tip joint" y="-189.123" id="0:3070">
+                        <Node name="handR palm pinky tip" scaleY="0.19273494921904472" opacity="0.0" id="0:3071">
+                          <Image name="handR palm pinky tip picture" assetId="0:322" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-78.141" y="-265.913" scaleX="9.53294" scaleY="9.38" id="0:3072" />
+                          <DataBindContext sourcePathIds="0:40-0:2749" propertyKey="17" converterId="0:2069" id="0:3787" />
+                          <DataBindContext sourcePathIds="0:40-0:2749" propertyKey="18" converterId="0:2113" id="0:3788" />
+                        </Node>
+                        <DataBindContext sourcePathIds="0:40-0:2749" propertyKey="14" converterId="0:2591" id="0:3786" />
+                      </Node>
+                      <DataBindContext sourcePathIds="0:40-0:2749" propertyKey="15" converterId="0:2678" id="0:3783" />
+                    </Node>
+                    <DataBindContext sourcePathIds="0:40-0:2750" propertyKey="15" converterId="0:2677" id="0:3782" />
+                  </Node>
+                </Node>
+              </Node>
+              <Image name="handR palm palm" assetId="0:311" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-379.5" y="-751.0" scaleX="9.47059" scaleY="9.52439" id="0:3041" />
+              <DataBindContext sourcePathIds="0:40-0:2752" propertyKey="18" converterId="0:2743" id="0:3757" />
+            </Node>
+          </Node>
+          <DataBindContext sourcePathIds="0:40-0:2751" propertyKey="17" id="0:3736" />
+        </Node>
+      </Node>
+      <Shape name="small forearm R" id="0:2979">
+        <Rectangle x="-74.896" y="0" originX="0" originY="0.5" width="90.752" height="30.752" cornerRadiusTL="15.376" id="0:2980" />
+        <Fill id="0:2983">
+          <SolidColor colorValue="FFFDC28D" id="0:2984" />
+        </Fill>
+        <Stroke thickness="6" cap="round" join="round" id="0:2981">
+          <SolidColor colorValue="FF3A1C0C" id="0:2982" />
+        </Stroke>
+      </Shape>
+    </Node>
+    <Node name="small L" x="230" y="875" id="0:3081">
+      <Node name="handL hand" scaleX="0.992" scaleY="0.992" id="0:3088">
+        <Node name="handL mirror" scaleY="-1.0" id="0:3089">
+          <Node name="handL art" rotation="1.5707963267948966" scaleX="0.084" scaleY="0.084" id="0:3090">
+            <Node name="handL back side" opacity="1" id="0:3091">
+              <Image name="handL back palm" assetId="0:300" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-409.5" y="-748.0" scaleX="9.57831" scaleY="9.4878" id="0:3098" />
+              <Node name="handL back thumb" id="0:3093">
+                <Node name="handL back thumb root" x="-284.5" y="-356.0" rotation="-0.06" id="0:3130">
+                  <Node name="handL back thumb mcp" rotation="0.07600000000000001" id="0:3131">
+                    <Image name="handL back thumb base picture" assetId="0:309" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-233.591" y="-292.497" scaleX="6.73556" scaleY="6.692" id="0:3132" />
+                    <Node name="handL back thumb tip joint" x="-142.365" y="-213.029" rotation="-0.64321" id="0:3133">
+                      <Node name="handL back thumb tip" y="25.519" id="0:3134">
+                        <Node name="handL back thumb tip unturn" rotation="0.64321" id="0:3135">
+                          <Image name="handL back thumb tip picture" assetId="0:310" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-148.392" y="-171.675" scaleX="6.62812" scaleY="6.63939" id="0:3136" />
+                        </Node>
+                        <DataBindContext sourcePathIds="0:40-0:2849" propertyKey="14" converterId="0:2299" id="0:3814" />
+                      </Node>
+                    </Node>
+                    <DataBindContext sourcePathIds="0:40-0:2849" propertyKey="15" converterId="0:2709" id="0:3813" />
+                  </Node>
+                  <DataBindContext sourcePathIds="0:40-0:2850" propertyKey="15" converterId="0:2679" id="0:3812" />
+                </Node>
+              </Node>
+              <Node name="handL back fingers" id="0:3092">
+                <Node name="handL back index" id="0:3094">
+                  <Node name="handL back index root" x="-185.5" y="-540.69" rotation="-0.054" id="0:3102">
+                    <Node name="handL back index converge" rotation="0.022000000000000002" id="0:3103">
+                      <Node name="handL back index slide" y="102.4" id="0:3104">
+                        <Image name="handL back index base picture" assetId="0:301" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-98.656" y="-519.797" scaleX="9.3381" scaleY="9.55862" id="0:3105" />
+                        <Node name="handL back index tip joint" y="-452.253" id="0:3106">
+                          <Node name="handL back index tip slide" y="105.851" id="0:3107">
+                            <Image name="handL back index tip picture" assetId="0:302" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-86.751" y="-309.428" scaleX="9.74333" scaleY="9.55111" id="0:3108" />
+                            <DataBindContext sourcePathIds="0:40-0:2851" propertyKey="14" converterId="0:2371" id="0:3799" />
+                          </Node>
+                        </Node>
+                        <DataBindContext sourcePathIds="0:40-0:2851" propertyKey="14" converterId="0:2343" id="0:3798" />
+                      </Node>
+                      <DataBindContext sourcePathIds="0:40-0:2851" propertyKey="15" converterId="0:2412" id="0:3797" />
+                    </Node>
+                    <DataBindContext sourcePathIds="0:40-0:2855" propertyKey="15" converterId="0:2411" id="0:3796" />
+                  </Node>
+                </Node>
+                <Node name="handL back middle" id="0:3095">
+                  <Node name="handL back middle root" x="-39.5" y="-587.62" rotation="-0.006" id="0:3109">
+                    <Node name="handL back middle converge" rotation="0.005600000000000001" id="0:3110">
+                      <Node name="handL back middle slide" y="159.883" id="0:3111">
+                        <Image name="handL back middle base picture" assetId="0:303" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-103.844" y="-570.194" scaleX="9.35091" scaleY="9.45" id="0:3112" />
+                        <Node name="handL back middle tip joint" y="-502.696" id="0:3113">
+                          <Node name="handL back middle tip slide" y="175.804" id="0:3114">
+                            <Image name="handL back middle tip picture" assetId="0:304" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-89.217" y="-341.16" scaleX="9.58105" scaleY="9.62051" id="0:3115" />
+                            <DataBindContext sourcePathIds="0:40-0:2852" propertyKey="14" converterId="0:2459" id="0:3803" />
+                          </Node>
+                        </Node>
+                        <DataBindContext sourcePathIds="0:40-0:2852" propertyKey="14" converterId="0:2431" id="0:3802" />
+                      </Node>
+                      <DataBindContext sourcePathIds="0:40-0:2852" propertyKey="15" converterId="0:2500" id="0:3801" />
+                    </Node>
+                    <DataBindContext sourcePathIds="0:40-0:2855" propertyKey="15" converterId="0:2499" id="0:3800" />
+                  </Node>
+                </Node>
+                <Node name="handL back ring" id="0:3096">
+                  <Node name="handL back ring root" x="119.5" y="-591.31" rotation="0.0305" id="0:3116">
+                    <Node name="handL back ring converge" rotation="-0.0165" id="0:3117">
+                      <Node name="handL back ring slide" y="185.558" id="0:3118">
+                        <Image name="handL back ring base picture" assetId="0:305" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-103.453" y="-528.677" scaleX="9.35091" scaleY="9.54847" id="0:3119" />
+                        <Node name="handL back ring tip joint" y="-461.109" id="0:3120">
+                          <Node name="handL back ring tip slide" y="222.431" id="0:3121">
+                            <Image name="handL back ring tip picture" assetId="0:306" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-93.566" y="-319.242" scaleX="9.472" scaleY="9.56541" id="0:3122" />
+                            <DataBindContext sourcePathIds="0:40-0:2853" propertyKey="14" converterId="0:2547" id="0:3807" />
+                          </Node>
+                        </Node>
+                        <DataBindContext sourcePathIds="0:40-0:2853" propertyKey="14" converterId="0:2519" id="0:3806" />
+                      </Node>
+                      <DataBindContext sourcePathIds="0:40-0:2853" propertyKey="15" converterId="0:2588" id="0:3805" />
+                    </Node>
+                    <DataBindContext sourcePathIds="0:40-0:2855" propertyKey="15" converterId="0:2587" id="0:3804" />
+                  </Node>
+                </Node>
+                <Node name="handL back pinky" id="0:3097">
+                  <Node name="handL back pinky root" x="251.5" y="-581.88" rotation="0.0785" id="0:3123">
+                    <Node name="handL back pinky converge" rotation="-0.0456" id="0:3124">
+                      <Node name="handL back pinky slide" y="183.985" id="0:3125">
+                        <Image name="handL back pinky base picture" assetId="0:307" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-91.971" y="-440.388" scaleX="9.50316" scaleY="9.4976" id="0:3126" />
+                        <Node name="handL back pinky tip joint" y="-373.108" id="0:3127">
+                          <Node name="handL back pinky tip slide" y="244.598" id="0:3128">
+                            <Image name="handL back pinky tip picture" assetId="0:308" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-78.141" y="-265.913" scaleX="9.53294" scaleY="9.38" id="0:3129" />
+                            <DataBindContext sourcePathIds="0:40-0:2854" propertyKey="14" converterId="0:2635" id="0:3811" />
+                          </Node>
+                        </Node>
+                        <DataBindContext sourcePathIds="0:40-0:2854" propertyKey="14" converterId="0:2607" id="0:3810" />
+                      </Node>
+                      <DataBindContext sourcePathIds="0:40-0:2854" propertyKey="15" converterId="0:2676" id="0:3809" />
+                    </Node>
+                    <DataBindContext sourcePathIds="0:40-0:2855" propertyKey="15" converterId="0:2675" id="0:3808" />
+                  </Node>
+                </Node>
+                <ClippingShape sourceId="0:3099" name="handL back finger clip" id="0:3101" />
+              </Node>
+              <Shape name="handL back finger clip" id="0:3099">
+                <Rectangle x="-4000" y="-8459.98070574089" originX="0" originY="0" width="8000" height="8000" id="0:3100" />
+              </Shape>
+              <DataBindContext sourcePathIds="0:40-0:2857" propertyKey="18" converterId="0:2742" id="0:3795" />
+            </Node>
+            <Node name="handL palm side" opacity="0" id="0:3137">
+              <Node name="handL palm thumb" id="0:3139">
+                <Node name="handL palm thumb root" x="299.5" y="-367.0" rotation="0.06" id="0:3177">
+                  <Node name="handL palm thumb mcp" rotation="-0.07600000000000001" id="0:3178">
+                    <Image name="handL palm thumb base picture" assetId="0:324" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-68.809" y="-292.497" scaleX="6.73556" scaleY="6.692" id="0:3179" />
+                    <Node name="handL palm thumb tip joint" x="142.365" y="-213.029" rotation="0.64321" id="0:3180">
+                      <Node name="handL palm thumb tip" scaleY="0.8521634095587163" opacity="1.0" id="0:3181">
+                        <Node name="handL palm thumb tip unturn" rotation="-0.64321" id="0:3182">
+                          <Image name="handL palm thumb tip picture" assetId="0:325" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-63.008" y="-171.675" scaleX="6.62812" scaleY="6.63939" id="0:3183" />
+                        </Node>
+                        <DataBindContext sourcePathIds="0:40-0:2849" propertyKey="17" converterId="0:2097" id="0:3850" />
+                        <DataBindContext sourcePathIds="0:40-0:2849" propertyKey="18" converterId="0:2245" id="0:3851" />
+                      </Node>
+                    </Node>
+                    <DataBindContext sourcePathIds="0:40-0:2849" propertyKey="15" converterId="0:2740" id="0:3849" />
+                  </Node>
+                  <DataBindContext sourcePathIds="0:40-0:2850" propertyKey="15" converterId="0:2710" id="0:3848" />
+                </Node>
+              </Node>
+              <Node name="handL palm fingers" id="0:3138">
+                <Node name="handL palm index" id="0:3140">
+                  <Image name="handL palm index root patch" assetId="0:314" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="117.5" y="-751.0" scaleX="9.52381" scaleY="9.52381" id="0:3152" opacity="1">
+                    <DataBindContext sourcePathIds="0:40-0:2851" propertyKey="18" converterId="0:2741" id="0:3823" />
+                  </Image>
+                  <Node name="handL palm index root" x="210.5" y="-546.09" rotation="0.054" id="0:3145">
+                    <Node name="handL palm index converge" rotation="-0.022000000000000002" id="0:3146">
+                      <Node name="handL palm index base" scaleY="0.7735789210886813" opacity="1.0" id="0:3147">
+                        <Image name="handL palm index base picture" assetId="0:312" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-98.656" y="-519.797" scaleX="9.3381" scaleY="9.55862" id="0:3148" />
+                        <DataBindContext sourcePathIds="0:40-0:2851" propertyKey="17" converterId="0:2053" id="0:3818" />
+                        <DataBindContext sourcePathIds="0:40-0:2851" propertyKey="18" converterId="0:2191" id="0:3819" />
+                      </Node>
+                      <Node name="handL palm index tip joint" y="-349.854" id="0:3149">
+                        <Node name="handL palm index tip" scaleY="0.6939995243081564" opacity="1.0" id="0:3150">
+                          <Image name="handL palm index tip picture" assetId="0:313" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-86.751" y="-309.428" scaleX="9.74333" scaleY="9.55111" id="0:3151" />
+                          <DataBindContext sourcePathIds="0:40-0:2851" propertyKey="17" converterId="0:2069" id="0:3821" />
+                          <DataBindContext sourcePathIds="0:40-0:2851" propertyKey="18" converterId="0:2113" id="0:3822" />
+                        </Node>
+                        <DataBindContext sourcePathIds="0:40-0:2851" propertyKey="14" converterId="0:2327" id="0:3820" />
+                      </Node>
+                      <DataBindContext sourcePathIds="0:40-0:2851" propertyKey="15" converterId="0:2414" id="0:3817" />
+                    </Node>
+                    <DataBindContext sourcePathIds="0:40-0:2855" propertyKey="15" converterId="0:2413" id="0:3816" />
+                  </Node>
+                </Node>
+                <Node name="handL palm middle" id="0:3141">
+                  <Image name="handL palm middle root patch" assetId="0:317" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-37.5" y="-751.0" scaleX="9.52381" scaleY="9.52381" id="0:3160" opacity="1">
+                    <DataBindContext sourcePathIds="0:40-0:2852" propertyKey="18" converterId="0:2741" id="0:3831" />
+                  </Image>
+                  <Node name="handL palm middle root" x="60.5" y="-589.65" rotation="0.006" id="0:3153">
+                    <Node name="handL palm middle converge" rotation="-0.005600000000000001" id="0:3154">
+                      <Node name="handL palm middle base" scaleY="0.681949551555751" opacity="1.0" id="0:3155">
+                        <Image name="handL palm middle base picture" assetId="0:315" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-103.844" y="-570.194" scaleX="9.35091" scaleY="9.45" id="0:3156" />
+                        <DataBindContext sourcePathIds="0:40-0:2852" propertyKey="17" converterId="0:2053" id="0:3826" />
+                        <DataBindContext sourcePathIds="0:40-0:2852" propertyKey="18" converterId="0:2191" id="0:3827" />
+                      </Node>
+                      <Node name="handL palm middle tip joint" y="-342.813" id="0:3157">
+                        <Node name="handL palm middle tip" scaleY="0.5346229984457247" opacity="1.0" id="0:3158">
+                          <Image name="handL palm middle tip picture" assetId="0:316" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-89.217" y="-341.16" scaleX="9.58105" scaleY="9.62051" id="0:3159" />
+                          <DataBindContext sourcePathIds="0:40-0:2852" propertyKey="17" converterId="0:2069" id="0:3829" />
+                          <DataBindContext sourcePathIds="0:40-0:2852" propertyKey="18" converterId="0:2113" id="0:3830" />
+                        </Node>
+                        <DataBindContext sourcePathIds="0:40-0:2852" propertyKey="14" converterId="0:2415" id="0:3828" />
+                      </Node>
+                      <DataBindContext sourcePathIds="0:40-0:2852" propertyKey="15" converterId="0:2502" id="0:3825" />
+                    </Node>
+                    <DataBindContext sourcePathIds="0:40-0:2855" propertyKey="15" converterId="0:2501" id="0:3824" />
+                  </Node>
+                </Node>
+                <Node name="handL palm ring" id="0:3142">
+                  <Image name="handL palm ring root patch" assetId="0:320" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-202.5" y="-751.0" scaleX="9.52381" scaleY="9.52381" id="0:3168" opacity="1">
+                    <DataBindContext sourcePathIds="0:40-0:2853" propertyKey="18" converterId="0:2741" id="0:3839" />
+                  </Image>
+                  <Node name="handL palm ring root" x="-103.5" y="-594.09" rotation="-0.0305" id="0:3161">
+                    <Node name="handL palm ring converge" rotation="0.0165" id="0:3162">
+                      <Node name="handL palm ring base" scaleY="0.5975832992595547" opacity="1.0" id="0:3163">
+                        <Image name="handL palm ring base picture" assetId="0:318" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-103.453" y="-528.677" scaleX="9.35091" scaleY="9.54847" id="0:3164" />
+                        <DataBindContext sourcePathIds="0:40-0:2853" propertyKey="17" converterId="0:2053" id="0:3834" />
+                        <DataBindContext sourcePathIds="0:40-0:2853" propertyKey="18" converterId="0:2191" id="0:3835" />
+                      </Node>
+                      <Node name="handL palm ring tip joint" y="-275.551" id="0:3165">
+                        <Node name="handL palm ring tip" scaleY="0.3748567893852484" opacity="1.0" id="0:3166">
+                          <Image name="handL palm ring tip picture" assetId="0:319" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-93.566" y="-319.242" scaleX="9.472" scaleY="9.56541" id="0:3167" />
+                          <DataBindContext sourcePathIds="0:40-0:2853" propertyKey="17" converterId="0:2069" id="0:3837" />
+                          <DataBindContext sourcePathIds="0:40-0:2853" propertyKey="18" converterId="0:2113" id="0:3838" />
+                        </Node>
+                        <DataBindContext sourcePathIds="0:40-0:2853" propertyKey="14" converterId="0:2503" id="0:3836" />
+                      </Node>
+                      <DataBindContext sourcePathIds="0:40-0:2853" propertyKey="15" converterId="0:2590" id="0:3833" />
+                    </Node>
+                    <DataBindContext sourcePathIds="0:40-0:2855" propertyKey="15" converterId="0:2589" id="0:3832" />
+                  </Node>
+                </Node>
+                <Node name="handL palm pinky" id="0:3143">
+                  <Image name="handL palm pinky root patch" assetId="0:323" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-322.5" y="-751.0" scaleX="9.52381" scaleY="9.52381" id="0:3176" opacity="1">
+                    <DataBindContext sourcePathIds="0:40-0:2854" propertyKey="18" converterId="0:2741" id="0:3847" />
+                  </Image>
+                  <Node name="handL palm pinky root" x="-239.5" y="-583.03" rotation="-0.0785" id="0:3169">
+                    <Node name="handL palm pinky converge" rotation="0.0456" id="0:3170">
+                      <Node name="handL palm pinky base" scaleY="0.5068860309155578" opacity="1.0" id="0:3171">
+                        <Image name="handL palm pinky base picture" assetId="0:321" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-91.971" y="-440.388" scaleX="9.50316" scaleY="9.4976" id="0:3172" />
+                        <DataBindContext sourcePathIds="0:40-0:2854" propertyKey="17" converterId="0:2053" id="0:3842" />
+                        <DataBindContext sourcePathIds="0:40-0:2854" propertyKey="18" converterId="0:2191" id="0:3843" />
+                      </Node>
+                      <Node name="handL palm pinky tip joint" y="-189.123" id="0:3173">
+                        <Node name="handL palm pinky tip" scaleY="0.19273494921904472" opacity="0.0" id="0:3174">
+                          <Image name="handL palm pinky tip picture" assetId="0:322" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-78.141" y="-265.913" scaleX="9.53294" scaleY="9.38" id="0:3175" />
+                          <DataBindContext sourcePathIds="0:40-0:2854" propertyKey="17" converterId="0:2069" id="0:3845" />
+                          <DataBindContext sourcePathIds="0:40-0:2854" propertyKey="18" converterId="0:2113" id="0:3846" />
+                        </Node>
+                        <DataBindContext sourcePathIds="0:40-0:2854" propertyKey="14" converterId="0:2591" id="0:3844" />
+                      </Node>
+                      <DataBindContext sourcePathIds="0:40-0:2854" propertyKey="15" converterId="0:2678" id="0:3841" />
+                    </Node>
+                    <DataBindContext sourcePathIds="0:40-0:2855" propertyKey="15" converterId="0:2677" id="0:3840" />
+                  </Node>
+                </Node>
+              </Node>
+              <Image name="handL palm palm" assetId="0:311" originX="0" originY="0" samplerWrapX="1" samplerWrapY="1" x="-379.5" y="-751.0" scaleX="9.47059" scaleY="9.52439" id="0:3144" />
+              <DataBindContext sourcePathIds="0:40-0:2857" propertyKey="18" converterId="0:2743" id="0:3815" />
+            </Node>
+          </Node>
+          <DataBindContext sourcePathIds="0:40-0:2856" propertyKey="17" id="0:3794" />
+        </Node>
+      </Node>
+      <Shape name="small forearm L" id="0:3082">
+        <Rectangle x="-74.896" y="0" originX="0" originY="0.5" width="90.752" height="30.752" cornerRadiusTL="15.376" id="0:3083" />
+        <Fill id="0:3086">
+          <SolidColor colorValue="FFFDC28D" id="0:3087" />
+        </Fill>
+        <Stroke thickness="6" cap="round" join="round" id="0:3084">
+          <SolidColor colorValue="FF3A1C0C" id="0:3085" />
+        </Stroke>
+      </Shape>
+    </Node>
+    <Image name="painted relaxed" assetId="0:100" originX="0" originY="0" x="380.0" y="835" scaleX="0.5107841671018277" scaleY="0.5107841671018277" id="0:3184" />
+    <Image name="painted point" assetId="0:101" originX="0" originY="0" x="498.0" y="835" scaleX="0.5107841671018277" scaleY="0.5107841671018277" id="0:3185" />
+    <Image name="painted fist" assetId="0:102" originX="0" originY="0" x="616.0" y="835" scaleX="0.5107841671018277" scaleY="0.5107841671018277" id="0:3186" />
+    <Image name="painted thumb" assetId="0:103" originX="0" originY="0" x="734.0" y="835" scaleX="0.5107841671018277" scaleY="0.5107841671018277" id="0:3187" />
+    <Image name="painted palm" assetId="0:104" originX="0" originY="0" x="852.0" y="835" scaleX="0.5107841671018277" scaleY="0.5107841671018277" id="0:3188" />
+    <Image name="painted back" assetId="0:105" originX="0" originY="0" x="970.0" y="835" scaleX="0.5107841671018277" scaleY="0.5107841671018277" id="0:3189" />
+    <StateMachine name="Hands" id="0:7">
+      <StateMachineLayer name="Main" id="0:8">
+        <EntryState x="0" y="0" id="0:3574">
+          <StateTransition stateToId="0:12" id="0:3575" />
+        </EntryState>
+        <AnyState x="0" y="-150" id="0:3576" />
+        <ExitState x="650" y="-150" id="0:3577" />
+        <AnimationState animationId="0:60" id="0:12" x="180" y="0" />
+      </StateMachineLayer>
+      <StateMachineListenerSingle targetId="0:3200" listenerTypeValue="click" name="Relaxed" id="0:3209">
+        <ListenerViewModelChange id="0:3210">
+          <BindablePropertyNumber propertyValue="0" id="0:3211">
+            <DataBindContext sourcePathIds="0:40-0:2003" propertyKey="636" direction="true" id="0:3212" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+        <ListenerViewModelChange id="0:3213">
+          <BindablePropertyNumber propertyValue="0" id="0:3214">
+            <DataBindContext sourcePathIds="0:40-0:2006" propertyKey="636" direction="true" id="0:3215" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+      </StateMachineListenerSingle>
+      <StateMachineListenerSingle targetId="0:3216" listenerTypeValue="click" name="Open" id="0:3225">
+        <ListenerViewModelChange id="0:3226">
+          <BindablePropertyNumber propertyValue="1" id="0:3227">
+            <DataBindContext sourcePathIds="0:40-0:2003" propertyKey="636" direction="true" id="0:3228" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+        <ListenerViewModelChange id="0:3229">
+          <BindablePropertyNumber propertyValue="0" id="0:3230">
+            <DataBindContext sourcePathIds="0:40-0:2006" propertyKey="636" direction="true" id="0:3231" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+      </StateMachineListenerSingle>
+      <StateMachineListenerSingle targetId="0:3232" listenerTypeValue="click" name="Flat" id="0:3241">
+        <ListenerViewModelChange id="0:3242">
+          <BindablePropertyNumber propertyValue="2" id="0:3243">
+            <DataBindContext sourcePathIds="0:40-0:2003" propertyKey="636" direction="true" id="0:3244" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+        <ListenerViewModelChange id="0:3245">
+          <BindablePropertyNumber propertyValue="0" id="0:3246">
+            <DataBindContext sourcePathIds="0:40-0:2006" propertyKey="636" direction="true" id="0:3247" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+      </StateMachineListenerSingle>
+      <StateMachineListenerSingle targetId="0:3248" listenerTypeValue="click" name="Wave" id="0:3257">
+        <ListenerViewModelChange id="0:3258">
+          <BindablePropertyNumber propertyValue="3" id="0:3259">
+            <DataBindContext sourcePathIds="0:40-0:2003" propertyKey="636" direction="true" id="0:3260" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+        <ListenerViewModelChange id="0:3261">
+          <BindablePropertyNumber propertyValue="0" id="0:3262">
+            <DataBindContext sourcePathIds="0:40-0:2006" propertyKey="636" direction="true" id="0:3263" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+      </StateMachineListenerSingle>
+      <StateMachineListenerSingle targetId="0:3264" listenerTypeValue="click" name="Fist" id="0:3273">
+        <ListenerViewModelChange id="0:3274">
+          <BindablePropertyNumber propertyValue="4" id="0:3275">
+            <DataBindContext sourcePathIds="0:40-0:2003" propertyKey="636" direction="true" id="0:3276" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+        <ListenerViewModelChange id="0:3277">
+          <BindablePropertyNumber propertyValue="0" id="0:3278">
+            <DataBindContext sourcePathIds="0:40-0:2006" propertyKey="636" direction="true" id="0:3279" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+      </StateMachineListenerSingle>
+      <StateMachineListenerSingle targetId="0:3280" listenerTypeValue="click" name="Point" id="0:3289">
+        <ListenerViewModelChange id="0:3290">
+          <BindablePropertyNumber propertyValue="5" id="0:3291">
+            <DataBindContext sourcePathIds="0:40-0:2003" propertyKey="636" direction="true" id="0:3292" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+        <ListenerViewModelChange id="0:3293">
+          <BindablePropertyNumber propertyValue="0" id="0:3294">
+            <DataBindContext sourcePathIds="0:40-0:2006" propertyKey="636" direction="true" id="0:3295" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+      </StateMachineListenerSingle>
+      <StateMachineListenerSingle targetId="0:3296" listenerTypeValue="click" name="Thumbs up" id="0:3305">
+        <ListenerViewModelChange id="0:3306">
+          <BindablePropertyNumber propertyValue="6" id="0:3307">
+            <DataBindContext sourcePathIds="0:40-0:2003" propertyKey="636" direction="true" id="0:3308" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+        <ListenerViewModelChange id="0:3309">
+          <BindablePropertyNumber propertyValue="0" id="0:3310">
+            <DataBindContext sourcePathIds="0:40-0:2006" propertyKey="636" direction="true" id="0:3311" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+      </StateMachineListenerSingle>
+      <StateMachineListenerSingle targetId="0:3312" listenerTypeValue="click" name="Pinch" id="0:3321">
+        <ListenerViewModelChange id="0:3322">
+          <BindablePropertyNumber propertyValue="7" id="0:3323">
+            <DataBindContext sourcePathIds="0:40-0:2003" propertyKey="636" direction="true" id="0:3324" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+        <ListenerViewModelChange id="0:3325">
+          <BindablePropertyNumber propertyValue="0" id="0:3326">
+            <DataBindContext sourcePathIds="0:40-0:2006" propertyKey="636" direction="true" id="0:3327" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+      </StateMachineListenerSingle>
+      <StateMachineListenerSingle targetId="0:3328" listenerTypeValue="click" name="Grip apple" id="0:3337">
+        <ListenerViewModelChange id="0:3338">
+          <BindablePropertyNumber propertyValue="8" id="0:3339">
+            <DataBindContext sourcePathIds="0:40-0:2003" propertyKey="636" direction="true" id="0:3340" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+        <ListenerViewModelChange id="0:3341">
+          <BindablePropertyNumber propertyValue="0" id="0:3342">
+            <DataBindContext sourcePathIds="0:40-0:2006" propertyKey="636" direction="true" id="0:3343" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+      </StateMachineListenerSingle>
+      <StateMachineListenerSingle targetId="0:3344" listenerTypeValue="click" name="Grip handle" id="0:3353">
+        <ListenerViewModelChange id="0:3354">
+          <BindablePropertyNumber propertyValue="9" id="0:3355">
+            <DataBindContext sourcePathIds="0:40-0:2003" propertyKey="636" direction="true" id="0:3356" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+        <ListenerViewModelChange id="0:3357">
+          <BindablePropertyNumber propertyValue="0" id="0:3358">
+            <DataBindContext sourcePathIds="0:40-0:2006" propertyKey="636" direction="true" id="0:3359" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+      </StateMachineListenerSingle>
+      <StateMachineListenerSingle targetId="0:3360" listenerTypeValue="click" name="Carry" id="0:3369">
+        <ListenerViewModelChange id="0:3370">
+          <BindablePropertyNumber propertyValue="10" id="0:3371">
+            <DataBindContext sourcePathIds="0:40-0:2003" propertyKey="636" direction="true" id="0:3372" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+        <ListenerViewModelChange id="0:3373">
+          <BindablePropertyNumber propertyValue="0" id="0:3374">
+            <DataBindContext sourcePathIds="0:40-0:2006" propertyKey="636" direction="true" id="0:3375" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+      </StateMachineListenerSingle>
+      <StateMachineListenerSingle targetId="0:3376" listenerTypeValue="click" name="Beckon" id="0:3385">
+        <ListenerViewModelChange id="0:3386">
+          <BindablePropertyNumber propertyValue="11" id="0:3387">
+            <DataBindContext sourcePathIds="0:40-0:2003" propertyKey="636" direction="true" id="0:3388" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+        <ListenerViewModelChange id="0:3389">
+          <BindablePropertyNumber propertyValue="0" id="0:3390">
+            <DataBindContext sourcePathIds="0:40-0:2006" propertyKey="636" direction="true" id="0:3391" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+      </StateMachineListenerSingle>
+      <StateMachineListenerSingle targetId="0:3392" listenerTypeValue="click" name="Count 1" id="0:3401">
+        <ListenerViewModelChange id="0:3402">
+          <BindablePropertyNumber propertyValue="12" id="0:3403">
+            <DataBindContext sourcePathIds="0:40-0:2003" propertyKey="636" direction="true" id="0:3404" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+        <ListenerViewModelChange id="0:3405">
+          <BindablePropertyNumber propertyValue="0" id="0:3406">
+            <DataBindContext sourcePathIds="0:40-0:2006" propertyKey="636" direction="true" id="0:3407" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+      </StateMachineListenerSingle>
+      <StateMachineListenerSingle targetId="0:3408" listenerTypeValue="click" name="Count 2" id="0:3417">
+        <ListenerViewModelChange id="0:3418">
+          <BindablePropertyNumber propertyValue="13" id="0:3419">
+            <DataBindContext sourcePathIds="0:40-0:2003" propertyKey="636" direction="true" id="0:3420" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+        <ListenerViewModelChange id="0:3421">
+          <BindablePropertyNumber propertyValue="0" id="0:3422">
+            <DataBindContext sourcePathIds="0:40-0:2006" propertyKey="636" direction="true" id="0:3423" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+      </StateMachineListenerSingle>
+      <StateMachineListenerSingle targetId="0:3424" listenerTypeValue="click" name="Count 3" id="0:3433">
+        <ListenerViewModelChange id="0:3434">
+          <BindablePropertyNumber propertyValue="14" id="0:3435">
+            <DataBindContext sourcePathIds="0:40-0:2003" propertyKey="636" direction="true" id="0:3436" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+        <ListenerViewModelChange id="0:3437">
+          <BindablePropertyNumber propertyValue="0" id="0:3438">
+            <DataBindContext sourcePathIds="0:40-0:2006" propertyKey="636" direction="true" id="0:3439" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+      </StateMachineListenerSingle>
+      <StateMachineListenerSingle targetId="0:3440" listenerTypeValue="click" name="Count 4" id="0:3449">
+        <ListenerViewModelChange id="0:3450">
+          <BindablePropertyNumber propertyValue="15" id="0:3451">
+            <DataBindContext sourcePathIds="0:40-0:2003" propertyKey="636" direction="true" id="0:3452" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+        <ListenerViewModelChange id="0:3453">
+          <BindablePropertyNumber propertyValue="0" id="0:3454">
+            <DataBindContext sourcePathIds="0:40-0:2006" propertyKey="636" direction="true" id="0:3455" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+      </StateMachineListenerSingle>
+      <StateMachineListenerSingle targetId="0:3456" listenerTypeValue="click" name="Count 5" id="0:3465">
+        <ListenerViewModelChange id="0:3466">
+          <BindablePropertyNumber propertyValue="16" id="0:3467">
+            <DataBindContext sourcePathIds="0:40-0:2003" propertyKey="636" direction="true" id="0:3468" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+        <ListenerViewModelChange id="0:3469">
+          <BindablePropertyNumber propertyValue="0" id="0:3470">
+            <DataBindContext sourcePathIds="0:40-0:2006" propertyKey="636" direction="true" id="0:3471" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+      </StateMachineListenerSingle>
+      <StateMachineListenerSingle targetId="0:3477" listenerTypeValue="click" name="Back of hand" id="0:3486">
+        <ListenerViewModelChange id="0:3487">
+          <BindablePropertyNumber propertyValue="0" id="0:3488">
+            <DataBindContext sourcePathIds="0:40-0:2004" propertyKey="636" direction="true" id="0:3489" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+      </StateMachineListenerSingle>
+      <StateMachineListenerSingle targetId="0:3490" listenerTypeValue="click" name="Palm side" id="0:3499">
+        <ListenerViewModelChange id="0:3500">
+          <BindablePropertyNumber propertyValue="1" id="0:3501">
+            <DataBindContext sourcePathIds="0:40-0:2004" propertyKey="636" direction="true" id="0:3502" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+      </StateMachineListenerSingle>
+      <StateMachineListenerSingle targetId="0:3503" listenerTypeValue="click" name="Arm still" id="0:3512">
+        <ListenerViewModelChange id="0:3513">
+          <BindablePropertyNumber propertyValue="0" id="0:3514">
+            <DataBindContext sourcePathIds="0:40-0:2005" propertyKey="636" direction="true" id="0:3515" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+      </StateMachineListenerSingle>
+      <StateMachineListenerSingle targetId="0:3516" listenerTypeValue="click" name="Arm moves" id="0:3525">
+        <ListenerViewModelChange id="0:3526">
+          <BindablePropertyNumber propertyValue="1" id="0:3527">
+            <DataBindContext sourcePathIds="0:40-0:2005" propertyKey="636" direction="true" id="0:3528" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+      </StateMachineListenerSingle>
+      <StateMachineListenerSingle targetId="0:3529" listenerTypeValue="click" name="Sequence" id="0:3538">
+        <ListenerViewModelChange id="0:3539">
+          <BindablePropertyNumber propertyValue="1" id="0:3540">
+            <DataBindContext sourcePathIds="0:40-0:2006" propertyKey="636" direction="true" id="0:3541" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+      </StateMachineListenerSingle>
+      <StateMachineListenerSingle targetId="0:3542" listenerTypeValue="click" name="Slow 0.25x" id="0:3551">
+        <ListenerViewModelChange id="0:3552">
+          <BindablePropertyNumber propertyValue="0.25" id="0:3553">
+            <DataBindContext sourcePathIds="0:40-0:2007" propertyKey="636" direction="true" id="0:3554" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+      </StateMachineListenerSingle>
+      <StateMachineListenerSingle targetId="0:3555" listenerTypeValue="click" name="Speed 1x" id="0:3564">
+        <ListenerViewModelChange id="0:3565">
+          <BindablePropertyNumber propertyValue="1" id="0:3566">
+            <DataBindContext sourcePathIds="0:40-0:2007" propertyKey="636" direction="true" id="0:3567" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+      </StateMachineListenerSingle>
+    </StateMachine>
+    <LinearAnimation name="Idle" fps="60" duration="60" loopValue="loop" id="0:60" />
+  </Artboard>
+  <DataConverterFormula name="hand base fold" id="0:2053">
+    <FormulaTokenParenthesisOpen id="0:2054" />
+    <FormulaTokenFunction functionType="9" id="0:2055" />
+    <FormulaTokenParenthesisOpen id="0:2056" />
+    <FormulaTokenParenthesisOpen id="0:2057" />
+    <FormulaTokenInput id="0:2058" />
+    <FormulaTokenOperation operationType="2" id="0:2059" />
+    <FormulaTokenValue operationValue="2.0594885" id="0:2060" />
+    <FormulaTokenParenthesisClose id="0:2061" />
+    <FormulaTokenOperation operationType="0" id="0:2062" />
+    <FormulaTokenValue operationValue="0.2792527" id="0:2063" />
+    <FormulaTokenParenthesisClose id="0:2064" />
+    <FormulaTokenParenthesisClose id="0:2065" />
+    <FormulaTokenOperation operationType="2" id="0:2066" />
+    <FormulaTokenValue operationValue="1.0402994" id="0:2067" />
+    <FormulaTokenParenthesisClose id="0:2068" />
+  </DataConverterFormula>
+  <DataConverterFormula name="hand tip fold" id="0:2069">
+    <FormulaTokenParenthesisOpen id="0:2070" />
+    <FormulaTokenFunction functionType="9" id="0:2071" />
+    <FormulaTokenParenthesisOpen id="0:2072" />
+    <FormulaTokenParenthesisOpen id="0:2073" />
+    <FormulaTokenParenthesisOpen id="0:2074" />
+    <FormulaTokenInput id="0:2075" />
+    <FormulaTokenOperation operationType="2" id="0:2076" />
+    <FormulaTokenValue operationValue="2.0594885" id="0:2077" />
+    <FormulaTokenParenthesisClose id="0:2078" />
+    <FormulaTokenOperation operationType="0" id="0:2079" />
+    <FormulaTokenParenthesisOpen id="0:2080" />
+    <FormulaTokenParenthesisOpen id="0:2081" />
+    <FormulaTokenInput id="0:2082" />
+    <FormulaTokenOperation operationType="2" id="0:2083" />
+    <FormulaTokenInput id="0:2084" />
+    <FormulaTokenParenthesisClose id="0:2085" />
+    <FormulaTokenOperation operationType="2" id="0:2086" />
+    <FormulaTokenValue operationValue="2.2340214" id="0:2087" />
+    <FormulaTokenParenthesisClose id="0:2088" />
+    <FormulaTokenParenthesisClose id="0:2089" />
+    <FormulaTokenOperation operationType="0" id="0:2090" />
+    <FormulaTokenValue operationValue="0.2792527" id="0:2091" />
+    <FormulaTokenParenthesisClose id="0:2092" />
+    <FormulaTokenParenthesisClose id="0:2093" />
+    <FormulaTokenOperation operationType="2" id="0:2094" />
+    <FormulaTokenValue operationValue="1.0402994" id="0:2095" />
+    <FormulaTokenParenthesisClose id="0:2096" />
+  </DataConverterFormula>
+  <DataConverterFormula name="hand thumb tip fold" id="0:2097">
+    <FormulaTokenParenthesisOpen id="0:2098" />
+    <FormulaTokenFunction functionType="9" id="0:2099" />
+    <FormulaTokenParenthesisOpen id="0:2100" />
+    <FormulaTokenParenthesisOpen id="0:2101" />
+    <FormulaTokenInput id="0:2102" />
+    <FormulaTokenOperation operationType="2" id="0:2103" />
+    <FormulaTokenValue operationValue="1.6580628" id="0:2104" />
+    <FormulaTokenParenthesisClose id="0:2105" />
+    <FormulaTokenOperation operationType="0" id="0:2106" />
+    <FormulaTokenValue operationValue="0.2792527" id="0:2107" />
+    <FormulaTokenParenthesisClose id="0:2108" />
+    <FormulaTokenParenthesisClose id="0:2109" />
+    <FormulaTokenOperation operationType="2" id="0:2110" />
+    <FormulaTokenValue operationValue="1.0402994" id="0:2111" />
+    <FormulaTokenParenthesisClose id="0:2112" />
+  </DataConverterFormula>
+  <DataConverterFormula name="hand tip end-on" id="0:2113">
+    <FormulaTokenFunction functionType="0" id="0:2114" />
+    <FormulaTokenValue operationValue="1.0" id="0:2115" />
+    <FormulaTokenArgumentSeparator id="0:2116" />
+    <FormulaTokenFunction functionType="1" id="0:2117" />
+    <FormulaTokenValue operationValue="0.0" id="0:2118" />
+    <FormulaTokenArgumentSeparator id="0:2119" />
+    <FormulaTokenParenthesisOpen id="0:2120" />
+    <FormulaTokenParenthesisOpen id="0:2121" />
+    <FormulaTokenFunction functionType="1" id="0:2122" />
+    <FormulaTokenParenthesisOpen id="0:2123" />
+    <FormulaTokenFunction functionType="9" id="0:2124" />
+    <FormulaTokenParenthesisOpen id="0:2125" />
+    <FormulaTokenParenthesisOpen id="0:2126" />
+    <FormulaTokenParenthesisOpen id="0:2127" />
+    <FormulaTokenInput id="0:2128" />
+    <FormulaTokenOperation operationType="2" id="0:2129" />
+    <FormulaTokenValue operationValue="2.0594885" id="0:2130" />
+    <FormulaTokenParenthesisClose id="0:2131" />
+    <FormulaTokenOperation operationType="0" id="0:2132" />
+    <FormulaTokenParenthesisOpen id="0:2133" />
+    <FormulaTokenParenthesisOpen id="0:2134" />
+    <FormulaTokenInput id="0:2135" />
+    <FormulaTokenOperation operationType="2" id="0:2136" />
+    <FormulaTokenInput id="0:2137" />
+    <FormulaTokenParenthesisClose id="0:2138" />
+    <FormulaTokenOperation operationType="2" id="0:2139" />
+    <FormulaTokenValue operationValue="2.2340214" id="0:2140" />
+    <FormulaTokenParenthesisClose id="0:2141" />
+    <FormulaTokenParenthesisClose id="0:2142" />
+    <FormulaTokenOperation operationType="0" id="0:2143" />
+    <FormulaTokenValue operationValue="0.2792527" id="0:2144" />
+    <FormulaTokenParenthesisClose id="0:2145" />
+    <FormulaTokenParenthesisClose id="0:2146" />
+    <FormulaTokenOperation operationType="2" id="0:2147" />
+    <FormulaTokenValue operationValue="1.0402994" id="0:2148" />
+    <FormulaTokenParenthesisClose id="0:2149" />
+    <FormulaTokenArgumentSeparator id="0:2150" />
+    <FormulaTokenParenthesisOpen id="0:2151" />
+    <FormulaTokenValue operationValue="-1.0" id="0:2152" />
+    <FormulaTokenOperation operationType="2" id="0:2153" />
+    <FormulaTokenParenthesisOpen id="0:2154" />
+    <FormulaTokenFunction functionType="9" id="0:2155" />
+    <FormulaTokenParenthesisOpen id="0:2156" />
+    <FormulaTokenParenthesisOpen id="0:2157" />
+    <FormulaTokenParenthesisOpen id="0:2158" />
+    <FormulaTokenInput id="0:2159" />
+    <FormulaTokenOperation operationType="2" id="0:2160" />
+    <FormulaTokenValue operationValue="2.0594885" id="0:2161" />
+    <FormulaTokenParenthesisClose id="0:2162" />
+    <FormulaTokenOperation operationType="0" id="0:2163" />
+    <FormulaTokenParenthesisOpen id="0:2164" />
+    <FormulaTokenParenthesisOpen id="0:2165" />
+    <FormulaTokenInput id="0:2166" />
+    <FormulaTokenOperation operationType="2" id="0:2167" />
+    <FormulaTokenInput id="0:2168" />
+    <FormulaTokenParenthesisClose id="0:2169" />
+    <FormulaTokenOperation operationType="2" id="0:2170" />
+    <FormulaTokenValue operationValue="2.2340214" id="0:2171" />
+    <FormulaTokenParenthesisClose id="0:2172" />
+    <FormulaTokenParenthesisClose id="0:2173" />
+    <FormulaTokenOperation operationType="0" id="0:2174" />
+    <FormulaTokenValue operationValue="0.2792527" id="0:2175" />
+    <FormulaTokenParenthesisClose id="0:2176" />
+    <FormulaTokenParenthesisClose id="0:2177" />
+    <FormulaTokenOperation operationType="2" id="0:2178" />
+    <FormulaTokenValue operationValue="1.0402994" id="0:2179" />
+    <FormulaTokenParenthesisClose id="0:2180" />
+    <FormulaTokenParenthesisClose id="0:2181" />
+    <FormulaTokenParenthesisClose id="0:2182" />
+    <FormulaTokenOperation operationType="1" id="0:2183" />
+    <FormulaTokenValue operationValue="0.2" id="0:2184" />
+    <FormulaTokenParenthesisClose id="0:2185" />
+    <FormulaTokenOperation operationType="3" id="0:2186" />
+    <FormulaTokenValue operationValue="0.05" id="0:2187" />
+    <FormulaTokenParenthesisClose id="0:2188" />
+    <FormulaTokenParenthesisClose id="0:2189" />
+    <FormulaTokenParenthesisClose id="0:2190" />
+  </DataConverterFormula>
+  <DataConverterFormula name="hand base end-on" id="0:2191">
+    <FormulaTokenFunction functionType="0" id="0:2192" />
+    <FormulaTokenValue operationValue="1.0" id="0:2193" />
+    <FormulaTokenArgumentSeparator id="0:2194" />
+    <FormulaTokenFunction functionType="1" id="0:2195" />
+    <FormulaTokenValue operationValue="0.0" id="0:2196" />
+    <FormulaTokenArgumentSeparator id="0:2197" />
+    <FormulaTokenParenthesisOpen id="0:2198" />
+    <FormulaTokenParenthesisOpen id="0:2199" />
+    <FormulaTokenFunction functionType="1" id="0:2200" />
+    <FormulaTokenParenthesisOpen id="0:2201" />
+    <FormulaTokenFunction functionType="9" id="0:2202" />
+    <FormulaTokenParenthesisOpen id="0:2203" />
+    <FormulaTokenParenthesisOpen id="0:2204" />
+    <FormulaTokenInput id="0:2205" />
+    <FormulaTokenOperation operationType="2" id="0:2206" />
+    <FormulaTokenValue operationValue="2.0594885" id="0:2207" />
+    <FormulaTokenParenthesisClose id="0:2208" />
+    <FormulaTokenOperation operationType="0" id="0:2209" />
+    <FormulaTokenValue operationValue="0.2792527" id="0:2210" />
+    <FormulaTokenParenthesisClose id="0:2211" />
+    <FormulaTokenParenthesisClose id="0:2212" />
+    <FormulaTokenOperation operationType="2" id="0:2213" />
+    <FormulaTokenValue operationValue="1.0402994" id="0:2214" />
+    <FormulaTokenParenthesisClose id="0:2215" />
+    <FormulaTokenArgumentSeparator id="0:2216" />
+    <FormulaTokenParenthesisOpen id="0:2217" />
+    <FormulaTokenValue operationValue="-1.0" id="0:2218" />
+    <FormulaTokenOperation operationType="2" id="0:2219" />
+    <FormulaTokenParenthesisOpen id="0:2220" />
+    <FormulaTokenFunction functionType="9" id="0:2221" />
+    <FormulaTokenParenthesisOpen id="0:2222" />
+    <FormulaTokenParenthesisOpen id="0:2223" />
+    <FormulaTokenInput id="0:2224" />
+    <FormulaTokenOperation operationType="2" id="0:2225" />
+    <FormulaTokenValue operationValue="2.0594885" id="0:2226" />
+    <FormulaTokenParenthesisClose id="0:2227" />
+    <FormulaTokenOperation operationType="0" id="0:2228" />
+    <FormulaTokenValue operationValue="0.2792527" id="0:2229" />
+    <FormulaTokenParenthesisClose id="0:2230" />
+    <FormulaTokenParenthesisClose id="0:2231" />
+    <FormulaTokenOperation operationType="2" id="0:2232" />
+    <FormulaTokenValue operationValue="1.0402994" id="0:2233" />
+    <FormulaTokenParenthesisClose id="0:2234" />
+    <FormulaTokenParenthesisClose id="0:2235" />
+    <FormulaTokenParenthesisClose id="0:2236" />
+    <FormulaTokenOperation operationType="1" id="0:2237" />
+    <FormulaTokenValue operationValue="0.03" id="0:2238" />
+    <FormulaTokenParenthesisClose id="0:2239" />
+    <FormulaTokenOperation operationType="3" id="0:2240" />
+    <FormulaTokenValue operationValue="0.09" id="0:2241" />
+    <FormulaTokenParenthesisClose id="0:2242" />
+    <FormulaTokenParenthesisClose id="0:2243" />
+    <FormulaTokenParenthesisClose id="0:2244" />
+  </DataConverterFormula>
+  <DataConverterFormula name="hand thumb tip end-on" id="0:2245">
+    <FormulaTokenFunction functionType="0" id="0:2246" />
+    <FormulaTokenValue operationValue="1.0" id="0:2247" />
+    <FormulaTokenArgumentSeparator id="0:2248" />
+    <FormulaTokenFunction functionType="1" id="0:2249" />
+    <FormulaTokenValue operationValue="0.0" id="0:2250" />
+    <FormulaTokenArgumentSeparator id="0:2251" />
+    <FormulaTokenParenthesisOpen id="0:2252" />
+    <FormulaTokenParenthesisOpen id="0:2253" />
+    <FormulaTokenFunction functionType="1" id="0:2254" />
+    <FormulaTokenParenthesisOpen id="0:2255" />
+    <FormulaTokenFunction functionType="9" id="0:2256" />
+    <FormulaTokenParenthesisOpen id="0:2257" />
+    <FormulaTokenParenthesisOpen id="0:2258" />
+    <FormulaTokenInput id="0:2259" />
+    <FormulaTokenOperation operationType="2" id="0:2260" />
+    <FormulaTokenValue operationValue="1.6580628" id="0:2261" />
+    <FormulaTokenParenthesisClose id="0:2262" />
+    <FormulaTokenOperation operationType="0" id="0:2263" />
+    <FormulaTokenValue operationValue="0.2792527" id="0:2264" />
+    <FormulaTokenParenthesisClose id="0:2265" />
+    <FormulaTokenParenthesisClose id="0:2266" />
+    <FormulaTokenOperation operationType="2" id="0:2267" />
+    <FormulaTokenValue operationValue="1.0402994" id="0:2268" />
+    <FormulaTokenParenthesisClose id="0:2269" />
+    <FormulaTokenArgumentSeparator id="0:2270" />
+    <FormulaTokenParenthesisOpen id="0:2271" />
+    <FormulaTokenValue operationValue="-1.0" id="0:2272" />
+    <FormulaTokenOperation operationType="2" id="0:2273" />
+    <FormulaTokenParenthesisOpen id="0:2274" />
+    <FormulaTokenFunction functionType="9" id="0:2275" />
+    <FormulaTokenParenthesisOpen id="0:2276" />
+    <FormulaTokenParenthesisOpen id="0:2277" />
+    <FormulaTokenInput id="0:2278" />
+    <FormulaTokenOperation operationType="2" id="0:2279" />
+    <FormulaTokenValue operationValue="1.6580628" id="0:2280" />
+    <FormulaTokenParenthesisClose id="0:2281" />
+    <FormulaTokenOperation operationType="0" id="0:2282" />
+    <FormulaTokenValue operationValue="0.2792527" id="0:2283" />
+    <FormulaTokenParenthesisClose id="0:2284" />
+    <FormulaTokenParenthesisClose id="0:2285" />
+    <FormulaTokenOperation operationType="2" id="0:2286" />
+    <FormulaTokenValue operationValue="1.0402994" id="0:2287" />
+    <FormulaTokenParenthesisClose id="0:2288" />
+    <FormulaTokenParenthesisClose id="0:2289" />
+    <FormulaTokenParenthesisClose id="0:2290" />
+    <FormulaTokenOperation operationType="1" id="0:2291" />
+    <FormulaTokenValue operationValue="0.2" id="0:2292" />
+    <FormulaTokenParenthesisClose id="0:2293" />
+    <FormulaTokenOperation operationType="3" id="0:2294" />
+    <FormulaTokenValue operationValue="0.05" id="0:2295" />
+    <FormulaTokenParenthesisClose id="0:2296" />
+    <FormulaTokenParenthesisClose id="0:2297" />
+    <FormulaTokenParenthesisClose id="0:2298" />
+  </DataConverterFormula>
+  <DataConverterFormula name="hand thumb slide tip" id="0:2299">
+    <FormulaTokenParenthesisOpen id="0:2300" />
+    <FormulaTokenValue operationValue="172.6150689" id="0:2301" />
+    <FormulaTokenOperation operationType="2" id="0:2302" />
+    <FormulaTokenParenthesisOpen id="0:2303" />
+    <FormulaTokenValue operationValue="1.0" id="0:2304" />
+    <FormulaTokenOperation operationType="1" id="0:2305" />
+    <FormulaTokenFunction functionType="1" id="0:2306" />
+    <FormulaTokenParenthesisOpen id="0:2307" />
+    <FormulaTokenFunction functionType="9" id="0:2308" />
+    <FormulaTokenParenthesisOpen id="0:2309" />
+    <FormulaTokenParenthesisOpen id="0:2310" />
+    <FormulaTokenInput id="0:2311" />
+    <FormulaTokenOperation operationType="2" id="0:2312" />
+    <FormulaTokenValue operationValue="1.6580628" id="0:2313" />
+    <FormulaTokenParenthesisClose id="0:2314" />
+    <FormulaTokenOperation operationType="0" id="0:2315" />
+    <FormulaTokenValue operationValue="0.2792527" id="0:2316" />
+    <FormulaTokenParenthesisClose id="0:2317" />
+    <FormulaTokenParenthesisClose id="0:2318" />
+    <FormulaTokenOperation operationType="2" id="0:2319" />
+    <FormulaTokenValue operationValue="1.0402994" id="0:2320" />
+    <FormulaTokenParenthesisClose id="0:2321" />
+    <FormulaTokenArgumentSeparator id="0:2322" />
+    <FormulaTokenValue operationValue="0.0" id="0:2323" />
+    <FormulaTokenParenthesisClose id="0:2324" />
+    <FormulaTokenParenthesisClose id="0:2325" />
+    <FormulaTokenParenthesisClose id="0:2326" />
+  </DataConverterFormula>
+  <DataConverterFormula name="hand index tip joint" id="0:2327">
+    <FormulaTokenParenthesisOpen id="0:2328" />
+    <FormulaTokenFunction functionType="9" id="0:2329" />
+    <FormulaTokenParenthesisOpen id="0:2330" />
+    <FormulaTokenParenthesisOpen id="0:2331" />
+    <FormulaTokenInput id="0:2332" />
+    <FormulaTokenOperation operationType="2" id="0:2333" />
+    <FormulaTokenValue operationValue="2.0594885" id="0:2334" />
+    <FormulaTokenParenthesisClose id="0:2335" />
+    <FormulaTokenOperation operationType="0" id="0:2336" />
+    <FormulaTokenValue operationValue="0.2792527" id="0:2337" />
+    <FormulaTokenParenthesisClose id="0:2338" />
+    <FormulaTokenParenthesisClose id="0:2339" />
+    <FormulaTokenOperation operationType="2" id="0:2340" />
+    <FormulaTokenValue operationValue="-470.4789516" id="0:2341" />
+    <FormulaTokenParenthesisClose id="0:2342" />
+  </DataConverterFormula>
+  <DataConverterFormula name="hand index slide base" id="0:2343">
+    <FormulaTokenParenthesisOpen id="0:2344" />
+    <FormulaTokenValue operationValue="452.253395" id="0:2345" />
+    <FormulaTokenOperation operationType="2" id="0:2346" />
+    <FormulaTokenParenthesisOpen id="0:2347" />
+    <FormulaTokenValue operationValue="1.0" id="0:2348" />
+    <FormulaTokenOperation operationType="1" id="0:2349" />
+    <FormulaTokenFunction functionType="1" id="0:2350" />
+    <FormulaTokenParenthesisOpen id="0:2351" />
+    <FormulaTokenFunction functionType="9" id="0:2352" />
+    <FormulaTokenParenthesisOpen id="0:2353" />
+    <FormulaTokenParenthesisOpen id="0:2354" />
+    <FormulaTokenInput id="0:2355" />
+    <FormulaTokenOperation operationType="2" id="0:2356" />
+    <FormulaTokenValue operationValue="2.0594885" id="0:2357" />
+    <FormulaTokenParenthesisClose id="0:2358" />
+    <FormulaTokenOperation operationType="0" id="0:2359" />
+    <FormulaTokenValue operationValue="0.2792527" id="0:2360" />
+    <FormulaTokenParenthesisClose id="0:2361" />
+    <FormulaTokenParenthesisClose id="0:2362" />
+    <FormulaTokenOperation operationType="2" id="0:2363" />
+    <FormulaTokenValue operationValue="1.0402994" id="0:2364" />
+    <FormulaTokenParenthesisClose id="0:2365" />
+    <FormulaTokenArgumentSeparator id="0:2366" />
+    <FormulaTokenValue operationValue="0.0" id="0:2367" />
+    <FormulaTokenParenthesisClose id="0:2368" />
+    <FormulaTokenParenthesisClose id="0:2369" />
+    <FormulaTokenParenthesisClose id="0:2370" />
+  </DataConverterFormula>
+  <DataConverterFormula name="hand index slide tip" id="0:2371">
+    <FormulaTokenParenthesisOpen id="0:2372" />
+    <FormulaTokenValue operationValue="345.9162948" id="0:2373" />
+    <FormulaTokenOperation operationType="2" id="0:2374" />
+    <FormulaTokenParenthesisOpen id="0:2375" />
+    <FormulaTokenValue operationValue="1.0" id="0:2376" />
+    <FormulaTokenOperation operationType="1" id="0:2377" />
+    <FormulaTokenFunction functionType="1" id="0:2378" />
+    <FormulaTokenParenthesisOpen id="0:2379" />
+    <FormulaTokenFunction functionType="9" id="0:2380" />
+    <FormulaTokenParenthesisOpen id="0:2381" />
+    <FormulaTokenParenthesisOpen id="0:2382" />
+    <FormulaTokenParenthesisOpen id="0:2383" />
+    <FormulaTokenInput id="0:2384" />
+    <FormulaTokenOperation operationType="2" id="0:2385" />
+    <FormulaTokenValue operationValue="2.0594885" id="0:2386" />
+    <FormulaTokenParenthesisClose id="0:2387" />
+    <FormulaTokenOperation operationType="0" id="0:2388" />
+    <FormulaTokenParenthesisOpen id="0:2389" />
+    <FormulaTokenParenthesisOpen id="0:2390" />
+    <FormulaTokenInput id="0:2391" />
+    <FormulaTokenOperation operationType="2" id="0:2392" />
+    <FormulaTokenInput id="0:2393" />
+    <FormulaTokenParenthesisClose id="0:2394" />
+    <FormulaTokenOperation operationType="2" id="0:2395" />
+    <FormulaTokenValue operationValue="2.2340214" id="0:2396" />
+    <FormulaTokenParenthesisClose id="0:2397" />
+    <FormulaTokenParenthesisClose id="0:2398" />
+    <FormulaTokenOperation operationType="0" id="0:2399" />
+    <FormulaTokenValue operationValue="0.2792527" id="0:2400" />
+    <FormulaTokenParenthesisClose id="0:2401" />
+    <FormulaTokenParenthesisClose id="0:2402" />
+    <FormulaTokenOperation operationType="2" id="0:2403" />
+    <FormulaTokenValue operationValue="1.0402994" id="0:2404" />
+    <FormulaTokenParenthesisClose id="0:2405" />
+    <FormulaTokenArgumentSeparator id="0:2406" />
+    <FormulaTokenValue operationValue="0.0" id="0:2407" />
+    <FormulaTokenParenthesisClose id="0:2408" />
+    <FormulaTokenParenthesisClose id="0:2409" />
+    <FormulaTokenParenthesisClose id="0:2410" />
+  </DataConverterFormula>
+  <DataConverterRangeMapper name="hand index fan back" minInput="0" maxInput="1" minOutput="-0.03" maxOutput="-0.19" id="0:2411" />
+  <DataConverterRangeMapper name="hand index converge back" minInput="0" maxInput="1" minOutput="0" maxOutput="0.1" id="0:2412" />
+  <DataConverterRangeMapper name="hand index fan palm" minInput="0" maxInput="1" minOutput="0.03" maxOutput="0.19" id="0:2413" />
+  <DataConverterRangeMapper name="hand index converge palm" minInput="0" maxInput="1" minOutput="0" maxOutput="-0.1" id="0:2414" />
+  <DataConverterFormula name="hand middle tip joint" id="0:2415">
+    <FormulaTokenParenthesisOpen id="0:2416" />
+    <FormulaTokenFunction functionType="9" id="0:2417" />
+    <FormulaTokenParenthesisOpen id="0:2418" />
+    <FormulaTokenParenthesisOpen id="0:2419" />
+    <FormulaTokenInput id="0:2420" />
+    <FormulaTokenOperation operationType="2" id="0:2421" />
+    <FormulaTokenValue operationValue="2.0594885" id="0:2422" />
+    <FormulaTokenParenthesisClose id="0:2423" />
+    <FormulaTokenOperation operationType="0" id="0:2424" />
+    <FormulaTokenValue operationValue="0.2792527" id="0:2425" />
+    <FormulaTokenParenthesisClose id="0:2426" />
+    <FormulaTokenParenthesisClose id="0:2427" />
+    <FormulaTokenOperation operationType="2" id="0:2428" />
+    <FormulaTokenValue operationValue="-522.95395" id="0:2429" />
+    <FormulaTokenParenthesisClose id="0:2430" />
+  </DataConverterFormula>
+  <DataConverterFormula name="hand middle slide base" id="0:2431">
+    <FormulaTokenParenthesisOpen id="0:2432" />
+    <FormulaTokenValue operationValue="502.6956009" id="0:2433" />
+    <FormulaTokenOperation operationType="2" id="0:2434" />
+    <FormulaTokenParenthesisOpen id="0:2435" />
+    <FormulaTokenValue operationValue="1.0" id="0:2436" />
+    <FormulaTokenOperation operationType="1" id="0:2437" />
+    <FormulaTokenFunction functionType="1" id="0:2438" />
+    <FormulaTokenParenthesisOpen id="0:2439" />
+    <FormulaTokenFunction functionType="9" id="0:2440" />
+    <FormulaTokenParenthesisOpen id="0:2441" />
+    <FormulaTokenParenthesisOpen id="0:2442" />
+    <FormulaTokenInput id="0:2443" />
+    <FormulaTokenOperation operationType="2" id="0:2444" />
+    <FormulaTokenValue operationValue="2.0594885" id="0:2445" />
+    <FormulaTokenParenthesisClose id="0:2446" />
+    <FormulaTokenOperation operationType="0" id="0:2447" />
+    <FormulaTokenValue operationValue="0.2792527" id="0:2448" />
+    <FormulaTokenParenthesisClose id="0:2449" />
+    <FormulaTokenParenthesisClose id="0:2450" />
+    <FormulaTokenOperation operationType="2" id="0:2451" />
+    <FormulaTokenValue operationValue="1.0402994" id="0:2452" />
+    <FormulaTokenParenthesisClose id="0:2453" />
+    <FormulaTokenArgumentSeparator id="0:2454" />
+    <FormulaTokenValue operationValue="0.0" id="0:2455" />
+    <FormulaTokenParenthesisClose id="0:2456" />
+    <FormulaTokenParenthesisClose id="0:2457" />
+    <FormulaTokenParenthesisClose id="0:2458" />
+  </DataConverterFormula>
+  <DataConverterFormula name="hand middle slide tip" id="0:2459">
+    <FormulaTokenParenthesisOpen id="0:2460" />
+    <FormulaTokenValue operationValue="377.7675555" id="0:2461" />
+    <FormulaTokenOperation operationType="2" id="0:2462" />
+    <FormulaTokenParenthesisOpen id="0:2463" />
+    <FormulaTokenValue operationValue="1.0" id="0:2464" />
+    <FormulaTokenOperation operationType="1" id="0:2465" />
+    <FormulaTokenFunction functionType="1" id="0:2466" />
+    <FormulaTokenParenthesisOpen id="0:2467" />
+    <FormulaTokenFunction functionType="9" id="0:2468" />
+    <FormulaTokenParenthesisOpen id="0:2469" />
+    <FormulaTokenParenthesisOpen id="0:2470" />
+    <FormulaTokenParenthesisOpen id="0:2471" />
+    <FormulaTokenInput id="0:2472" />
+    <FormulaTokenOperation operationType="2" id="0:2473" />
+    <FormulaTokenValue operationValue="2.0594885" id="0:2474" />
+    <FormulaTokenParenthesisClose id="0:2475" />
+    <FormulaTokenOperation operationType="0" id="0:2476" />
+    <FormulaTokenParenthesisOpen id="0:2477" />
+    <FormulaTokenParenthesisOpen id="0:2478" />
+    <FormulaTokenInput id="0:2479" />
+    <FormulaTokenOperation operationType="2" id="0:2480" />
+    <FormulaTokenInput id="0:2481" />
+    <FormulaTokenParenthesisClose id="0:2482" />
+    <FormulaTokenOperation operationType="2" id="0:2483" />
+    <FormulaTokenValue operationValue="2.2340214" id="0:2484" />
+    <FormulaTokenParenthesisClose id="0:2485" />
+    <FormulaTokenParenthesisClose id="0:2486" />
+    <FormulaTokenOperation operationType="0" id="0:2487" />
+    <FormulaTokenValue operationValue="0.2792527" id="0:2488" />
+    <FormulaTokenParenthesisClose id="0:2489" />
+    <FormulaTokenParenthesisClose id="0:2490" />
+    <FormulaTokenOperation operationType="2" id="0:2491" />
+    <FormulaTokenValue operationValue="1.0402994" id="0:2492" />
+    <FormulaTokenParenthesisClose id="0:2493" />
+    <FormulaTokenArgumentSeparator id="0:2494" />
+    <FormulaTokenValue operationValue="0.0" id="0:2495" />
+    <FormulaTokenParenthesisClose id="0:2496" />
+    <FormulaTokenParenthesisClose id="0:2497" />
+    <FormulaTokenParenthesisClose id="0:2498" />
+  </DataConverterFormula>
+  <DataConverterRangeMapper name="hand middle fan back" minInput="0" maxInput="1" minOutput="0.0" maxOutput="-0.04" id="0:2499" />
+  <DataConverterRangeMapper name="hand middle converge back" minInput="0" maxInput="1" minOutput="0" maxOutput="0.02" id="0:2500" />
+  <DataConverterRangeMapper name="hand middle fan palm" minInput="0" maxInput="1" minOutput="-0.0" maxOutput="0.04" id="0:2501" />
+  <DataConverterRangeMapper name="hand middle converge palm" minInput="0" maxInput="1" minOutput="0" maxOutput="-0.02" id="0:2502" />
+  <DataConverterFormula name="hand ring tip joint" id="0:2503">
+    <FormulaTokenParenthesisOpen id="0:2504" />
+    <FormulaTokenFunction functionType="9" id="0:2505" />
+    <FormulaTokenParenthesisOpen id="0:2506" />
+    <FormulaTokenParenthesisOpen id="0:2507" />
+    <FormulaTokenInput id="0:2508" />
+    <FormulaTokenOperation operationType="2" id="0:2509" />
+    <FormulaTokenValue operationValue="2.0594885" id="0:2510" />
+    <FormulaTokenParenthesisClose id="0:2511" />
+    <FormulaTokenOperation operationType="0" id="0:2512" />
+    <FormulaTokenValue operationValue="0.2792527" id="0:2513" />
+    <FormulaTokenParenthesisClose id="0:2514" />
+    <FormulaTokenParenthesisClose id="0:2515" />
+    <FormulaTokenOperation operationType="2" id="0:2516" />
+    <FormulaTokenValue operationValue="-479.6911589" id="0:2517" />
+    <FormulaTokenParenthesisClose id="0:2518" />
+  </DataConverterFormula>
+  <DataConverterFormula name="hand ring slide base" id="0:2519">
+    <FormulaTokenParenthesisOpen id="0:2520" />
+    <FormulaTokenValue operationValue="461.1087369" id="0:2521" />
+    <FormulaTokenOperation operationType="2" id="0:2522" />
+    <FormulaTokenParenthesisOpen id="0:2523" />
+    <FormulaTokenValue operationValue="1.0" id="0:2524" />
+    <FormulaTokenOperation operationType="1" id="0:2525" />
+    <FormulaTokenFunction functionType="1" id="0:2526" />
+    <FormulaTokenParenthesisOpen id="0:2527" />
+    <FormulaTokenFunction functionType="9" id="0:2528" />
+    <FormulaTokenParenthesisOpen id="0:2529" />
+    <FormulaTokenParenthesisOpen id="0:2530" />
+    <FormulaTokenInput id="0:2531" />
+    <FormulaTokenOperation operationType="2" id="0:2532" />
+    <FormulaTokenValue operationValue="2.0594885" id="0:2533" />
+    <FormulaTokenParenthesisClose id="0:2534" />
+    <FormulaTokenOperation operationType="0" id="0:2535" />
+    <FormulaTokenValue operationValue="0.2792527" id="0:2536" />
+    <FormulaTokenParenthesisClose id="0:2537" />
+    <FormulaTokenParenthesisClose id="0:2538" />
+    <FormulaTokenOperation operationType="2" id="0:2539" />
+    <FormulaTokenValue operationValue="1.0402994" id="0:2540" />
+    <FormulaTokenParenthesisClose id="0:2541" />
+    <FormulaTokenArgumentSeparator id="0:2542" />
+    <FormulaTokenValue operationValue="0.0" id="0:2543" />
+    <FormulaTokenParenthesisClose id="0:2544" />
+    <FormulaTokenParenthesisClose id="0:2545" />
+    <FormulaTokenParenthesisClose id="0:2546" />
+  </DataConverterFormula>
+  <DataConverterFormula name="hand ring slide tip" id="0:2547">
+    <FormulaTokenParenthesisOpen id="0:2548" />
+    <FormulaTokenValue operationValue="355.8087669" id="0:2549" />
+    <FormulaTokenOperation operationType="2" id="0:2550" />
+    <FormulaTokenParenthesisOpen id="0:2551" />
+    <FormulaTokenValue operationValue="1.0" id="0:2552" />
+    <FormulaTokenOperation operationType="1" id="0:2553" />
+    <FormulaTokenFunction functionType="1" id="0:2554" />
+    <FormulaTokenParenthesisOpen id="0:2555" />
+    <FormulaTokenFunction functionType="9" id="0:2556" />
+    <FormulaTokenParenthesisOpen id="0:2557" />
+    <FormulaTokenParenthesisOpen id="0:2558" />
+    <FormulaTokenParenthesisOpen id="0:2559" />
+    <FormulaTokenInput id="0:2560" />
+    <FormulaTokenOperation operationType="2" id="0:2561" />
+    <FormulaTokenValue operationValue="2.0594885" id="0:2562" />
+    <FormulaTokenParenthesisClose id="0:2563" />
+    <FormulaTokenOperation operationType="0" id="0:2564" />
+    <FormulaTokenParenthesisOpen id="0:2565" />
+    <FormulaTokenParenthesisOpen id="0:2566" />
+    <FormulaTokenInput id="0:2567" />
+    <FormulaTokenOperation operationType="2" id="0:2568" />
+    <FormulaTokenInput id="0:2569" />
+    <FormulaTokenParenthesisClose id="0:2570" />
+    <FormulaTokenOperation operationType="2" id="0:2571" />
+    <FormulaTokenValue operationValue="2.2340214" id="0:2572" />
+    <FormulaTokenParenthesisClose id="0:2573" />
+    <FormulaTokenParenthesisClose id="0:2574" />
+    <FormulaTokenOperation operationType="0" id="0:2575" />
+    <FormulaTokenValue operationValue="0.2792527" id="0:2576" />
+    <FormulaTokenParenthesisClose id="0:2577" />
+    <FormulaTokenParenthesisClose id="0:2578" />
+    <FormulaTokenOperation operationType="2" id="0:2579" />
+    <FormulaTokenValue operationValue="1.0402994" id="0:2580" />
+    <FormulaTokenParenthesisClose id="0:2581" />
+    <FormulaTokenArgumentSeparator id="0:2582" />
+    <FormulaTokenValue operationValue="0.0" id="0:2583" />
+    <FormulaTokenParenthesisClose id="0:2584" />
+    <FormulaTokenParenthesisClose id="0:2585" />
+    <FormulaTokenParenthesisClose id="0:2586" />
+  </DataConverterFormula>
+  <DataConverterRangeMapper name="hand ring fan back" minInput="0" maxInput="1" minOutput="0.02" maxOutput="0.09000000000000001" id="0:2587" />
+  <DataConverterRangeMapper name="hand ring converge back" minInput="0" maxInput="1" minOutput="0" maxOutput="-0.05" id="0:2588" />
+  <DataConverterRangeMapper name="hand ring fan palm" minInput="0" maxInput="1" minOutput="-0.02" maxOutput="-0.09000000000000001" id="0:2589" />
+  <DataConverterRangeMapper name="hand ring converge palm" minInput="0" maxInput="1" minOutput="0" maxOutput="0.05" id="0:2590" />
+  <DataConverterFormula name="hand pinky tip joint" id="0:2591">
+    <FormulaTokenParenthesisOpen id="0:2592" />
+    <FormulaTokenFunction functionType="9" id="0:2593" />
+    <FormulaTokenParenthesisOpen id="0:2594" />
+    <FormulaTokenParenthesisOpen id="0:2595" />
+    <FormulaTokenInput id="0:2596" />
+    <FormulaTokenOperation operationType="2" id="0:2597" />
+    <FormulaTokenValue operationValue="2.0594885" id="0:2598" />
+    <FormulaTokenParenthesisClose id="0:2599" />
+    <FormulaTokenOperation operationType="0" id="0:2600" />
+    <FormulaTokenValue operationValue="0.2792527" id="0:2601" />
+    <FormulaTokenParenthesisClose id="0:2602" />
+    <FormulaTokenParenthesisClose id="0:2603" />
+    <FormulaTokenOperation operationType="2" id="0:2604" />
+    <FormulaTokenValue operationValue="-388.1437451" id="0:2605" />
+    <FormulaTokenParenthesisClose id="0:2606" />
+  </DataConverterFormula>
+  <DataConverterFormula name="hand pinky slide base" id="0:2607">
+    <FormulaTokenParenthesisOpen id="0:2608" />
+    <FormulaTokenValue operationValue="373.1077147" id="0:2609" />
+    <FormulaTokenOperation operationType="2" id="0:2610" />
+    <FormulaTokenParenthesisOpen id="0:2611" />
+    <FormulaTokenValue operationValue="1.0" id="0:2612" />
+    <FormulaTokenOperation operationType="1" id="0:2613" />
+    <FormulaTokenFunction functionType="1" id="0:2614" />
+    <FormulaTokenParenthesisOpen id="0:2615" />
+    <FormulaTokenFunction functionType="9" id="0:2616" />
+    <FormulaTokenParenthesisOpen id="0:2617" />
+    <FormulaTokenParenthesisOpen id="0:2618" />
+    <FormulaTokenInput id="0:2619" />
+    <FormulaTokenOperation operationType="2" id="0:2620" />
+    <FormulaTokenValue operationValue="2.0594885" id="0:2621" />
+    <FormulaTokenParenthesisClose id="0:2622" />
+    <FormulaTokenOperation operationType="0" id="0:2623" />
+    <FormulaTokenValue operationValue="0.2792527" id="0:2624" />
+    <FormulaTokenParenthesisClose id="0:2625" />
+    <FormulaTokenParenthesisClose id="0:2626" />
+    <FormulaTokenOperation operationType="2" id="0:2627" />
+    <FormulaTokenValue operationValue="1.0402994" id="0:2628" />
+    <FormulaTokenParenthesisClose id="0:2629" />
+    <FormulaTokenArgumentSeparator id="0:2630" />
+    <FormulaTokenValue operationValue="0.0" id="0:2631" />
+    <FormulaTokenParenthesisClose id="0:2632" />
+    <FormulaTokenParenthesisClose id="0:2633" />
+    <FormulaTokenParenthesisClose id="0:2634" />
+  </DataConverterFormula>
+  <DataConverterFormula name="hand pinky slide tip" id="0:2635">
+    <FormulaTokenParenthesisOpen id="0:2636" />
+    <FormulaTokenValue operationValue="302.9955054" id="0:2637" />
+    <FormulaTokenOperation operationType="2" id="0:2638" />
+    <FormulaTokenParenthesisOpen id="0:2639" />
+    <FormulaTokenValue operationValue="1.0" id="0:2640" />
+    <FormulaTokenOperation operationType="1" id="0:2641" />
+    <FormulaTokenFunction functionType="1" id="0:2642" />
+    <FormulaTokenParenthesisOpen id="0:2643" />
+    <FormulaTokenFunction functionType="9" id="0:2644" />
+    <FormulaTokenParenthesisOpen id="0:2645" />
+    <FormulaTokenParenthesisOpen id="0:2646" />
+    <FormulaTokenParenthesisOpen id="0:2647" />
+    <FormulaTokenInput id="0:2648" />
+    <FormulaTokenOperation operationType="2" id="0:2649" />
+    <FormulaTokenValue operationValue="2.0594885" id="0:2650" />
+    <FormulaTokenParenthesisClose id="0:2651" />
+    <FormulaTokenOperation operationType="0" id="0:2652" />
+    <FormulaTokenParenthesisOpen id="0:2653" />
+    <FormulaTokenParenthesisOpen id="0:2654" />
+    <FormulaTokenInput id="0:2655" />
+    <FormulaTokenOperation operationType="2" id="0:2656" />
+    <FormulaTokenInput id="0:2657" />
+    <FormulaTokenParenthesisClose id="0:2658" />
+    <FormulaTokenOperation operationType="2" id="0:2659" />
+    <FormulaTokenValue operationValue="2.2340214" id="0:2660" />
+    <FormulaTokenParenthesisClose id="0:2661" />
+    <FormulaTokenParenthesisClose id="0:2662" />
+    <FormulaTokenOperation operationType="0" id="0:2663" />
+    <FormulaTokenValue operationValue="0.2792527" id="0:2664" />
+    <FormulaTokenParenthesisClose id="0:2665" />
+    <FormulaTokenParenthesisClose id="0:2666" />
+    <FormulaTokenOperation operationType="2" id="0:2667" />
+    <FormulaTokenValue operationValue="1.0402994" id="0:2668" />
+    <FormulaTokenParenthesisClose id="0:2669" />
+    <FormulaTokenArgumentSeparator id="0:2670" />
+    <FormulaTokenValue operationValue="0.0" id="0:2671" />
+    <FormulaTokenParenthesisClose id="0:2672" />
+    <FormulaTokenParenthesisClose id="0:2673" />
+    <FormulaTokenParenthesisClose id="0:2674" />
+  </DataConverterFormula>
+  <DataConverterRangeMapper name="hand pinky fan back" minInput="0" maxInput="1" minOutput="0.05" maxOutput="0.24" id="0:2675" />
+  <DataConverterRangeMapper name="hand pinky converge back" minInput="0" maxInput="1" minOutput="0" maxOutput="-0.12" id="0:2676" />
+  <DataConverterRangeMapper name="hand pinky fan palm" minInput="0" maxInput="1" minOutput="-0.05" maxOutput="-0.24" id="0:2677" />
+  <DataConverterRangeMapper name="hand pinky converge palm" minInput="0" maxInput="1" minOutput="0" maxOutput="0.12" id="0:2678" />
+  <DataConverterFormula name="hand thumb opp back" id="0:2679">
+    <FormulaTokenParenthesisOpen id="0:2680" />
+    <FormulaTokenValue operationValue="1.0" id="0:2681" />
+    <FormulaTokenOperation operationType="2" id="0:2682" />
+    <FormulaTokenParenthesisOpen id="0:2683" />
+    <FormulaTokenValue operationValue="-0.06" id="0:2684" />
+    <FormulaTokenOperation operationType="0" id="0:2685" />
+    <FormulaTokenParenthesisOpen id="0:2686" />
+    <FormulaTokenParenthesisOpen id="0:2687" />
+    <FormulaTokenValue operationValue="1.26" id="0:2688" />
+    <FormulaTokenOperation operationType="2" id="0:2689" />
+    <FormulaTokenFunction functionType="1" id="0:2690" />
+    <FormulaTokenInput id="0:2691" />
+    <FormulaTokenArgumentSeparator id="0:2692" />
+    <FormulaTokenValue operationValue="0.0" id="0:2693" />
+    <FormulaTokenParenthesisClose id="0:2694" />
+    <FormulaTokenParenthesisClose id="0:2695" />
+    <FormulaTokenOperation operationType="0" id="0:2696" />
+    <FormulaTokenParenthesisOpen id="0:2697" />
+    <FormulaTokenValue operationValue="0.99" id="0:2698" />
+    <FormulaTokenOperation operationType="2" id="0:2699" />
+    <FormulaTokenFunction functionType="0" id="0:2700" />
+    <FormulaTokenInput id="0:2701" />
+    <FormulaTokenArgumentSeparator id="0:2702" />
+    <FormulaTokenValue operationValue="0.0" id="0:2703" />
+    <FormulaTokenParenthesisClose id="0:2704" />
+    <FormulaTokenParenthesisClose id="0:2705" />
+    <FormulaTokenParenthesisClose id="0:2706" />
+    <FormulaTokenParenthesisClose id="0:2707" />
+    <FormulaTokenParenthesisClose id="0:2708" />
+  </DataConverterFormula>
+  <DataConverterRangeMapper name="hand thumb mcp back" minInput="0" maxInput="1" minOutput="0" maxOutput="0.38" id="0:2709" />
+  <DataConverterFormula name="hand thumb opp palm" id="0:2710">
+    <FormulaTokenParenthesisOpen id="0:2711" />
+    <FormulaTokenValue operationValue="-1.0" id="0:2712" />
+    <FormulaTokenOperation operationType="2" id="0:2713" />
+    <FormulaTokenParenthesisOpen id="0:2714" />
+    <FormulaTokenValue operationValue="-0.06" id="0:2715" />
+    <FormulaTokenOperation operationType="0" id="0:2716" />
+    <FormulaTokenParenthesisOpen id="0:2717" />
+    <FormulaTokenParenthesisOpen id="0:2718" />
+    <FormulaTokenValue operationValue="1.26" id="0:2719" />
+    <FormulaTokenOperation operationType="2" id="0:2720" />
+    <FormulaTokenFunction functionType="1" id="0:2721" />
+    <FormulaTokenInput id="0:2722" />
+    <FormulaTokenArgumentSeparator id="0:2723" />
+    <FormulaTokenValue operationValue="0.0" id="0:2724" />
+    <FormulaTokenParenthesisClose id="0:2725" />
+    <FormulaTokenParenthesisClose id="0:2726" />
+    <FormulaTokenOperation operationType="0" id="0:2727" />
+    <FormulaTokenParenthesisOpen id="0:2728" />
+    <FormulaTokenValue operationValue="0.99" id="0:2729" />
+    <FormulaTokenOperation operationType="2" id="0:2730" />
+    <FormulaTokenFunction functionType="0" id="0:2731" />
+    <FormulaTokenInput id="0:2732" />
+    <FormulaTokenArgumentSeparator id="0:2733" />
+    <FormulaTokenValue operationValue="0.0" id="0:2734" />
+    <FormulaTokenParenthesisClose id="0:2735" />
+    <FormulaTokenParenthesisClose id="0:2736" />
+    <FormulaTokenParenthesisClose id="0:2737" />
+    <FormulaTokenParenthesisClose id="0:2738" />
+    <FormulaTokenParenthesisClose id="0:2739" />
+  </DataConverterFormula>
+  <DataConverterRangeMapper name="hand thumb mcp palm" minInput="0" maxInput="1" minOutput="0" maxOutput="-0.38" id="0:2740" />
+  <DataConverterRangeMapper name="hand root patch" minInput="0.42" maxInput="0.6" minOutput="1" maxOutput="0" clampLower="true" clampUpper="true" id="0:2741" />
+  <DataConverterRangeMapper name="hand back opacity" minInput="0.4" maxInput="0.6" minOutput="1" maxOutput="0" clampLower="true" clampUpper="true" id="0:2742" />
+  <DataConverterRangeMapper name="hand palm opacity" minInput="0.4" maxInput="0.6" minOutput="0" maxOutput="1" clampLower="true" clampUpper="true" id="0:2743" />
+  <ImageAsset file="../pieces/rig/back_palm.png" name="back_palm" id="0:300" />
+  <ImageAsset file="../pieces/rig/back_index_base.png" name="back_index_base" id="0:301" />
+  <ImageAsset file="../pieces/rig/back_index_tip.png" name="back_index_tip" id="0:302" />
+  <ImageAsset file="../pieces/rig/back_middle_base.png" name="back_middle_base" id="0:303" />
+  <ImageAsset file="../pieces/rig/back_middle_tip.png" name="back_middle_tip" id="0:304" />
+  <ImageAsset file="../pieces/rig/back_ring_base.png" name="back_ring_base" id="0:305" />
+  <ImageAsset file="../pieces/rig/back_ring_tip.png" name="back_ring_tip" id="0:306" />
+  <ImageAsset file="../pieces/rig/back_pinky_base.png" name="back_pinky_base" id="0:307" />
+  <ImageAsset file="../pieces/rig/back_pinky_tip.png" name="back_pinky_tip" id="0:308" />
+  <ImageAsset file="../pieces/rig/back_thumb_base.png" name="back_thumb_base" id="0:309" />
+  <ImageAsset file="../pieces/rig/back_thumb_tip.png" name="back_thumb_tip" id="0:310" />
+  <ImageAsset file="../pieces/rig/palm_palm.png" name="palm_palm" id="0:311" />
+  <ImageAsset file="../pieces/rig/palm_index_base.png" name="palm_index_base" id="0:312" />
+  <ImageAsset file="../pieces/rig/palm_index_tip.png" name="palm_index_tip" id="0:313" />
+  <ImageAsset file="../pieces/rig/palm_index_root.png" name="palm_index_root" id="0:314" />
+  <ImageAsset file="../pieces/rig/palm_middle_base.png" name="palm_middle_base" id="0:315" />
+  <ImageAsset file="../pieces/rig/palm_middle_tip.png" name="palm_middle_tip" id="0:316" />
+  <ImageAsset file="../pieces/rig/palm_middle_root.png" name="palm_middle_root" id="0:317" />
+  <ImageAsset file="../pieces/rig/palm_ring_base.png" name="palm_ring_base" id="0:318" />
+  <ImageAsset file="../pieces/rig/palm_ring_tip.png" name="palm_ring_tip" id="0:319" />
+  <ImageAsset file="../pieces/rig/palm_ring_root.png" name="palm_ring_root" id="0:320" />
+  <ImageAsset file="../pieces/rig/palm_pinky_base.png" name="palm_pinky_base" id="0:321" />
+  <ImageAsset file="../pieces/rig/palm_pinky_tip.png" name="palm_pinky_tip" id="0:322" />
+  <ImageAsset file="../pieces/rig/palm_pinky_root.png" name="palm_pinky_root" id="0:323" />
+  <ImageAsset file="../pieces/rig/palm_thumb_base.png" name="palm_thumb_base" id="0:324" />
+  <ImageAsset file="../pieces/rig/palm_thumb_tip.png" name="palm_thumb_tip" id="0:325" />
+  <ViewModel name="Hands" defaultInstanceId="0:41" id="0:40">
+    <ViewModelPropertyNumber name="shape" id="0:2003" />
+    <ViewModelPropertyNumber name="turn" id="0:2004" />
+    <ViewModelPropertyNumber name="move" id="0:2005" />
+    <ViewModelPropertyNumber name="seq" id="0:2006" />
+    <ViewModelPropertyNumber name="rate" id="0:2007" />
+    <ViewModelPropertyNumber name="shapeOut" id="0:2008" />
+    <ViewModelPropertyNumber name="armRSh" id="0:2009" />
+    <ViewModelPropertyNumber name="armREl" id="0:2010" />
+    <ViewModelPropertyNumber name="armRWr" id="0:2011" />
+    <ViewModelPropertyNumber name="armLSh" id="0:2012" />
+    <ViewModelPropertyNumber name="armLEl" id="0:2013" />
+    <ViewModelPropertyNumber name="armLWr" id="0:2014" />
+    <ViewModelPropertyNumber name="propApple" id="0:2015" />
+    <ViewModelPropertyNumber name="propHandle" id="0:2016" />
+    <ViewModelPropertyNumber name="handRThumbCurl" id="0:2744" />
+    <ViewModelPropertyNumber name="handRThumbOpp" id="0:2745" />
+    <ViewModelPropertyNumber name="handRIndexCurl" id="0:2746" />
+    <ViewModelPropertyNumber name="handRMiddleCurl" id="0:2747" />
+    <ViewModelPropertyNumber name="handRRingCurl" id="0:2748" />
+    <ViewModelPropertyNumber name="handRPinkyCurl" id="0:2749" />
+    <ViewModelPropertyNumber name="handRSpread" id="0:2750" />
+    <ViewModelPropertyNumber name="handRFlip" id="0:2751" />
+    <ViewModelPropertyNumber name="handRPalmSide" id="0:2752" />
+    <ViewModelPropertyNumber name="handLThumbCurl" id="0:2849" />
+    <ViewModelPropertyNumber name="handLThumbOpp" id="0:2850" />
+    <ViewModelPropertyNumber name="handLIndexCurl" id="0:2851" />
+    <ViewModelPropertyNumber name="handLMiddleCurl" id="0:2852" />
+    <ViewModelPropertyNumber name="handLRingCurl" id="0:2853" />
+    <ViewModelPropertyNumber name="handLPinkyCurl" id="0:2854" />
+    <ViewModelPropertyNumber name="handLSpread" id="0:2855" />
+    <ViewModelPropertyNumber name="handLFlip" id="0:2856" />
+    <ViewModelPropertyNumber name="handLPalmSide" id="0:2857" />
+    <ViewModelInstance name="Default" exports="true" id="0:41">
+      <ViewModelInstanceNumber viewModelPropertyId="0:2003" propertyValue="0" id="0:3578" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2004" propertyValue="0" id="0:3579" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2005" propertyValue="0" id="0:3580" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2006" propertyValue="0" id="0:3581" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2007" propertyValue="1" id="0:3582" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2008" propertyValue="0" id="0:3583" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2009" propertyValue="0.62" id="0:3584" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2010" propertyValue="-0.62" id="0:3585" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2011" propertyValue="0" id="0:3586" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2012" propertyValue="-0.62" id="0:3587" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2013" propertyValue="0.62" id="0:3588" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2014" propertyValue="0" id="0:3589" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2015" propertyValue="0" id="0:3590" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2016" propertyValue="0" id="0:3591" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2744" propertyValue="0.2" id="0:3592" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2745" propertyValue="0.0" id="0:3593" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2746" propertyValue="0.22" id="0:3594" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2747" propertyValue="0.28" id="0:3595" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2748" propertyValue="0.33" id="0:3596" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2749" propertyValue="0.38" id="0:3597" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2750" propertyValue="0.15" id="0:3598" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2751" propertyValue="1.0" id="0:3599" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2752" propertyValue="0.0" id="0:3600" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2849" propertyValue="0.2" id="0:3601" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2850" propertyValue="0.0" id="0:3602" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2851" propertyValue="0.22" id="0:3603" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2852" propertyValue="0.28" id="0:3604" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2853" propertyValue="0.33" id="0:3605" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2854" propertyValue="0.38" id="0:3606" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2855" propertyValue="0.15" id="0:3607" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2856" propertyValue="-1.0" id="0:3608" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2857" propertyValue="0.0" id="0:3609" />
+    </ViewModelInstance>
+  </ViewModel>
+</Rive>
