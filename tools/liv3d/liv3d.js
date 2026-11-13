@@ -88,7 +88,7 @@ export class LivActor {
     if (this.prop) { this.body.remove(this.prop.mesh); this.prop = null; }
     if (this.flying) for (const f of this.flying) f.mesh.parent && f.mesh.parent.remove(f.mesh);
     this.flying = [];
-    this.stats = { maxOver: 0 }; this._pelY = null; this.boost = 1; this._dec = 1;
+    this.stats = { maxOver: 0 }; this._pelY = null; this._armPole = {}; this.boost = 1; this._dec = 1;
     this._place(); this.update(0);
     this.springCenter.position.set(this.x, 0, this.z); this.springCenter.updateMatrixWorld();
     const sb = this.vrm.springBoneManager; if (sb) { for (const j of sb.joints) j.center = this.springCenter; sb.reset(); }
@@ -289,7 +289,7 @@ export class LivActor {
       f.pitch = sp < 0.5 ? lerp(f.lpitch, mid, smooth(sp / 0.5)) : lerp(mid, land, smooth((sp - 0.5) / 0.5));
       f.flat = 1 - smooth(sp / 0.4);
       const Hs = lerp(0.05, 0.17, this.rw) * M.ls * Math.max(smooth(this.vN / 0.25), 0.5);
-      f.lift = Hs * Math.pow(Math.sin(Math.PI * Math.pow(sp, lerp(0.85, 0.55, this.rw))), 2);
+      f.lift = Hs * Math.pow(Math.sin(Math.PI * Math.pow(sp, lerp(0.85, 0.55, this.rw))), 2) * lerp(1, smooth(sp / 0.22), this.rw);   // eased out of the toe-off
       f.offA = this._pivot(S, f.lpitch); f.offB = this._pivot(S, land);
       if (sp >= 1) { f.planted = true; f.ax = lx; f.az = lz; f.yaw = yawL + toe; f.pitch = land; f.expBack = this.v * sg * this.T * (1 - lerp(0.37, 0.3, this.rw)) + 0.06 * M.leg; }
     }
@@ -418,7 +418,7 @@ export class LivActor {
       // a swinging leg stays folded: its foot is drawn in toward the hip (up behind her when running)
       const fs = this.feet[S];
       if (!fs.planted && !this.frozen) {
-        const w = Math.sin(Math.PI * fs.sp), rmax = m.leg * (0.995 - (0.07 + 0.2 * this.rw) * w), d = f.p.distanceTo(H);
+        const w = smooth(fs.sp / 0.4) * smooth((1 - fs.sp) / 0.4), rmax = m.leg * (0.995 - (0.07 + 0.2 * this.rw) * w), d = f.p.distanceTo(H);
         if (d > rmax) f.p.sub(H).multiplyScalar(rmax / d).add(H);
       }
       const r = solve2(H, m.L1, m.L2, f.p, pole);
@@ -439,7 +439,15 @@ export class LivActor {
       if (a.chin > 0) { const B = this._bodyShape || (this._bodyShape = this._measureBody()); tr.lerp(B.chin.clone().add(sv(a.h).multiplyScalar(M.ls)), a.chin); }
       if (!a.free) this._avoidBody(tr, s);
       const target = rig.carry(C, tr), pole = sv(a.e).applyQuaternion(dC), palm = sv(a.palm).applyQuaternion(dC);
-      const sh = rig.pos(p + 'UpperArm'), r = solve2(sh, m.A1, m.A2, target, pole.lengthSq() > 1e-6 ? pole : V3(0, 0, -1));
+      // the elbow keeps to its side: the previous elbow direction steadies a hint that lines up with the arm
+      const prevPole = this._armPole[S]; if (prevPole) pole.normalize().addScaledVector(prevPole, 0.6);
+      const sh = rig.pos(p + 'UpperArm');
+      { // an arm never locks straight: the reach saturates softly (near full extension the elbow would swing wildly)
+        const Lr = m.A1 + m.A2, d = target.distanceTo(sh), k0 = 0.88 * Lr, span = 0.1 * Lr;
+        if (d > k0) target.sub(sh).setLength(k0 + span * Math.tanh((d - k0) / span)).add(sh);
+      }
+      const r = solve2(sh, m.A1, m.A2, target, pole.lengthSq() > 1e-6 ? pole : V3(0, 0, -1));
+      this._armPole[S] = r.pole.clone();
       rig.set(p + 'UpperArm', alignQ(r.mid.clone().sub(sh), r.pole, m.restArmDir1, V3(0, 0, -1)));
       const lo = alignQ(r.end.clone().sub(r.mid), r.pole, m.restArmDir2, V3(0, 0, -1));
       const fa = r.end.clone().sub(r.mid).normalize();
@@ -450,8 +458,8 @@ export class LivActor {
       const handQ = alignQ(fd, n, m.restFinger, V3(0, -1, 0));
       // forearm takes part of the twist so the wrist does not wring
       const rel = lo.clone().invert().multiply(handQ), ax = m.restArmDir2, d = rel.x * ax.x + rel.y * ax.y + rel.z * ax.z;
-      const tw = new THREE.Quaternion(ax.x * d, ax.y * d, ax.z * d, rel.w); if (tw.lengthSq() > 1e-9) tw.normalize(); else tw.identity();
-      rig.set(p + 'LowerArm', lo.multiply(Q().slerp(tw, 0.6)));
+      const twist = clamp(wrapPi(2 * Math.atan2(d, rel.w)), -1.9, 1.9);
+      rig.set(p + 'LowerArm', lo.multiply(qAxis(ax, 0.6 * twist)));
       rig.set(p + 'Hand', handQ);
       this.hands[S].update(dt, a.row);
       this.hands[S].apply();
