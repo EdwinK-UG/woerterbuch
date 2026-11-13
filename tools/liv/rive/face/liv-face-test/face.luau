@@ -151,7 +151,7 @@ function M.update(f:Face,dt:number)
   local C=o.cfg
   for _,m in ipairs(MOUTHS) do put(o,'mo_'..m,f.mop[m] or 0) end
   local mp=get(C,'mouth_px',1)
-  put(o,'mouth_x',cu.mx*mp);put(o,'mouth_y',cu.my*mp);put(o,'mouth_r',cu.mr)
+  put(o,'mouth_x',cu.mx*mp*get(C,'mouth_xk',1));put(o,'mouth_y',cu.my*mp);put(o,'mouth_r',cu.mr)
   put(o,'mouth_sx',cu.ms*(1+.05*(1-pop)));put(o,'mouth_sy',cu.mh*pop)
   -- brows: raise moves up; inner end up turns the brow (near brow: inner end on the right; far brow: on the left)
   local br=get(C,'brow_raise',9);local rot=get(C,'brow_rot',.2);local fs=get(C,'brow_far_scale',.85)

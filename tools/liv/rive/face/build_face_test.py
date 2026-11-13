@@ -13,12 +13,16 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 from face_tq import emit_face
 
-OUT = HERE / 'liv-face-test'; OUT.mkdir(exist_ok=True)
+VIEW = sys.argv[1] if len(sys.argv) > 1 else 'tq'
+OUT = HERE / ('liv-face-test' if VIEW == 'tq' else f'liv-face-test-{VIEW}'); OUT.mkdir(exist_ok=True)
+TV = json.loads((HERE.parent / VIEW / f'{VIEW}.json').read_text())
+VIEW_NAME = {'tq': 'three-quarter view', 'front': 'front view', 'side': 'side view'}[VIEW]
+FACE_CROP = {'tq': (470, 248, 652, 442), 'front': (410, 245, 620, 440), 'side': (555, 248, 665, 442)}[VIEW]   # view px
 PARTS = json.loads((HERE.parent / 'parts/parts.json').read_text())
 STAGE_W, STAGE_H = 1100, 760
 SCALE = 1.7
-NECK, HEAD_TOP = (504.0, 472.0), (508.0, 180.0)          # as build_tq.py
-HP = PARTS['tq_head']
+NECK, HEAD_TOP = tuple(map(float, TV['neck'])), tuple(map(float, TV['rig']['head_top'])) if 'rig' in TV else (508.0, 180.0)   # as build_liv.py
+HP = PARTS[f'{VIEW}_head']
 CHAR_X, CHAR_Y = 30 - HP['x'] * SCALE, 40 - HP['y'] * SCALE
 EXPRS = ['Happy', 'Smile', 'Neutral', 'Laugh', 'Surprised', 'Sad', 'Think', 'Ouch', 'Effort', 'Wink']
 
@@ -35,7 +39,7 @@ aid = [100]
 def add_asset(key, file):
     a = el('ImageAsset', root, file=file, name=key, id=f'0:{aid[0]}'); aid[0] += 1
     return a.get('id')
-head_asset = add_asset('tq_head', '../../parts/tq_head.png')
+head_asset = add_asset(f'{VIEW}_head', f'../../parts/{VIEW}_head.png')
 ab = el('Artboard', root, name='Liv face test', width=STAGE_W, height=STAGE_H, defaultStateMachineId='0:7', styleId='0:5', id='0:2')
 el('LayoutComponentStyle', ab, name='Artboard style', id='0:5')
 f = el('Fill', ab, name='Studio'); el('SolidColor', f, colorValue='FFF3EBDD')
@@ -43,8 +47,8 @@ char = el('Node', ab, name='Liv', x=CHAR_X, y=CHAR_Y, scaleX=SCALE, scaleY=SCALE
 
 w = math.atan2(HEAD_TOP[1] - NECK[1], HEAD_TOP[0] - NECK[0])
 head_bone = el('RootBone', char, name='head', x=NECK[0], y=NECK[1], rotation=w, length=math.dist(NECK, HEAD_TOP))
-PRE = 'tq_'                                             # per-view prefix, as build_liv.py
-face = emit_face(el, head_bone, {'char': char, 'head_world': (NECK, w), 'add_asset': add_asset, 'art_rel': '../art', 'view': 'tq'}, pre=PRE)
+PRE = VIEW + '_'                                         # per-view prefix, as build_liv.py
+face = emit_face(el, head_bone, {'char': char, 'head_world': (NECK, w), 'add_asset': add_asset, 'art_rel': '../art', 'view': VIEW}, pre=PRE)
 
 # the head image: rigid on the head bone (the real rig uses a grid with a hair bone; the face does not care)
 x, y, ww, hh = HP['x'], HP['y'], HP['w'], HP['h']
@@ -72,19 +76,19 @@ for e_, key, n in face['bindings']: bindp(e_, key, PRE + n)
 bindp(head_bone, 15, 'headRot')
 
 # scripts: the face module and its per-view numbers first (a module must be declared before what requires it)
-(OUT / 'face_cfg_tq.luau').write_text(face['luau_cfg'])
+(OUT / f'face_cfg_{VIEW}.luau').write_text(face['luau_cfg'])
 shutil.copy(HERE / 'face.luau', OUT / 'face.luau')
 el('ScriptAsset', root, file='face.luau', name='face', isModule=True, id='0:78')
-el('ScriptAsset', root, file='face_cfg_tq.luau', name='face_cfg_tq', isModule=True, id='0:79')
-(OUT / 'test.luau').write_text('''-- Test controller: drives the face module and a gentle head nod (button "Nod").
+el('ScriptAsset', root, file=f'face_cfg_{VIEW}.luau', name=f'face_cfg_{VIEW}', isModule=True, id='0:79')
+(OUT / 'test.luau').write_text(('''-- Test controller: drives the face module and a gentle head nod (button "Nod").
 local Face = require('face')
-local CFG_TQ = require('face_cfg_tq')
+local CFG_V = require('face_cfg_@V@')
 type St = {context: Context, face: Face.Face?, rot: Property<number>?, rest: number, nod: Property<number>?, t: number}
 local function init(self: St, context: Context): boolean
  self.context = context
  local vm = context:viewModel()
  if vm == nil then return true end
- self.face = Face.new(vm, {{pre = 'tq_', cfg = CFG_TQ}}, '')
+ self.face = Face.new(vm, {{pre = '@V@_', cfg = CFG_V}}, '')
  self.rot = vm:getNumber('headRot'); self.nod = vm:getNumber('nod')
  local r = vm:getNumber('headRest'); if r then self.rest = r.value end
  return true
@@ -103,7 +107,7 @@ end
 return function(context: Context): Layout<St>
  return {context = context, face = nil, rot = nil, rest = 0, nod = nil, t = 0, init = init, advance = advance, draw = function(self: St, renderer: Renderer) end}
 end
-''')
+''').replace('@V@', VIEW))
 el('ScriptAsset', root, file='test.luau', name='test', id='0:80')
 layout = el('LayoutComponent', ab, name='Face controller', width=STAGE_W, height=STAGE_H, styleId='0:82', id='0:81')
 el('LayoutComponentStyle', layout, name='Fill stage', layoutWidthScaleType='fill', layoutHeightScaleType='fill', widthUnitsValue='auto', heightUnitsValue='auto', id='0:82')
@@ -129,7 +133,7 @@ def button(label, x, y, bw, actions):
         el('DataBindContext', bp, sourcePathIds='0:40-' + props[prop], propertyKey=636, direction=True)
     return (x, y)
 BTN = {}
-text('Liv · face · three-quarter view', 24, 10, 18)
+text(f'Liv · face · {VIEW_NAME}', 24, 10, 18)
 text('Expressions', 812, 40, 14, 'FF8B7460')
 for i, n in enumerate(EXPRS):
     BTN[n] = button(n, 870 + (i % 2) * 140, 92 + (i // 2) * 48, 128, [('expression', i)])
@@ -152,7 +156,7 @@ E.indent(root)
 (OUT / '.gitignore').write_text('build/\n')
 # where things are on the stage (for the render script): face crop box and button centres
 def stage(px, py): return (CHAR_X + px * SCALE, CHAR_Y + py * SCALE)
-fx0, fy0 = stage(470, 248); fx1, fy1 = stage(652, 442)
+fx0, fy0 = stage(*FACE_CROP[:2]); fx1, fy1 = stage(*FACE_CROP[2:])
 hx0, hy0 = stage(HP['x'], HP['y']); hx1, hy1 = stage(HP['x'] + HP['w'], HP['y'] + HP['h'])
 (OUT / 'layout.json').write_text(json.dumps({'face_crop': [fx0, fy0, fx1, fy1], 'head_crop': [hx0, hy0, hx1, hy1], 'buttons': BTN, 'scale': SCALE, 'expressions': EXPRS}, indent=1))
 print('props', len(face['props']), 'drawables', len(face['drawables']))

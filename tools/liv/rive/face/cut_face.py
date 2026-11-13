@@ -55,7 +55,38 @@ CFG = {
         'brows': {'N': 'tq_brow0'},
         'mouth': {'painted': 'tq_mouth', 'c': (577.0, 406.0), 'sx': 0.8, 'tilt': -0.04},
     },
+    # front: two eyes of the same size, both brows are pack parts, both closed patches exist (front_blink0/1)
+    'front': {
+        'head': 'front_head',
+        'eyes': {
+            'N': {'box': (152, 184, 214, 256), 'iris': (186.5, 222.0, 13.5, 18.5), 'xmax': None, 'closed': None,                # front_blink0/1 show faint outlines of the open eye: made here
+                  'look': {'xl': -6.5, 'xr': 1.8, 'yu': -2.5, 'yd': 2.5}, 'travel': 31.0,
+                  'happy': {'p0': (161.0, 226.0), 'p1': (186.0, 202.0), 'p2': (211.0, 224.0), 'w': 3.6}},
+            'F': {'box': (258, 184, 322, 256), 'iris': (281.3, 221.5, 13.5, 19.0), 'xmax': None, 'closed': None, 'mirror': True,
+                  'look': {'xl': -1.8, 'xr': 6.5, 'yu': -2.5, 'yd': 2.5}, 'travel': 31.0,
+                  'happy': {'p0': (262.0, 224.0), 'p1': (287.0, 202.0), 'p2': (312.0, 226.0), 'w': 3.6}},
+        },
+        'browcut': {},
+        'brows': {'N': 'front_brow0', 'F': 'front_brow1'},
+        'mouth': {'painted': 'front_mouth', 'c': (515.0, 401.0), 'sx': 1.0, 'tilt': 0.0},   # 7 px below the canvas engine's point: the pack mouths then sit on the painted smile's line
+    },
+    # side (profile, facing right): one eye, the brow is painted in the head (cut here), the mouth is a profile mouth
+    # drawn in code (profile_mouths) at the lips of the face contour
+    'side': {
+        'head': 'side_head',
+        'eyes': {
+            'N': {'box': (300, 184, 346, 252), 'iris': (330.5, 220.0, 6.5, 19.5), 'xmax': None, 'closed': None,                # side_blink0 shows a streak of the open eye: made here
+                  'look': {'xl': -6.0, 'xr': 0.6, 'yu': -2.2, 'yd': 2.2}, 'travel': 30.0,
+                  'happy': {'p0': (311.0, 224.0), 'p1': (325.0, 201.0), 'p2': (339.0, 219.0), 'w': 3.4}},
+        },
+        'browcut': {'N': {'box': (297, 156, 346, 192), 'edge': (400.0, 400.0), 'seed': (330, 163)}},
+        'brows': {},
+        'mouth': {'painted': 'side_mouth', 'profile': True},
+    },
 }
+
+# palette for the drawn profile mouths (from the pack, see docs/liv-rive-handoff.md)
+MOUTH_INK, MOUTH_IN, TONGUE, TEETH = (0x3a, 0x1c, 0x0c), (0x8c, 0x3a, 0x2c), (0xe0, 0x7a, 0x66), (0xfb, 0xf4, 0xe8)
 
 
 def lum(a):
@@ -131,6 +162,81 @@ def save(arr_rgb, alpha, name):
     Image.fromarray(a, 'RGBA').save(ART / name)
 
 
+def profile_mouths(view, pm):
+    """Profile mouths for a side view, drawn in code in the art's palette (the pack's mouths are front views). Each sits
+    at the lips of the face contour (the pack's contour per row, parts.json _meta.<view>.edge) and never paints outside
+    the face: the drawing is clipped to the contour, as the canvas engine's profile wedge. Slots use the names of the
+    pack mouths they replace, so face.luau's expression table works unchanged:
+      0 closed smile, 1 flat, 0f corners down (sad), 8 open laugh, 5 open round (surprised), 4f teeth, corners down."""
+    ed = PARTS['_meta'][view]['edge']; xs = ed['xs']; y0e = ed['y0']
+    def edge_x(y): return xs[int(np.clip(round(y) - y0e, 0, len(xs) - 1))] + 0.5
+    BX, BY, W, H = 598, 386, 44, 38                                  # image box in view px
+    SS = 8
+    notch = (edge_x(403) - 0.6, 403.0)                               # where the lips meet on the contour
+    clip = np.zeros((H * SS, W * SS), bool)
+    for j in range(H * SS):
+        y = BY + (j + 0.5) / SS; ex = edge_x(y) - 1.4                  # stay inside the contour's ink line
+        clip[j, :] = (BX + (np.arange(W * SS) + 0.5) / SS) < ex
+    def P(x, y): return ((x - BX) * SS, (y - BY) * SS)
+    def curve(p0, p1, p2, n=60):
+        pts, _ = bez(p0, p1, p2, n); return [P(*q) for q in pts]
+    def layer(): return Image.new('L', (W * SS, H * SS), 0)
+    def strokes(pairs, img):
+        d = ImageDraw.Draw(img)
+        for pts, w0, w1 in pairs:            # width tapers from w0 (first point) to w1
+            for k, (x, y) in enumerate(pts):
+                w = (w0 + (w1 - w0) * k / max(1, len(pts) - 1)) * SS / 2
+                d.ellipse([x - w, y - w, x + w, y + w], fill=255)
+        return img
+    def poly(pts, img):
+        ImageDraw.Draw(img).polygon(pts, fill=255); return img
+    def compose(layers):
+        rgb = np.zeros((H * SS, W * SS, 3)); a = np.zeros((H * SS, W * SS))
+        for colour, m in layers:                                   # bottom first
+            m = (np.asarray(m).astype(float) / 255) * clip
+            rgb = rgb * (1 - m[..., None]) + np.array(colour) * m[..., None]; a = a + m * (1 - a)
+        rgb = np.where(a[..., None] > 0, rgb, 0)
+        big = np.dstack([rgb * a[..., None], a])
+        small = big.reshape(H, SS, W, SS, 4).mean(axis=(1, 3))
+        al = small[..., 3]; col = small[..., :3] / np.maximum(al[..., None], 1e-6)
+        return col, al
+    ex, ey = notch
+    def closed(p0, p1, w0=1.3, w1=2.6, tick=None):
+        L = strokes([(curve(p0, p1, (ex + 2, ey)), w0, w1)], layer())
+        if tick: strokes([(curve(p0, ((p0[0] + tick[0]) / 2, (p0[1] + tick[1]) / 2), tick, 12), 2.2, 1.2)], L)
+        return [(MOUTH_INK, L)]
+    def opened(corner, top_mid, top_end, bot_mid, bot_end, teeth_top=0.0, teeth_bot=0.0, tongue=True, mid_line=False):
+        top = curve(corner, top_mid, top_end); bot = curve(corner, bot_mid, bot_end)
+        far = [P(ex + 6, top_end[1]), P(ex + 6, bot_end[1])]
+        hole = poly(top + far + bot[::-1], layer())
+        out_ = [(MOUTH_IN, hole)]
+        if tongue:
+            tg = layer(); ImageDraw.Draw(tg).ellipse([*P(corner[0] + 7, bot_end[1] - 5.5), *P(ex + 4, bot_end[1] + 3)], fill=255)
+            out_.append((TONGUE, Image.fromarray(np.minimum(np.asarray(tg), np.asarray(hole)))))
+        for amt, ref, sgn in ((teeth_top, top, 1), (teeth_bot, bot, -1)):
+            if amt <= 0: continue
+            band = poly(ref + [(x, y + sgn * amt * SS) for x, y in ref[::-1]], layer())
+            tz = np.asarray(band) * (np.arange(W * SS)[None, :] > (corner[0] + 4 - BX) * SS)
+            out_.append((TEETH, Image.fromarray(np.minimum(tz, np.asarray(hole)).astype(np.uint8))))
+        if mid_line:
+            mid = curve(((corner[0] + 4), (top_mid[1] + bot_mid[1]) / 2), ((corner[0] + ex) / 2, (top_mid[1] + bot_mid[1]) / 2 + .5), (ex + 2, (top_end[1] + bot_end[1]) / 2))
+            out_.append((MOUTH_INK, strokes([(mid, 0.9, 0.9)], layer())))
+        out_.append((MOUTH_INK, strokes([(top, 1.6, 2.4), (bot, 1.6, 2.2)], layer())))
+        return out_
+    shapes = {
+        '0': closed((609.0, 398.5), (620.0, 405.8), tick=(606.8, 396.6)),
+        '1': closed((609.5, 403.6), (622.0, 404.4), 1.5, 2.5, tick=(608.0, 403.2)),
+        '0f': closed((612.0, 408.5), (622.0, 401.0), 1.4, 2.4, tick=(610.6, 410.2)),
+        '8': opened((609.0, 398.0), (621.0, 403.0), (ex + 2, 401.0), (614.0, 418.0), (ex + 2, 417.0), teeth_top=2.6),
+        '5': opened((617.0, 405.0), (618.5, 395.5), (ex + 2, 397.5), (619.5, 417.0), (ex + 2, 415.5)),
+        '4f': opened((612.0, 406.5), (620.0, 399.5), (ex + 2, 400.0), (621.0, 411.0), (ex + 2, 410.0), teeth_top=4.2, teeth_bot=4.2, tongue=False, mid_line=True),
+    }
+    for name, layers in shapes.items():
+        col, al = compose(layers); save(col, al, f'{view}_mouth_{name}.png')
+    return {'c': [ex, ey], 'sx': 1.0, 'tilt': 0.0, 'painted_box': [pm['x'], pm['y'], pm['w'], pm['h']],
+            'boxes': {n: [BX, BY, W, H] for n in shapes}, 'profile': True}
+
+
 def fit_iris(a, box, guess, eye):
     """Refine the iris ellipse from the dark iris body (rows below the lash, where its sides are clean)."""
     cx, cy, rx, ry = guess
@@ -173,7 +279,7 @@ def cut_view(view):
     out = {'view': view, 'head': {'x': HX, 'y': HY, 'w': hp['w'], 'h': hp['h']}, 'eyes': {}, 'brows': {}, 'mouth': {}}
     skin = skin_mask(head)
     lid_col = np.median(rgb[skin], axis=0)
-    blink0 = np.asarray(Image.open(PARTS_DIR / 'tq_blink0.png')).astype(float) if view == 'tq' else None
+    blink0 = np.asarray(Image.open(PARTS_DIR / 'tq_blink0.png')).astype(float)     # lash matte for a generated closed eye
 
     for en, E in C['eyes'].items():
         x0, y0, x1, y1 = E['box']
@@ -311,6 +417,7 @@ def cut_view(view):
             happy_base, happy_a, happy_box = skin_fill, patch_a, (x0 + HX, y0 + HY, W, H)
         else:
             # far eye: the head's skin over the eye + blink0's lash squeezed to this eye's width
+            if E.get('mirror'): b0a = b0a[:, ::-1]             # outer corner on the right (front view, her left eye)
             ex = np.where(eye.any(0))[0]; ew = ex[-1] - ex[0] + 1
             n_ex = np.where(b0a.max(0) > 0.3)[0]; nw = n_ex[-1] - n_ex[0] + 1
             sx = (ew + 1.0) / nw
@@ -355,7 +462,8 @@ def cut_view(view):
         L = lum(sub)
         ink = (L < 185) & left & (sub[..., 3] > 200) & ~skin_mask(sub)
         lab, n = ndi.label(ink); sizes = ndi.sum(ink, lab, range(1, n + 1))
-        brow = lab == (1 + int(np.argmax(sizes)))
+        if 'seed' in B: brow = lab == lab[B['seed'][1] - y0, B['seed'][0] - x0]
+        else: brow = lab == (1 + int(np.argmax(sizes)))
         unknown = ndi.binary_dilation(brow, iterations=2) & left
         source = skin_mask(sub) & ~unknown
         bg = diffuse(srgb, unknown, source, 1500)
@@ -379,6 +487,10 @@ def cut_view(view):
     # mouths: the pack's painted smile at its own place; the nine pack mouths about the view's mouth point
     M = C['mouth']; pm = PARTS[M['painted']]
     Image.open(PARTS_DIR / f"{M['painted']}.png").save(ART / f'{view}_mouth_painted.png')
+    if M.get('profile'):
+        out['mouth'] = profile_mouths(view, pm)
+        (ART / f'{view}_face.json').write_text(json.dumps(out, indent=1))
+        return out
     mc = PARTS['_mouth']
     out['mouth'] = {'c': list(M['c']), 'sx': M['sx'], 'tilt': M['tilt'],
                     'painted_box': [pm['x'], pm['y'], pm['w'], pm['h']],

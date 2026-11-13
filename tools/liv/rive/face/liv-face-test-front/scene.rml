@@ -1,0 +1,1847 @@
+<Rive version="1" kind="fragment">
+  <ImageAsset file="../../parts/front_head.png" name="front_head" id="0:100" />
+  <Artboard name="Liv face test" width="1100" height="760" defaultStateMachineId="0:7" styleId="0:5" id="0:2" viewModelId="0:40" viewModelInstanceId="0:41">
+    <LayoutComponent name="Face controller" width="1100" height="760" styleId="0:82" id="0:81">
+      <LayoutComponentStyle name="Fill stage" layoutWidthScaleType="fill" layoutHeightScaleType="fill" widthUnitsValue="auto" heightUnitsValue="auto" id="0:82" />
+      <ScriptedLayout name="Liv face controller" scriptAssetId="0:80" id="0:2913" />
+    </LayoutComponent>
+    <Text name="Still" x="985.5" y="678" id="0:3187">
+      <TextStylePaint fontSize="17" fontAssetId="0:30" id="0:3188">
+        <Fill id="0:3189">
+          <SolidColor colorValue="FF4C4038" id="0:3190" />
+        </Fill>
+      </TextStylePaint>
+      <TextValueRun styleId="0:3188" text="Still" id="0:3191" />
+    </Text>
+    <Shape x="1010" y="688" name="Still button" id="0:3183">
+      <Rectangle width="128" height="38" cornerRadiusTL="9" cornerRadiusTR="9" cornerRadiusBL="9" cornerRadiusBR="9" id="0:3184" />
+      <Fill id="0:3185">
+        <SolidColor colorValue="FFE6D8C6" id="0:3186" />
+      </Fill>
+    </Shape>
+    <Text name="Nod" x="855.3" y="678" id="0:3174">
+      <TextStylePaint fontSize="17" fontAssetId="0:30" id="0:3175">
+        <Fill id="0:3176">
+          <SolidColor colorValue="FF4C4038" id="0:3177" />
+        </Fill>
+      </TextStylePaint>
+      <TextValueRun styleId="0:3175" text="Nod" id="0:3178" />
+    </Text>
+    <Shape x="870" y="688" name="Nod button" id="0:3170">
+      <Rectangle width="128" height="38" cornerRadiusTL="9" cornerRadiusTR="9" cornerRadiusBL="9" cornerRadiusBR="9" id="0:3171" />
+      <Fill id="0:3172">
+        <SolidColor colorValue="FFE6D8C6" id="0:3173" />
+      </Fill>
+    </Shape>
+    <Text name="Wink eye" x="970.8" y="630" id="0:3161">
+      <TextStylePaint fontSize="17" fontAssetId="0:30" id="0:3162">
+        <Fill id="0:3163">
+          <SolidColor colorValue="FF4C4038" id="0:3164" />
+        </Fill>
+      </TextStylePaint>
+      <TextValueRun styleId="0:3162" text="Wink eye" id="0:3165" />
+    </Text>
+    <Shape x="1010" y="640" name="Wink eye button" id="0:3157">
+      <Rectangle width="128" height="38" cornerRadiusTL="9" cornerRadiusTR="9" cornerRadiusBL="9" cornerRadiusBR="9" id="0:3158" />
+      <Fill id="0:3159">
+        <SolidColor colorValue="FFE6D8C6" id="0:3160" />
+      </Fill>
+    </Shape>
+    <Text name="Blink" x="845.5" y="630" id="0:3148">
+      <TextStylePaint fontSize="17" fontAssetId="0:30" id="0:3149">
+        <Fill id="0:3150">
+          <SolidColor colorValue="FF4C4038" id="0:3151" />
+        </Fill>
+      </TextStylePaint>
+      <TextValueRun styleId="0:3149" text="Blink" id="0:3152" />
+    </Text>
+    <Shape x="870" y="640" name="Blink button" id="0:3144">
+      <Rectangle width="128" height="38" cornerRadiusTL="9" cornerRadiusTR="9" cornerRadiusBL="9" cornerRadiusBR="9" id="0:3145" />
+      <Fill id="0:3146">
+        <SolidColor colorValue="FFE6D8C6" id="0:3147" />
+      </Fill>
+    </Shape>
+    <Text name="Eyes and head" x="812" y="590" id="0:3139">
+      <TextStylePaint fontSize="14" fontAssetId="0:30" id="0:3140">
+        <Fill id="0:3141">
+          <SolidColor colorValue="FF8B7460" id="0:3142" />
+        </Fill>
+      </TextStylePaint>
+      <TextValueRun styleId="0:3140" text="Eyes and head" id="0:3143" />
+    </Text>
+    <Text name="Centre" x="840.6" y="478" id="0:3127">
+      <TextStylePaint fontSize="17" fontAssetId="0:30" id="0:3128">
+        <Fill id="0:3129">
+          <SolidColor colorValue="FF4C4038" id="0:3130" />
+        </Fill>
+      </TextStylePaint>
+      <TextValueRun styleId="0:3128" text="Centre" id="0:3131" />
+    </Text>
+    <Shape x="870" y="488" name="Centre button" id="0:3123">
+      <Rectangle width="128" height="38" cornerRadiusTL="9" cornerRadiusTR="9" cornerRadiusBL="9" cornerRadiusBR="9" id="0:3124" />
+      <Fill id="0:3125">
+        <SolidColor colorValue="FFE6D8C6" id="0:3126" />
+      </Fill>
+    </Shape>
+    <Text name="Down" x="990.4" y="430" id="0:3111">
+      <TextStylePaint fontSize="17" fontAssetId="0:30" id="0:3112">
+        <Fill id="0:3113">
+          <SolidColor colorValue="FF4C4038" id="0:3114" />
+        </Fill>
+      </TextStylePaint>
+      <TextValueRun styleId="0:3112" text="Down" id="0:3115" />
+    </Text>
+    <Shape x="1010" y="440" name="Down button" id="0:3107">
+      <Rectangle width="128" height="38" cornerRadiusTL="9" cornerRadiusTR="9" cornerRadiusBL="9" cornerRadiusBR="9" id="0:3108" />
+      <Fill id="0:3109">
+        <SolidColor colorValue="FFE6D8C6" id="0:3110" />
+      </Fill>
+    </Shape>
+    <Text name="Up" x="860.2" y="430" id="0:3095">
+      <TextStylePaint fontSize="17" fontAssetId="0:30" id="0:3096">
+        <Fill id="0:3097">
+          <SolidColor colorValue="FF4C4038" id="0:3098" />
+        </Fill>
+      </TextStylePaint>
+      <TextValueRun styleId="0:3096" text="Up" id="0:3099" />
+    </Text>
+    <Shape x="870" y="440" name="Up button" id="0:3091">
+      <Rectangle width="128" height="38" cornerRadiusTL="9" cornerRadiusTR="9" cornerRadiusBL="9" cornerRadiusBR="9" id="0:3092" />
+      <Fill id="0:3093">
+        <SolidColor colorValue="FFE6D8C6" id="0:3094" />
+      </Fill>
+    </Shape>
+    <Text name="Right" x="985.5" y="382" id="0:3079">
+      <TextStylePaint fontSize="17" fontAssetId="0:30" id="0:3080">
+        <Fill id="0:3081">
+          <SolidColor colorValue="FF4C4038" id="0:3082" />
+        </Fill>
+      </TextStylePaint>
+      <TextValueRun styleId="0:3080" text="Right" id="0:3083" />
+    </Text>
+    <Shape x="1010" y="392" name="Right button" id="0:3075">
+      <Rectangle width="128" height="38" cornerRadiusTL="9" cornerRadiusTR="9" cornerRadiusBL="9" cornerRadiusBR="9" id="0:3076" />
+      <Fill id="0:3077">
+        <SolidColor colorValue="FFE6D8C6" id="0:3078" />
+      </Fill>
+    </Shape>
+    <Text name="Left" x="850.4" y="382" id="0:3063">
+      <TextStylePaint fontSize="17" fontAssetId="0:30" id="0:3064">
+        <Fill id="0:3065">
+          <SolidColor colorValue="FF4C4038" id="0:3066" />
+        </Fill>
+      </TextStylePaint>
+      <TextValueRun styleId="0:3064" text="Left" id="0:3067" />
+    </Text>
+    <Shape x="870" y="392" name="Left button" id="0:3059">
+      <Rectangle width="128" height="38" cornerRadiusTL="9" cornerRadiusTR="9" cornerRadiusBL="9" cornerRadiusBR="9" id="0:3060" />
+      <Fill id="0:3061">
+        <SolidColor colorValue="FFE6D8C6" id="0:3062" />
+      </Fill>
+    </Shape>
+    <Text name="Look" x="812" y="340" id="0:3054">
+      <TextStylePaint fontSize="14" fontAssetId="0:30" id="0:3055">
+        <Fill id="0:3056">
+          <SolidColor colorValue="FF8B7460" id="0:3057" />
+        </Fill>
+      </TextStylePaint>
+      <TextValueRun styleId="0:3055" text="Look" id="0:3058" />
+    </Text>
+    <Text name="Wink" x="990.4" y="274" id="0:3045">
+      <TextStylePaint fontSize="17" fontAssetId="0:30" id="0:3046">
+        <Fill id="0:3047">
+          <SolidColor colorValue="FF4C4038" id="0:3048" />
+        </Fill>
+      </TextStylePaint>
+      <TextValueRun styleId="0:3046" text="Wink" id="0:3049" />
+    </Text>
+    <Shape x="1010" y="284" name="Wink button" id="0:3041">
+      <Rectangle width="128" height="38" cornerRadiusTL="9" cornerRadiusTR="9" cornerRadiusBL="9" cornerRadiusBR="9" id="0:3042" />
+      <Fill id="0:3043">
+        <SolidColor colorValue="FFE6D8C6" id="0:3044" />
+      </Fill>
+    </Shape>
+    <Text name="Effort" x="840.6" y="274" id="0:3032">
+      <TextStylePaint fontSize="17" fontAssetId="0:30" id="0:3033">
+        <Fill id="0:3034">
+          <SolidColor colorValue="FF4C4038" id="0:3035" />
+        </Fill>
+      </TextStylePaint>
+      <TextValueRun styleId="0:3033" text="Effort" id="0:3036" />
+    </Text>
+    <Shape x="870" y="284" name="Effort button" id="0:3028">
+      <Rectangle width="128" height="38" cornerRadiusTL="9" cornerRadiusTR="9" cornerRadiusBL="9" cornerRadiusBR="9" id="0:3029" />
+      <Fill id="0:3030">
+        <SolidColor colorValue="FFE6D8C6" id="0:3031" />
+      </Fill>
+    </Shape>
+    <Text name="Ouch" x="990.4" y="226" id="0:3019">
+      <TextStylePaint fontSize="17" fontAssetId="0:30" id="0:3020">
+        <Fill id="0:3021">
+          <SolidColor colorValue="FF4C4038" id="0:3022" />
+        </Fill>
+      </TextStylePaint>
+      <TextValueRun styleId="0:3020" text="Ouch" id="0:3023" />
+    </Text>
+    <Shape x="1010" y="236" name="Ouch button" id="0:3015">
+      <Rectangle width="128" height="38" cornerRadiusTL="9" cornerRadiusTR="9" cornerRadiusBL="9" cornerRadiusBR="9" id="0:3016" />
+      <Fill id="0:3017">
+        <SolidColor colorValue="FFE6D8C6" id="0:3018" />
+      </Fill>
+    </Shape>
+    <Text name="Think" x="845.5" y="226" id="0:3006">
+      <TextStylePaint fontSize="17" fontAssetId="0:30" id="0:3007">
+        <Fill id="0:3008">
+          <SolidColor colorValue="FF4C4038" id="0:3009" />
+        </Fill>
+      </TextStylePaint>
+      <TextValueRun styleId="0:3007" text="Think" id="0:3010" />
+    </Text>
+    <Shape x="870" y="236" name="Think button" id="0:3002">
+      <Rectangle width="128" height="38" cornerRadiusTL="9" cornerRadiusTR="9" cornerRadiusBL="9" cornerRadiusBR="9" id="0:3003" />
+      <Fill id="0:3004">
+        <SolidColor colorValue="FFE6D8C6" id="0:3005" />
+      </Fill>
+    </Shape>
+    <Text name="Sad" x="995.3" y="178" id="0:2993">
+      <TextStylePaint fontSize="17" fontAssetId="0:30" id="0:2994">
+        <Fill id="0:2995">
+          <SolidColor colorValue="FF4C4038" id="0:2996" />
+        </Fill>
+      </TextStylePaint>
+      <TextValueRun styleId="0:2994" text="Sad" id="0:2997" />
+    </Text>
+    <Shape x="1010" y="188" name="Sad button" id="0:2989">
+      <Rectangle width="128" height="38" cornerRadiusTL="9" cornerRadiusTR="9" cornerRadiusBL="9" cornerRadiusBR="9" id="0:2990" />
+      <Fill id="0:2991">
+        <SolidColor colorValue="FFE6D8C6" id="0:2992" />
+      </Fill>
+    </Shape>
+    <Text name="Surprised" x="825.9" y="178" id="0:2980">
+      <TextStylePaint fontSize="17" fontAssetId="0:30" id="0:2981">
+        <Fill id="0:2982">
+          <SolidColor colorValue="FF4C4038" id="0:2983" />
+        </Fill>
+      </TextStylePaint>
+      <TextValueRun styleId="0:2981" text="Surprised" id="0:2984" />
+    </Text>
+    <Shape x="870" y="188" name="Surprised button" id="0:2976">
+      <Rectangle width="128" height="38" cornerRadiusTL="9" cornerRadiusTR="9" cornerRadiusBL="9" cornerRadiusBR="9" id="0:2977" />
+      <Fill id="0:2978">
+        <SolidColor colorValue="FFE6D8C6" id="0:2979" />
+      </Fill>
+    </Shape>
+    <Text name="Laugh" x="985.5" y="130" id="0:2967">
+      <TextStylePaint fontSize="17" fontAssetId="0:30" id="0:2968">
+        <Fill id="0:2969">
+          <SolidColor colorValue="FF4C4038" id="0:2970" />
+        </Fill>
+      </TextStylePaint>
+      <TextValueRun styleId="0:2968" text="Laugh" id="0:2971" />
+    </Text>
+    <Shape x="1010" y="140" name="Laugh button" id="0:2963">
+      <Rectangle width="128" height="38" cornerRadiusTL="9" cornerRadiusTR="9" cornerRadiusBL="9" cornerRadiusBR="9" id="0:2964" />
+      <Fill id="0:2965">
+        <SolidColor colorValue="FFE6D8C6" id="0:2966" />
+      </Fill>
+    </Shape>
+    <Text name="Neutral" x="835.7" y="130" id="0:2954">
+      <TextStylePaint fontSize="17" fontAssetId="0:30" id="0:2955">
+        <Fill id="0:2956">
+          <SolidColor colorValue="FF4C4038" id="0:2957" />
+        </Fill>
+      </TextStylePaint>
+      <TextValueRun styleId="0:2955" text="Neutral" id="0:2958" />
+    </Text>
+    <Shape x="870" y="140" name="Neutral button" id="0:2950">
+      <Rectangle width="128" height="38" cornerRadiusTL="9" cornerRadiusTR="9" cornerRadiusBL="9" cornerRadiusBR="9" id="0:2951" />
+      <Fill id="0:2952">
+        <SolidColor colorValue="FFE6D8C6" id="0:2953" />
+      </Fill>
+    </Shape>
+    <Text name="Smile" x="985.5" y="82" id="0:2941">
+      <TextStylePaint fontSize="17" fontAssetId="0:30" id="0:2942">
+        <Fill id="0:2943">
+          <SolidColor colorValue="FF4C4038" id="0:2944" />
+        </Fill>
+      </TextStylePaint>
+      <TextValueRun styleId="0:2942" text="Smile" id="0:2945" />
+    </Text>
+    <Shape x="1010" y="92" name="Smile button" id="0:2937">
+      <Rectangle width="128" height="38" cornerRadiusTL="9" cornerRadiusTR="9" cornerRadiusBL="9" cornerRadiusBR="9" id="0:2938" />
+      <Fill id="0:2939">
+        <SolidColor colorValue="FFE6D8C6" id="0:2940" />
+      </Fill>
+    </Shape>
+    <Text name="Happy" x="845.5" y="82" id="0:2928">
+      <TextStylePaint fontSize="17" fontAssetId="0:30" id="0:2929">
+        <Fill id="0:2930">
+          <SolidColor colorValue="FF4C4038" id="0:2931" />
+        </Fill>
+      </TextStylePaint>
+      <TextValueRun styleId="0:2929" text="Happy" id="0:2932" />
+    </Text>
+    <Shape x="870" y="92" name="Happy button" id="0:2924">
+      <Rectangle width="128" height="38" cornerRadiusTL="9" cornerRadiusTR="9" cornerRadiusBL="9" cornerRadiusBR="9" id="0:2925" />
+      <Fill id="0:2926">
+        <SolidColor colorValue="FFE6D8C6" id="0:2927" />
+      </Fill>
+    </Shape>
+    <Text name="Expressions" x="812" y="40" id="0:2919">
+      <TextStylePaint fontSize="14" fontAssetId="0:30" id="0:2920">
+        <Fill id="0:2921">
+          <SolidColor colorValue="FF8B7460" id="0:2922" />
+        </Fill>
+      </TextStylePaint>
+      <TextValueRun styleId="0:2920" text="Expressions" id="0:2923" />
+    </Text>
+    <Text name="Liv · face · front view" x="24" y="10" id="0:2914">
+      <TextStylePaint fontSize="18" fontAssetId="0:30" id="0:2915">
+        <Fill id="0:2916">
+          <SolidColor colorValue="FF4C4038" id="0:2917" />
+        </Fill>
+      </TextStylePaint>
+      <TextValueRun styleId="0:2915" text="Liv · face · front view" id="0:2918" />
+    </Text>
+    <LayoutComponentStyle name="Artboard style" id="0:5" />
+    <Fill name="Studio" id="0:2001">
+      <SolidColor colorValue="FFF3EBDD" id="0:2002" />
+    </Fill>
+    <Node name="Liv" x="-449.4" y="-152.1" scaleX="1.7" scaleY="1.7" id="0:10">
+      <RootBone name="head" x="513.0" y="461.0" rotation="-1.5707963267948966" length="330.0" id="0:2003">
+        <RootBone name="face" x="0" y="0" rotation="1.5707963267948966" length="0" id="0:2004">
+          <RootBone name="mouth base" x="2.0" y="-60.0" rotation="0" length="0" id="0:2005">
+            <RootBone name="mouth" x="0.0" y="0.0" rotation="0" length="0" id="0:2006">
+              <DataBindContext sourcePathIds="0:40-0:2771" propertyKey="90" id="0:2871" />
+              <DataBindContext sourcePathIds="0:40-0:2772" propertyKey="91" id="0:2872" />
+              <DataBindContext sourcePathIds="0:40-0:2773" propertyKey="15" id="0:2873" />
+              <DataBindContext sourcePathIds="0:40-0:2774" propertyKey="16" id="0:2874" />
+              <DataBindContext sourcePathIds="0:40-0:2775" propertyKey="17" id="0:2875" />
+            </RootBone>
+          </RootBone>
+          <RootBone name="browN base" x="-54.34251290877796" y="-180.2616179001721" rotation="0" length="0" id="0:2151">
+            <RootBone name="browN" x="0.0" y="0.0" rotation="0" length="0" id="0:2152">
+              <DataBindContext sourcePathIds="0:40-0:2788" propertyKey="90" id="0:2888" />
+              <DataBindContext sourcePathIds="0:40-0:2789" propertyKey="91" id="0:2889" />
+              <DataBindContext sourcePathIds="0:40-0:2790" propertyKey="15" id="0:2890" />
+            </RootBone>
+          </RootBone>
+          <RootBone name="browF base" x="60.164835164835154" y="-180.59523809523807" rotation="0" length="0" id="0:2165">
+            <RootBone name="browF" x="0.0" y="0.0" rotation="0" length="0" id="0:2166">
+              <DataBindContext sourcePathIds="0:40-0:2791" propertyKey="90" id="0:2891" />
+              <DataBindContext sourcePathIds="0:40-0:2792" propertyKey="91" id="0:2892" />
+              <DataBindContext sourcePathIds="0:40-0:2793" propertyKey="15" id="0:2893" />
+            </RootBone>
+          </RootBone>
+          <RootBone name="eyeN" x="-44.69717737857093" y="-125.40686813070226" rotation="0" length="0" id="0:2179">
+            <RootBone name="lidN" x="0.0" y="0.0" rotation="0" length="0" id="0:2180">
+              <DataBindContext sourcePathIds="0:40-0:2796" propertyKey="91" id="0:2896" />
+            </RootBone>
+            <RootBone name="irisN" x="0.0" y="0.0" rotation="0" length="0" id="0:2181">
+              <DataBindContext sourcePathIds="0:40-0:2797" propertyKey="90" id="0:2897" />
+              <DataBindContext sourcePathIds="0:40-0:2798" propertyKey="91" id="0:2898" />
+              <DataBindContext sourcePathIds="0:40-0:2799" propertyKey="16" id="0:2899" />
+              <DataBindContext sourcePathIds="0:40-0:2799" propertyKey="17" id="0:2900" />
+            </RootBone>
+            <DataBindContext sourcePathIds="0:40-0:2794" propertyKey="16" id="0:2894" />
+            <DataBindContext sourcePathIds="0:40-0:2795" propertyKey="17" id="0:2895" />
+          </RootBone>
+          <RootBone name="eyeF" x="49.99682334001659" y="-126.1112359552331" rotation="0" length="0" id="0:2467">
+            <RootBone name="lidF" x="0.0" y="0.0" rotation="0" length="0" id="0:2468">
+              <DataBindContext sourcePathIds="0:40-0:2804" propertyKey="91" id="0:2905" />
+            </RootBone>
+            <RootBone name="irisF" x="0.0" y="0.0" rotation="0" length="0" id="0:2469">
+              <DataBindContext sourcePathIds="0:40-0:2805" propertyKey="90" id="0:2906" />
+              <DataBindContext sourcePathIds="0:40-0:2806" propertyKey="91" id="0:2907" />
+              <DataBindContext sourcePathIds="0:40-0:2807" propertyKey="16" id="0:2908" />
+              <DataBindContext sourcePathIds="0:40-0:2807" propertyKey="17" id="0:2909" />
+            </RootBone>
+            <DataBindContext sourcePathIds="0:40-0:2802" propertyKey="16" id="0:2903" />
+            <DataBindContext sourcePathIds="0:40-0:2803" propertyKey="17" id="0:2904" />
+          </RootBone>
+        </RootBone>
+        <DataBindContext sourcePathIds="0:40-0:2819" propertyKey="15" id="0:2912" />
+      </RootBone>
+      <Image name="Liv mouth painted" assetId="0:101" originX="0" originY="0" id="0:2007">
+        <Mesh name="Liv mouth painted mesh" triangleIndexBytes="AAECAAID" id="0:2008">
+          <MeshVertex x="479" y="390" u="0" v="0" id="0:2009">
+            <Weight values="255" indices="1" id="0:2010" />
+          </MeshVertex>
+          <MeshVertex x="552" y="390" u="1" v="0" id="0:2011">
+            <Weight values="255" indices="1" id="0:2012" />
+          </MeshVertex>
+          <MeshVertex x="552" y="410" u="1" v="1" id="0:2013">
+            <Weight values="255" indices="1" id="0:2014" />
+          </MeshVertex>
+          <MeshVertex x="479" y="410" u="0" v="1" id="0:2015">
+            <Weight values="255" indices="1" id="0:2016" />
+          </MeshVertex>
+          <Skin name="Liv mouth painted skin" tx="0" ty="0" id="0:2017">
+            <Tendon boneId="0:2006" name="mouth" xx="1" xy="0" yx="0" yy="1" tx="515.0" ty="401.0" id="0:2018" />
+          </Skin>
+        </Mesh>
+        <DataBindContext sourcePathIds="0:40-0:2776" propertyKey="18" id="0:2876" />
+      </Image>
+      <Image name="Liv mouth 0" assetId="0:102" originX="0" originY="0" id="0:2019">
+        <Mesh name="Liv mouth 0 mesh" triangleIndexBytes="AAECAAID" id="0:2020">
+          <MeshVertex x="469.944" y="363.624" u="0" v="0" id="0:2021">
+            <Weight values="255" indices="1" id="0:2022" />
+          </MeshVertex>
+          <MeshVertex x="559.944" y="363.624" u="1" v="0" id="0:2023">
+            <Weight values="255" indices="1" id="0:2024" />
+          </MeshVertex>
+          <MeshVertex x="559.944" y="438.624" u="1" v="1" id="0:2025">
+            <Weight values="255" indices="1" id="0:2026" />
+          </MeshVertex>
+          <MeshVertex x="469.944" y="438.624" u="0" v="1" id="0:2027">
+            <Weight values="255" indices="1" id="0:2028" />
+          </MeshVertex>
+          <Skin name="Liv mouth 0 skin" tx="0" ty="0" id="0:2029">
+            <Tendon boneId="0:2006" name="mouth" xx="1" xy="0" yx="0" yy="1" tx="515.0" ty="401.0" id="0:2030" />
+          </Skin>
+        </Mesh>
+        <DataBindContext sourcePathIds="0:40-0:2777" propertyKey="18" id="0:2877" />
+      </Image>
+      <Image name="Liv mouth 1" assetId="0:103" originX="0" originY="0" id="0:2031">
+        <Mesh name="Liv mouth 1 mesh" triangleIndexBytes="AAECAAID" id="0:2032">
+          <MeshVertex x="469.944" y="363.624" u="0" v="0" id="0:2033">
+            <Weight values="255" indices="1" id="0:2034" />
+          </MeshVertex>
+          <MeshVertex x="559.944" y="363.624" u="1" v="0" id="0:2035">
+            <Weight values="255" indices="1" id="0:2036" />
+          </MeshVertex>
+          <MeshVertex x="559.944" y="438.624" u="1" v="1" id="0:2037">
+            <Weight values="255" indices="1" id="0:2038" />
+          </MeshVertex>
+          <MeshVertex x="469.944" y="438.624" u="0" v="1" id="0:2039">
+            <Weight values="255" indices="1" id="0:2040" />
+          </MeshVertex>
+          <Skin name="Liv mouth 1 skin" tx="0" ty="0" id="0:2041">
+            <Tendon boneId="0:2006" name="mouth" xx="1" xy="0" yx="0" yy="1" tx="515.0" ty="401.0" id="0:2042" />
+          </Skin>
+        </Mesh>
+        <DataBindContext sourcePathIds="0:40-0:2778" propertyKey="18" id="0:2878" />
+      </Image>
+      <Image name="Liv mouth 2" assetId="0:104" originX="0" originY="0" id="0:2043">
+        <Mesh name="Liv mouth 2 mesh" triangleIndexBytes="AAECAAID" id="0:2044">
+          <MeshVertex x="469.944" y="363.624" u="0" v="0" id="0:2045">
+            <Weight values="255" indices="1" id="0:2046" />
+          </MeshVertex>
+          <MeshVertex x="559.944" y="363.624" u="1" v="0" id="0:2047">
+            <Weight values="255" indices="1" id="0:2048" />
+          </MeshVertex>
+          <MeshVertex x="559.944" y="438.624" u="1" v="1" id="0:2049">
+            <Weight values="255" indices="1" id="0:2050" />
+          </MeshVertex>
+          <MeshVertex x="469.944" y="438.624" u="0" v="1" id="0:2051">
+            <Weight values="255" indices="1" id="0:2052" />
+          </MeshVertex>
+          <Skin name="Liv mouth 2 skin" tx="0" ty="0" id="0:2053">
+            <Tendon boneId="0:2006" name="mouth" xx="1" xy="0" yx="0" yy="1" tx="515.0" ty="401.0" id="0:2054" />
+          </Skin>
+        </Mesh>
+        <DataBindContext sourcePathIds="0:40-0:2779" propertyKey="18" id="0:2879" />
+      </Image>
+      <Image name="Liv mouth 3" assetId="0:105" originX="0" originY="0" id="0:2055">
+        <Mesh name="Liv mouth 3 mesh" triangleIndexBytes="AAECAAID" id="0:2056">
+          <MeshVertex x="469.944" y="363.624" u="0" v="0" id="0:2057">
+            <Weight values="255" indices="1" id="0:2058" />
+          </MeshVertex>
+          <MeshVertex x="559.944" y="363.624" u="1" v="0" id="0:2059">
+            <Weight values="255" indices="1" id="0:2060" />
+          </MeshVertex>
+          <MeshVertex x="559.944" y="438.624" u="1" v="1" id="0:2061">
+            <Weight values="255" indices="1" id="0:2062" />
+          </MeshVertex>
+          <MeshVertex x="469.944" y="438.624" u="0" v="1" id="0:2063">
+            <Weight values="255" indices="1" id="0:2064" />
+          </MeshVertex>
+          <Skin name="Liv mouth 3 skin" tx="0" ty="0" id="0:2065">
+            <Tendon boneId="0:2006" name="mouth" xx="1" xy="0" yx="0" yy="1" tx="515.0" ty="401.0" id="0:2066" />
+          </Skin>
+        </Mesh>
+        <DataBindContext sourcePathIds="0:40-0:2780" propertyKey="18" id="0:2880" />
+      </Image>
+      <Image name="Liv mouth 4" assetId="0:106" originX="0" originY="0" id="0:2067">
+        <Mesh name="Liv mouth 4 mesh" triangleIndexBytes="AAECAAID" id="0:2068">
+          <MeshVertex x="469.944" y="363.624" u="0" v="0" id="0:2069">
+            <Weight values="255" indices="1" id="0:2070" />
+          </MeshVertex>
+          <MeshVertex x="559.944" y="363.624" u="1" v="0" id="0:2071">
+            <Weight values="255" indices="1" id="0:2072" />
+          </MeshVertex>
+          <MeshVertex x="559.944" y="438.624" u="1" v="1" id="0:2073">
+            <Weight values="255" indices="1" id="0:2074" />
+          </MeshVertex>
+          <MeshVertex x="469.944" y="438.624" u="0" v="1" id="0:2075">
+            <Weight values="255" indices="1" id="0:2076" />
+          </MeshVertex>
+          <Skin name="Liv mouth 4 skin" tx="0" ty="0" id="0:2077">
+            <Tendon boneId="0:2006" name="mouth" xx="1" xy="0" yx="0" yy="1" tx="515.0" ty="401.0" id="0:2078" />
+          </Skin>
+        </Mesh>
+        <DataBindContext sourcePathIds="0:40-0:2781" propertyKey="18" id="0:2881" />
+      </Image>
+      <Image name="Liv mouth 5" assetId="0:107" originX="0" originY="0" id="0:2079">
+        <Mesh name="Liv mouth 5 mesh" triangleIndexBytes="AAECAAID" id="0:2080">
+          <MeshVertex x="469.944" y="363.624" u="0" v="0" id="0:2081">
+            <Weight values="255" indices="1" id="0:2082" />
+          </MeshVertex>
+          <MeshVertex x="559.944" y="363.624" u="1" v="0" id="0:2083">
+            <Weight values="255" indices="1" id="0:2084" />
+          </MeshVertex>
+          <MeshVertex x="559.944" y="438.624" u="1" v="1" id="0:2085">
+            <Weight values="255" indices="1" id="0:2086" />
+          </MeshVertex>
+          <MeshVertex x="469.944" y="438.624" u="0" v="1" id="0:2087">
+            <Weight values="255" indices="1" id="0:2088" />
+          </MeshVertex>
+          <Skin name="Liv mouth 5 skin" tx="0" ty="0" id="0:2089">
+            <Tendon boneId="0:2006" name="mouth" xx="1" xy="0" yx="0" yy="1" tx="515.0" ty="401.0" id="0:2090" />
+          </Skin>
+        </Mesh>
+        <DataBindContext sourcePathIds="0:40-0:2782" propertyKey="18" id="0:2882" />
+      </Image>
+      <Image name="Liv mouth 6" assetId="0:108" originX="0" originY="0" id="0:2091">
+        <Mesh name="Liv mouth 6 mesh" triangleIndexBytes="AAECAAID" id="0:2092">
+          <MeshVertex x="469.944" y="363.624" u="0" v="0" id="0:2093">
+            <Weight values="255" indices="1" id="0:2094" />
+          </MeshVertex>
+          <MeshVertex x="559.944" y="363.624" u="1" v="0" id="0:2095">
+            <Weight values="255" indices="1" id="0:2096" />
+          </MeshVertex>
+          <MeshVertex x="559.944" y="438.624" u="1" v="1" id="0:2097">
+            <Weight values="255" indices="1" id="0:2098" />
+          </MeshVertex>
+          <MeshVertex x="469.944" y="438.624" u="0" v="1" id="0:2099">
+            <Weight values="255" indices="1" id="0:2100" />
+          </MeshVertex>
+          <Skin name="Liv mouth 6 skin" tx="0" ty="0" id="0:2101">
+            <Tendon boneId="0:2006" name="mouth" xx="1" xy="0" yx="0" yy="1" tx="515.0" ty="401.0" id="0:2102" />
+          </Skin>
+        </Mesh>
+        <DataBindContext sourcePathIds="0:40-0:2783" propertyKey="18" id="0:2883" />
+      </Image>
+      <Image name="Liv mouth 7" assetId="0:109" originX="0" originY="0" id="0:2103">
+        <Mesh name="Liv mouth 7 mesh" triangleIndexBytes="AAECAAID" id="0:2104">
+          <MeshVertex x="469.944" y="363.624" u="0" v="0" id="0:2105">
+            <Weight values="255" indices="1" id="0:2106" />
+          </MeshVertex>
+          <MeshVertex x="559.944" y="363.624" u="1" v="0" id="0:2107">
+            <Weight values="255" indices="1" id="0:2108" />
+          </MeshVertex>
+          <MeshVertex x="559.944" y="438.624" u="1" v="1" id="0:2109">
+            <Weight values="255" indices="1" id="0:2110" />
+          </MeshVertex>
+          <MeshVertex x="469.944" y="438.624" u="0" v="1" id="0:2111">
+            <Weight values="255" indices="1" id="0:2112" />
+          </MeshVertex>
+          <Skin name="Liv mouth 7 skin" tx="0" ty="0" id="0:2113">
+            <Tendon boneId="0:2006" name="mouth" xx="1" xy="0" yx="0" yy="1" tx="515.0" ty="401.0" id="0:2114" />
+          </Skin>
+        </Mesh>
+        <DataBindContext sourcePathIds="0:40-0:2784" propertyKey="18" id="0:2884" />
+      </Image>
+      <Image name="Liv mouth 8" assetId="0:110" originX="0" originY="0" id="0:2115">
+        <Mesh name="Liv mouth 8 mesh" triangleIndexBytes="AAECAAID" id="0:2116">
+          <MeshVertex x="469.944" y="363.624" u="0" v="0" id="0:2117">
+            <Weight values="255" indices="1" id="0:2118" />
+          </MeshVertex>
+          <MeshVertex x="559.944" y="363.624" u="1" v="0" id="0:2119">
+            <Weight values="255" indices="1" id="0:2120" />
+          </MeshVertex>
+          <MeshVertex x="559.944" y="438.624" u="1" v="1" id="0:2121">
+            <Weight values="255" indices="1" id="0:2122" />
+          </MeshVertex>
+          <MeshVertex x="469.944" y="438.624" u="0" v="1" id="0:2123">
+            <Weight values="255" indices="1" id="0:2124" />
+          </MeshVertex>
+          <Skin name="Liv mouth 8 skin" tx="0" ty="0" id="0:2125">
+            <Tendon boneId="0:2006" name="mouth" xx="1" xy="0" yx="0" yy="1" tx="515.0" ty="401.0" id="0:2126" />
+          </Skin>
+        </Mesh>
+        <DataBindContext sourcePathIds="0:40-0:2785" propertyKey="18" id="0:2885" />
+      </Image>
+      <Image name="Liv mouth 0f" assetId="0:111" originX="0" originY="0" id="0:2127">
+        <Mesh name="Liv mouth 0f mesh" triangleIndexBytes="AAECAAID" id="0:2128">
+          <MeshVertex x="469.944" y="363.624" u="0" v="0" id="0:2129">
+            <Weight values="255" indices="1" id="0:2130" />
+          </MeshVertex>
+          <MeshVertex x="559.944" y="363.624" u="1" v="0" id="0:2131">
+            <Weight values="255" indices="1" id="0:2132" />
+          </MeshVertex>
+          <MeshVertex x="559.944" y="438.624" u="1" v="1" id="0:2133">
+            <Weight values="255" indices="1" id="0:2134" />
+          </MeshVertex>
+          <MeshVertex x="469.944" y="438.624" u="0" v="1" id="0:2135">
+            <Weight values="255" indices="1" id="0:2136" />
+          </MeshVertex>
+          <Skin name="Liv mouth 0f skin" tx="0" ty="0" id="0:2137">
+            <Tendon boneId="0:2006" name="mouth" xx="1" xy="0" yx="0" yy="1" tx="515.0" ty="401.0" id="0:2138" />
+          </Skin>
+        </Mesh>
+        <DataBindContext sourcePathIds="0:40-0:2786" propertyKey="18" id="0:2886" />
+      </Image>
+      <Image name="Liv mouth 4f" assetId="0:112" originX="0" originY="0" id="0:2139">
+        <Mesh name="Liv mouth 4f mesh" triangleIndexBytes="AAECAAID" id="0:2140">
+          <MeshVertex x="469.944" y="363.624" u="0" v="0" id="0:2141">
+            <Weight values="255" indices="1" id="0:2142" />
+          </MeshVertex>
+          <MeshVertex x="559.944" y="363.624" u="1" v="0" id="0:2143">
+            <Weight values="255" indices="1" id="0:2144" />
+          </MeshVertex>
+          <MeshVertex x="559.944" y="438.624" u="1" v="1" id="0:2145">
+            <Weight values="255" indices="1" id="0:2146" />
+          </MeshVertex>
+          <MeshVertex x="469.944" y="438.624" u="0" v="1" id="0:2147">
+            <Weight values="255" indices="1" id="0:2148" />
+          </MeshVertex>
+          <Skin name="Liv mouth 4f skin" tx="0" ty="0" id="0:2149">
+            <Tendon boneId="0:2006" name="mouth" xx="1" xy="0" yx="0" yy="1" tx="515.0" ty="401.0" id="0:2150" />
+          </Skin>
+        </Mesh>
+        <DataBindContext sourcePathIds="0:40-0:2787" propertyKey="18" id="0:2887" />
+      </Image>
+      <Image name="Liv brow N" assetId="0:113" originX="0" originY="0" id="0:2153">
+        <Mesh name="Liv brow N mesh" triangleIndexBytes="AAECAAID" id="0:2154">
+          <MeshVertex x="431" y="269" u="0" v="0" id="0:2155">
+            <Weight values="255" indices="1" id="0:2156" />
+          </MeshVertex>
+          <MeshVertex x="488" y="269" u="1" v="0" id="0:2157">
+            <Weight values="255" indices="1" id="0:2158" />
+          </MeshVertex>
+          <MeshVertex x="488" y="301" u="1" v="1" id="0:2159">
+            <Weight values="255" indices="1" id="0:2160" />
+          </MeshVertex>
+          <MeshVertex x="431" y="301" u="0" v="1" id="0:2161">
+            <Weight values="255" indices="1" id="0:2162" />
+          </MeshVertex>
+          <Skin name="Liv brow N skin" tx="0" ty="0" id="0:2163">
+            <Tendon boneId="0:2152" name="browN" xx="1" xy="0" yx="0" yy="1" tx="458.65748709122204" ty="280.7383820998279" id="0:2164" />
+          </Skin>
+        </Mesh>
+      </Image>
+      <Image name="Liv brow F" assetId="0:114" originX="0" originY="0" id="0:2167">
+        <Mesh name="Liv brow F mesh" triangleIndexBytes="AAECAAID" id="0:2168">
+          <MeshVertex x="546" y="269" u="0" v="0" id="0:2169">
+            <Weight values="255" indices="1" id="0:2170" />
+          </MeshVertex>
+          <MeshVertex x="601" y="269" u="1" v="0" id="0:2171">
+            <Weight values="255" indices="1" id="0:2172" />
+          </MeshVertex>
+          <MeshVertex x="601" y="299" u="1" v="1" id="0:2173">
+            <Weight values="255" indices="1" id="0:2174" />
+          </MeshVertex>
+          <MeshVertex x="546" y="299" u="0" v="1" id="0:2175">
+            <Weight values="255" indices="1" id="0:2176" />
+          </MeshVertex>
+          <Skin name="Liv brow F skin" tx="0" ty="0" id="0:2177">
+            <Tendon boneId="0:2166" name="browF" xx="1" xy="0" yx="0" yy="1" tx="573.1648351648352" ty="280.4047619047619" id="0:2178" />
+          </Skin>
+        </Mesh>
+      </Image>
+      <Image name="Liv eye N happy" assetId="0:115" originX="0" originY="0" id="0:2182">
+        <Mesh name="Liv eye N happy mesh" triangleIndexBytes="AAECAAID" id="0:2183">
+          <MeshVertex x="434.0" y="297.0" u="0" v="0" id="0:2184">
+            <Weight values="255" indices="1" id="0:2185" />
+          </MeshVertex>
+          <MeshVertex x="496.0" y="297.0" u="1" v="0" id="0:2186">
+            <Weight values="255" indices="1" id="0:2187" />
+          </MeshVertex>
+          <MeshVertex x="496.0" y="369.0" u="1" v="1" id="0:2188">
+            <Weight values="255" indices="1" id="0:2189" />
+          </MeshVertex>
+          <MeshVertex x="434.0" y="369.0" u="0" v="1" id="0:2190">
+            <Weight values="255" indices="1" id="0:2191" />
+          </MeshVertex>
+          <Skin name="Liv eye N happy skin" tx="0" ty="0" id="0:2192">
+            <Tendon boneId="0:2179" name="eyeN" xx="1" xy="0" yx="0" yy="1" tx="468.3028226214291" ty="335.59313186929774" id="0:2193" />
+          </Skin>
+        </Mesh>
+        <DataBindContext sourcePathIds="0:40-0:2800" propertyKey="18" id="0:2901" />
+      </Image>
+      <Image name="Liv eye N closed" assetId="0:116" originX="0" originY="0" id="0:2194">
+        <Mesh name="Liv eye N closed mesh" triangleIndexBytes="AAECAAID" id="0:2195">
+          <MeshVertex x="434.0" y="297.0" u="0" v="0" id="0:2196">
+            <Weight values="255" indices="1" id="0:2197" />
+          </MeshVertex>
+          <MeshVertex x="496.0" y="297.0" u="1" v="0" id="0:2198">
+            <Weight values="255" indices="1" id="0:2199" />
+          </MeshVertex>
+          <MeshVertex x="496.0" y="369.0" u="1" v="1" id="0:2200">
+            <Weight values="255" indices="1" id="0:2201" />
+          </MeshVertex>
+          <MeshVertex x="434.0" y="369.0" u="0" v="1" id="0:2202">
+            <Weight values="255" indices="1" id="0:2203" />
+          </MeshVertex>
+          <Skin name="Liv eye N closed skin" tx="0" ty="0" id="0:2204">
+            <Tendon boneId="0:2179" name="eyeN" xx="1" xy="0" yx="0" yy="1" tx="468.3028226214291" ty="335.59313186929774" id="0:2205" />
+          </Skin>
+        </Mesh>
+        <DataBindContext sourcePathIds="0:40-0:2801" propertyKey="18" id="0:2902" />
+      </Image>
+      <Image name="Liv eye N frame" assetId="0:117" originX="0" originY="0" id="0:2206">
+        <Mesh name="Liv eye N frame mesh" triangleIndexBytes="AAECAAID" id="0:2207">
+          <MeshVertex x="434" y="297" u="0" v="0" id="0:2208">
+            <Weight values="255" indices="1" id="0:2209" />
+          </MeshVertex>
+          <MeshVertex x="496" y="297" u="1" v="0" id="0:2210">
+            <Weight values="255" indices="1" id="0:2211" />
+          </MeshVertex>
+          <MeshVertex x="496" y="369" u="1" v="1" id="0:2212">
+            <Weight values="255" indices="1" id="0:2213" />
+          </MeshVertex>
+          <MeshVertex x="434" y="369" u="0" v="1" id="0:2214">
+            <Weight values="255" indices="1" id="0:2215" />
+          </MeshVertex>
+          <Skin name="Liv eye N frame skin" tx="0" ty="0" id="0:2216">
+            <Tendon boneId="0:2179" name="eyeN" xx="1" xy="0" yx="0" yy="1" tx="468.3028226214291" ty="335.59313186929774" id="0:2217" />
+          </Skin>
+        </Mesh>
+      </Image>
+      <Image name="Liv eye N lash" assetId="0:118" originX="0" originY="0" id="0:2218">
+        <Mesh name="Liv eye N lash mesh" triangleIndexBytes="AAECAAID" id="0:2219">
+          <MeshVertex x="434" y="297" u="0" v="0" id="0:2220">
+            <Weight values="255" indices="1" id="0:2221" />
+          </MeshVertex>
+          <MeshVertex x="496" y="297" u="1" v="0" id="0:2222">
+            <Weight values="255" indices="1" id="0:2223" />
+          </MeshVertex>
+          <MeshVertex x="496" y="369" u="1" v="1" id="0:2224">
+            <Weight values="255" indices="1" id="0:2225" />
+          </MeshVertex>
+          <MeshVertex x="434" y="369" u="0" v="1" id="0:2226">
+            <Weight values="255" indices="1" id="0:2227" />
+          </MeshVertex>
+          <Skin name="Liv eye N lash skin" tx="0" ty="0" id="0:2228">
+            <Tendon boneId="0:2180" name="lidN" xx="1" xy="0" yx="0" yy="1" tx="468.3028226214291" ty="335.59313186929774" id="0:2229" />
+          </Skin>
+        </Mesh>
+      </Image>
+      <Image name="Liv eye N lid" assetId="0:119" originX="0" originY="0" id="0:2230">
+        <Mesh name="Liv eye N lid mesh" triangleIndexBytes="AAIDAAMBAgQFAgUDBAYHBAcFBggJBgkHCAoLCAsJCgwNCg0LDA4PDA8NDhARDhEPEBITEBMREhQVEhUTFBYXFBcVFhgZFhkXGBobGBsZGhwdGh0bHB4fHB8dHiAhHiEfICIjICMhIiQlIiUjJCYnJCclJigpJiknKCorKCspKiwtKi0rLC4vLC8tLjAxLjEvMDIzMDMxMjQ1MjUzNDY3NDc1Njg5Njk3ODo7ODs5Ojw9Oj07PD4/PD89PkBBPkE/QEJDQENBQkRFQkVDREZHREdFRkhJRklHSEpLSEtJSkxNSk1LTE5PTE9NTlBRTlFPUFJTUFNRUlRVUlVTVFZXVFdVVlhZVllXWFpbWFtZWlxdWl1bXF5fXF9dXmBhXmFfYGJjYGNhYmRlYmVjZGZnZGdl" id="0:2231">
+          <MeshVertex x="436.5" y="316.0" u="0.5" v="0.5" id="0:2232">
+            <Weight values="255" indices="1" id="0:2233" />
+          </MeshVertex>
+          <MeshVertex x="436.5" y="336.167" u="0.5" v="0.5" id="0:2234">
+            <Weight values="255" indices="2" id="0:2235" />
+          </MeshVertex>
+          <MeshVertex x="437.5" y="316.0" u="0.5" v="0.5" id="0:2236">
+            <Weight values="255" indices="1" id="0:2237" />
+          </MeshVertex>
+          <MeshVertex x="437.5" y="336.167" u="0.5" v="0.5" id="0:2238">
+            <Weight values="255" indices="2" id="0:2239" />
+          </MeshVertex>
+          <MeshVertex x="438.5" y="316.0" u="0.5" v="0.5" id="0:2240">
+            <Weight values="255" indices="1" id="0:2241" />
+          </MeshVertex>
+          <MeshVertex x="438.5" y="336.167" u="0.5" v="0.5" id="0:2242">
+            <Weight values="255" indices="2" id="0:2243" />
+          </MeshVertex>
+          <MeshVertex x="439.5" y="316.0" u="0.5" v="0.5" id="0:2244">
+            <Weight values="255" indices="1" id="0:2245" />
+          </MeshVertex>
+          <MeshVertex x="439.5" y="336.167" u="0.5" v="0.5" id="0:2246">
+            <Weight values="255" indices="2" id="0:2247" />
+          </MeshVertex>
+          <MeshVertex x="440.5" y="316.0" u="0.5" v="0.5" id="0:2248">
+            <Weight values="255" indices="1" id="0:2249" />
+          </MeshVertex>
+          <MeshVertex x="440.5" y="336.75" u="0.5" v="0.5" id="0:2250">
+            <Weight values="255" indices="2" id="0:2251" />
+          </MeshVertex>
+          <MeshVertex x="441.5" y="315.0" u="0.5" v="0.5" id="0:2252">
+            <Weight values="255" indices="1" id="0:2253" />
+          </MeshVertex>
+          <MeshVertex x="441.5" y="337.1" u="0.5" v="0.5" id="0:2254">
+            <Weight values="255" indices="2" id="0:2255" />
+          </MeshVertex>
+          <MeshVertex x="442.5" y="315.0" u="0.5" v="0.5" id="0:2256">
+            <Weight values="255" indices="1" id="0:2257" />
+          </MeshVertex>
+          <MeshVertex x="442.5" y="336.9" u="0.5" v="0.5" id="0:2258">
+            <Weight values="255" indices="2" id="0:2259" />
+          </MeshVertex>
+          <MeshVertex x="443.5" y="314.0" u="0.5" v="0.5" id="0:2260">
+            <Weight values="255" indices="1" id="0:2261" />
+          </MeshVertex>
+          <MeshVertex x="443.5" y="335.7" u="0.5" v="0.5" id="0:2262">
+            <Weight values="255" indices="2" id="0:2263" />
+          </MeshVertex>
+          <MeshVertex x="444.5" y="313.0" u="0.5" v="0.5" id="0:2264">
+            <Weight values="255" indices="1" id="0:2265" />
+          </MeshVertex>
+          <MeshVertex x="444.5" y="333.7" u="0.5" v="0.5" id="0:2266">
+            <Weight values="255" indices="2" id="0:2267" />
+          </MeshVertex>
+          <MeshVertex x="445.5" y="312.0" u="0.5" v="0.5" id="0:2268">
+            <Weight values="255" indices="1" id="0:2269" />
+          </MeshVertex>
+          <MeshVertex x="445.5" y="331.1" u="0.5" v="0.5" id="0:2270">
+            <Weight values="255" indices="2" id="0:2271" />
+          </MeshVertex>
+          <MeshVertex x="446.5" y="311.0" u="0.5" v="0.5" id="0:2272">
+            <Weight values="255" indices="1" id="0:2273" />
+          </MeshVertex>
+          <MeshVertex x="446.5" y="328.3" u="0.5" v="0.5" id="0:2274">
+            <Weight values="255" indices="2" id="0:2275" />
+          </MeshVertex>
+          <MeshVertex x="447.5" y="310.0" u="0.5" v="0.5" id="0:2276">
+            <Weight values="255" indices="1" id="0:2277" />
+          </MeshVertex>
+          <MeshVertex x="447.5" y="326.1" u="0.5" v="0.5" id="0:2278">
+            <Weight values="255" indices="2" id="0:2279" />
+          </MeshVertex>
+          <MeshVertex x="448.5" y="309.0" u="0.5" v="0.5" id="0:2280">
+            <Weight values="255" indices="1" id="0:2281" />
+          </MeshVertex>
+          <MeshVertex x="448.5" y="324.3" u="0.5" v="0.5" id="0:2282">
+            <Weight values="255" indices="2" id="0:2283" />
+          </MeshVertex>
+          <MeshVertex x="449.5" y="308.0" u="0.5" v="0.5" id="0:2284">
+            <Weight values="255" indices="1" id="0:2285" />
+          </MeshVertex>
+          <MeshVertex x="449.5" y="322.9" u="0.5" v="0.5" id="0:2286">
+            <Weight values="255" indices="2" id="0:2287" />
+          </MeshVertex>
+          <MeshVertex x="450.5" y="307.0" u="0.5" v="0.5" id="0:2288">
+            <Weight values="255" indices="1" id="0:2289" />
+          </MeshVertex>
+          <MeshVertex x="450.5" y="321.7" u="0.5" v="0.5" id="0:2290">
+            <Weight values="255" indices="2" id="0:2291" />
+          </MeshVertex>
+          <MeshVertex x="451.5" y="306.0" u="0.5" v="0.5" id="0:2292">
+            <Weight values="255" indices="1" id="0:2293" />
+          </MeshVertex>
+          <MeshVertex x="451.5" y="320.5" u="0.5" v="0.5" id="0:2294">
+            <Weight values="255" indices="2" id="0:2295" />
+          </MeshVertex>
+          <MeshVertex x="452.5" y="306.0" u="0.5" v="0.5" id="0:2296">
+            <Weight values="255" indices="1" id="0:2297" />
+          </MeshVertex>
+          <MeshVertex x="452.5" y="319.7" u="0.5" v="0.5" id="0:2298">
+            <Weight values="255" indices="2" id="0:2299" />
+          </MeshVertex>
+          <MeshVertex x="453.5" y="305.0" u="0.5" v="0.5" id="0:2300">
+            <Weight values="255" indices="1" id="0:2301" />
+          </MeshVertex>
+          <MeshVertex x="453.5" y="318.9" u="0.5" v="0.5" id="0:2302">
+            <Weight values="255" indices="2" id="0:2303" />
+          </MeshVertex>
+          <MeshVertex x="454.5" y="305.0" u="0.5" v="0.5" id="0:2304">
+            <Weight values="255" indices="1" id="0:2305" />
+          </MeshVertex>
+          <MeshVertex x="454.5" y="318.3" u="0.5" v="0.5" id="0:2306">
+            <Weight values="255" indices="2" id="0:2307" />
+          </MeshVertex>
+          <MeshVertex x="455.5" y="304.0" u="0.5" v="0.5" id="0:2308">
+            <Weight values="255" indices="1" id="0:2309" />
+          </MeshVertex>
+          <MeshVertex x="455.5" y="317.7" u="0.5" v="0.5" id="0:2310">
+            <Weight values="255" indices="2" id="0:2311" />
+          </MeshVertex>
+          <MeshVertex x="456.5" y="304.0" u="0.5" v="0.5" id="0:2312">
+            <Weight values="255" indices="1" id="0:2313" />
+          </MeshVertex>
+          <MeshVertex x="456.5" y="317.3" u="0.5" v="0.5" id="0:2314">
+            <Weight values="255" indices="2" id="0:2315" />
+          </MeshVertex>
+          <MeshVertex x="457.5" y="303.0" u="0.5" v="0.5" id="0:2316">
+            <Weight values="255" indices="1" id="0:2317" />
+          </MeshVertex>
+          <MeshVertex x="457.5" y="316.7" u="0.5" v="0.5" id="0:2318">
+            <Weight values="255" indices="2" id="0:2319" />
+          </MeshVertex>
+          <MeshVertex x="458.5" y="302.0" u="0.5" v="0.5" id="0:2320">
+            <Weight values="255" indices="1" id="0:2321" />
+          </MeshVertex>
+          <MeshVertex x="458.5" y="316.3" u="0.5" v="0.5" id="0:2322">
+            <Weight values="255" indices="2" id="0:2323" />
+          </MeshVertex>
+          <MeshVertex x="459.5" y="303.0" u="0.5" v="0.5" id="0:2324">
+            <Weight values="255" indices="1" id="0:2325" />
+          </MeshVertex>
+          <MeshVertex x="459.5" y="315.9" u="0.5" v="0.5" id="0:2326">
+            <Weight values="255" indices="2" id="0:2327" />
+          </MeshVertex>
+          <MeshVertex x="460.5" y="303.0" u="0.5" v="0.5" id="0:2328">
+            <Weight values="255" indices="1" id="0:2329" />
+          </MeshVertex>
+          <MeshVertex x="460.5" y="315.7" u="0.5" v="0.5" id="0:2330">
+            <Weight values="255" indices="2" id="0:2331" />
+          </MeshVertex>
+          <MeshVertex x="461.5" y="302.0" u="0.5" v="0.5" id="0:2332">
+            <Weight values="255" indices="1" id="0:2333" />
+          </MeshVertex>
+          <MeshVertex x="461.5" y="315.3" u="0.5" v="0.5" id="0:2334">
+            <Weight values="255" indices="2" id="0:2335" />
+          </MeshVertex>
+          <MeshVertex x="462.5" y="301.0" u="0.5" v="0.5" id="0:2336">
+            <Weight values="255" indices="1" id="0:2337" />
+          </MeshVertex>
+          <MeshVertex x="462.5" y="315.1" u="0.5" v="0.5" id="0:2338">
+            <Weight values="255" indices="2" id="0:2339" />
+          </MeshVertex>
+          <MeshVertex x="463.5" y="301.0" u="0.5" v="0.5" id="0:2340">
+            <Weight values="255" indices="1" id="0:2341" />
+          </MeshVertex>
+          <MeshVertex x="463.5" y="314.9" u="0.5" v="0.5" id="0:2342">
+            <Weight values="255" indices="2" id="0:2343" />
+          </MeshVertex>
+          <MeshVertex x="464.5" y="301.0" u="0.5" v="0.5" id="0:2344">
+            <Weight values="255" indices="1" id="0:2345" />
+          </MeshVertex>
+          <MeshVertex x="464.5" y="314.7" u="0.5" v="0.5" id="0:2346">
+            <Weight values="255" indices="2" id="0:2347" />
+          </MeshVertex>
+          <MeshVertex x="465.5" y="301.0" u="0.5" v="0.5" id="0:2348">
+            <Weight values="255" indices="1" id="0:2349" />
+          </MeshVertex>
+          <MeshVertex x="465.5" y="314.7" u="0.5" v="0.5" id="0:2350">
+            <Weight values="255" indices="2" id="0:2351" />
+          </MeshVertex>
+          <MeshVertex x="466.5" y="301.0" u="0.5" v="0.5" id="0:2352">
+            <Weight values="255" indices="1" id="0:2353" />
+          </MeshVertex>
+          <MeshVertex x="466.5" y="314.9" u="0.5" v="0.5" id="0:2354">
+            <Weight values="255" indices="2" id="0:2355" />
+          </MeshVertex>
+          <MeshVertex x="467.5" y="302.0" u="0.5" v="0.5" id="0:2356">
+            <Weight values="255" indices="1" id="0:2357" />
+          </MeshVertex>
+          <MeshVertex x="467.5" y="315.1" u="0.5" v="0.5" id="0:2358">
+            <Weight values="255" indices="2" id="0:2359" />
+          </MeshVertex>
+          <MeshVertex x="468.5" y="303.0" u="0.5" v="0.5" id="0:2360">
+            <Weight values="255" indices="1" id="0:2361" />
+          </MeshVertex>
+          <MeshVertex x="468.5" y="315.3" u="0.5" v="0.5" id="0:2362">
+            <Weight values="255" indices="2" id="0:2363" />
+          </MeshVertex>
+          <MeshVertex x="469.5" y="303.0" u="0.5" v="0.5" id="0:2364">
+            <Weight values="255" indices="1" id="0:2365" />
+          </MeshVertex>
+          <MeshVertex x="469.5" y="315.7" u="0.5" v="0.5" id="0:2366">
+            <Weight values="255" indices="2" id="0:2367" />
+          </MeshVertex>
+          <MeshVertex x="470.5" y="303.0" u="0.5" v="0.5" id="0:2368">
+            <Weight values="255" indices="1" id="0:2369" />
+          </MeshVertex>
+          <MeshVertex x="470.5" y="315.9" u="0.5" v="0.5" id="0:2370">
+            <Weight values="255" indices="2" id="0:2371" />
+          </MeshVertex>
+          <MeshVertex x="471.5" y="304.0" u="0.5" v="0.5" id="0:2372">
+            <Weight values="255" indices="1" id="0:2373" />
+          </MeshVertex>
+          <MeshVertex x="471.5" y="316.3" u="0.5" v="0.5" id="0:2374">
+            <Weight values="255" indices="2" id="0:2375" />
+          </MeshVertex>
+          <MeshVertex x="472.5" y="304.0" u="0.5" v="0.5" id="0:2376">
+            <Weight values="255" indices="1" id="0:2377" />
+          </MeshVertex>
+          <MeshVertex x="472.5" y="316.7" u="0.5" v="0.5" id="0:2378">
+            <Weight values="255" indices="2" id="0:2379" />
+          </MeshVertex>
+          <MeshVertex x="473.5" y="304.0" u="0.5" v="0.5" id="0:2380">
+            <Weight values="255" indices="1" id="0:2381" />
+          </MeshVertex>
+          <MeshVertex x="473.5" y="317.3" u="0.5" v="0.5" id="0:2382">
+            <Weight values="255" indices="2" id="0:2383" />
+          </MeshVertex>
+          <MeshVertex x="474.5" y="305.0" u="0.5" v="0.5" id="0:2384">
+            <Weight values="255" indices="1" id="0:2385" />
+          </MeshVertex>
+          <MeshVertex x="474.5" y="317.7" u="0.5" v="0.5" id="0:2386">
+            <Weight values="255" indices="2" id="0:2387" />
+          </MeshVertex>
+          <MeshVertex x="475.5" y="306.0" u="0.5" v="0.5" id="0:2388">
+            <Weight values="255" indices="1" id="0:2389" />
+          </MeshVertex>
+          <MeshVertex x="475.5" y="318.3" u="0.5" v="0.5" id="0:2390">
+            <Weight values="255" indices="2" id="0:2391" />
+          </MeshVertex>
+          <MeshVertex x="476.5" y="306.0" u="0.5" v="0.5" id="0:2392">
+            <Weight values="255" indices="1" id="0:2393" />
+          </MeshVertex>
+          <MeshVertex x="476.5" y="318.9" u="0.5" v="0.5" id="0:2394">
+            <Weight values="255" indices="2" id="0:2395" />
+          </MeshVertex>
+          <MeshVertex x="477.5" y="307.0" u="0.5" v="0.5" id="0:2396">
+            <Weight values="255" indices="1" id="0:2397" />
+          </MeshVertex>
+          <MeshVertex x="477.5" y="319.7" u="0.5" v="0.5" id="0:2398">
+            <Weight values="255" indices="2" id="0:2399" />
+          </MeshVertex>
+          <MeshVertex x="478.5" y="308.0" u="0.5" v="0.5" id="0:2400">
+            <Weight values="255" indices="1" id="0:2401" />
+          </MeshVertex>
+          <MeshVertex x="478.5" y="320.7" u="0.5" v="0.5" id="0:2402">
+            <Weight values="255" indices="2" id="0:2403" />
+          </MeshVertex>
+          <MeshVertex x="479.5" y="309.0" u="0.5" v="0.5" id="0:2404">
+            <Weight values="255" indices="1" id="0:2405" />
+          </MeshVertex>
+          <MeshVertex x="479.5" y="321.9" u="0.5" v="0.5" id="0:2406">
+            <Weight values="255" indices="2" id="0:2407" />
+          </MeshVertex>
+          <MeshVertex x="480.5" y="310.0" u="0.5" v="0.5" id="0:2408">
+            <Weight values="255" indices="1" id="0:2409" />
+          </MeshVertex>
+          <MeshVertex x="480.5" y="323.3" u="0.5" v="0.5" id="0:2410">
+            <Weight values="255" indices="2" id="0:2411" />
+          </MeshVertex>
+          <MeshVertex x="481.5" y="311.0" u="0.5" v="0.5" id="0:2412">
+            <Weight values="255" indices="1" id="0:2413" />
+          </MeshVertex>
+          <MeshVertex x="481.5" y="325.0" u="0.5" v="0.5" id="0:2414">
+            <Weight values="255" indices="2" id="0:2415" />
+          </MeshVertex>
+          <MeshVertex x="482.5" y="315.0" u="0.5" v="0.5" id="0:2416">
+            <Weight values="255" indices="1" id="0:2417" />
+          </MeshVertex>
+          <MeshVertex x="482.5" y="325.875" u="0.5" v="0.5" id="0:2418">
+            <Weight values="255" indices="2" id="0:2419" />
+          </MeshVertex>
+          <MeshVertex x="483.5" y="317.0" u="0.5" v="0.5" id="0:2420">
+            <Weight values="255" indices="1" id="0:2421" />
+          </MeshVertex>
+          <MeshVertex x="483.5" y="326.667" u="0.5" v="0.5" id="0:2422">
+            <Weight values="255" indices="2" id="0:2423" />
+          </MeshVertex>
+          <MeshVertex x="484.5" y="317.0" u="0.5" v="0.5" id="0:2424">
+            <Weight values="255" indices="1" id="0:2425" />
+          </MeshVertex>
+          <MeshVertex x="484.5" y="326.667" u="0.5" v="0.5" id="0:2426">
+            <Weight values="255" indices="2" id="0:2427" />
+          </MeshVertex>
+          <MeshVertex x="485.5" y="317.0" u="0.5" v="0.5" id="0:2428">
+            <Weight values="255" indices="1" id="0:2429" />
+          </MeshVertex>
+          <MeshVertex x="485.5" y="326.667" u="0.5" v="0.5" id="0:2430">
+            <Weight values="255" indices="2" id="0:2431" />
+          </MeshVertex>
+          <MeshVertex x="486.5" y="317.0" u="0.5" v="0.5" id="0:2432">
+            <Weight values="255" indices="1" id="0:2433" />
+          </MeshVertex>
+          <MeshVertex x="486.5" y="326.667" u="0.5" v="0.5" id="0:2434">
+            <Weight values="255" indices="2" id="0:2435" />
+          </MeshVertex>
+          <MeshVertex x="487.5" y="317.0" u="0.5" v="0.5" id="0:2436">
+            <Weight values="255" indices="1" id="0:2437" />
+          </MeshVertex>
+          <MeshVertex x="487.5" y="326.667" u="0.5" v="0.5" id="0:2438">
+            <Weight values="255" indices="2" id="0:2439" />
+          </MeshVertex>
+          <Skin name="Liv eye N lid skin" tx="0" ty="0" id="0:2440">
+            <Tendon boneId="0:2179" name="eyeN" xx="1" xy="0" yx="0" yy="1" tx="468.3028226214291" ty="335.59313186929774" id="0:2441" />
+            <Tendon boneId="0:2180" name="lidN" xx="1" xy="0" yx="0" yy="1" tx="468.3028226214291" ty="335.59313186929774" id="0:2442" />
+          </Skin>
+        </Mesh>
+      </Image>
+      <Image name="Liv eye N iris" assetId="0:120" originX="0" originY="0" id="0:2443">
+        <Mesh name="Liv eye N iris mesh" triangleIndexBytes="AAECAAID" id="0:2444">
+          <MeshVertex x="434" y="297" u="0" v="0" id="0:2445">
+            <Weight values="255" indices="1" id="0:2446" />
+          </MeshVertex>
+          <MeshVertex x="496" y="297" u="1" v="0" id="0:2447">
+            <Weight values="255" indices="1" id="0:2448" />
+          </MeshVertex>
+          <MeshVertex x="496" y="369" u="1" v="1" id="0:2449">
+            <Weight values="255" indices="1" id="0:2450" />
+          </MeshVertex>
+          <MeshVertex x="434" y="369" u="0" v="1" id="0:2451">
+            <Weight values="255" indices="1" id="0:2452" />
+          </MeshVertex>
+          <Skin name="Liv eye N iris skin" tx="0" ty="0" id="0:2453">
+            <Tendon boneId="0:2181" name="irisN" xx="1" xy="0" yx="0" yy="1" tx="468.3028226214291" ty="335.59313186929774" id="0:2454" />
+          </Skin>
+        </Mesh>
+      </Image>
+      <Image name="Liv eye N white" assetId="0:121" originX="0" originY="0" id="0:2455">
+        <Mesh name="Liv eye N white mesh" triangleIndexBytes="AAECAAID" id="0:2456">
+          <MeshVertex x="434" y="297" u="0" v="0" id="0:2457">
+            <Weight values="255" indices="1" id="0:2458" />
+          </MeshVertex>
+          <MeshVertex x="496" y="297" u="1" v="0" id="0:2459">
+            <Weight values="255" indices="1" id="0:2460" />
+          </MeshVertex>
+          <MeshVertex x="496" y="369" u="1" v="1" id="0:2461">
+            <Weight values="255" indices="1" id="0:2462" />
+          </MeshVertex>
+          <MeshVertex x="434" y="369" u="0" v="1" id="0:2463">
+            <Weight values="255" indices="1" id="0:2464" />
+          </MeshVertex>
+          <Skin name="Liv eye N white skin" tx="0" ty="0" id="0:2465">
+            <Tendon boneId="0:2179" name="eyeN" xx="1" xy="0" yx="0" yy="1" tx="468.3028226214291" ty="335.59313186929774" id="0:2466" />
+          </Skin>
+        </Mesh>
+      </Image>
+      <Image name="Liv eye F happy" assetId="0:122" originX="0" originY="0" id="0:2470">
+        <Mesh name="Liv eye F happy mesh" triangleIndexBytes="AAECAAID" id="0:2471">
+          <MeshVertex x="540.0" y="297.0" u="0" v="0" id="0:2472">
+            <Weight values="255" indices="1" id="0:2473" />
+          </MeshVertex>
+          <MeshVertex x="604.0" y="297.0" u="1" v="0" id="0:2474">
+            <Weight values="255" indices="1" id="0:2475" />
+          </MeshVertex>
+          <MeshVertex x="604.0" y="369.0" u="1" v="1" id="0:2476">
+            <Weight values="255" indices="1" id="0:2477" />
+          </MeshVertex>
+          <MeshVertex x="540.0" y="369.0" u="0" v="1" id="0:2478">
+            <Weight values="255" indices="1" id="0:2479" />
+          </MeshVertex>
+          <Skin name="Liv eye F happy skin" tx="0" ty="0" id="0:2480">
+            <Tendon boneId="0:2467" name="eyeF" xx="1" xy="0" yx="0" yy="1" tx="562.9968233400166" ty="334.8887640447669" id="0:2481" />
+          </Skin>
+        </Mesh>
+        <DataBindContext sourcePathIds="0:40-0:2808" propertyKey="18" id="0:2910" />
+      </Image>
+      <Image name="Liv eye F closed" assetId="0:123" originX="0" originY="0" id="0:2482">
+        <Mesh name="Liv eye F closed mesh" triangleIndexBytes="AAECAAID" id="0:2483">
+          <MeshVertex x="540.0" y="297.0" u="0" v="0" id="0:2484">
+            <Weight values="255" indices="1" id="0:2485" />
+          </MeshVertex>
+          <MeshVertex x="604.0" y="297.0" u="1" v="0" id="0:2486">
+            <Weight values="255" indices="1" id="0:2487" />
+          </MeshVertex>
+          <MeshVertex x="604.0" y="369.0" u="1" v="1" id="0:2488">
+            <Weight values="255" indices="1" id="0:2489" />
+          </MeshVertex>
+          <MeshVertex x="540.0" y="369.0" u="0" v="1" id="0:2490">
+            <Weight values="255" indices="1" id="0:2491" />
+          </MeshVertex>
+          <Skin name="Liv eye F closed skin" tx="0" ty="0" id="0:2492">
+            <Tendon boneId="0:2467" name="eyeF" xx="1" xy="0" yx="0" yy="1" tx="562.9968233400166" ty="334.8887640447669" id="0:2493" />
+          </Skin>
+        </Mesh>
+        <DataBindContext sourcePathIds="0:40-0:2809" propertyKey="18" id="0:2911" />
+      </Image>
+      <Image name="Liv eye F frame" assetId="0:124" originX="0" originY="0" id="0:2494">
+        <Mesh name="Liv eye F frame mesh" triangleIndexBytes="AAECAAID" id="0:2495">
+          <MeshVertex x="540" y="297" u="0" v="0" id="0:2496">
+            <Weight values="255" indices="1" id="0:2497" />
+          </MeshVertex>
+          <MeshVertex x="604" y="297" u="1" v="0" id="0:2498">
+            <Weight values="255" indices="1" id="0:2499" />
+          </MeshVertex>
+          <MeshVertex x="604" y="369" u="1" v="1" id="0:2500">
+            <Weight values="255" indices="1" id="0:2501" />
+          </MeshVertex>
+          <MeshVertex x="540" y="369" u="0" v="1" id="0:2502">
+            <Weight values="255" indices="1" id="0:2503" />
+          </MeshVertex>
+          <Skin name="Liv eye F frame skin" tx="0" ty="0" id="0:2504">
+            <Tendon boneId="0:2467" name="eyeF" xx="1" xy="0" yx="0" yy="1" tx="562.9968233400166" ty="334.8887640447669" id="0:2505" />
+          </Skin>
+        </Mesh>
+      </Image>
+      <Image name="Liv eye F lash" assetId="0:125" originX="0" originY="0" id="0:2506">
+        <Mesh name="Liv eye F lash mesh" triangleIndexBytes="AAECAAID" id="0:2507">
+          <MeshVertex x="540" y="297" u="0" v="0" id="0:2508">
+            <Weight values="255" indices="1" id="0:2509" />
+          </MeshVertex>
+          <MeshVertex x="604" y="297" u="1" v="0" id="0:2510">
+            <Weight values="255" indices="1" id="0:2511" />
+          </MeshVertex>
+          <MeshVertex x="604" y="369" u="1" v="1" id="0:2512">
+            <Weight values="255" indices="1" id="0:2513" />
+          </MeshVertex>
+          <MeshVertex x="540" y="369" u="0" v="1" id="0:2514">
+            <Weight values="255" indices="1" id="0:2515" />
+          </MeshVertex>
+          <Skin name="Liv eye F lash skin" tx="0" ty="0" id="0:2516">
+            <Tendon boneId="0:2468" name="lidF" xx="1" xy="0" yx="0" yy="1" tx="562.9968233400166" ty="334.8887640447669" id="0:2517" />
+          </Skin>
+        </Mesh>
+      </Image>
+      <Image name="Liv eye F lid" assetId="0:126" originX="0" originY="0" id="0:2518">
+        <Mesh name="Liv eye F lid mesh" triangleIndexBytes="AAIDAAMBAgQFAgUDBAYHBAcFBggJBgkHCAoLCAsJCgwNCg0LDA4PDA8NDhARDhEPEBITEBMREhQVEhUTFBYXFBcVFhgZFhkXGBobGBsZGhwdGh0bHB4fHB8dHiAhHiEfICIjICMhIiQlIiUjJCYnJCclJigpJiknKCorKCspKiwtKi0rLC4vLC8tLjAxLjEvMDIzMDMxMjQ1MjUzNDY3NDc1Njg5Njk3ODo7ODs5Ojw9Oj07PD4/PD89PkBBPkE/QEJDQENBQkRFQkVDREZHREdFRkhJRklHSEpLSEtJSkxNSk1LTE5PTE9NTlBRTlFPUFJTUFNRUlRVUlVTVFZXVFdVVlhZVllXWFpbWFtZWlxdWl1bXF5fXF9dXmBhXmFfYGJjYGNhYmRlYmVjZGZnZGdlZmhpZmln" id="0:2519">
+          <MeshVertex x="543.5" y="318.0" u="0.5" v="0.5" id="0:2520">
+            <Weight values="255" indices="1" id="0:2521" />
+          </MeshVertex>
+          <MeshVertex x="543.5" y="322.833" u="0.5" v="0.5" id="0:2522">
+            <Weight values="255" indices="2" id="0:2523" />
+          </MeshVertex>
+          <MeshVertex x="544.5" y="318.0" u="0.5" v="0.5" id="0:2524">
+            <Weight values="255" indices="1" id="0:2525" />
+          </MeshVertex>
+          <MeshVertex x="544.5" y="322.833" u="0.5" v="0.5" id="0:2526">
+            <Weight values="255" indices="2" id="0:2527" />
+          </MeshVertex>
+          <MeshVertex x="545.5" y="318.0" u="0.5" v="0.5" id="0:2528">
+            <Weight values="255" indices="1" id="0:2529" />
+          </MeshVertex>
+          <MeshVertex x="545.5" y="322.833" u="0.5" v="0.5" id="0:2530">
+            <Weight values="255" indices="2" id="0:2531" />
+          </MeshVertex>
+          <MeshVertex x="546.5" y="318.0" u="0.5" v="0.5" id="0:2532">
+            <Weight values="255" indices="1" id="0:2533" />
+          </MeshVertex>
+          <MeshVertex x="546.5" y="322.833" u="0.5" v="0.5" id="0:2534">
+            <Weight values="255" indices="2" id="0:2535" />
+          </MeshVertex>
+          <MeshVertex x="547.5" y="314.0" u="0.5" v="0.5" id="0:2536">
+            <Weight values="255" indices="1" id="0:2537" />
+          </MeshVertex>
+          <MeshVertex x="547.5" y="323.0" u="0.5" v="0.5" id="0:2538">
+            <Weight values="255" indices="2" id="0:2539" />
+          </MeshVertex>
+          <MeshVertex x="548.5" y="312.0" u="0.5" v="0.5" id="0:2540">
+            <Weight values="255" indices="1" id="0:2541" />
+          </MeshVertex>
+          <MeshVertex x="548.5" y="323.1" u="0.5" v="0.5" id="0:2542">
+            <Weight values="255" indices="2" id="0:2543" />
+          </MeshVertex>
+          <MeshVertex x="549.5" y="311.0" u="0.5" v="0.5" id="0:2544">
+            <Weight values="255" indices="1" id="0:2545" />
+          </MeshVertex>
+          <MeshVertex x="549.5" y="322.7" u="0.5" v="0.5" id="0:2546">
+            <Weight values="255" indices="2" id="0:2547" />
+          </MeshVertex>
+          <MeshVertex x="550.5" y="310.0" u="0.5" v="0.5" id="0:2548">
+            <Weight values="255" indices="1" id="0:2549" />
+          </MeshVertex>
+          <MeshVertex x="550.5" y="322.3" u="0.5" v="0.5" id="0:2550">
+            <Weight values="255" indices="2" id="0:2551" />
+          </MeshVertex>
+          <MeshVertex x="551.5" y="309.0" u="0.5" v="0.5" id="0:2552">
+            <Weight values="255" indices="1" id="0:2553" />
+          </MeshVertex>
+          <MeshVertex x="551.5" y="321.7" u="0.5" v="0.5" id="0:2554">
+            <Weight values="255" indices="2" id="0:2555" />
+          </MeshVertex>
+          <MeshVertex x="552.5" y="308.0" u="0.5" v="0.5" id="0:2556">
+            <Weight values="255" indices="1" id="0:2557" />
+          </MeshVertex>
+          <MeshVertex x="552.5" y="320.9" u="0.5" v="0.5" id="0:2558">
+            <Weight values="255" indices="2" id="0:2559" />
+          </MeshVertex>
+          <MeshVertex x="553.5" y="307.0" u="0.5" v="0.5" id="0:2560">
+            <Weight values="255" indices="1" id="0:2561" />
+          </MeshVertex>
+          <MeshVertex x="553.5" y="320.1" u="0.5" v="0.5" id="0:2562">
+            <Weight values="255" indices="2" id="0:2563" />
+          </MeshVertex>
+          <MeshVertex x="554.5" y="306.0" u="0.5" v="0.5" id="0:2564">
+            <Weight values="255" indices="1" id="0:2565" />
+          </MeshVertex>
+          <MeshVertex x="554.5" y="319.5" u="0.5" v="0.5" id="0:2566">
+            <Weight values="255" indices="2" id="0:2567" />
+          </MeshVertex>
+          <MeshVertex x="555.5" y="306.0" u="0.5" v="0.5" id="0:2568">
+            <Weight values="255" indices="1" id="0:2569" />
+          </MeshVertex>
+          <MeshVertex x="555.5" y="318.9" u="0.5" v="0.5" id="0:2570">
+            <Weight values="255" indices="2" id="0:2571" />
+          </MeshVertex>
+          <MeshVertex x="556.5" y="305.0" u="0.5" v="0.5" id="0:2572">
+            <Weight values="255" indices="1" id="0:2573" />
+          </MeshVertex>
+          <MeshVertex x="556.5" y="318.5" u="0.5" v="0.5" id="0:2574">
+            <Weight values="255" indices="2" id="0:2575" />
+          </MeshVertex>
+          <MeshVertex x="557.5" y="304.0" u="0.5" v="0.5" id="0:2576">
+            <Weight values="255" indices="1" id="0:2577" />
+          </MeshVertex>
+          <MeshVertex x="557.5" y="318.1" u="0.5" v="0.5" id="0:2578">
+            <Weight values="255" indices="2" id="0:2579" />
+          </MeshVertex>
+          <MeshVertex x="558.5" y="303.0" u="0.5" v="0.5" id="0:2580">
+            <Weight values="255" indices="1" id="0:2581" />
+          </MeshVertex>
+          <MeshVertex x="558.5" y="317.3" u="0.5" v="0.5" id="0:2582">
+            <Weight values="255" indices="2" id="0:2583" />
+          </MeshVertex>
+          <MeshVertex x="559.5" y="303.0" u="0.5" v="0.5" id="0:2584">
+            <Weight values="255" indices="1" id="0:2585" />
+          </MeshVertex>
+          <MeshVertex x="559.5" y="316.7" u="0.5" v="0.5" id="0:2586">
+            <Weight values="255" indices="2" id="0:2587" />
+          </MeshVertex>
+          <MeshVertex x="560.5" y="302.0" u="0.5" v="0.5" id="0:2588">
+            <Weight values="255" indices="1" id="0:2589" />
+          </MeshVertex>
+          <MeshVertex x="560.5" y="316.3" u="0.5" v="0.5" id="0:2590">
+            <Weight values="255" indices="2" id="0:2591" />
+          </MeshVertex>
+          <MeshVertex x="561.5" y="302.0" u="0.5" v="0.5" id="0:2592">
+            <Weight values="255" indices="1" id="0:2593" />
+          </MeshVertex>
+          <MeshVertex x="561.5" y="315.9" u="0.5" v="0.5" id="0:2594">
+            <Weight values="255" indices="2" id="0:2595" />
+          </MeshVertex>
+          <MeshVertex x="562.5" y="303.0" u="0.5" v="0.5" id="0:2596">
+            <Weight values="255" indices="1" id="0:2597" />
+          </MeshVertex>
+          <MeshVertex x="562.5" y="315.3" u="0.5" v="0.5" id="0:2598">
+            <Weight values="255" indices="2" id="0:2599" />
+          </MeshVertex>
+          <MeshVertex x="563.5" y="303.0" u="0.5" v="0.5" id="0:2600">
+            <Weight values="255" indices="1" id="0:2601" />
+          </MeshVertex>
+          <MeshVertex x="563.5" y="315.1" u="0.5" v="0.5" id="0:2602">
+            <Weight values="255" indices="2" id="0:2603" />
+          </MeshVertex>
+          <MeshVertex x="564.5" y="302.0" u="0.5" v="0.5" id="0:2604">
+            <Weight values="255" indices="1" id="0:2605" />
+          </MeshVertex>
+          <MeshVertex x="564.5" y="314.9" u="0.5" v="0.5" id="0:2606">
+            <Weight values="255" indices="2" id="0:2607" />
+          </MeshVertex>
+          <MeshVertex x="565.5" y="302.0" u="0.5" v="0.5" id="0:2608">
+            <Weight values="255" indices="1" id="0:2609" />
+          </MeshVertex>
+          <MeshVertex x="565.5" y="314.7" u="0.5" v="0.5" id="0:2610">
+            <Weight values="255" indices="2" id="0:2611" />
+          </MeshVertex>
+          <MeshVertex x="566.5" y="302.0" u="0.5" v="0.5" id="0:2612">
+            <Weight values="255" indices="1" id="0:2613" />
+          </MeshVertex>
+          <MeshVertex x="566.5" y="314.7" u="0.5" v="0.5" id="0:2614">
+            <Weight values="255" indices="2" id="0:2615" />
+          </MeshVertex>
+          <MeshVertex x="567.5" y="302.0" u="0.5" v="0.5" id="0:2616">
+            <Weight values="255" indices="1" id="0:2617" />
+          </MeshVertex>
+          <MeshVertex x="567.5" y="314.9" u="0.5" v="0.5" id="0:2618">
+            <Weight values="255" indices="2" id="0:2619" />
+          </MeshVertex>
+          <MeshVertex x="568.5" y="302.0" u="0.5" v="0.5" id="0:2620">
+            <Weight values="255" indices="1" id="0:2621" />
+          </MeshVertex>
+          <MeshVertex x="568.5" y="315.1" u="0.5" v="0.5" id="0:2622">
+            <Weight values="255" indices="2" id="0:2623" />
+          </MeshVertex>
+          <MeshVertex x="569.5" y="302.0" u="0.5" v="0.5" id="0:2624">
+            <Weight values="255" indices="1" id="0:2625" />
+          </MeshVertex>
+          <MeshVertex x="569.5" y="315.3" u="0.5" v="0.5" id="0:2626">
+            <Weight values="255" indices="2" id="0:2627" />
+          </MeshVertex>
+          <MeshVertex x="570.5" y="303.0" u="0.5" v="0.5" id="0:2628">
+            <Weight values="255" indices="1" id="0:2629" />
+          </MeshVertex>
+          <MeshVertex x="570.5" y="315.7" u="0.5" v="0.5" id="0:2630">
+            <Weight values="255" indices="2" id="0:2631" />
+          </MeshVertex>
+          <MeshVertex x="571.5" y="303.0" u="0.5" v="0.5" id="0:2632">
+            <Weight values="255" indices="1" id="0:2633" />
+          </MeshVertex>
+          <MeshVertex x="571.5" y="315.9" u="0.5" v="0.5" id="0:2634">
+            <Weight values="255" indices="2" id="0:2635" />
+          </MeshVertex>
+          <MeshVertex x="572.5" y="303.0" u="0.5" v="0.5" id="0:2636">
+            <Weight values="255" indices="1" id="0:2637" />
+          </MeshVertex>
+          <MeshVertex x="572.5" y="316.1" u="0.5" v="0.5" id="0:2638">
+            <Weight values="255" indices="2" id="0:2639" />
+          </MeshVertex>
+          <MeshVertex x="573.5" y="303.0" u="0.5" v="0.5" id="0:2640">
+            <Weight values="255" indices="1" id="0:2641" />
+          </MeshVertex>
+          <MeshVertex x="573.5" y="316.5" u="0.5" v="0.5" id="0:2642">
+            <Weight values="255" indices="2" id="0:2643" />
+          </MeshVertex>
+          <MeshVertex x="574.5" y="304.0" u="0.5" v="0.5" id="0:2644">
+            <Weight values="255" indices="1" id="0:2645" />
+          </MeshVertex>
+          <MeshVertex x="574.5" y="317.1" u="0.5" v="0.5" id="0:2646">
+            <Weight values="255" indices="2" id="0:2647" />
+          </MeshVertex>
+          <MeshVertex x="575.5" y="304.0" u="0.5" v="0.5" id="0:2648">
+            <Weight values="255" indices="1" id="0:2649" />
+          </MeshVertex>
+          <MeshVertex x="575.5" y="317.5" u="0.5" v="0.5" id="0:2650">
+            <Weight values="255" indices="2" id="0:2651" />
+          </MeshVertex>
+          <MeshVertex x="576.5" y="305.0" u="0.5" v="0.5" id="0:2652">
+            <Weight values="255" indices="1" id="0:2653" />
+          </MeshVertex>
+          <MeshVertex x="576.5" y="318.1" u="0.5" v="0.5" id="0:2654">
+            <Weight values="255" indices="2" id="0:2655" />
+          </MeshVertex>
+          <MeshVertex x="577.5" y="305.0" u="0.5" v="0.5" id="0:2656">
+            <Weight values="255" indices="1" id="0:2657" />
+          </MeshVertex>
+          <MeshVertex x="577.5" y="318.9" u="0.5" v="0.5" id="0:2658">
+            <Weight values="255" indices="2" id="0:2659" />
+          </MeshVertex>
+          <MeshVertex x="578.5" y="306.0" u="0.5" v="0.5" id="0:2660">
+            <Weight values="255" indices="1" id="0:2661" />
+          </MeshVertex>
+          <MeshVertex x="578.5" y="319.7" u="0.5" v="0.5" id="0:2662">
+            <Weight values="255" indices="2" id="0:2663" />
+          </MeshVertex>
+          <MeshVertex x="579.5" y="305.0" u="0.5" v="0.5" id="0:2664">
+            <Weight values="255" indices="1" id="0:2665" />
+          </MeshVertex>
+          <MeshVertex x="579.5" y="320.5" u="0.5" v="0.5" id="0:2666">
+            <Weight values="255" indices="2" id="0:2667" />
+          </MeshVertex>
+          <MeshVertex x="580.5" y="307.0" u="0.5" v="0.5" id="0:2668">
+            <Weight values="255" indices="1" id="0:2669" />
+          </MeshVertex>
+          <MeshVertex x="580.5" y="321.7" u="0.5" v="0.5" id="0:2670">
+            <Weight values="255" indices="2" id="0:2671" />
+          </MeshVertex>
+          <MeshVertex x="581.5" y="308.0" u="0.5" v="0.5" id="0:2672">
+            <Weight values="255" indices="1" id="0:2673" />
+          </MeshVertex>
+          <MeshVertex x="581.5" y="323.1" u="0.5" v="0.5" id="0:2674">
+            <Weight values="255" indices="2" id="0:2675" />
+          </MeshVertex>
+          <MeshVertex x="582.5" y="309.0" u="0.5" v="0.5" id="0:2676">
+            <Weight values="255" indices="1" id="0:2677" />
+          </MeshVertex>
+          <MeshVertex x="582.5" y="324.7" u="0.5" v="0.5" id="0:2678">
+            <Weight values="255" indices="2" id="0:2679" />
+          </MeshVertex>
+          <MeshVertex x="583.5" y="310.0" u="0.5" v="0.5" id="0:2680">
+            <Weight values="255" indices="1" id="0:2681" />
+          </MeshVertex>
+          <MeshVertex x="583.5" y="326.9" u="0.5" v="0.5" id="0:2682">
+            <Weight values="255" indices="2" id="0:2683" />
+          </MeshVertex>
+          <MeshVertex x="584.5" y="311.0" u="0.5" v="0.5" id="0:2684">
+            <Weight values="255" indices="1" id="0:2685" />
+          </MeshVertex>
+          <MeshVertex x="584.5" y="330.1" u="0.5" v="0.5" id="0:2686">
+            <Weight values="255" indices="2" id="0:2687" />
+          </MeshVertex>
+          <MeshVertex x="585.5" y="312.0" u="0.5" v="0.5" id="0:2688">
+            <Weight values="255" indices="1" id="0:2689" />
+          </MeshVertex>
+          <MeshVertex x="585.5" y="332.9" u="0.5" v="0.5" id="0:2690">
+            <Weight values="255" indices="2" id="0:2691" />
+          </MeshVertex>
+          <MeshVertex x="586.5" y="314.0" u="0.5" v="0.5" id="0:2692">
+            <Weight values="255" indices="1" id="0:2693" />
+          </MeshVertex>
+          <MeshVertex x="586.5" y="334.9" u="0.5" v="0.5" id="0:2694">
+            <Weight values="255" indices="2" id="0:2695" />
+          </MeshVertex>
+          <MeshVertex x="587.5" y="315.0" u="0.5" v="0.5" id="0:2696">
+            <Weight values="255" indices="1" id="0:2697" />
+          </MeshVertex>
+          <MeshVertex x="587.5" y="334.1" u="0.5" v="0.5" id="0:2698">
+            <Weight values="255" indices="2" id="0:2699" />
+          </MeshVertex>
+          <MeshVertex x="588.5" y="316.0" u="0.5" v="0.5" id="0:2700">
+            <Weight values="255" indices="1" id="0:2701" />
+          </MeshVertex>
+          <MeshVertex x="588.5" y="334.5" u="0.5" v="0.5" id="0:2702">
+            <Weight values="255" indices="2" id="0:2703" />
+          </MeshVertex>
+          <MeshVertex x="589.5" y="315.0" u="0.5" v="0.5" id="0:2704">
+            <Weight values="255" indices="1" id="0:2705" />
+          </MeshVertex>
+          <MeshVertex x="589.5" y="333.167" u="0.5" v="0.5" id="0:2706">
+            <Weight values="255" indices="2" id="0:2707" />
+          </MeshVertex>
+          <MeshVertex x="590.5" y="315.0" u="0.5" v="0.5" id="0:2708">
+            <Weight values="255" indices="1" id="0:2709" />
+          </MeshVertex>
+          <MeshVertex x="590.5" y="322.5" u="0.5" v="0.5" id="0:2710">
+            <Weight values="255" indices="2" id="0:2711" />
+          </MeshVertex>
+          <MeshVertex x="591.5" y="315.0" u="0.5" v="0.5" id="0:2712">
+            <Weight values="255" indices="1" id="0:2713" />
+          </MeshVertex>
+          <MeshVertex x="591.5" y="322.0" u="0.5" v="0.5" id="0:2714">
+            <Weight values="255" indices="2" id="0:2715" />
+          </MeshVertex>
+          <MeshVertex x="592.5" y="315.0" u="0.5" v="0.5" id="0:2716">
+            <Weight values="255" indices="1" id="0:2717" />
+          </MeshVertex>
+          <MeshVertex x="592.5" y="322.0" u="0.5" v="0.5" id="0:2718">
+            <Weight values="255" indices="2" id="0:2719" />
+          </MeshVertex>
+          <MeshVertex x="593.5" y="315.0" u="0.5" v="0.5" id="0:2720">
+            <Weight values="255" indices="1" id="0:2721" />
+          </MeshVertex>
+          <MeshVertex x="593.5" y="322.0" u="0.5" v="0.5" id="0:2722">
+            <Weight values="255" indices="2" id="0:2723" />
+          </MeshVertex>
+          <MeshVertex x="594.5" y="315.0" u="0.5" v="0.5" id="0:2724">
+            <Weight values="255" indices="1" id="0:2725" />
+          </MeshVertex>
+          <MeshVertex x="594.5" y="322.0" u="0.5" v="0.5" id="0:2726">
+            <Weight values="255" indices="2" id="0:2727" />
+          </MeshVertex>
+          <MeshVertex x="595.5" y="315.0" u="0.5" v="0.5" id="0:2728">
+            <Weight values="255" indices="1" id="0:2729" />
+          </MeshVertex>
+          <MeshVertex x="595.5" y="322.0" u="0.5" v="0.5" id="0:2730">
+            <Weight values="255" indices="2" id="0:2731" />
+          </MeshVertex>
+          <Skin name="Liv eye F lid skin" tx="0" ty="0" id="0:2732">
+            <Tendon boneId="0:2467" name="eyeF" xx="1" xy="0" yx="0" yy="1" tx="562.9968233400166" ty="334.8887640447669" id="0:2733" />
+            <Tendon boneId="0:2468" name="lidF" xx="1" xy="0" yx="0" yy="1" tx="562.9968233400166" ty="334.8887640447669" id="0:2734" />
+          </Skin>
+        </Mesh>
+      </Image>
+      <Image name="Liv eye F iris" assetId="0:127" originX="0" originY="0" id="0:2735">
+        <Mesh name="Liv eye F iris mesh" triangleIndexBytes="AAECAAID" id="0:2736">
+          <MeshVertex x="540" y="297" u="0" v="0" id="0:2737">
+            <Weight values="255" indices="1" id="0:2738" />
+          </MeshVertex>
+          <MeshVertex x="604" y="297" u="1" v="0" id="0:2739">
+            <Weight values="255" indices="1" id="0:2740" />
+          </MeshVertex>
+          <MeshVertex x="604" y="369" u="1" v="1" id="0:2741">
+            <Weight values="255" indices="1" id="0:2742" />
+          </MeshVertex>
+          <MeshVertex x="540" y="369" u="0" v="1" id="0:2743">
+            <Weight values="255" indices="1" id="0:2744" />
+          </MeshVertex>
+          <Skin name="Liv eye F iris skin" tx="0" ty="0" id="0:2745">
+            <Tendon boneId="0:2469" name="irisF" xx="1" xy="0" yx="0" yy="1" tx="562.9968233400166" ty="334.8887640447669" id="0:2746" />
+          </Skin>
+        </Mesh>
+      </Image>
+      <Image name="Liv eye F white" assetId="0:128" originX="0" originY="0" id="0:2747">
+        <Mesh name="Liv eye F white mesh" triangleIndexBytes="AAECAAID" id="0:2748">
+          <MeshVertex x="540" y="297" u="0" v="0" id="0:2749">
+            <Weight values="255" indices="1" id="0:2750" />
+          </MeshVertex>
+          <MeshVertex x="604" y="297" u="1" v="0" id="0:2751">
+            <Weight values="255" indices="1" id="0:2752" />
+          </MeshVertex>
+          <MeshVertex x="604" y="369" u="1" v="1" id="0:2753">
+            <Weight values="255" indices="1" id="0:2754" />
+          </MeshVertex>
+          <MeshVertex x="540" y="369" u="0" v="1" id="0:2755">
+            <Weight values="255" indices="1" id="0:2756" />
+          </MeshVertex>
+          <Skin name="Liv eye F white skin" tx="0" ty="0" id="0:2757">
+            <Tendon boneId="0:2467" name="eyeF" xx="1" xy="0" yx="0" yy="1" tx="562.9968233400166" ty="334.8887640447669" id="0:2758" />
+          </Skin>
+        </Mesh>
+      </Image>
+      <Image name="Liv head" assetId="0:100" originX="0" originY="0" id="0:2759">
+        <Mesh name="head mesh" triangleIndexBytes="AAECAAID" id="0:2760">
+          <MeshVertex x="282" y="113" u="0" v="0" id="0:2761">
+            <Weight values="255" indices="1" id="0:2762" />
+          </MeshVertex>
+          <MeshVertex x="742" y="113" u="1" v="0" id="0:2763">
+            <Weight values="255" indices="1" id="0:2764" />
+          </MeshVertex>
+          <MeshVertex x="742" y="463" u="1" v="1" id="0:2765">
+            <Weight values="255" indices="1" id="0:2766" />
+          </MeshVertex>
+          <MeshVertex x="282" y="463" u="0" v="1" id="0:2767">
+            <Weight values="255" indices="1" id="0:2768" />
+          </MeshVertex>
+          <Skin name="head skin" tx="0" ty="0" id="0:2769">
+            <Tendon boneId="0:2003" name="head" xx="6.123233995736766e-17" xy="-1.0" yx="1.0" yy="6.123233995736766e-17" tx="513.0" ty="461.0" id="0:2770" />
+          </Skin>
+        </Mesh>
+      </Image>
+    </Node>
+    <StateMachine name="Face" id="0:7">
+      <StateMachineLayer name="Main" id="0:8">
+        <EntryState x="0" y="0" id="0:3196">
+          <StateTransition stateToId="0:12" id="0:3197" />
+        </EntryState>
+        <AnyState x="0" y="-150" id="0:3198" />
+        <ExitState x="650" y="-150" id="0:3199" />
+        <AnimationState animationId="0:60" id="0:12" x="180" y="0" />
+      </StateMachineLayer>
+      <StateMachineListenerSingle targetId="0:2924" listenerTypeValue="click" name="Happy" id="0:2933">
+        <ListenerViewModelChange id="0:2934">
+          <BindablePropertyNumber propertyValue="0" id="0:2935">
+            <DataBindContext sourcePathIds="0:40-0:2810" propertyKey="636" direction="true" id="0:2936" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+      </StateMachineListenerSingle>
+      <StateMachineListenerSingle targetId="0:2937" listenerTypeValue="click" name="Smile" id="0:2946">
+        <ListenerViewModelChange id="0:2947">
+          <BindablePropertyNumber propertyValue="1" id="0:2948">
+            <DataBindContext sourcePathIds="0:40-0:2810" propertyKey="636" direction="true" id="0:2949" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+      </StateMachineListenerSingle>
+      <StateMachineListenerSingle targetId="0:2950" listenerTypeValue="click" name="Neutral" id="0:2959">
+        <ListenerViewModelChange id="0:2960">
+          <BindablePropertyNumber propertyValue="2" id="0:2961">
+            <DataBindContext sourcePathIds="0:40-0:2810" propertyKey="636" direction="true" id="0:2962" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+      </StateMachineListenerSingle>
+      <StateMachineListenerSingle targetId="0:2963" listenerTypeValue="click" name="Laugh" id="0:2972">
+        <ListenerViewModelChange id="0:2973">
+          <BindablePropertyNumber propertyValue="3" id="0:2974">
+            <DataBindContext sourcePathIds="0:40-0:2810" propertyKey="636" direction="true" id="0:2975" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+      </StateMachineListenerSingle>
+      <StateMachineListenerSingle targetId="0:2976" listenerTypeValue="click" name="Surprised" id="0:2985">
+        <ListenerViewModelChange id="0:2986">
+          <BindablePropertyNumber propertyValue="4" id="0:2987">
+            <DataBindContext sourcePathIds="0:40-0:2810" propertyKey="636" direction="true" id="0:2988" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+      </StateMachineListenerSingle>
+      <StateMachineListenerSingle targetId="0:2989" listenerTypeValue="click" name="Sad" id="0:2998">
+        <ListenerViewModelChange id="0:2999">
+          <BindablePropertyNumber propertyValue="5" id="0:3000">
+            <DataBindContext sourcePathIds="0:40-0:2810" propertyKey="636" direction="true" id="0:3001" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+      </StateMachineListenerSingle>
+      <StateMachineListenerSingle targetId="0:3002" listenerTypeValue="click" name="Think" id="0:3011">
+        <ListenerViewModelChange id="0:3012">
+          <BindablePropertyNumber propertyValue="6" id="0:3013">
+            <DataBindContext sourcePathIds="0:40-0:2810" propertyKey="636" direction="true" id="0:3014" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+      </StateMachineListenerSingle>
+      <StateMachineListenerSingle targetId="0:3015" listenerTypeValue="click" name="Ouch" id="0:3024">
+        <ListenerViewModelChange id="0:3025">
+          <BindablePropertyNumber propertyValue="7" id="0:3026">
+            <DataBindContext sourcePathIds="0:40-0:2810" propertyKey="636" direction="true" id="0:3027" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+      </StateMachineListenerSingle>
+      <StateMachineListenerSingle targetId="0:3028" listenerTypeValue="click" name="Effort" id="0:3037">
+        <ListenerViewModelChange id="0:3038">
+          <BindablePropertyNumber propertyValue="8" id="0:3039">
+            <DataBindContext sourcePathIds="0:40-0:2810" propertyKey="636" direction="true" id="0:3040" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+      </StateMachineListenerSingle>
+      <StateMachineListenerSingle targetId="0:3041" listenerTypeValue="click" name="Wink" id="0:3050">
+        <ListenerViewModelChange id="0:3051">
+          <BindablePropertyNumber propertyValue="9" id="0:3052">
+            <DataBindContext sourcePathIds="0:40-0:2810" propertyKey="636" direction="true" id="0:3053" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+      </StateMachineListenerSingle>
+      <StateMachineListenerSingle targetId="0:3059" listenerTypeValue="click" name="Left" id="0:3068">
+        <ListenerViewModelChange id="0:3069">
+          <BindablePropertyNumber propertyValue="-1" id="0:3070">
+            <DataBindContext sourcePathIds="0:40-0:2812" propertyKey="636" direction="true" id="0:3071" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+        <ListenerViewModelChange id="0:3072">
+          <BindablePropertyNumber propertyValue="0" id="0:3073">
+            <DataBindContext sourcePathIds="0:40-0:2813" propertyKey="636" direction="true" id="0:3074" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+      </StateMachineListenerSingle>
+      <StateMachineListenerSingle targetId="0:3075" listenerTypeValue="click" name="Right" id="0:3084">
+        <ListenerViewModelChange id="0:3085">
+          <BindablePropertyNumber propertyValue="1" id="0:3086">
+            <DataBindContext sourcePathIds="0:40-0:2812" propertyKey="636" direction="true" id="0:3087" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+        <ListenerViewModelChange id="0:3088">
+          <BindablePropertyNumber propertyValue="0" id="0:3089">
+            <DataBindContext sourcePathIds="0:40-0:2813" propertyKey="636" direction="true" id="0:3090" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+      </StateMachineListenerSingle>
+      <StateMachineListenerSingle targetId="0:3091" listenerTypeValue="click" name="Up" id="0:3100">
+        <ListenerViewModelChange id="0:3101">
+          <BindablePropertyNumber propertyValue="0" id="0:3102">
+            <DataBindContext sourcePathIds="0:40-0:2812" propertyKey="636" direction="true" id="0:3103" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+        <ListenerViewModelChange id="0:3104">
+          <BindablePropertyNumber propertyValue="1" id="0:3105">
+            <DataBindContext sourcePathIds="0:40-0:2813" propertyKey="636" direction="true" id="0:3106" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+      </StateMachineListenerSingle>
+      <StateMachineListenerSingle targetId="0:3107" listenerTypeValue="click" name="Down" id="0:3116">
+        <ListenerViewModelChange id="0:3117">
+          <BindablePropertyNumber propertyValue="0" id="0:3118">
+            <DataBindContext sourcePathIds="0:40-0:2812" propertyKey="636" direction="true" id="0:3119" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+        <ListenerViewModelChange id="0:3120">
+          <BindablePropertyNumber propertyValue="-1" id="0:3121">
+            <DataBindContext sourcePathIds="0:40-0:2813" propertyKey="636" direction="true" id="0:3122" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+      </StateMachineListenerSingle>
+      <StateMachineListenerSingle targetId="0:3123" listenerTypeValue="click" name="Centre" id="0:3132">
+        <ListenerViewModelChange id="0:3133">
+          <BindablePropertyNumber propertyValue="0" id="0:3134">
+            <DataBindContext sourcePathIds="0:40-0:2812" propertyKey="636" direction="true" id="0:3135" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+        <ListenerViewModelChange id="0:3136">
+          <BindablePropertyNumber propertyValue="0" id="0:3137">
+            <DataBindContext sourcePathIds="0:40-0:2813" propertyKey="636" direction="true" id="0:3138" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+      </StateMachineListenerSingle>
+      <StateMachineListenerSingle targetId="0:3144" listenerTypeValue="click" name="Blink" id="0:3153">
+        <ListenerViewModelChange id="0:3154">
+          <BindablePropertyNumber propertyValue="1" id="0:3155">
+            <DataBindContext sourcePathIds="0:40-0:2814" propertyKey="636" direction="true" id="0:3156" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+      </StateMachineListenerSingle>
+      <StateMachineListenerSingle targetId="0:3157" listenerTypeValue="click" name="Wink eye" id="0:3166">
+        <ListenerViewModelChange id="0:3167">
+          <BindablePropertyNumber propertyValue="1" id="0:3168">
+            <DataBindContext sourcePathIds="0:40-0:2815" propertyKey="636" direction="true" id="0:3169" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+      </StateMachineListenerSingle>
+      <StateMachineListenerSingle targetId="0:3170" listenerTypeValue="click" name="Nod" id="0:3179">
+        <ListenerViewModelChange id="0:3180">
+          <BindablePropertyNumber propertyValue="1" id="0:3181">
+            <DataBindContext sourcePathIds="0:40-0:2818" propertyKey="636" direction="true" id="0:3182" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+      </StateMachineListenerSingle>
+      <StateMachineListenerSingle targetId="0:3183" listenerTypeValue="click" name="Still" id="0:3192">
+        <ListenerViewModelChange id="0:3193">
+          <BindablePropertyNumber propertyValue="0" id="0:3194">
+            <DataBindContext sourcePathIds="0:40-0:2818" propertyKey="636" direction="true" id="0:3195" />
+          </BindablePropertyNumber>
+        </ListenerViewModelChange>
+      </StateMachineListenerSingle>
+    </StateMachine>
+    <LinearAnimation name="Idle" fps="60" duration="60" loopValue="loop" id="0:60" />
+  </Artboard>
+  <ImageAsset file="../art/front_mouth_painted.png" name="face_front_mouth_painted" id="0:101" />
+  <ImageAsset file="../art/mouth_0.png" name="face_mouth_0" id="0:102" />
+  <ImageAsset file="../art/mouth_1.png" name="face_mouth_1" id="0:103" />
+  <ImageAsset file="../art/mouth_2.png" name="face_mouth_2" id="0:104" />
+  <ImageAsset file="../art/mouth_3.png" name="face_mouth_3" id="0:105" />
+  <ImageAsset file="../art/mouth_4.png" name="face_mouth_4" id="0:106" />
+  <ImageAsset file="../art/mouth_5.png" name="face_mouth_5" id="0:107" />
+  <ImageAsset file="../art/mouth_6.png" name="face_mouth_6" id="0:108" />
+  <ImageAsset file="../art/mouth_7.png" name="face_mouth_7" id="0:109" />
+  <ImageAsset file="../art/mouth_8.png" name="face_mouth_8" id="0:110" />
+  <ImageAsset file="../art/mouth_0f.png" name="face_mouth_0f" id="0:111" />
+  <ImageAsset file="../art/mouth_4f.png" name="face_mouth_4f" id="0:112" />
+  <ImageAsset file="../art/front_browN.png" name="face_front_browN" id="0:113" />
+  <ImageAsset file="../art/front_browF.png" name="face_front_browF" id="0:114" />
+  <ImageAsset file="../art/front_eyeN_happy.png" name="face_front_eyeN_happy" id="0:115" />
+  <ImageAsset file="../art/front_eyeN_closed.png" name="face_front_eyeN_closed" id="0:116" />
+  <ImageAsset file="../art/front_eyeN_frame.png" name="face_front_eyeN_frame" id="0:117" />
+  <ImageAsset file="../art/front_eyeN_lash.png" name="face_front_eyeN_lash" id="0:118" />
+  <ImageAsset file="../art/front_eyeN_lidfill.png" name="face_front_eyeN_lidfill" id="0:119" />
+  <ImageAsset file="../art/front_eyeN_iris.png" name="face_front_eyeN_iris" id="0:120" />
+  <ImageAsset file="../art/front_eyeN_sclera.png" name="face_front_eyeN_sclera" id="0:121" />
+  <ImageAsset file="../art/front_eyeF_happy.png" name="face_front_eyeF_happy" id="0:122" />
+  <ImageAsset file="../art/front_eyeF_closed.png" name="face_front_eyeF_closed" id="0:123" />
+  <ImageAsset file="../art/front_eyeF_frame.png" name="face_front_eyeF_frame" id="0:124" />
+  <ImageAsset file="../art/front_eyeF_lash.png" name="face_front_eyeF_lash" id="0:125" />
+  <ImageAsset file="../art/front_eyeF_lidfill.png" name="face_front_eyeF_lidfill" id="0:126" />
+  <ImageAsset file="../art/front_eyeF_iris.png" name="face_front_eyeF_iris" id="0:127" />
+  <ImageAsset file="../art/front_eyeF_sclera.png" name="face_front_eyeF_sclera" id="0:128" />
+  <ViewModel name="LivFace" defaultInstanceId="0:41" id="0:40">
+    <ViewModelPropertyNumber name="front_mouth_x" id="0:2771" />
+    <ViewModelPropertyNumber name="front_mouth_y" id="0:2772" />
+    <ViewModelPropertyNumber name="front_mouth_r" id="0:2773" />
+    <ViewModelPropertyNumber name="front_mouth_sx" id="0:2774" />
+    <ViewModelPropertyNumber name="front_mouth_sy" id="0:2775" />
+    <ViewModelPropertyNumber name="front_mo_painted" id="0:2776" />
+    <ViewModelPropertyNumber name="front_mo_0" id="0:2777" />
+    <ViewModelPropertyNumber name="front_mo_1" id="0:2778" />
+    <ViewModelPropertyNumber name="front_mo_2" id="0:2779" />
+    <ViewModelPropertyNumber name="front_mo_3" id="0:2780" />
+    <ViewModelPropertyNumber name="front_mo_4" id="0:2781" />
+    <ViewModelPropertyNumber name="front_mo_5" id="0:2782" />
+    <ViewModelPropertyNumber name="front_mo_6" id="0:2783" />
+    <ViewModelPropertyNumber name="front_mo_7" id="0:2784" />
+    <ViewModelPropertyNumber name="front_mo_8" id="0:2785" />
+    <ViewModelPropertyNumber name="front_mo_0f" id="0:2786" />
+    <ViewModelPropertyNumber name="front_mo_4f" id="0:2787" />
+    <ViewModelPropertyNumber name="front_browN_x" id="0:2788" />
+    <ViewModelPropertyNumber name="front_browN_y" id="0:2789" />
+    <ViewModelPropertyNumber name="front_browN_r" id="0:2790" />
+    <ViewModelPropertyNumber name="front_browF_x" id="0:2791" />
+    <ViewModelPropertyNumber name="front_browF_y" id="0:2792" />
+    <ViewModelPropertyNumber name="front_browF_r" id="0:2793" />
+    <ViewModelPropertyNumber name="front_eyeN_sx" id="0:2794" />
+    <ViewModelPropertyNumber name="front_eyeN_sy" id="0:2795" />
+    <ViewModelPropertyNumber name="front_lidN_y" id="0:2796" />
+    <ViewModelPropertyNumber name="front_irisN_x" id="0:2797" />
+    <ViewModelPropertyNumber name="front_irisN_y" id="0:2798" />
+    <ViewModelPropertyNumber name="front_irisN_s" id="0:2799" />
+    <ViewModelPropertyNumber name="front_happyN" id="0:2800" />
+    <ViewModelPropertyNumber name="front_closedN" id="0:2801" />
+    <ViewModelPropertyNumber name="front_eyeF_sx" id="0:2802" />
+    <ViewModelPropertyNumber name="front_eyeF_sy" id="0:2803" />
+    <ViewModelPropertyNumber name="front_lidF_y" id="0:2804" />
+    <ViewModelPropertyNumber name="front_irisF_x" id="0:2805" />
+    <ViewModelPropertyNumber name="front_irisF_y" id="0:2806" />
+    <ViewModelPropertyNumber name="front_irisF_s" id="0:2807" />
+    <ViewModelPropertyNumber name="front_happyF" id="0:2808" />
+    <ViewModelPropertyNumber name="front_closedF" id="0:2809" />
+    <ViewModelPropertyNumber name="expression" id="0:2810" />
+    <ViewModelPropertyNumber name="expressionAmount" id="0:2811" />
+    <ViewModelPropertyNumber name="lookX" id="0:2812" />
+    <ViewModelPropertyNumber name="lookY" id="0:2813" />
+    <ViewModelPropertyNumber name="blinkNow" id="0:2814" />
+    <ViewModelPropertyNumber name="winkNow" id="0:2815" />
+    <ViewModelPropertyNumber name="faceIdle" id="0:2816" />
+    <ViewModelPropertyNumber name="autoBlink" id="0:2817" />
+    <ViewModelPropertyNumber name="nod" id="0:2818" />
+    <ViewModelPropertyNumber name="headRot" id="0:2819" />
+    <ViewModelPropertyNumber name="headRest" id="0:2820" />
+    <ViewModelInstance name="Default" exports="true" id="0:41">
+      <ViewModelInstanceNumber viewModelPropertyId="0:2771" propertyValue="0.0" id="0:2821" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2772" propertyValue="0.0" id="0:2822" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2773" propertyValue="0.0" id="0:2823" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2774" propertyValue="1.0" id="0:2824" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2775" propertyValue="1.0" id="0:2825" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2776" propertyValue="1.0" id="0:2826" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2777" propertyValue="0.0" id="0:2827" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2778" propertyValue="0.0" id="0:2828" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2779" propertyValue="0.0" id="0:2829" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2780" propertyValue="0.0" id="0:2830" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2781" propertyValue="0.0" id="0:2831" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2782" propertyValue="0.0" id="0:2832" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2783" propertyValue="0.0" id="0:2833" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2784" propertyValue="0.0" id="0:2834" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2785" propertyValue="0.0" id="0:2835" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2786" propertyValue="0.0" id="0:2836" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2787" propertyValue="0.0" id="0:2837" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2788" propertyValue="0.0" id="0:2838" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2789" propertyValue="0.0" id="0:2839" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2790" propertyValue="0.0" id="0:2840" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2791" propertyValue="0.0" id="0:2841" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2792" propertyValue="0.0" id="0:2842" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2793" propertyValue="0.0" id="0:2843" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2794" propertyValue="1.0" id="0:2844" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2795" propertyValue="1.0" id="0:2845" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2796" propertyValue="0.0" id="0:2846" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2797" propertyValue="0.0" id="0:2847" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2798" propertyValue="0.0" id="0:2848" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2799" propertyValue="1.0" id="0:2849" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2800" propertyValue="0.0" id="0:2850" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2801" propertyValue="0.0" id="0:2851" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2802" propertyValue="1.0" id="0:2852" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2803" propertyValue="1.0" id="0:2853" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2804" propertyValue="0.0" id="0:2854" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2805" propertyValue="0.0" id="0:2855" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2806" propertyValue="0.0" id="0:2856" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2807" propertyValue="1.0" id="0:2857" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2808" propertyValue="0.0" id="0:2858" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2809" propertyValue="0.0" id="0:2859" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2810" propertyValue="0" id="0:2860" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2811" propertyValue="1" id="0:2861" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2812" propertyValue="0" id="0:2862" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2813" propertyValue="0" id="0:2863" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2814" propertyValue="0" id="0:2864" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2815" propertyValue="0" id="0:2865" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2816" propertyValue="1" id="0:2866" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2817" propertyValue="1" id="0:2867" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2818" propertyValue="0" id="0:2868" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2819" propertyValue="-1.5707963267948966" id="0:2869" />
+      <ViewModelInstanceNumber viewModelPropertyId="0:2820" propertyValue="-1.5707963267948966" id="0:2870" />
+    </ViewModelInstance>
+  </ViewModel>
+  <ScriptAsset file="face.luau" name="face" isModule="true" id="0:78" />
+  <ScriptAsset file="face_cfg_front.luau" name="face_cfg_front" isModule="true" id="0:79" />
+  <ScriptAsset file="test.luau" name="test" id="0:80" />
+  <FontAsset file="../../liv-tq/Inter.ttf" name="Inter" id="0:30" />
+</Rive>

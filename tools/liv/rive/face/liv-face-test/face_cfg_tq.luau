@@ -17,6 +17,7 @@ local CFG: {[string]: number} = {
  lidF_travel = 29.0000,
  lidN_travel = 31.0000,
  mouth_px = 1.0000,
+ mouth_xk = 1.0000,
  wide_sx = 1.0500,
  wide_sy = 1.0900,
 }
