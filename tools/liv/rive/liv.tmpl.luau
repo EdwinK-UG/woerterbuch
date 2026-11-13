@@ -119,7 +119,7 @@ local function core(self:St,seconds:number,full:boolean):boolean
  if PARK then self.yaw=self.parkYaw else self.yawV+=(42*(yt-self.yaw)-2*6.5*self.yawV)*dt;self.yaw+=self.yawV*dt end
  self.yaw=math.clamp(self.yaw,0,180)
  local mt=if PARK then self.parkFlipT elseif nv('mirror',0)>.5 then -1.0 else 1.0
- self.flipV+=(150*(mt-self.flip)-2*12*self.flipV)*dt;self.flip+=self.flipV*dt
+ if PARK then self.flip=mt;self.flipV=0 else self.flipV+=(150*(mt-self.flip)-2*12*self.flipV)*dt;self.flip+=self.flipV*dt end      -- [park] she turns through the front: flip there, no sliver
  local yaw=self.yaw
  -- the two views around the yaw, and how far we are from one to the other
  local nviews=#VIEWS;local lo=1;local hi=1;local f=0.0

@@ -1,0 +1,22 @@
+<!doctype html><meta charset="utf-8"><title>Liv park in the Rive web runtime</title>
+<style>body{margin:0;background:#f3ebdd;font:15px system-ui;color:#4c4038}main{max-width:1200px;margin:0 auto;padding:12px}canvas{width:100%;display:block;background:#cfe6ee;border-radius:10px}
+.row{display:flex;gap:12px;align-items:center;margin:10px 0;flex-wrap:wrap}button{font:inherit;padding:8px 14px;border:0;border-radius:10px;background:#e6d8c6;cursor:pointer}button.on{background:#2f7d5b;color:#fff}#log{font:12px monospace;white-space:pre-wrap}input[type=range]{width:min(60vw,560px)}</style>
+<main><canvas id="c" width="1760" height="864"></canvas>
+<div class="row"><button id="into" class="on">in den Park (Akkusativ)</button><button id="within">im Park (Dativ)</button><button id="play">Play</button>
+<input id="t" type="range" min="0" max="8" step="0.01" value="0"><b id="tv">0.00 s</b></div><div id="log"></div></main>
+<script>
+// Serve this folder next to park.riv (copy the published file here as park.riv), then open it: python3 -m http.server and visit /index.html
+const log=(m)=>document.getElementById('log').textContent+=m+'\n';
+const s=document.createElement('script');s.src='https://unpkg.com/@rive-app/canvas@2.26.0';
+s.onload=()=>{const r=new rive.Rive({src:new URLSearchParams(location.search).get('riv')||'park.riv',canvas:document.getElementById('c'),autoplay:true,autoBind:true,stateMachines:'Liv',
+ onLoad(){r.resizeDrawingSurfaceToCanvas();const vm=r.viewModelInstance;log('loaded; view model: '+(vm?'yes':'no'));
+  const set=(n,v)=>{const p=vm.number(n);if(p)p.value=v};const tag=vm.string('tag');if(tag)tag.value='in den Park · Wohin?';
+  let route=0,playing=false,t0=0;const T=document.getElementById('t'),TV=document.getElementById('tv');
+  const apply=(t)=>{set('route',route);set('t',t);set('goal',route?0:1);T.value=t;TV.textContent=t.toFixed(2)+' s'};
+  T.oninput=()=>{playing=false;apply(+T.value)};
+  const pick=(k)=>{route=k;document.getElementById('into').classList.toggle('on',k===0);document.getElementById('within').classList.toggle('on',k===1);if(tag)tag.value=k?'im Park · Wo?':'in den Park · Wohin?';apply(+T.value)};
+  document.getElementById('into').onclick=()=>pick(0);document.getElementById('within').onclick=()=>pick(1);
+  document.getElementById('play').onclick=()=>{playing=true;t0=performance.now();apply(0);const f=()=>{if(!playing)return;const t=(performance.now()-t0)/1000;apply(Math.min(t,8));if(t<8)requestAnimationFrame(f);else playing=false};requestAnimationFrame(f)};
+  apply(0);window.R=r;},onLoadError:(e)=>log('load error '+JSON.stringify(e))});};
+s.onerror=()=>log('could not load the Rive runtime from unpkg');document.head.appendChild(s);
+</script>
