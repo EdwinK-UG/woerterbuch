@@ -29,7 +29,7 @@ function roundedBox(w, h, d, r) {
 }
 
 // Props are given in the hand's rest frame: X along the fingers' side, -Y out of the palm, origin at the palm centre.
-export function makeProp(name, s) {
+export function makeProp(name, s, opts = {}) {
   const g = new THREE.Group(); g.name = 'prop:' + name;
   if (name === 'apple') {
     const r = 0.036 * s, geo = new THREE.SphereGeometry(r, 20, 14), p = geo.attributes.position;
@@ -50,6 +50,35 @@ export function makeProp(name, s) {
     const handle = inked(new THREE.CapsuleGeometry(hr, hl, 4, 10), 0xb07a3f, 0.003 * s); handle.rotation.x = Math.PI / 2; g.add(handle);   // along Z (across the palm)
     const blade = inked(new THREE.BoxGeometry(0.004 * s, 0.07 * s, 0.2 * s), 0xb8c2c8, 0.002 * s); blade.position.set(0, 0.045 * s, hl * 0.5 + 0.1 * s); g.add(blade);
     g.userData = { radius: hr, grip: 'gripHandle', gripAmount: 0.87 };
+  } else if (name === 'cane') {
+    // a crooked wooden walking stick (A01): the shaft runs along the fingers (down when the arm hangs) to the ground,
+    // the crook curls forward over the hand. len = palm height above the ground when standing.
+    const len = (opts.len || 0.75 * s), r = 0.013 * s, pts = [];
+    for (let i = 0; i <= 12; i++) { const t = i / 12; pts.push(V3(-t * len, 0.004 * s * Math.sin(t * 17) , 0.006 * s * Math.sin(t * 11 + 1))); }
+    const shaft = inked(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 40, r, 7, false), 0xa8743f, 0.0025 * s); g.add(shaft);
+    const crook = []; for (let i = 0; i <= 10; i++) { const a = i / 10 * Math.PI * 1.15; crook.push(V3(0.035 * s * Math.sin(a), 0, 0.035 * s * (1 - Math.cos(a)))); }
+    const top = inked(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(crook), 20, r * 1.1, 7, false), 0x9a6a38, 0.0025 * s); g.add(top);
+    const knob = inked(new THREE.SphereGeometry(r * 1.4, 10, 8), 0x8d5f30, 0.002 * s); knob.position.copy(pts[4]); g.add(knob);
+    g.userData = { radius: r, grip: 'gripHandle', gripAmount: 0.9, noPose: true };
+  } else if (name === 'book') {
+    // a brown leather book (A05), held flat against the palm, spine along the fingers
+    const w = 0.15 * s, h = 0.21 * s, d = 0.035 * s;
+    const cover = inked(roundedBox(h, d, w, 0.006 * s), 0x7a4a2c, 0.003 * s); g.add(cover);
+    const pages = new THREE.Mesh(new THREE.BoxGeometry(h * 0.96, d * 0.7, w * 0.94), toon(0xf1e6cc)); pages.position.z = 0.006 * s; g.add(pages);
+    for (const x of [-h * 0.3, h * 0.3]) { const band = new THREE.Mesh(new THREE.BoxGeometry(0.008 * s, d * 1.04, w * 0.2), toon(0x5c351e)); band.position.set(x, 0, -w * 0.42); g.add(band); }
+    g.position.set(-h * 0.25, 0, 0); g.userData = { radius: d * 0.5, grip: 'carry', gripAmount: 0.4 };
+  } else if (name === 'slingshot') {
+    // a forked stick with a leather pouch (C04)
+    const r = 0.007 * s, stem = [V3(0.03 * s, 0, 0), V3(-0.05 * s, 0, 0)];
+    g.add(inked(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(stem), 6, r, 7, false), 0xb08850, 0.002 * s));
+    for (const z of [-1, 1]) {
+      const arm = [V3(-0.05 * s, 0, 0), V3(-0.085 * s, 0, z * 0.02 * s), V3(-0.12 * s, 0, z * 0.03 * s)];
+      g.add(inked(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(arm), 8, r * 0.85, 7, false), 0xb08850, 0.002 * s));
+    }
+    const band = [V3(-0.12 * s, 0, -0.03 * s), V3(-0.1 * s, 0.03 * s, -0.012 * s), V3(-0.1 * s, 0.035 * s, 0.012 * s), V3(-0.12 * s, 0, 0.03 * s)];
+    g.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(band), 12, r * 0.25, 5, false), toon(0x5a3b22)));
+    const pouch = inked(new THREE.SphereGeometry(0.011 * s, 8, 6).scale(1, 0.5, 1.4), 0x7a4a2c, 0.0015 * s); pouch.position.set(-0.1 * s, 0.035 * s, 0); g.add(pouch);
+    g.userData = { radius: r, grip: 'gripHandle', gripAmount: 0.85 };
   }
   return g;
 }

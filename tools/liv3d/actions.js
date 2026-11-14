@@ -23,7 +23,18 @@ def('thumb', 2.0, (t, a) => { const b = 0.03 * Math.sin(t * 11) * pulse(t, 0.2, 
 def('clap', 2.4, (t) => { const g = Math.abs(Math.sin(t * PI / 0.3)), A = arm([0.03 + 0.14 * g, -0.22, 0.62], [0.9, -0.7, 0], [-1, 0, 0], 'flat', { m: 1 }); return { aL: A, aR: A, py: 0.985 + 0.006 * g }; }, { expr: 'laugh' });
 def('shrug', 2.2, () => { const A = arm([0.5, -0.46, 0.42], [0.5, -0.9, -0.3], [0, 1, 0.2], 'open'); return { aL: A, aR: A, shL: 1.3, shR: 1.3, hr: 0.1 }; }, { expr: 'think' });
 def('think', 3.0, (t, a) => ({ [a.n]: arm([-0.01, -0.03, 0.04], [0.9, -0.8, 0.2], [-0.3, 0, -1], mixRow('point', 'fist', 0.35), { at: 'chin', bend: 0.1, free: 1 }), [a.f]: arm([-0.05, -0.62, 0.32], [0.9, -0.6, -0.2], [0, 0, -1], 'relaxed', { m: 0.5 }), hr: -0.09, hp: -0.04 }), { expr: 'think' });
-def('cheer', 2.4, (t, a) => { const b = Math.abs(Math.sin(t * PI / 0.42)), A = arm([0.42, 0.92 + 0.04 * b, 0.12], [1, 0.2, 0], [0, 0, 1], 'open'); return { aL: A, aR: A, hop: 0.05 * b * a.H, hp: -0.1 }; }, { expr: 'laugh' });
+// cheer: two little jumps with the arms up, then the arms stay up on the ground. Each jump is a real one: the knees
+// dip, she pushes off, both feet leave the ground (toes pointing down), and the knees give on landing.
+def('cheer', 2.4, (t, a) => {
+  const P = 0.78, k = Math.floor(t / P), p = (t - k * P) / P, on = k < 2 ? 1 : 0;
+  const air = clamp((p - 0.26) / 0.42, 0, 1), up = on && p > 0.26 && p < 0.68 ? 1 : 0;
+  const hop = up * 4 * 0.12 * a.H * air * (1 - air);
+  const dip = on * (pulse(p, 0.0, 0.17, 0.2, 0.27) + 0.85 * pulse(p, 0.68, 0.76, 0.84, 1.0));
+  const toe = -0.42 * Math.sin(PI * air) * up, b = Math.sin(PI * air) * up;
+  const A = arm([0.42, 0.86 + 0.08 * b - 0.1 * dip, 0.12], [1, 0.2, 0], [0, 0, 1], 'open');
+  return { aL: A, aR: A, hop, py: 0.985 - 0.08 * dip, lean: 0.1 * dip, hp: -0.1 + 0.06 * dip,
+    fL: { p: [1.0, 0.02 * b, 0], pitch: toe }, fR: { p: [1.0, 0.02 * b, 0], pitch: toe } };
+}, { expr: 'laugh' });
 def('hips', 2.4, () => { const A = arm([0.34, -0.62, 0.0], [1, -0.15, -0.7], [0, 0, -1], 'fist'); return { aL: A, aR: A }; });
 def('present', 2.6, (t, a) => ({ [a.f]: arm([0.85, 0.1, 0.3], [0.3, -1, -0.3], [0, 1, 0.2], 'open') }));
 def('stop', 2.0, (t, a) => ({ [a.n]: arm([0.2, 0.22, 0.86], [0.6, -0.8, -0.2], [0, 0, 1], 'flat', { bend: -0.5 }) }), { expr: 'neutral' });
@@ -54,7 +65,9 @@ def('kick', 1.3, (t, a) => {
 def('sit', 3.0, () => { const A = arm([0.12, -0.62, 0.42], [0.8, -0.6, -0.3], [0, -1, 0], 'relaxed', { m: 0.3 }); return { py: 0.6, psf: -0.34, lean: 0.06, aL: A, aR: A, fL: { p: [1.0, 0, 0.12], pitch: 0 }, fR: { p: [1.0, 0, 0.2], pitch: 0 }, knees: 1 }; }, { tin: 0.6, tout: 0.6 });
 def('dance', 3.2, (t) => {
   const s = Math.sin(t * TAU / 0.8), c = Math.cos(t * TAU / 0.8), b = Math.abs(Math.sin(t * TAU / 0.8));
-  return { psx: 0.6 * s, prl: 0.06 * s, crl: -0.08 * s, py: 0.975 - 0.03 * b, hr: 0.08 * s, aL: arm([0.5, 0.2 + 0.25 * s, 0.4], [1, -0.4, 0], [0, 0, 1], 'open'), aR: arm([0.5, 0.2 - 0.25 * s, 0.4], [1, -0.4, 0], [0, 0, 1], 'open'), fL: { p: [1.2, 0.05 * Math.max(0, -c), 0], pitch: 0 }, fR: { p: [1.2, 0.05 * Math.max(0, c), 0], pitch: 0 } };
+  // the weight goes onto one foot while the other lifts and points its toes, side to side (a real step, not a bob)
+  const lL = Math.pow(Math.max(0, -c), 1.5), lR = Math.pow(Math.max(0, c), 1.5);
+  return { psx: 0.6 * s, prl: 0.06 * s, crl: -0.08 * s, py: 0.975 - 0.035 * b, hr: 0.08 * s, aL: arm([0.5, 0.2 + 0.25 * s, 0.4], [1, -0.4, 0], [0, 0, 1], 'open'), aR: arm([0.5, 0.2 - 0.25 * s, 0.4], [1, -0.4, 0], [0, 0, 1], 'open'), fL: { p: [1.2, 0.11 * lL, 0.03 * lL], pitch: -0.35 * lL }, fR: { p: [1.2, 0.11 * lR, 0.03 * lR], pitch: -0.35 * lR } };
 }, { expr: 'laugh' });
 def('explain', 3.0, (t, a) => { const b = Math.sin(t * 5.2); return { [a.n]: arm([0.44, -0.2 + 0.05 * b, 0.6], [0.8, -0.8, -0.1], [0, 1, 0.3], 'open', { bend: -0.15 + 0.1 * b }), hr: 0.03 * b }; });
 def('ouchHand', 1.6, (t, a) => { const s = Math.sin(t * 26) * Math.exp(-t * 1.6); return { [a.f]: arm([0.5 + 0.1 * s, -0.1 + 0.08 * Math.abs(s), 0.6], [0.5, -0.9, -0.2], [0, -1, 0], 'open', { bend: 0.5 * s }), lean: -0.12, hr: -0.06 }; }, { expr: 'ouch', tin: 0.08 });

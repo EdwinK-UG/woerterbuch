@@ -12,7 +12,8 @@ What it changes (each step can be switched off with --no-<step>):
            cream shorts under the skirt
   socks    short ribbed socks instead of the knee socks (painted into the skin texture), with a real cuff
   boots    tan laces and bow
-  face     the paintings' skin tone, blush, freckles, short thick brows, peach skin shadows
+  face     the paintings' skin tone, blush, freckles, short thick brows, peach skin shadows, a nose and mouth line
+           that still read at scene distance (cast_fit.face_lines)
   look     dark-brown outlines (also on the hair), hair gloss toned down
   slim     a small thumbnail instead of the 2048 px one
   web      a smaller file: no flat body normal map, sparse morph targets (positions only), nothing unreferenced
@@ -530,7 +531,7 @@ def main():
     ap.add_argument('--hair-width', type=float, default=1.0); ap.add_argument('--hair-blunt', type=float, default=0.84); ap.add_argument('--hair-drop', default='_01,_02'); ap.add_argument('--hair-fly', type=float, default=0.99); ap.add_argument('--hair-report', action='store_true'); ap.add_argument('--hair-drop-tips', default='74,0.935')
     ap.add_argument('--hair-wave', type=float, default=0.014); ap.add_argument('--hair-volume', type=float, default=0.046); ap.add_argument('--hair-flick', type=float, default=0.012)
     ap.add_argument('--outline', type=float, default=0.0016); ap.add_argument('--hair-gloss', type=float, default=0.4)
-    for s in ('head', 'hair', 'dress', 'socks', 'boots', 'face', 'slim', 'look', 'web'): ap.add_argument('--no-' + s, action='store_true')
+    for s in ('head', 'hair', 'dress', 'socks', 'boots', 'face', 'lines', 'slim', 'look', 'web'): ap.add_argument('--no-' + s, action='store_true')
     o = ap.parse_args(); g = GLB(o.src)
     if not o.no_hair: hair_bob(g, o)
     if not o.no_head: head_scale(g, o.head)
@@ -551,6 +552,9 @@ def main():
     if not o.no_face:
         i = g.mat_image('Face_00_SKIN'); g.set_image(i, face_tex(g.image(i)))
         i = g.mat_image('FaceBrow'); g.set_image(i, brow_tex(g.image(i)))
+    if not o.no_face and not o.no_lines:
+        import cast_fit                                                           # nose and mouth readable at scene distance
+        print(f'face lines: {cast_fit.face_lines(g, cast_fit.landmarks(g))} texels')
     if not o.no_look:
         for m in g.j['materials']:
             mt = m['extensions']['VRMC_materials_mtoon']; mt['outlineColorFactor'] = OUTLINE; head = any(k in m['name'] for k in ('Face', 'Hair', 'Eye'))

@@ -152,15 +152,17 @@ export class LivActor {
   blink() { this.face.blink(); }
   /** Look at a point in actor.root space (head turns part of the way, eyes the rest), or null for idle glances. */
   lookAt(p) { this.lookTarget = p ? p.clone() : null; }
-  /** 'apple' | 'crate' | 'sawHandle' | null */
+  /** 'apple' | 'crate' | 'sawHandle' | 'cane' | 'book' | 'slingshot' | null */
   holdProp(name) {
-    if (this.prop) { this.body.remove(this.prop.mesh); this.prop = null; }
+    if (this.prop) { if (this.prop.mesh.userData.noPose) this.setHand('R', null); this.body.remove(this.prop.mesh); this.prop = null; }
     this.stopAction('hold');
     if (!name) return;
     // the crate fits between her hands in the carry pose; small props scale with the leg length
     const M = this.rig.M, sc = name === 'crate' ? (2 * (M.shW + 0.3 * M.arm) - 0.03 * M.ls) / 0.34 : M.ls;
-    const mesh = makeProp(name, sc); this.body.add(mesh);
+    const len = name === 'cane' ? Math.max(0.2, this._palm('R').y - 0.01 * M.ls) : undefined;   // palm height, standing
+    const mesh = makeProp(name, sc, { len }); this.body.add(mesh);
     this.prop = { name, mesh };
+    if (mesh.userData.noPose) { this.setHand('R', mesh.userData.grip, mesh.userData.gripAmount); return; }      // the cane: the arm just hangs
     this.play(name === 'crate' ? 'carry' : 'holdOne', { hold: true, key: 'hold' });
   }
   attachSatchel(on = true) {

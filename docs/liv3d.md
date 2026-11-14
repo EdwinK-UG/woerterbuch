@@ -170,6 +170,7 @@ node tools/version-assets.cjs   # new version hash for the model in index.html (
 | `socks` | short ribbed socks in the skin texture, with a real cuff (the leg rings inside the sock are pushed out) |
 | `boots` | tan laces and bow |
 | `face` | skin tone of the paintings, blush, freckles, short thick brows, peach skin shadows |
+| `lines` | the nose stroke and the closed-mouth line darkened a little and grown, so they read at scene distance (`cast_fit.face_lines`) |
 | `look` | dark-brown outlines (also on the hair), hair gloss toned down |
 | `slim` | 256 px thumbnail |
 
@@ -184,6 +185,7 @@ average in the walk and 0.39 mm in the run (ankle bone, flat phase). Pictures an
 The bodice was re-checked close up with the arms forward, down, raised and waving after that fix.
 
 Scenes built on her: the park (`docs/liv3d-park.md`) and the Kapitel 57 workshop (`docs/liv3d-werkstatt.md`), both opt-in.
+The rest of the cast (A01–A06, C02–C04) uses the same player and a general fit script: `docs/cast3d.md`.
 
 Open on this model:
 
