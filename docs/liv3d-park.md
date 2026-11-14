@@ -1,14 +1,14 @@
 # The park scene with the 3D Liv
 
-Branch `feat/liv-2d-scenes`, local only. The canvas park (`grammatik/liv/film-park.js`) stays the default; the 3D park is an
-opt-in of the film player (see "In the film player").
+Live on main. The canvas park (`grammatik/liv/film-park.js`) is the fallback; the 3D park is the
+default of the film player (see "In the film player").
 
 | File | What |
 |---|---|
 | `tools/liv3d/park/park3d.js` | `ParkScene`: the park in Three.js (same layout, sizes and colours as the canvas park), Liv, the staging of each scene, the grammar drawn on the ground |
 | `tools/liv3d/park/index.html` | local preview: scene buttons, Play, scrubber, the audio clock, captions and the example sentence |
 | `tools/liv3d/park/make_video.py` | turns recorded frames plus the narration clips into an MP4 (private, see below) |
-| `grammatik/liv/film-park-3d.js`, `grammatik/liv/park3d-frame.html` | the film player's opt-in: the same `GRAM_PARK.draw(canvas, route, t, opts)`, drawn by this scene |
+| `grammatik/liv/film-park-3d.js`, `grammatik/liv/park3d-frame.html` | the film player's 3D park: the same `GRAM_PARK.draw(canvas, route, t, opts)`, drawn by this scene |
 
 ## Scenes
 
@@ -28,10 +28,10 @@ const park = await ParkScene.create({ model: 'grammatik/liv/liv.vrm' });
 park.seek('goal', audio.currentTime); park.render(renderer);
 ```
 
-## In the film player (opt-in)
+## In the film player (default since 14 Nov 2026)
 
-Open the app with `?liv3d=1` (for example `index.html?liv3d=1`; `?park3d=1` does the same). The choice is kept for that
-browser tab (`sessionStorage`), `?liv3d=0` switches it off. Without the flag nothing is loaded and nothing changes. The
+The 3D Liv is the default. `?liv3d=0` on the app page switches back to the 2D park and the workman for that browser tab
+(`sessionStorage`); `?liv3d=1` switches it on again. The
 same flag puts Liv into the 3D workshop of Kapitel 57 (`docs/liv3d-werkstatt.md`).
 
 - `index.html`'s `loadFilmPark` loads the 2D park as before and then, only with the flag, `grammatik/liv/film-park-3d.js`.

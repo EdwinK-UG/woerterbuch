@@ -1,7 +1,6 @@
-/* Deutschklinik film park with the 3D Liv. OPT-IN drop-in over grammatik/liv/film-park.js: the same
-   GRAM_PARK.draw(canvas, route, t, opts) the film player already calls ('into' = Akkusativ, 'within' = Dativ).
-   index.html's loadFilmPark loads this file after the 2D park, and only when the page was opened with ?liv3d=1 (or
-   ?park3d=1; remembered for this browser tab; ?liv3d=0 switches it off again). Without it nothing changes.
+/* Deutschklinik film park with the 3D Liv, over grammatik/liv/film-park.js: the same GRAM_PARK.draw(canvas, route, t, opts)
+   the film player already calls ('into' = Akkusativ, 'within' = Dativ). index.html's loadFilmPark loads this file after the
+   2D park unless the page was opened with ?liv3d=0 (remembered for the browser tab; ?liv3d=1 switches it on again).
 
    The picture comes from tools/liv3d/park/park3d.js (Three.js, the VRM Liv). The 3D libraries and their import map live
    in a hidden same-origin frame (park3d-frame.html), so the app page itself loads nothing new; each frame of the film is

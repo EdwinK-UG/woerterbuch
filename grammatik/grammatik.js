@@ -1189,7 +1189,7 @@ function openWerkstatt(n, kind) {
   const previous = document.activeElement, scroll = document.body.style.overflow;
   const d = document.createElement('dialog'); d.setAttribute('aria-label', w[1]);
   d.style.cssText = 'position:fixed;inset:0;width:100vw;height:100dvh;max-width:none;max-height:none;margin:0;padding:0;border:0;background:#f3e9d8';
-  const f = document.createElement('iframe'); f.title = w[1]; f.src = w[0] + (kind === '3d' && window.DK_LIV3D ? '&liv=1' : ''); f.allow = 'autoplay; fullscreen';      // opt-in (?liv3d=1 on the app page): Liv at the saw
+  const f = document.createElement('iframe'); f.title = w[1]; f.src = w[0] + (kind === '3d' && window.DK_LIV3D ? '&liv=1' : ''); f.allow = 'autoplay; fullscreen';      // Liv at the saw unless the app page was opened with ?liv3d=0
   f.style.cssText = 'display:block;width:100%;height:100%;border:0';
   const send = () => f.contentWindow?.postMessage({ type: 'werkstatt-texts', texts: werkTexts(c) }, location.origin);
   const onMsg = e => { if (e.source !== f.contentWindow || e.origin !== location.origin) return; if (e.data?.type === 'werkstatt-ready') send(); else if (e.data?.type === 'werkstatt-close') close(); };

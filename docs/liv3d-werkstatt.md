@@ -1,12 +1,12 @@
-# Liv in the 3D workshop of Kapitel 57 (opt-in)
+# Liv in the 3D workshop of Kapitel 57
 
-Branch `feat/liv-2d-scenes`, local only. The workshop (`grammatik/werkstatt/`) is unchanged by default: the workman stays.
+Live on main. Liv is the default worker of the 3D workshop (`grammatik/werkstatt/`); the workman is the fallback.
 With `?liv=1` on the workshop page the 3D Liv (`tools/liv3d`) takes his place at the saw.
 
 ## How to switch it on
 
-- In the app: open it with `?liv3d=1` (kept for the browser tab; `?liv3d=0` switches it off; the same flag turns on the
-  3D park, see `docs/liv3d-park.md`). The lesson page then opens the "3D-Werkstatt" with `&liv=1`.
+- In the app this is the default (since 14 Nov 2026): the lesson page opens the "3D-Werkstatt" with `&liv=1`.
+  `?liv3d=0` on the app page brings the workman back for that browser tab (the same switch as for the park).
 - The workshop page alone shows "Nicht verfügbar": it gets its sentences from the lesson page by message. For local
   work a harness outside git (`.local/w57/`, git-ignored) embeds it and posts the texts it reads at run time from the
   private folder. No lesson sentence is in any repository file.
