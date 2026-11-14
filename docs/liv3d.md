@@ -59,6 +59,8 @@ World units are metres; `actor.root` is her world (place or scale it as a whole)
 | `lookAt(vec3 | null)` | head turns most of the way, eyes the rest; `null` = idle glances |
 | `holdProp('apple'|'crate'|'sawHandle'|null)` | a prop in the right hand (crate: both hands, carry pose); `throw` releases the apple |
 | `attachSatchel(on = true)` | the tan satchel on a cross-body strap (fitted to the model's surface) |
+| `setHandTarget('L'|'R', vec3 | null, { w, palm, elbow, bend, shape, grip, row })` | pins a wrist to a point in the actor's root space every frame (arm IK) until cleared with `null` or `reset()`; `palm` and `elbow` are root-space directions |
+| `handFrame('L'|'R')` | `{ wrist, fingers, palm }` in root space after the last update |
 | `after(sec, fn)` | a timer in actor time (deterministic, unlike `setTimeout`) |
 | `reset({ x, z, yaw })` | standing, nothing playing, no props |
 | `replay(script, t, start)` | **pure function of time**: reset and simulate in fixed 1/60 s steps to `t` (spring bones only for the last 1.5 s). `script = [{ t, do: (actor) => ... }]` |
@@ -158,7 +160,7 @@ python3 tools/liv3d/vrm_fit.py tools/liv3d/models/liv-vroid.vrm tools/liv3d/mode
 |---|---|
 | `head` | scales the head joint to 0.66 (the export is 2.7 heads tall, the painted Liv about 4); spring-bone radii below the head follow |
 | `hair` | cuts every lock to a bob along its own shape (fringe above the brows, jaw length at the sides and back) with a rounded end, adds volume, waves and a slight outward curl, removes ear tufts and flyaway locks; skin weights follow |
-| `dress` | repaints the dress texture: red bodice with scoop and laced panel, long straight apron, small bow at the back, plain hem, plain cuffs; paints the blouse (and the bodice straps) on the body where the dress mesh is open; cream shorts under the skirt |
+| `dress` | repaints the dress texture: red bodice with scoop and laced panel, long straight apron, small bow at the back, plain hem, plain cuffs; paints the blouse and the straps' inner edges on the body where the dress mesh is open (the scoop's round bottom is the dress's own edge, because the exported body has no mesh under the bodice); cream shorts under the skirt |
 | `socks` | short ribbed socks in the skin texture, with a real cuff (the leg rings inside the sock are pushed out) |
 | `boots` | tan laces and bow |
 | `face` | skin tone of the paintings, blush, freckles, short thick brows, peach skin shadows |
@@ -171,7 +173,11 @@ and `--head`, `--outline`, `--hair-gloss` are options.
 
 Checked on this model with `demo/sheets.js` (contact sheets posted to `demo/shot_server.py`): four views against the
 paintings, eight expressions, all 27 actions, walk and run from the side. Feet while planted move 0.14 mm per frame on
-average in the walk and 0.39 mm in the run (ankle bone, flat phase). Pictures and a 12 s clip are in `tools/liv3d/preview/`.
+average in the walk and 0.39 mm in the run (ankle bone, flat phase). Pictures and a 12 s clip are in `tools/liv3d/preview/`
+(the clip and the park videos were recorded before the last bodice fix: the lacing sat a little higher).
+The bodice was re-checked close up with the arms forward, down, raised and waving after that fix.
+
+Scenes built on her: the park (`docs/liv3d-park.md`) and the Kapitel 57 workshop (`docs/liv3d-werkstatt.md`), both opt-in.
 
 Open on this model:
 

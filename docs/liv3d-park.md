@@ -30,8 +30,9 @@ park.seek('goal', audio.currentTime); park.render(renderer);
 
 ## In the film player (opt-in)
 
-Open the app with `?park3d=1` (for example `index.html?park3d=1`). The choice is kept for that browser tab
-(`sessionStorage`), `?park3d=0` switches it off. Without the flag nothing is loaded and nothing changes.
+Open the app with `?liv3d=1` (for example `index.html?liv3d=1`; `?park3d=1` does the same). The choice is kept for that
+browser tab (`sessionStorage`), `?liv3d=0` switches it off. Without the flag nothing is loaded and nothing changes. The
+same flag puts Liv into the 3D workshop of Kapitel 57 (`docs/liv3d-werkstatt.md`).
 
 - `index.html`'s `loadFilmPark` loads the 2D park as before and then, only with the flag, `grammatik/liv/film-park-3d.js`.
   That file wraps the 2D park: it draws the 2D picture until the 3D scene is ready and whenever it cannot be used (no

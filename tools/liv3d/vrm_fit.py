@@ -271,10 +271,17 @@ def dress_tex(im):
     reds = row_red(a, by0, by1, px(1200), px(1500)); a[by0:by1, bx0:bx1, :3] = reds[:, None, :]; a[by0:by1, bx0:bx1, 3] = 255
     im2 = img(a); d = ImageDraw.Draw(im2)
     # the scoop: open (the blouse inside it is painted on the body, see blouse_on_body: the dress mesh has gaps there)
-    sx0, sx1 = px(932), px(1108); hole = Image.new('L', im2.size, 0); hd = ImageDraw.Draw(hole)
-    hd.rounded_rectangle([sx0, px(470), sx1, px(860)], radius=px(84), fill=255); hd.rectangle([sx0, px(470), sx1, px(700)], fill=255)
-    d.rectangle([px(996), px(872), px(1044), by1], fill=TAN, outline=(170, 110, 50), width=px(3))
-    rowsy = [888, 930, 972, 1014]
+    # The scoop. Its lower part (below about the armpits) is cut into the dress, where the dress mesh is whole. Higher up the
+    # preset's mesh is strips with gaps, so there the hole is the preset's own wider opening (903..1137) and the strap's inner
+    # edge is painted on the body instead (red outside, cream inside): one smooth line that bends with her. Two layers
+    # with two edges went ragged there as soon as her arms came forward.
+    hole = Image.new('L', im2.size, 0); hd = ImageDraw.Draw(hole)
+    # The scoop's round bottom is the dress's own edge at 800 (about 0.718 m): the exported body mesh ends at 0.68 to 0.71 m
+    # on the chest (VRoid deletes the body under clothes), with a ragged edge that must stay behind the bodice.
+    hd.rounded_rectangle([px(932), px(470), px(1108), px(800)], radius=px(84), fill=255); hd.rectangle([px(932), px(470), px(1108), px(700)], fill=255)
+    hd.rectangle([px(903), px(470), px(1137), px(716)], fill=255)
+    d.rectangle([px(996), px(866), px(1044), by1], fill=TAN, outline=(170, 110, 50), width=px(3))      # starts below the body mesh's lowest point (0.69 m)
+    rowsy = [882, 929, 976, 1023]
     for y0_, y1_ in zip(rowsy[:-1], rowsy[1:]):
         d.line([px(978), px(y0_), px(1062), px(y1_)], fill=LACE, width=px(8)); d.line([px(1062), px(y0_), px(978), px(y1_)], fill=LACE, width=px(8))
     for y_ in rowsy:
@@ -401,12 +408,14 @@ def blouse_on_body(g):
         on = inside & (np.abs(w[..., 0]) < 0.088) & ((w[..., 1] < neck[1] - 0.012) | ((r > 0.036) & (w[..., 1] < neck[1] + 0.012)))
         sub = a[y0:y1 + 1, x0:x1 + 1]; m = on & (sub[..., 3] > 128)
         sub[m, :3] = cream; n += int(m.sum())
-        # under the scoop's lower edge the export hides the body; make it solid there, or a gap opens when she raises her arms
+        # the body's last rows above its own lower edge (the export has no body under the bodice): solid and cream
         low = inside & (np.abs(w[..., 0]) < 0.04) & (w[..., 2] > neck[2]) & (w[..., 1] > 0.672) & (w[..., 1] < 0.74)
         sub[low, :3] = cream; sub[low, 3] = 255; m = m | low
         # outside the scoop the body is red like the bodice on top of it, so the gaps in the dress mesh never show cream
-        xs = 0.0365 * np.sqrt(np.clip(1 - (np.clip(0.722 - w[..., 1], 0, None) / 0.031) ** 2, 0, 1))
-        sub[m & (w[..., 2] > neck[2] - 0.005) & (np.abs(w[..., 0]) > xs) & (np.abs(w[..., 0]) < 0.056), :3] = RED      # not the shoulder under the sleeve
+        xs = np.where(w[..., 1] < 0.715, 0.0, 0.0365)                                 # the scoop's sides; below the dress's round edge (0.718 m) the body is bodice red,
+                                                                                      # so its ragged lower end never shows through the dress as cream
+        lim = 0.056 + 0.026 * sstep(0.742, 0.764, w[..., 1])                          # wider over the shoulder top (under the strap), not at the armpit (under the sleeve)
+        sub[m & (w[..., 2] > neck[2] - 0.005) & (np.abs(w[..., 0]) > xs) & (np.abs(w[..., 0]) < lim), :3] = RED
         slit = m & (np.abs(w[..., 0]) < 0.0016) & (w[..., 2] > neck[2]) & (w[..., 1] > neck[1] - 0.05); sub[slit, :3] = CREAM_D      # the slit at the neck
     dark = (a[..., :3].max(-1) < 46) & (a[..., 3] > 128); a[dark, :3] = cream * 0.97
     # cream shorts to mid thigh under the skirt (seen when it flies in a run, a kick or a crouch); the export hides the

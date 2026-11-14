@@ -77,7 +77,7 @@ export class LivActor {
     this.t = 0; this.x = o.x || 0; this.z = o.z || 0; this.yaw = o.yaw || 0; this.yawRate = 0;
     this.v = 0; this.acc = 0; this.leanA = 0; this.rw = 0; this.gw = 0; this.phi = 0; this.frozen = true; this.move = 0;
     this.cmd = null; this.target = null; this.fixedYaw = null; this.layers = []; this.lookTarget = null; this.timers = [];
-    this.handOverride = { L: null, R: null }; this.exprName = 'happy';
+    this.handOverride = { L: null, R: null }; this.handTarget = { L: null, R: null }; this.exprName = 'happy';
     this.face = new Face(this.vrm); this.face.set('happy', 1);
     this.hands = { L: new Hand(this.rig, 'L', 0.3), R: new Hand(this.rig, 'R', 1.7) };
     this.feet = {};
@@ -131,6 +131,23 @@ export class LivActor {
   _end(l) { l.ending = true; l.te = 0; l.w0 = l.w; if (l.res) { l.res(true); l.res = null; } }
   /** Hand shape override for one hand (null = back to what the pose wants). grip 0..1 for the grip shapes. */
   setHand(side, shape, grip = 0) { this.handOverride[side] = shape ? { shape, grip } : null; }
+  /**
+   * Pin one wrist to a point in actor.root space: the arm IK reaches for it every frame until it is cleared with null
+   * (for holding something that belongs to the scene, like a handle). opts: { w: 0..1 blend from the pose's own arm
+   * (default 1), palm: palm normal before the wrist bends, elbow: where the elbow points (both directions in
+   * actor.root space), bend: wrist bend in radians (+ = toward the palm), shape + grip, or row: the hand shape }.
+   * Whatever is left out stays as the pose has it. The reach still saturates softly, so keep the body close enough.
+   */
+  setHandTarget(side, p, o = {}) {
+    this.handTarget[side] = p ? { p: p.clone(), w: o.w == null ? 1 : clamp(o.w, 0, 1), palm: o.palm ? o.palm.clone() : null, elbow: o.elbow ? o.elbow.clone() : null,
+      bend: o.bend, row: o.row || (o.shape ? shapeRow(o.shape, o.grip || 0) : null) } : null;
+  }
+  /** Where a hand is after the last update, in actor.root space: { wrist, fingers (the direction they point), palm (palm normal, square to the fingers) }. */
+  handFrame(side) {
+    const rig = this.rig, n = (side === 'L' ? 'left' : 'right') + 'Hand', q = rig.D[n], rf = rig.M[side].restFinger, c = Math.cos(this.yaw), s = Math.sin(this.yaw);
+    const out = (v, x, z) => V3(x + v.x * c + v.z * s, v.y, z - v.x * s + v.z * c);
+    return { wrist: out(rig.pos(n), this.x, this.z), fingers: out(rf.clone().applyQuaternion(q), 0, 0), palm: out(V3(0, -1, 0).addScaledVector(rf, rf.y).normalize().applyQuaternion(q), 0, 0) };
+  }
   setExpression(name, amount = 1) { this.exprName = name; this.face.set(name, amount); }
   blink() { this.face.blink(); }
   /** Look at a point in actor.root space (head turns part of the way, eyes the rest), or null for idle glances. */
@@ -439,6 +456,7 @@ export class LivActor {
       if (a.chin > 0) { const B = this._bodyShape || (this._bodyShape = this._measureBody()); tr.lerp(B.chin.clone().add(sv(a.h).multiplyScalar(M.ls)), a.chin); }
       if (!a.free) this._avoidBody(tr, s);
       const target = rig.carry(C, tr), pole = sv(a.e).applyQuaternion(dC), palm = sv(a.palm).applyQuaternion(dC);
+      if (this.handTarget[S]) this._toHandTarget(this.handTarget[S], target, pole, palm, a);
       // the elbow keeps to its side: the previous elbow direction steadies a hint that lines up with the arm
       const prevPole = this._armPole[S]; if (prevPole) pole.normalize().addScaledVector(prevPole, 0.6);
       const sh = rig.pos(p + 'UpperArm');
@@ -465,6 +483,16 @@ export class LivActor {
       this.hands[S].apply();
     }
     rig.write();
+  }
+  // setHandTarget: blend one arm's IK inputs (body space) toward the target given in actor.root space
+  _toHandTarget(ht, target, pole, palm, a) {
+    const w = ht.w, c = Math.cos(this.yaw), s = Math.sin(this.yaw), dir = (v) => V3(v.x * c - v.z * s, v.y, v.x * s + v.z * c);
+    const [bx, bz] = toBody(ht.p.x, ht.p.z, this.x, this.z, this.yaw);
+    target.lerp(V3(bx, ht.p.y, bz), w);
+    if (ht.palm) palm.lerp(dir(ht.palm), w);
+    if (ht.elbow) pole.lerp(dir(ht.elbow), w);
+    if (ht.bend != null) a.bend = lerp(a.bend || 0, ht.bend, w);
+    if (ht.row) a.row = a.row.map((x, i) => lerp(x, ht.row[i], w));
   }
   // push a hand target (rest space of the chest) out of the torso cylinder and the head sphere
   _avoidBody(tr, s) {
