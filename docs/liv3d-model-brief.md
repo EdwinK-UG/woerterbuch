@@ -37,6 +37,12 @@ She is always fully dressed. She does not speak, so no mouth shapes beyond a few
 
 Anything the model cannot do (the satchel, the dirndl details) the player can add on top; do not fight the tool for it.
 
+## How it was made in the end
+
+VRoid Studio for the base (steps above, driven by Claude), then `tools/liv3d/vrm_fit.py` for everything VRoid's presets
+do not offer: head size, the bob, the dirndl details, short socks, the paintings' colours. See "Liv's own model" in
+`docs/liv3d.md`. Re-run the script after every new export from VRoid Studio.
+
 ## How we check it (acceptance)
 
 Put `liv.vrm` in `tools/liv3d/models/` (that folder is not committed). The demo page shows her in all five directions, walking,

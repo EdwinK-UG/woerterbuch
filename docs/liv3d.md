@@ -1,6 +1,6 @@
 # Liv 3D: the VRM player
 
-Branch `liv/liv3d` (from `feat/liv-2d-scenes`), local only. `tools/liv3d/` is a small runtime that makes any humanoid VRM
+Branch `feat/liv-2d-scenes` (the player was built on `liv/liv3d` and merged), local only. `tools/liv3d/` is a small runtime that makes any humanoid VRM
 walk, run, gesture and emote procedurally, without animation files. It replaces the abandoned Rive rig; the Rive rig's
 tuned gait numbers and the canvas engine's 27 actions are its specification. No model file is committed
 (`tools/liv3d/models/` is git-ignored).
@@ -15,7 +15,9 @@ tuned gait numbers and the canvas engine's 27 actions are its specification. No 
 | `tools/liv3d/face.js` | 10 expressions mapped onto VRM presets, blinks, gaze and idle glances |
 | `tools/liv3d/actions.js` | the 27 canvas actions (same timings, blends, hand targets) |
 | `tools/liv3d/props.js` | apple, crate, saw handle, satchel (built from simple geometry, toon material, ink outline) |
-| `tools/liv3d/demo/` | `index.html` + `demo.js` (buttons for everything, orbit camera, stepping hooks), `testkit.js` (tests) |
+| `tools/liv3d/demo/` | `index.html` + `demo.js` (buttons for everything, orbit camera, stepping hooks), `testkit.js` (tests), `sheets.js` + `shot_server.py` (contact sheets saved to disk) |
+| `tools/liv3d/vrm_fit.py` | fits the VRoid export to the painted Liv inside the VRM file (see "Liv's own model") |
+| `tools/liv3d/vroid_params.py`, `liv_textures.py` | body sliders and preset colours inside a `.vroid` project |
 
 Stack: Three.js r160 and `@pixiv/three-vrm` 3.0.0 through an import map (same Three version as the Kapitel 57
 workshop). Plain ES modules, no bundler, no other dependencies.
@@ -139,6 +141,45 @@ Python server on 127.0.0.1:8794 that saves POST bodies; not part of the repo). A
   park route (run 6 m from x = -3.4 at 2.48 m/s, stop at 2.6, turn to the viewer, thumbs-up) arrives within 1 cm.
   A seek to 5 s re-simulates 300 steps in about 0.14 s.
 - Blinks: 7 in 20 s idle. No console errors (the missing `liv.vrm` 404 is the expected fallback).
+
+## Liv's own model (14 Nov 2026)
+
+`tools/liv3d/models/liv.vrm` (git-ignored, 13.5 MB) is made in two steps, both repeatable:
+
+1. **VRoid Studio** gives the base (`models/liv-vroid.vrm`, project `models/Liv.vroid`): child body, dress preset, boots, wavy
+   hair. `vroid_params.py` and `liv_textures.py` set the body sliders and recolour the preset inside the `.vroid` file.
+2. **`vrm_fit.py`** turns that export into Liv directly in the VRM file (no VRoid Studio, no clicking):
+
+```sh
+python3 tools/liv3d/vrm_fit.py tools/liv3d/models/liv-vroid.vrm tools/liv3d/models/liv.vrm
+```
+
+| Step (`--no-<step>` switches it off) | What it does |
+|---|---|
+| `head` | scales the head joint to 0.66 (the export is 2.7 heads tall, the painted Liv about 4); spring-bone radii below the head follow |
+| `hair` | cuts every lock to a bob along its own shape (fringe above the brows, jaw length at the sides and back) with a rounded end, adds volume, waves and a slight outward curl, removes ear tufts and flyaway locks; skin weights follow |
+| `dress` | repaints the dress texture: red bodice with scoop and laced panel, long straight apron, small bow at the back, plain hem, plain cuffs; paints the blouse (and the bodice straps) on the body where the dress mesh is open; cream shorts under the skirt |
+| `socks` | short ribbed socks in the skin texture, with a real cuff (the leg rings inside the sock are pushed out) |
+| `boots` | tan laces and bow |
+| `face` | skin tone of the paintings, blush, freckles, short thick brows, peach skin shadows |
+| `look` | dark-brown outlines (also on the hair), hair gloss toned down |
+| `slim` | 256 px thumbnail |
+
+Colours are the dominant colours of the painted front view (`tools/liv/rive/views/01_front.png`). Numbers for the hair
+(`--hair-volume`, `--hair-wave`, `--hair-flick`, `--hair-blunt`, `--hair-drop-tips "angle,height;..."`, `--hair-report`)
+and `--head`, `--outline`, `--hair-gloss` are options.
+
+Checked on this model with `demo/sheets.js` (contact sheets posted to `demo/shot_server.py`): four views against the
+paintings, eight expressions, all 27 actions, walk and run from the side. Feet while planted move 0.14 mm per frame on
+average in the walk and 0.39 mm in the run (ankle bone, flat phase). Pictures and a 12 s clip are in `tools/liv3d/preview/`.
+
+Open on this model:
+
+- Crouch and sit: the skirt (six spring chains) opens over the thighs and folds through itself; she wears cream shorts,
+  but it does not look right yet.
+- The hair is a wavy bob, smoother than the painted curls; no loose curl on top yet.
+- Eyes are smaller than painted; the boots have a heel and are slimmer; the satchel prop is still a plain box.
+- 13.5 MB, 40k triangles, 13 materials: fine on a laptop, not measured on phones.
 
 ## Weak spots (honest list)
 

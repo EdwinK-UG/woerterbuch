@@ -5,8 +5,8 @@
 import { clamp, lerp } from './rig.js';
 
 export const EXPRESSIONS = {
-  happy: { happy: 0.42, relaxed: 0.2 },
-  smile: { relaxed: 0.6 },
+  happy: { relaxed: 0.38 },            // her resting face: a soft closed-mouth smile, eyes open (VRoid's 'happy' closes the eyes and opens the mouth)
+  smile: { relaxed: 0.8 },
   neutral: {},
   laugh: { happy: 1.0, aa: 0.45 },
   surprised: { surprised: 1.0 },

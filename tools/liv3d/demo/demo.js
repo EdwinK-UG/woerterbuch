@@ -15,7 +15,7 @@ renderer.setClearColor(0xf3e9d8);
 const scene = new THREE.Scene();
 const cam = new THREE.PerspectiveCamera(30, 1, 0.05, 100);
 const controls = new OrbitControls(cam, canvas); controls.enableDamping = false;
-scene.add(new THREE.HemisphereLight(0xfff6ea, 0xb9a98a, 1.7));
+scene.add(new THREE.HemisphereLight(0xfff6ea, 0xb9a98a, 1.85));
 const sun = new THREE.DirectionalLight(0xffffff, 1.5); sun.position.set(1.5, 3, 2.5); scene.add(sun);
 // ground with soft markers, so motion over the ground (and any foot sliding) is visible
 const ground = new THREE.Mesh(new THREE.CircleGeometry(30, 64), new THREE.MeshBasicMaterial({ color: 0xece0cb })); ground.rotation.x = -Math.PI / 2; scene.add(ground);
