@@ -1,0 +1,258 @@
+{
+ "groups": [
+  {
+   "t": "A1 · Erste Schritte: Personen und Verben",
+   "ic": "zap",
+   "h": 216,
+   "open": true,
+   "ch": [
+    1,
+    2,
+    3,
+    4
+   ]
+  },
+  {
+   "t": "A1 · Fragen stellen, Sätze bauen",
+   "ic": "message-circle-question",
+   "h": 262,
+   "ch": [
+    10,
+    11,
+    12
+   ]
+  },
+  {
+   "t": "A1 · Nomen und Artikel",
+   "ic": "box",
+   "h": 300,
+   "ch": [
+    14,
+    49,
+    15,
+    16,
+    47
+   ]
+  },
+  {
+   "t": "A1 · Wer, wen, wem? Akkusativ und Dativ",
+   "ic": "users",
+   "h": 280,
+   "ch": [
+    17,
+    18,
+    19,
+    20,
+    21
+   ]
+  },
+  {
+   "t": "A1 · Können, müssen, dürfen: Modalverben",
+   "ic": "key-round",
+   "h": 30,
+   "ch": [
+    5,
+    6,
+    7
+   ]
+  },
+  {
+   "t": "A1 · Mehr Verben: trennbar und Imperativ",
+   "ic": "scissors",
+   "h": 190,
+   "ch": [
+    8,
+    48,
+    9
+   ]
+  },
+  {
+   "t": "A1 · Zeit und Ort: Präpositionen",
+   "ic": "map-pin",
+   "h": 160,
+   "ch": [
+    32,
+    33,
+    34,
+    35
+   ]
+  },
+  {
+   "t": "A1 · Gestern: die erste Vergangenheit",
+   "ic": "history",
+   "h": 24,
+   "ch": [
+    25,
+    26
+   ]
+  },
+  {
+   "t": "A1 · Sätze verbinden",
+   "ic": "link",
+   "h": 200,
+   "ch": [
+    44
+   ]
+  },
+  {
+   "t": "A2 · Satzbau und Nebensätze",
+   "ic": "git-branch",
+   "h": 200,
+   "ch": [
+    13,
+    45,
+    46,
+    50
+   ]
+  },
+  {
+   "t": "A2 · Dativ und Akkusativ im Satz",
+   "ic": "users",
+   "h": 280,
+   "ch": [
+    22,
+    23,
+    24,
+    31
+   ]
+  },
+  {
+   "t": "A2 · Perfekt und Präteritum",
+   "ic": "history",
+   "h": 24,
+   "ch": [
+    27,
+    28,
+    29,
+    30
+   ]
+  },
+  {
+   "t": "A2 · Wo? Wohin? Woher?",
+   "ic": "navigation",
+   "h": 140,
+   "ch": [
+    36,
+    37,
+    38,
+    39
+   ]
+  },
+  {
+   "t": "A2 · Adjektive und Vergleiche",
+   "ic": "palette",
+   "h": 330,
+   "ch": [
+    40,
+    41,
+    42
+   ]
+  },
+  {
+   "t": "A2 · Neue Wörter bilden",
+   "ic": "puzzle",
+   "h": 44,
+   "ch": [
+    51
+   ]
+  },
+  {
+   "t": "B1 · Erzählen in der Vergangenheit",
+   "ic": "book-open-text",
+   "h": 24,
+   "ch": [
+    54,
+    55
+   ]
+  },
+  {
+   "t": "B1 · Verben genauer",
+   "ic": "layers",
+   "h": 4,
+   "ch": [
+    56,
+    57,
+    58,
+    59,
+    66,
+    67
+   ]
+  },
+  {
+   "t": "B1 · Konjunktiv II",
+   "ic": "sparkles",
+   "h": 350,
+   "ch": [
+    60,
+    61
+   ]
+  },
+  {
+   "t": "B1 · Passiv, Futur und werden",
+   "ic": "settings",
+   "h": 190,
+   "ch": [
+    62,
+    63,
+    64,
+    65
+   ]
+  },
+  {
+   "t": "B1 · Nomen und Adjektive",
+   "ic": "palette",
+   "h": 330,
+   "ch": [
+    43,
+    68,
+    69,
+    70,
+    71,
+    84,
+    85
+   ]
+  },
+  {
+   "t": "B1 · Nebensätze und Infinitive",
+   "ic": "git-branch",
+   "h": 200,
+   "ch": [
+    72,
+    73,
+    74,
+    75,
+    76,
+    77,
+    78,
+    79
+   ]
+  },
+  {
+   "t": "B1 · Konnektoren und Vergleiche",
+   "ic": "link",
+   "h": 262,
+   "ch": [
+    80,
+    81
+   ]
+  },
+  {
+   "t": "B1 · Genau sagen: Verneinung und Ortsadverbien",
+   "ic": "crosshair",
+   "h": 160,
+   "ch": [
+    52,
+    53
+   ]
+  },
+  {
+   "t": "B1 · Präpositionen mit Genitiv und Zeit",
+   "ic": "clock",
+   "h": 140,
+   "ch": [
+    82,
+    83
+   ]
+  }
+ ]
+}

@@ -47,64 +47,118 @@ const GROUPS = [
     [269, 'Rechtliches', 'Strafrecht, Zivilrecht', 'C1'], [270, 'Politik und Ideologie', 'Demokratie, Gesinnungen', 'C1'],
     [271, 'Geistes- und Sozialwissenschaften', 'Theorien, Gesellschaft', 'C1'], [272, 'Mathematik und Logik', 'Rechnen, Schlussfolgern', 'C1'],
     [273, 'Finanzen und Wirtschaft', 'Geld, Märkte', 'C1'] ] },
-  { t: 'Verben 1', ic: 'zap', h: 216, open: true, ch: [
-    [1, 'Personalpronomen', 'ich, du, er, sie, es …', 'A1'], [2, 'Präsens: regelmäßige Verben', 'ich wohne, du wohnst', 'A1'],
-    [3, 'sein, haben und möchten', 'ich bin, ich habe', 'A1'], [4, 'Verben mit Vokalwechsel', 'essen → isst, fahren → fährt', 'A1'],
-    [5, 'Modalverben: Formen und Satzbau', 'können, müssen, dürfen …', 'A1'], [6, 'Modalverben: können, wollen, möchten', 'Fähigkeit und Wunsch', 'A1'],
-    [7, 'Modalverben: müssen, sollen, dürfen', 'Pflicht und Erlaubnis', 'A1'], [8, 'Trennbare Verben', 'einkaufen, anrufen', 'A1'],
-    [9, 'Imperativ', 'Komm! Kommt! Kommen Sie!', 'A1'] ] },
-  { t: 'Sätze und Fragen', ic: 'message-circle-question', h: 262, ch: [
-    [10, 'W-Fragen', 'wer, wie, wo, was …', 'A1'], [11, 'Ja/Nein-Fragen', 'Wohnst du hier?', 'A1'],
-    [12, 'Das Verb auf Position 2', 'Heute gehen wir ins Kino.', 'A1'], [13, 'Zwei Verben im Satz', 'Ich gehe einkaufen.', 'A2'] ] },
-  { t: 'Pronomen, Nomen und Artikel', ic: 'users', h: 280, ch: [
-    [14, 'Plural der Nomen', 'das Buch – die Bücher', 'A1'], [15, 'Bestimmter und unbestimmter Artikel', 'der, das, die – ein, eine', 'A1'],
-    [16, 'Verneinung: nicht und kein', 'Ich habe keine Zeit.', 'A1'], [17, 'Der Akkusativ', 'Ich sehe den Hund.', 'A1'],
-    [18, 'Der Dativ', 'mit dem Bus, mit der Bahn', 'A1'], [19, 'Possessivartikel', 'mein, dein, unser …', 'A1'],
-    [20, 'welcher? und dieser', 'Welche Jacke? – Diese!', 'A1'], [21, 'Personalpronomen im Akkusativ und Dativ', 'mich, mir, dich, dir …', 'A1'],
-    [22, 'Verben mit Dativ und Akkusativ', 'Wem gibst du was?', 'A2'], [23, 'Verben mit Dativ', 'helfen, danken, gefallen', 'A2'],
-    [24, 'Fragen nach Personen und Sachen', 'wer, wen, wem, was', 'A2'] ] },
-  { t: 'Verben 2', ic: 'history', h: 24, ch: [
-    [25, 'Präteritum von sein und haben', 'ich war, ich hatte', 'A1'], [26, 'Perfekt mit haben', 'Ich habe gekocht.', 'A1'],
-    [27, 'Perfekt mit sein', 'Ich bin gefahren.', 'A2'], [28, 'Das Partizip II', 'gemacht, eingekauft, bezahlt', 'A2'],
-    [29, 'Präteritum der Modalverben', 'ich konnte, ich musste', 'A2'], [30, 'Perfekt oder Präteritum?', 'Erzählen über gestern', 'A2'],
-    [31, 'Reflexive Verben', 'sich waschen, sich freuen', 'A2'] ] },
-  { t: 'Präpositionen 1', ic: 'map-pin', h: 160, ch: [
-    [32, 'Zeitangaben', 'im Mai, am Montag, um acht', 'A1'], [33, 'Präpositionen mit Dativ', 'aus, bei, mit, nach, seit, von, zu', 'A1'],
-    [34, 'Präpositionen mit Akkusativ', 'für, durch, ohne, gegen, um', 'A1'], [35, 'Wo? Ortsangaben mit Dativ', 'im Kino, auf dem Tisch', 'A1'],
-    [36, 'Wo oder wohin? Wechselpräpositionen', 'im Kino – ins Kino', 'A2'], [37, 'Wohin? zu, nach, in, auf', 'zum Arzt, nach Berlin', 'A2'],
-    [38, 'Wo? bei, in, auf', 'beim Arzt, in Berlin', 'A2'], [39, 'Woher? aus und von', 'aus Berlin, vom Arzt', 'A2'] ] },
-  { t: 'Adjektive 1', ic: 'palette', h: 330, ch: [
-    [40, 'Adjektivendungen', 'ein netter Mann, den netten Mann', 'A2'], [41, 'Ordinalzahlen und Datum', 'am ersten Mai', 'A2'],
-    [42, 'Komparativ und Vergleiche', 'größer als, so groß wie', 'A2'], [43, 'Superlativ', 'am schnellsten, der größte', 'B1'] ] },
-  { t: 'Sätze verbinden 1', ic: 'link', h: 190, ch: [
-    [44, 'und, aber, oder, denn', 'Hauptsätze verbinden', 'A1'], [45, 'deshalb, sonst, dann, danach', 'Folge und Reihenfolge', 'A2'],
-    [46, 'Nebensätze: weil, dass, wenn', 'Das Verb steht am Ende', 'A2'] ] },
-  { t: 'Wörter und Wortbildung', ic: 'puzzle', h: 44, ch: [
-    [47, 'Zusammengesetzte Nomen', 'der Regenschirm', 'A1'], [48, 'an sein, aus sein, weg sein', 'Kurze Verbformen', 'A1'],
-    [49, 'Der, die oder das? Genusregeln', 'Endungen verraten den Artikel', 'A1'], [50, 'Modalpartikeln', 'denn, doch, mal', 'A2'],
-    [51, 'Wortbildung mit Endungen', '-chen, -in, -ung …', 'A2'], [52, 'nicht, nichts, noch nicht, nicht mehr', 'Verneinung genau', 'B1'],
-    [53, 'Ortsadverbien', 'oben, unten, nach oben', 'B1'] ] },
-  { t: 'Verben 3', ic: 'layers', h: 4, ch: [
-    [54, 'Präteritum', 'Er kam, sah und …', 'B1'], [55, 'Plusquamperfekt', 'Ich hatte geschlafen.', 'B1'],
-    [56, 'Reflexivpronomen im Dativ', 'Ich wasche mir die Hände.', 'B1'], [57, 'Trennbar oder untrennbar?', 'einkaufen – bestellen', 'B1'],
-    [58, 'Verben mit Präpositionen', 'sich freuen über', 'B1'], [59, 'dafür, daran, worauf …', 'Präpositionaladverbien', 'B1'],
-    [60, 'Konjunktiv II: Formen', 'wäre, hätte, würde', 'B1'], [61, 'Konjunktiv II: Wünsche und Ratschläge', 'Wenn ich Zeit hätte …', 'B1'],
-    [62, 'Passiv Präsens', 'Der Baum wird gepflanzt.', 'B1'], [63, 'Passiv in der Vergangenheit', 'wurde gebaut', 'B1'],
-    [64, 'Futur I', 'Ich werde kommen.', 'B1'], [65, 'Die vielen Gesichter von werden', 'Verb, Futur, Passiv', 'B1'],
-    [66, 'lassen', 'Ich lasse das Auto reparieren.', 'B1'], [67, 'stehen/stellen, liegen/legen …', 'Wo? und Wohin?', 'B1'] ] },
-  { t: 'Nomen 2', ic: 'box', h: 300, ch: [
-    [68, 'Der Genitiv', 'das Auto meines Vaters', 'B1'], [69, 'n-Deklination', 'den Herrn, dem Kunden', 'B1'],
-    [70, 'Adjektive als Nomen', 'der Jugendliche, ein Jugendlicher', 'B1'], [71, 'alles Gute, etwas Neues', 'Adjektive nach alles, etwas', 'B1'] ] },
-  { t: 'Sätze verbinden 2', ic: 'git-branch', h: 200, ch: [
-    [72, 'Indirekte Fragen', 'Wissen Sie, ob …?', 'B1'], [73, 'Infinitiv mit zu', 'Es ist schön, zu …', 'B1'],
-    [74, 'Infinitiv ohne zu', 'Ich höre ihn singen.', 'B1'], [75, 'Relativsätze', 'der Mann, der …', 'B1'],
-    [76, 'Relativsätze mit Präposition', 'das Ding, mit dem …', 'B1'], [77, 'wenn und als', 'Zeit in Nebensätzen', 'B1'],
-    [78, 'während, bevor, nachdem, seit', 'Was passiert wann?', 'B1'], [79, 'um … zu und damit', 'Ziele ausdrücken', 'B1'],
-    [80, 'Zweiteilige Konnektoren', 'entweder … oder, weder … noch', 'B1'], [81, 'je … desto', 'Je mehr, desto besser.', 'B1'] ] },
-  { t: 'Präpositionen 2', ic: 'navigation', h: 140, ch: [
-    [82, 'Präpositionen mit Genitiv', 'wegen, trotz, während', 'B1'], [83, 'Zeitliche Präpositionen', 'innerhalb, vor, seit …', 'B1'] ] },
-  { t: 'Adjektive 2', ic: 'sparkles', h: 350, ch: [
-    [84, 'Adjektive ohne Artikel', 'frisches Brot, kaltes Wasser', 'B1'], [85, 'Partizip I als Adjektiv', 'ein lachendes Kind', 'B1'] ] },
+  /* A1–B1: generated by tools/grammar-a1b1/catalog.cjs */
+  { t: 'A1 · Erste Schritte: Personen und Verben', ic: 'zap', h: 216, open: true, ch: [
+    [1, 'Personalpronomen: Personen und Dinge', 'Ich koche, du deckst den Tisch.', 'A1'],
+    [2, 'Präsens: regelmäßige Verben konjugieren', 'Wir kochen, ihr tanzt.', 'A1'],
+    [3, 'sein, haben und andere besondere Verben', 'Ich bin müde und habe Hunger.', 'A1'],
+    [4, 'Präsens: Verben mit Vokalwechsel', 'Ich helfe gern – und du hilfst auch?', 'A1'] ] },
+  { t: 'A1 · Fragen stellen, Sätze bauen', ic: 'message-circle-question', h: 262, ch: [
+    [10, 'W-Fragen: Fragen mit Fragewort', 'Woher kommst du? Was machst du?', 'A1'],
+    [11, 'Ja/Nein-Fragen: Verb vorn, Antwort mit ja, nein oder doch', 'Kommst du mit? – Ja, gern!', 'A1'],
+    [12, 'Das Verb auf Position 2', 'Heute gehen wir ins Kino.', 'A1'] ] },
+  { t: 'A1 · Nomen und Artikel', ic: 'box', h: 300, ch: [
+    [14, 'Plural der Nomen', 'Ein Apfel, zwei Äpfel …', 'A1'],
+    [49, 'Der, die oder das? Regeln für das Genus', 'Die Endung verrät den Artikel', 'A1'],
+    [15, 'Bestimmter und unbestimmter Artikel – oder gar keiner', 'Ein Hund? Der Hund!', 'A1'],
+    [16, 'Verneinung: nicht und kein', 'Das ist kein Tee!', 'A1'],
+    [47, 'Zusammengesetzte Nomen: Wort + Wort = neues Wort', 'das Haus + die Tür = die Haustür', 'A1'] ] },
+  { t: 'A1 · Wer, wen, wem? Akkusativ und Dativ', ic: 'users', h: 280, ch: [
+    [17, 'Der Akkusativ: das direkte Objekt', 'Die Katze sieht den Vogel.', 'A1'],
+    [18, 'Der Dativ: Artikel und Nomen', 'mit dem Bus, mit der Bahn', 'A1'],
+    [19, 'Possessivartikel: Wem gehört was?', 'Ist das dein Hund?', 'A1'],
+    [20, 'Fragen und zeigen: welcher und dieser', 'Welche Jacke? – Diese!', 'A1'],
+    [21, 'Personalpronomen im Akkusativ und Dativ', 'Ich rufe dich an – du hilfst mir.', 'A1'] ] },
+  { t: 'A1 · Können, müssen, dürfen: Modalverben', ic: 'key-round', h: 30, ch: [
+    [5, 'Modalverben: Formen und Satzklammer', 'Ich kann heute nicht kommen.', 'A1'],
+    [6, 'Modalverben: können, wollen, möchten', 'Was kannst du – und was willst du?', 'A1'],
+    [7, 'Modalverben: müssen, dürfen, sollen', 'Muss ich – oder soll ich?', 'A1'] ] },
+  { t: 'A1 · Mehr Verben: trennbar und Imperativ', ic: 'scissors', h: 190, ch: [
+    [8, 'Trennbare Verben', 'Wir räumen heute auf.', 'A1'],
+    [48, 'an, aus, auf, zu, da, weg: kurze Wörter mit sein und haben', 'Das Licht ist an.', 'A1'],
+    [9, 'Imperativ: Bitten, Ratschläge, Aufforderungen', 'Komm! Kommt! Kommen Sie!', 'A1'] ] },
+  { t: 'A1 · Zeit und Ort: Präpositionen', ic: 'map-pin', h: 160, ch: [
+    [32, 'Wann? Präpositionen der Zeit', 'am Freitag um halb acht', 'A1'],
+    [33, 'Immer Dativ: sieben Präpositionen', 'mit dem Bus zur Arbeit', 'A1'],
+    [34, 'Immer Akkusativ: fünf Präpositionen', 'ein Tee ohne Zucker', 'A1'],
+    [35, 'Wo? Ortsangaben mit Dativ', 'Die Katze sitzt auf dem Tisch.', 'A1'] ] },
+  { t: 'A1 · Gestern: die erste Vergangenheit', ic: 'history', h: 24, ch: [
+    [25, 'Präteritum von sein und haben', 'Gestern war ich müde und hatte keine Zeit.', 'A1'],
+    [26, 'Vergangenes erzählen: haben + Partizip', 'Ich habe Pizza gemacht.', 'A1'] ] },
+  { t: 'A1 · Sätze verbinden', ic: 'link', h: 200, ch: [
+    [44, 'Konjunktionen auf Position 0: und, aber, oder, denn', 'Hauptsatz + und/aber/oder/denn + Hauptsatz', 'A1'] ] },
+  { t: 'A2 · Satzbau und Nebensätze', ic: 'git-branch', h: 200, ch: [
+    [13, 'Die Satzklammer: Verb auf Position 2, Teil 2 am Ende', 'Ich muss heute noch Brot kaufen.', 'A2'],
+    [45, 'Position 1: Folge, Warnung und Reihenfolge', 'deshalb nehme ich … · sonst kommst du …', 'A2'],
+    [46, 'weil, dass, wenn: Nebensätze mit Verb am Ende', '…, weil ich müde bin.', 'A2'],
+    [50, 'Modalpartikeln: denn, doch, mal', 'Wo wohnst du denn?', 'A2'] ] },
+  { t: 'A2 · Dativ und Akkusativ im Satz', ic: 'users', h: 280, ch: [
+    [22, 'Verben mit Dativ und Akkusativ', 'Ich leihe meiner Schwester mein Rad.', 'A2'],
+    [23, 'Verben mit Dativ', 'Ich helfe dir, und das gefällt mir.', 'A2'],
+    [24, 'Fragen nach Menschen und Dingen: wer, wen, wem, was', 'Wer? Wen? Wem? Was?', 'A2'],
+    [31, 'Reflexive Verben: mich, dich, sich …', 'Ich ziehe mich schnell um.', 'A2'] ] },
+  { t: 'A2 · Perfekt und Präteritum', ic: 'history', h: 24, ch: [
+    [27, 'Perfekt mit sein: wenn sich etwas ändert', 'Ich bin nach Deutschland geflogen.', 'A2'],
+    [28, 'Das Partizip: Formen für das Perfekt', 'gekocht, abgeholt, verkauft, studiert', 'A2'],
+    [29, 'Modalverben in der Vergangenheit', 'Wir durften nicht – er wollte nicht.', 'A2'],
+    [30, 'Präsens, Perfekt, Präteritum: welche Zeit wann?', 'Erzählen über gestern', 'A2'] ] },
+  { t: 'A2 · Wo? Wohin? Woher?', ic: 'navigation', h: 140, ch: [
+    [36, 'Wo oder wohin? Neun Präpositionen mit zwei Fällen', 'im Garten – in den Garten', 'A2'],
+    [37, 'Wohin? in, nach, an, auf und zu', 'nach Accra, zur Oma, ans Ufer', 'A2'],
+    [38, 'Wo? in, an, auf und bei', 'beim Zahnarzt, in Accra, am Ufer', 'A2'],
+    [39, 'Woher? aus und von', 'aus der Garage, vom Spielplatz', 'A2'] ] },
+  { t: 'A2 · Adjektive und Vergleiche', ic: 'palette', h: 330, ch: [
+    [40, 'Adjektivendungen im Nominativ und Akkusativ', 'ein warmer Mantel, den warmen Mantel', 'A2'],
+    [41, 'Adjektivendungen in allen drei Fällen', 'mit einem kleinen Hund · am ersten Mai', 'A2'],
+    [42, 'Der Komparativ: Vergleiche mit als und wie', 'heller als, genauso schnell wie', 'A2'] ] },
+  { t: 'A2 · Neue Wörter bilden', ic: 'puzzle', h: 44, ch: [
+    [51, 'Wortbildung mit Endungen', 'die Maus → das Mäuschen · lesen → das Lesen', 'A2'] ] },
+  { t: 'B1 · Erzählen in der Vergangenheit', ic: 'book-open-text', h: 24, ch: [
+    [54, 'Präteritum: erzählen und schreiben', 'sie spielte, er fuhr, wir dachten', 'B1'],
+    [55, 'Plusquamperfekt: was noch früher war', 'Ich hatte den Schlüssel vergessen.', 'B1'] ] },
+  { t: 'B1 · Verben genauer', ic: 'layers', h: 4, ch: [
+    [56, 'Reflexivpronomen: mich oder mir?', 'Ich ziehe mich an – ich ziehe mir die Jacke an.', 'B1'],
+    [57, 'Verben mit Präfix: trennbar oder untrennbar?', 'Ich mache auf – ich verkaufe.', 'B1'],
+    [58, 'Verben mit fester Präposition', 'warten auf, denken an, träumen von', 'B1'],
+    [59, 'Wörter mit da(r)- und wo(r)-', 'darauf, worüber, dabei …', 'B1'],
+    [66, 'lassen: nicht mitnehmen, erlauben, machen lassen', 'Ich lasse mein Fahrrad reparieren.', 'B1'],
+    [67, 'Position und Richtung: liegen oder legen?', 'Wo? und Wohin?', 'B1'] ] },
+  { t: 'B1 · Konjunktiv II', ic: 'sparkles', h: 350, ch: [
+    [60, 'Die Formen des Konjunktivs II', 'Ich hätte gern … – ich wäre gern …', 'B1'],
+    [61, 'Konjunktiv II: Wünsche, Bitten, Ratschläge', 'Ich wäre jetzt gern am Meer.', 'B1'] ] },
+  { t: 'B1 · Passiv, Futur und werden', ic: 'settings', h: 190, ch: [
+    [62, 'Passiv Präsens: werden + Partizip II', 'Das Brot wird frisch gebacken.', 'B1'],
+    [63, 'Passiv in der Vergangenheit: wurde … und ist … worden', 'wurde gebaut – ist gebaut worden', 'B1'],
+    [64, 'Futur I: Zukunft und Vermutung', 'Er wird wohl im Stau stehen.', 'B1'],
+    [65, 'Die vielen Gesichter von werden', 'Prozess, Passiv oder Futur?', 'B1'] ] },
+  { t: 'B1 · Nomen und Adjektive', ic: 'palette', h: 330, ch: [
+    [43, 'Der Superlativ: am …sten und der …ste', 'am schnellsten, die höchste Brücke', 'B1'],
+    [68, 'Der Genitiv: Wessen …?', 'die Jacke meiner Schwester', 'B1'],
+    [69, 'Die n-Deklination', 'den Polizisten, dem Kunden', 'B1'],
+    [70, 'Adjektive als Nomen: der Bekannte, ein Bekannter', 'eine Verwandte, ein Verwandter', 'B1'],
+    [71, 'Adjektive als Nomen: etwas Neues, nichts Besonderes', 'Ich habe etwas Schönes für dich!', 'B1'],
+    [84, 'Adjektivendungen: mit Artikel, mit ein/kein, ohne Artikel', 'der heiße Tee, ein heißer Tee, heißer Tee', 'B1'],
+    [85, 'Partizip 1 vor dem Nomen', 'wartende Gäste, ein klingelndes Handy', 'B1'] ] },
+  { t: 'B1 · Nebensätze und Infinitive', ic: 'git-branch', h: 200, ch: [
+    [72, 'Indirekte Fragen mit Fragewort und ob', 'Kannst du mir sagen, wann der Kurs beginnt?', 'B1'],
+    [73, 'Infinitiv mit zu', 'Ich habe keine Lust, heute zu kochen.', 'B1'],
+    [74, 'Infinitiv ohne zu: Modalverben, lassen, gehen, sehen, hören, bleiben', 'Wir gehen heute Abend tanzen.', 'B1'],
+    [75, 'Relativsätze mit der, das, die (Nominativ)', 'die Frau, die neben mir wohnt', 'B1'],
+    [76, 'Relativpronomen im Akkusativ, Dativ und mit Präposition', 'die Freundin, mit der ich lerne', 'B1'],
+    [77, 'Zeitsätze mit wenn und als', 'als ich klein war … wenn ich Zeit habe …', 'B1'],
+    [78, 'Zeitsätze: bevor, nachdem, während, seit(dem)', 'Was passiert vorher, nachher, gleichzeitig?', 'B1'],
+    [79, 'Ziele ausdrücken: um … zu und damit', 'Wozu machst du das?', 'B1'] ] },
+  { t: 'B1 · Konnektoren und Vergleiche', ic: 'link', h: 262, ch: [
+    [80, 'Zweiteilige Konnektoren: beides, keins oder eins', 'weder Kaffee noch Tee', 'B1'],
+    [81, 'je … desto / je … umso', 'Je öfter, desto leichter.', 'B1'] ] },
+  { t: 'B1 · Genau sagen: Verneinung und Ortsadverbien', ic: 'crosshair', h: 160, ch: [
+    [52, 'Verneinung: nie, nichts, noch nicht, nicht mehr', 'Bist du schon fertig? – Noch nicht.', 'B1'],
+    [53, 'Ortsadverbien: oben – nach oben, dort – dorthin', 'oben · nach oben · dort · dorthin', 'B1'] ] },
+  { t: 'B1 · Präpositionen mit Genitiv und Zeit', ic: 'clock', h: 140, ch: [
+    [82, 'Präpositionen mit Genitiv: wegen, trotz, während …', 'trotz des Windes, während der Pause', 'B1'],
+    [83, 'Wann? Zeitpräpositionen mit Dativ und Genitiv', 'seit Montag, beim Kochen, innerhalb eines Tages', 'B1'] ] },
+  /* end A1–B1 */
+
   /* B2–C1: authored native lessons; source chapter numbers are metadata. */
   {"t":"Wortpositionen im Satz · B2","ic":"book-open","h":40,"adv":true,"lv":"B2","ch":[[86,"Verbposition in einfachen Sätzen","","B2"],[87,"Verbposition in Satzverbindungen","","B2"],[88,"Position von Dativ- und Akkusativobjekt","","B2"],[89,"Position der Angaben im Satz","","B2"],[90,"Informationen direkt zum Verb","","B2"],[91,"Position von nicht","","B2"]]},
   {"t":"Konjunktiv II · B2","ic":"book-open","h":40,"adv":true,"lv":"B2","ch":[[94,"Konjunktiv II der Gegenwart: Formen","","B2"],[95,"Konjunktiv II der Vergangenheit: Formen","","B2"],[96,"Höflichkeit, Vorschläge, Ratschläge und Vorwürfe","","B2"],[97,"Wünsche, irreale Wünsche und irreale Bedingungen","","B2"],[98,"Irreale Vergleiche und irreale Folgen","","B2"]]},
@@ -133,10 +187,10 @@ const GROUPS = [
   {"t":"Wörter und Wortverbindungen · C1","ic":"book-open","h":160,"adv":true,"lv":"C1","ch":[[473,"Doppelkonnektoren","","C1"],[475,"Irgend…","","C1"],[479,"Funktionsverbgefüge 2","","C1"]]},
   {"t":"Sätze umformen · C1","ic":"book-open","h":160,"adv":true,"lv":"C1","ch":[[482,"Nominalisierung","","C1"],[483,"Links- und Rechtsattribute","","C1"],[484,"Präposition – Adverb – Konnektor: temporal","","C1"],[485,"Präposition – Adverb – Konnektor: kausal, konsekutiv, konzessiv, adversativ","","C1"],[486,"Präposition – Adverb – Konnektor: modal, konditional, final","","C1"]]},
   {"t":"Schreiben und Sprechen · C1","ic":"book-open","h":160,"adv":true,"lv":"C1","ch":[[487,"Kommaregeln","","C1"],[488,"Besondere Formen der mündlichen Sprache","","C1"]]},
-  {"t":"Nachschlagen und trainieren","ic":"library","h":40,"ref":true,"ch":[[101,"Unregelmäßige Verben","Präteritum, Partizip, haben oder sein – mit Trainer","Liste"],[102,"Verben mit Dativ","helfen, danken, gefallen … – mit Trainer","Liste"],[103,"Verben mit Dativ und Akkusativ","jemandem etwas geben … – mit Trainer","Liste"],[104,"Verben mit Präpositionen","warten auf, denken an … – mit Trainer","Liste"],[180,"Begriffe und Synonyme","","Liste"],[181,"Wortpositionen im Satz: Gesamtschema","","Liste"],[182,"Präpositionen mit Akkusativ, Dativ und Genitiv","","Liste"],[183,"Verben, Adjektive und Nomen: nach Präpositionen","","Liste"],[184,"Verben, Adjektive und Nomen: alphabetisch","","Liste"],[185,"Dativ, Genitiv und zwei Akkusative","","Liste"],[186,"Unregelmäßige Verben: nach Vokalen","","Liste"],[187,"Unregelmäßige Verben: alphabetisch","","Liste"]]}
+  {"t":"Nachschlagen und trainieren","ic":"library","h":40,"ref":true,"ch":[[101,"Unregelmäßige Verben","Präteritum, Partizip, haben oder sein – mit Trainer","Liste"],[102,"Verben mit Dativ","helfen, danken, gefallen … – mit Trainer","Liste"],[103,"Verben mit Dativ und Akkusativ","jemandem etwas geben … – mit Trainer","Liste"],[104,"Verben mit Präpositionen","warten auf, denken an … – mit Trainer","Liste"],[106,"Ordinalzahlen und Datum","der erste, am zweiten Mai – mit Trainer","Liste"],[180,"Begriffe und Synonyme","","Liste"],[181,"Wortpositionen im Satz: Gesamtschema","","Liste"],[182,"Präpositionen mit Akkusativ, Dativ und Genitiv","","Liste"],[183,"Verben, Adjektive und Nomen: nach Präpositionen","","Liste"],[184,"Verben, Adjektive und Nomen: alphabetisch","","Liste"],[185,"Dativ, Genitiv und zwei Akkusative","","Liste"],[186,"Unregelmäßige Verben: nach Vokalen","","Liste"],[187,"Unregelmäßige Verben: alphabetisch","","Liste"]]}
 ];
 const B2C1_READY = [86,401,87,88,89,90,91,407,408,94,95,410,96,97,412,98,413,99,414,100,415,105,417,418,419,109,110,111,112,113,114,426,116,427,428,429,430,120,431,432,122,123,124,125,126,437,127,128,439,440,130,441,131,443,133,134,445,446,136,137,138,449,139,140,141,142,453,143,144,456,146,457,147,148,149,461,151,152,463,153,464,154,465,155,466,156,467,157,468,158,159,160,471,161,472,162,473,163,164,475,165,166,167,479,169,170,482,483,484,485,486,176,487,488,180,181,182,183,184,185,186,187];   // B2–C1 grammar chapters that are finished
-const READY = Object.fromEntries([...B2C1_READY, ...Array.from({ length: 85 }, (_, i) => i + 1), 101, 102, 103, 104, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 261, 262, 263, 264, 265, 266, 267, 268, 269, 270, 271, 272, 273].map(n => [n, 1]));   // chapters that exist so far
+const READY = Object.fromEntries([...B2C1_READY, ...Array.from({ length: 85 }, (_, i) => i + 1), 101, 102, 103, 104, 106, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 261, 262, 263, 264, 265, 266, 267, 268, 269, 270, 271, 272, 273].map(n => [n, 1]));   // chapters that exist so far
 const TOTAL = GROUPS.reduce((s, g) => s + (g.ref || g.vocab ? 0 : g.ch.length), 0);
 /* level gating: a learner enrolled at level X sees chapters up to X; no level = everything open */
 const LVS = ['A1', 'A2', 'B1', 'B2', 'C1'];
@@ -148,8 +202,9 @@ const topicNo = n => n > 260 ? n - 260 : n > 240 ? n - 240 : n > 220 ? n - 220 :
 const en = () => !!(window.KONTO && KONTO.lang && KONTO.lang() === 'en');
 const lockBtn = l => window.KONTO && KONTO.lockSheet ? `<button class="btn sm gr-unl" data-unlock="${l}">${icn(KONTO.lvState(l) === 'pending' ? 'hourglass' : 'lock-open')} ${KONTO.lvState(l) === 'pending' ? (en() ? 'Requested' : 'Angefragt') : KONTO.org && KONTO.org() ? (en() ? 'Ask my teacher' : 'Lehrkraft fragen') : (en() ? 'Enroll' : 'Einschreiben')}</button>` : '';
 const isRef = n => !!chInfo(n)?.g.ref;                       // the four reference lists
+const A1B1_NO = {"1":1,"2":2,"3":3,"4":4,"5":18,"6":19,"7":20,"8":21,"9":23,"10":5,"11":6,"12":7,"13":31,"14":8,"15":10,"16":11,"17":13,"18":14,"19":15,"20":16,"21":17,"22":35,"23":36,"24":37,"25":28,"26":29,"27":39,"28":40,"29":41,"30":42,"31":38,"32":24,"33":25,"34":26,"35":27,"36":43,"37":44,"38":45,"39":46,"40":47,"41":48,"42":49,"43":65,"44":30,"45":32,"46":33,"47":12,"48":22,"49":9,"50":34,"51":50,"52":82,"53":83,"54":51,"55":52,"56":53,"57":54,"58":55,"59":56,"60":59,"61":60,"62":61,"63":62,"64":63,"65":64,"66":57,"67":58,"68":66,"69":67,"70":68,"71":69,"72":72,"73":73,"74":74,"75":75,"76":76,"77":77,"78":78,"79":79,"80":80,"81":81,"82":84,"83":85,"84":70,"85":71};
 const SOURCE_NO = {"86":1,"87":2,"88":3,"89":4,"90":5,"91":6,"94":9,"95":10,"96":11,"97":12,"98":13,"99":14,"100":15,"105":16,"109":20,"110":21,"111":22,"112":23,"113":24,"114":25,"116":27,"120":31,"122":33,"123":34,"124":35,"125":36,"126":37,"127":38,"128":39,"130":41,"131":42,"133":44,"134":45,"136":47,"137":48,"138":49,"139":50,"140":51,"141":52,"142":53,"143":54,"144":55,"146":57,"147":58,"148":59,"149":60,"151":62,"152":63,"153":64,"154":65,"155":66,"156":67,"157":68,"158":69,"159":70,"160":71,"161":72,"162":73,"163":74,"164":75,"165":76,"166":77,"167":78,"169":80,"170":81,"176":87,"401":1,"407":7,"408":8,"410":10,"412":12,"413":13,"414":14,"415":15,"417":17,"418":18,"419":19,"426":26,"427":27,"428":28,"429":29,"430":30,"431":31,"432":32,"437":37,"439":39,"440":40,"441":41,"443":43,"445":45,"446":46,"449":49,"453":53,"456":56,"457":57,"461":61,"463":63,"464":64,"465":65,"466":66,"467":67,"468":68,"471":71,"472":72,"473":73,"475":75,"479":79,"482":82,"483":83,"484":84,"485":85,"486":86,"487":87,"488":88};
-const gNo = n => SOURCE_NO[n] || n;              // B2–C1 chapters 105–177 are shown as 101–173
+const gNo = n => A1B1_NO[n] || SOURCE_NO[n] || n;              // B2–C1 chapters 105–177 are shown as 101–173
 const numLabel = n => isV(n) ? String(topicNo(n)) : isRef(n) ? icn('book-marked') : String(gNo(n));
 const chInfo = n => { for (const g of GROUPS) for (const c of g.ch) if (c[0] === n) return { g, c }; return null; };
 
@@ -1699,11 +1754,11 @@ function answers(x, ue) {
       return { ok: it.ok.includes(v) && !el.querySelector('.gr-pool').children.length, given: v, empty: !v }; }
     if (x.type === 'fill') { const ins = [...el.querySelectorAll('.gr-fill')], res = ins.map(i => { const ok = JSON.parse(i.dataset.ok), h = i.dataset.h, low = o => o.toLowerCase(); let v = i.value.trim();
         if (h && v && !ok.some(o => low(o) === low(v)) && ok.some(o => low(o) === low(h + v))) v = h + v;
-        return { v, ok: ok.includes(v), ci: !ok.includes(v) && ok.some(o => o.toLowerCase() === v.toLowerCase()) }; });
+        return { v, ok: ok.includes(v), ci: !x.strictCase && !ok.includes(v) && ok.some(o => o.toLowerCase() === v.toLowerCase()) }; });
       ins.forEach((inp, k) => { inp.classList.remove('right', 'wrong'); inp.classList.add(res[k].ok || res[k].ci ? 'right' : 'wrong'); });
       return { ok: res.every(r => r.ok || r.ci), points: res.filter(r=>r.ok||r.ci).length, total: res.length, ci: res.some(r => r.ci), given: res.map(r => r.v).join('|'), empty: res.every(r => !r.v) }; }
     if (x.type === 'match') { const v = el.querySelector('select').value, ok = v && x._opts[LET.indexOf(v)] === it.r; return { ok: !!ok, given: v ? x._opts[LET.indexOf(v)] : '', empty: !v }; }
-    if (x.type === 'type') { const raw = el.querySelector('input,textarea').value, v = sentenceNorm(raw, x.commas), ok = it.ok.some(a => sentenceNorm(a, x.commas) === v), ci = !ok && it.ok.some(a => sentenceNorm(a, x.commas).toLowerCase() === v.toLowerCase());
+    if (x.type === 'type') { const raw = el.querySelector('input,textarea').value, v = sentenceNorm(raw, x.commas), ok = it.ok.some(a => sentenceNorm(a, x.commas) === v), ci = !x.strictCase && !ok && it.ok.some(a => sentenceNorm(a, x.commas).toLowerCase() === v.toLowerCase());
       return { ok: ok || ci, ci, given: raw.trim(), empty: !v }; }
     return { ok: false, given: '', empty: true };
   });
@@ -1925,7 +1980,7 @@ const VKIT = {
 };
 window.GRAM = { kit: VKIT, view, leave, base, quiz, list: chapterList, practice, lessonEpoch: () => lessonEpoch, add(c) { CH[c.n] = c; }, filmVisual(n, v) { if (Number.isInteger(n) && v && typeof v === 'object') filmVisuals.set(n, v); }, allowed, chLevel,
   chapters: () => GROUPS.flatMap(g => g.ch.filter(c => READY[c[0]]).map(c => ({ n: c[0], title: c[1], kick: c[2], level: c[3], vocab: !!g.vocab, ref: !!g.ref, group: g.t, no: g.vocab ? topicNo(c[0]) : gNo(c[0]) })))
-    .sort((a, b) => (a.vocab === b.vocab ? 0 : a.vocab ? -1 : 1) || a.n - b.n),
+    .sort((a, b) => (a.vocab === b.vocab ? 0 : a.vocab ? -1 : 1) || (a.vocab ? a.n - b.n : 0)),   // grammar keeps the table-of-contents (learning) order
   requiredExercises: n => (LESSON_EXERCISES[n] || []).filter(row => !(row[2] & 2)).map(row => row[0]),
   async results() { await pull(); return attempts(); },
   setPass(p) { PASS = p > 1 ? p / 100 : p; if (cur) render(cur); }, pass: () => PASS, refresh() { if (window.KONTO && KONTO.can && !KONTO.can(mode === 'v' ? 'vocab' : 'grammar')) return; if (mode && location.hash.match(/^#\/[gv](\/|$)/)) view(decodeURIComponent(location.hash.split('/').slice(2).join('/')), mode); },

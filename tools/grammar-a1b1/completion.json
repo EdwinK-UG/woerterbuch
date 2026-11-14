@@ -1,0 +1,47 @@
+{
+ "source": {
+  "title": "Grammatik aktiv A1–B1, 2. aktualisierte Ausgabe",
+  "pdfPages": 267,
+  "printedOffset": 2,
+  "sha256": "d72b0724fb9ed3b84d52fae1da5b9b4e449f10895663267cba4d60725f71dcce",
+  "audioIncluded": false
+ },
+ "chapters": 85,
+ "levels": {
+  "A1": 30,
+  "A2": 20,
+  "B1": 35
+ },
+ "partnerPages": 11,
+ "referenceUnits": [
+  101,
+  102,
+  103,
+  104,
+  106
+ ],
+ "exerciseGroups": 722,
+ "questions": 6043,
+ "answerPoints": 7558,
+ "bookItemsIndexed": 4653,
+ "speakingDrills": {
+  "book": 76,
+  "mapped": 76
+ },
+ "blindSolving": {
+  "items": 5857,
+  "decisions": {
+   "reject": 262,
+   "fixed": 275,
+   "accept": 123
+  }
+ },
+ "bookKeyErrorsRecorded": 49,
+ "overlap": {
+  "words": 6,
+  "textHits": 0,
+  "tableHits": "3 rows listing the dative prepositions"
+ },
+ "groups": 24,
+ "order": "level first (A1, A2, B1), topic groups within each level; chapter IDs unchanged"
+}

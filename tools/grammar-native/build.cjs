@@ -26,11 +26,11 @@ const start=engine.indexOf('  /* B2–C1:'),stop=referenceStart(engine);assert.o
 engine=engine.slice(0,start)+'  /* B2–C1: authored native lessons; source chapter numbers are metadata. */\n'+groups.map(g=>'  '+JSON.stringify(g)+',').join('\n')+'\n'+engine.slice(stop);
 // Keep the existing lower-level references and add the source appendix as native references.
 const refsStart=referenceStart(engine),refsStop=engine.indexOf('\n];',refsStart);
-const refs=[[101,'Unregelmäßige Verben','Präteritum, Partizip, haben oder sein – mit Trainer','Liste'],[102,'Verben mit Dativ','helfen, danken, gefallen … – mit Trainer','Liste'],[103,'Verben mit Dativ und Akkusativ','jemandem etwas geben … – mit Trainer','Liste'],[104,'Verben mit Präpositionen','warten auf, denken an … – mit Trainer','Liste'],...index.references.map(r=>[r.id,r.title,'','Liste'])];
+const refs=[[101,'Unregelmäßige Verben','Präteritum, Partizip, haben oder sein – mit Trainer','Liste'],[102,'Verben mit Dativ','helfen, danken, gefallen … – mit Trainer','Liste'],[103,'Verben mit Dativ und Akkusativ','jemandem etwas geben … – mit Trainer','Liste'],[104,'Verben mit Präpositionen','warten auf, denken an … – mit Trainer','Liste'],[106,'Ordinalzahlen und Datum','der erste, am zweiten Mai – mit Trainer','Liste'],...index.references.map(r=>[r.id,r.title,'','Liste'])];
 engine=engine.slice(0,refsStart)+'  '+JSON.stringify({t:'Nachschlagen und trainieren',ic:'library',h:40,ref:true,ch:refs})+engine.slice(refsStop);
 engine=engine.replace(/const isRef = n => [^;]*;/,'const isRef = n => !!chInfo(n)?.g.ref;');
 engine=engine.replace(/const B2C1_READY = \[[^;]*;/,'const B2C1_READY = '+JSON.stringify(ready)+';');
-engine=engine.replace(/const gNo = n => [^;]*;/,'const SOURCE_NO = '+JSON.stringify(Object.fromEntries(index.chapters.flatMap(c=>Object.values(c.ids).map(id=>[id,c.sourceChapter]))))+';\nconst gNo = n => SOURCE_NO[n] || n;');
+engine=engine.replace(/const gNo = n => [^;]*;/,'const SOURCE_NO = '+JSON.stringify(Object.fromEntries(index.chapters.flatMap(c=>Object.values(c.ids).map(id=>[id,c.sourceChapter]))))+';\nconst gNo = n => (typeof A1B1_NO !== \'undefined\' && A1B1_NO[n]) || SOURCE_NO[n] || n;');
 // Regeneration replaces existing SOURCE_NO as well as the old draft's numeric formula.
 engine=engine.replace(/const SOURCE_NO = ([^;]+);\nconst SOURCE_NO = ([^;]+);/,'const SOURCE_NO = $2;');
 engine=engine.replace('const isV = n => n > 200;','const isV = n => !!chInfo(n)?.g.vocab;').replace('n > 200 ? String(topicNo(n))','isV(n) ? String(topicNo(n))').replace("n > 200 ? 'Thema '","isV(n) ? 'Thema '");

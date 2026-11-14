@@ -28,7 +28,7 @@ const short = (s, max = 158) => {
   const cut = s.slice(0, max - 1);
   return cut.slice(0, cut.lastIndexOf(" ")).replace(/[,;:–-]\s*$/, "") + "…";
 };
-const groupName = (g) => g.replace(/\s·\s(A1|A2|B1|B2|C1)$/, "");
+const groupName = (g) => g.replace(/\s·\s(A1|A2|B1|B2|C1)$/, "").replace(/^(A1|A2|B1) · /, "");
 
 const SECTIONS = {
   grammatik: { name: "Grammar", de: "Grammatik", kind: "German grammar", levels: ["A1", "A2", "B1", "B2", "C1"], unit: "Chapter" },
@@ -45,7 +45,7 @@ const missing = [];
 for (const c of chapters) {
   const sec = sectionOf(c);
   const base = sec === "listen" ? `/${OUT}/listen/` : levelPath(sec, c.level);
-  const url = base + slug(c.title) + "/";
+  const url = base + ((text.slugs && text.slugs[c.n]) || slug(c.title)) + "/"; // published addresses stay stable when a chapter is renamed
   if (byPath.has(url)) throw Error(`Two chapters share the address ${url} (${byPath.get(url).n} and ${c.n})`);
   const summary = text.chapters[c.n];
   if (!summary) missing.push(c.n);
