@@ -74,7 +74,7 @@ wink: the handoff's order), `expressionAmount` 0..1, `lookX` / `lookY` -1..1 (+x
   down three quarters of the way, then the closed patch takes over. Wink: near eye, 0.54 s, laughing-eye arc.
 - Gaze: critically damped spring (about 50 ms), iris travel per view in px (tq near eye -7 .. +2.5 x, +-2.5 y; far eye
   -2.6 .. +1.1 x, +-2.2 y); looking down lowers the lids a little. Idle: saccades every 0.8 to 2.4 s with two glances.
-- One face state drives every view (`Face.new(vm, {{pre='tq_', cfg=CFG_TQ}, ...}, '')`), so blinks and blends stay in step
+{% raw %}- One face state drives every view (`Face.new(vm, {{pre='tq_', cfg=CFG_TQ}, ...}, '')`), so blinks and blends stay in step{% endraw %}
   while the rig cross-fades views. Views without a part simply have no such numbers.
 
 ## Integration into build_liv.py (feat/liv-2d-scenes, 6d5952a)
@@ -124,7 +124,7 @@ Done by the lead in 8ccc09b (these were the steps; kept for reference and for ot
    and generate the controller's require lines (add next to the other `.replace` calls):
    ```python
    face_req = ''.join(f"local FACE_CFG_{V.upper()} = require('face_cfg_{V}')\n" for V in FACE_VIEWS)
-   face_list = ', '.join(f"{{pre = '{V}_', cfg = FACE_CFG_{V.upper()}}}" for V in FACE_VIEWS)
+{% raw %}   face_list = ', '.join(f"{{pre = '{V}_', cfg = FACE_CFG_{V.upper()}}}" for V in FACE_VIEWS){% endraw %}
    luau = luau.replace('@FACEREQ@', face_req).replace('@FACEVIEWS@', face_list)
    ```
 6. Optional test buttons (as in the face test): `button('Laugh', ..., [('expression', 3)])`, `[('blinkNow', 1)]`, etc.
