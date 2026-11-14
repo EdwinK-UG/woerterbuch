@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex">
+<title>Park (3D)</title>
+<!-- Hidden helper page of grammatik/liv/film-park-3d.js. It keeps the 3D libraries and their import map out of the app
+     page: the film player's page creates this page in an invisible frame and asks it for one picture at a time
+     (PARK3D.draw), which it copies onto the film's canvas. It holds no lesson text. -->
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
+  "@pixiv/three-vrm": "https://cdn.jsdelivr.net/npm/@pixiv/three-vrm@3.0.0/lib/three-vrm.module.min.js"
+} }
+</script>
+<script>window.PARK3D_READY = new Promise((ok, bad) => { window.__park3dOk = ok; window.__park3dBad = bad; });</script>
+</head>
+<body style="margin:0">
+<canvas id="c" width="2" height="2"></canvas>
+<script type="module" onerror="__park3dBad(new Error('the 3D libraries could not be loaded'))">
+import * as THREE from 'three';
+import { ParkScene } from '../../tools/liv3d/park/park3d.js';
+try {
+  const canvas = document.getElementById('c'), qs = new URLSearchParams(location.search);
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
+  renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.NoToneMapping; renderer.setPixelRatio(1);
+  const park = await ParkScene.create({ model: qs.get('model') || new URL('../../tools/liv3d/models/liv.vrm', import.meta.url).href });
+  let W = 0, H = 0;
+  // one picture: route 'into' | 'within', t seconds into the action (held after the 8 s run), size in device pixels
+  window.__park3dOk({ park, draw(route, t, w, h) {
+    w = Math.max(2, Math.min(4096, Math.round(w))); h = Math.max(2, Math.min(4096, Math.round(h)));
+    if (w !== W || h !== H) { renderer.setSize(w, h, false); W = w; H = h; }
+    park.seek(route === 'within' ? 'within' : 'into', t); park.render(renderer); return canvas;
+  } });
+} catch (e) { window.__park3dBad(e); }
+</script>
+</body>
+</html>

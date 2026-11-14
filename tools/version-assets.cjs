@@ -30,6 +30,7 @@ const files = [
   "grammatik/liv/liv-art.js",
   "grammatik/liv/engine.js",
   "grammatik/liv/film-park.js",
+  "grammatik/liv/film-park-3d.js",
   "grammatik/film.js",
   "grammatik/film.css",
   "grammatik/vocabulary.js",

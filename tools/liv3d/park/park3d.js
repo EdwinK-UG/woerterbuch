@@ -7,7 +7,7 @@
 //
 // Scenes: 'location' = Dativ, she jogs a loop inside the park, stops, the place lights up (26.3 s with narration);
 //         'goal'     = Akkusativ, she waits on the pavement, runs through the gate, the route and then the park light up (22.4 s).
-//         'within' / 'into' = the short 8 s versions the silent film player uses (same staging as the canvas park).
+//         'within' / 'into' = the short versions the film player uses (same staging as the canvas park; 9.6 s and 8 s, then held).
 // Cue times are the lengths of the recorded narration clips (Elisa); they are numbers only, no lesson text is in this file.
 import * as THREE from 'three';
 import { LivActor } from '../liv3d.js';
@@ -141,7 +141,7 @@ function buildOverlays(scene) {
 export const SCENES = {
   location: { route: 'within', length: 26.33, cues: [0, 9.195, 18.576], start: { x: 1.5, z: 0.05, yaw: Math.PI / 2 }, tag: 'im Park · Wo?', goal: false },
   goal: { route: 'into', length: 22.43, cues: [0, 4.783, 15.232], start: { x: -2.35, z: 0, yaw: Math.PI / 2 }, tag: 'in den Park · Wohin?', goal: true, crossing: 5.583 },
-  within: { route: 'within', length: 8, cues: [0], start: { x: 1.6, z: 0, yaw: Math.PI / 2 }, tag: 'im Park · Wo?', goal: false },
+  within: { route: 'within', length: 9.6, cues: [0], start: { x: 1.6, z: 0, yaw: Math.PI / 2 }, tag: 'im Park · Wo?', goal: false },
   into: { route: 'into', length: 8, cues: [0], start: { x: -3.4, z: 0, yaw: Math.PI / 2 }, tag: 'in den Park · Wohin?', goal: true },
 };
 // a loop on the lawn: she never leaves the park
