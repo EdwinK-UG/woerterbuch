@@ -40,7 +40,7 @@ same flag puts Liv into the 3D workshop of Kapitel 57 (`docs/liv3d-werkstatt.md`
 - The 3D libraries (Three.js r160, three-vrm 3.0.0 from jsDelivr) and their import map are in a hidden same-origin frame,
   `grammatik/liv/park3d-frame.html`. The app page itself gets no import map and no new library. Each film frame is
   rendered in that frame and copied onto the film's canvas; the tag pill is drawn on top as before.
-- The model is served with the site: `grammatik/liv/liv.vrm` (4.6 MB, built by `vrm_fit.py`, versioned in `index.html`
+- The model is served with the site: `grammatik/liv/liv.vrm` (2.6 MB, built by `vrm_fit.py` and `vrm_pack.py`, versioned in `index.html`
   by `npm run assets`). `window.GRAM_PARK_3D_MODEL` can point elsewhere.
 - `npm run assets` versions the new script like the others (`tools/version-assets.cjs`).
 

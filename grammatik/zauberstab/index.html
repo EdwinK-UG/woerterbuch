@@ -63,10 +63,35 @@
   @media (prefers-reduced-motion: reduce) { #start { backdrop-filter: none; } .gap.now { animation: none; } }
 </style>
 <script type="importmap">
-{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js",
                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
                "@pixiv/three-vrm": "https://cdn.jsdelivr.net/npm/@pixiv/three-vrm@3.0.0/lib/three-vrm.module.min.js" } }
 </script>
+<script>
+  // Liv's model starts downloading now, beside the code, not after it. ?lv= (from the lesson page) is the version the app
+  // page uses, so a model the lesson page or the film park already fetched comes from the browser's cache.
+  (function () {
+    var lv = new URLSearchParams(location.search).get('lv') || '';
+    window.LIV_MODEL = new URL('../liv/liv.vrm' + (/^[a-z0-9]{1,20}$/.test(lv) ? '?v=' + lv : ''), location.href).href;
+    var l = document.createElement('link'); l.rel = 'preload'; l.as = 'fetch'; l.crossOrigin = 'anonymous'; l.href = window.LIV_MODEL;
+    document.head.appendChild(l);
+  })();
+</script>
+<!-- every module the scene needs, fetched side by side instead of one import after another -->
+<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js" crossorigin>
+<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js" crossorigin>
+<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/utils/BufferGeometryUtils.js" crossorigin>
+<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/@pixiv/three-vrm@3.0.0/lib/three-vrm.module.min.js" crossorigin>
+<link rel="modulepreload" href="main.js?v=3">
+<link rel="modulepreload" href="wishes.js">
+<link rel="modulepreload" href="visions.js">
+<link rel="modulepreload" href="../werkstatt/sfx.js">
+<link rel="modulepreload" href="../../tools/liv3d/liv3d.js">
+<link rel="modulepreload" href="../../tools/liv3d/rig.js">
+<link rel="modulepreload" href="../../tools/liv3d/hands.js">
+<link rel="modulepreload" href="../../tools/liv3d/face.js">
+<link rel="modulepreload" href="../../tools/liv3d/actions.js">
+<link rel="modulepreload" href="../../tools/liv3d/props.js">
 </head>
 <body>
 <canvas id="scene" aria-label="Abendwiese: Liv, ein Mädchen im roten Dirndl, hält einen Zauberstab. Um sie schweben leuchtende Wortkugeln."></canvas>
@@ -96,6 +121,6 @@
     <div class="hint2">Wischen: Stab schwingen · Tippen oder 1 2 3: Wort wählen · → Weiter</div>
   </div>
 </div>
-<script type="module" src="main.js?v=2"></script>
+<script type="module" src="main.js?v=3"></script>
 </body>
 </html>

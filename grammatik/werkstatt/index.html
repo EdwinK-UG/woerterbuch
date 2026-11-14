@@ -52,9 +52,22 @@
   @media (prefers-reduced-motion: reduce) { #start { backdrop-filter: none; } }
 </style>
 <script type="importmap">
-{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js",
                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
                "@pixiv/three-vrm": "https://cdn.jsdelivr.net/npm/@pixiv/three-vrm@3.0.0/lib/three-vrm.module.min.js" } }
+</script>
+<script>
+  // With Liv (?liv=1) her model and modules start downloading now, beside the workshop's own code (the same addresses
+  // liv-worker.js asks for, so the requests are shared).
+  (function () {
+    var q = new URLSearchParams(location.search); if (q.get('liv') !== '1') return;
+    var lv = q.get('lv') || '', add = function (rel, href, cors) { var l = document.createElement('link'); l.rel = rel; l.href = href; if (rel === 'preload') l.as = 'fetch'; if (cors) l.crossOrigin = 'anonymous'; document.head.appendChild(l); };
+    add('preload', new URL('../liv/liv.vrm' + (/^[a-z0-9]{1,20}$/.test(lv) ? '?v=' + lv : ''), location.href).href, true);
+    ['three@0.160.0/examples/jsm/loaders/GLTFLoader.js', 'three@0.160.0/examples/jsm/utils/BufferGeometryUtils.js', '@pixiv/three-vrm@3.0.0/lib/three-vrm.module.min.js']
+      .forEach(function (p) { add('modulepreload', 'https://cdn.jsdelivr.net/npm/' + p, true); });
+    ['liv-worker.js?v=1', '../../tools/liv3d/liv3d.js', '../../tools/liv3d/rig.js', '../../tools/liv3d/hands.js', '../../tools/liv3d/face.js', '../../tools/liv3d/actions.js', '../../tools/liv3d/props.js']
+      .forEach(function (p) { add('modulepreload', p); });
+  })();
 </script>
 </head>
 <body>

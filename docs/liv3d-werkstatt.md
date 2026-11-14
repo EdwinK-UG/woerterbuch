@@ -10,7 +10,7 @@ With `?liv=1` on the workshop page the 3D Liv (`tools/liv3d`) takes his place at
 - The workshop page alone shows "Nicht verfügbar": it gets its sentences from the lesson page by message. For local
   work a harness outside git (`.local/w57/`, git-ignored) embeds it and posts the texts it reads at run time from the
   private folder. No lesson sentence is in any repository file.
-- The model is `grammatik/liv/liv.vrm` (4.6 MB, served with the site). Without it, or on any error, the workman comes
+- The model is `grammatik/liv/liv.vrm` (2.6 MB, served with the site; with `?liv=1` it and Liv's modules start downloading from the page head). Without it, or on any error, the workman comes
   back (one console warning). The open button waits for her; after 45 s the workman takes over.
 
 ## What was built

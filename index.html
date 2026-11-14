@@ -594,7 +594,7 @@ function loadGram(){
     if(!window.GRAM_ART)await scriptFile('grammatik/illustrations.js?v=990e867b0dec');
     // Illustrations stay static. Authored films opt in per private lesson;
     // the old picture-type motion wrapper is retained only in its review prototype.
-    if(!window.GRAM)await scriptFile('grammatik/grammatik.js?v=2dcf9b8d64a7');
+    if(!window.GRAM)await scriptFile('grammatik/grammatik.js?v=f9f589a00ce9');
   })().catch(e=>{gramP=null;throw e});
   return gramP;
 }
@@ -629,7 +629,8 @@ let filmParkP=null;
 // On by default; ?liv3d=0 switches back to the 2D park and the workman for this browser tab, ?liv3d=1 on again. Without WebGL or the model both fall back by themselves.
 const park3d=(()=>{try{const p=new URLSearchParams(location.search),q=p.get('liv3d')||p.get('park3d');if(q==='0')sessionStorage.setItem('dk-liv3d','0');else if(q==='1')sessionStorage.removeItem('dk-liv3d');return sessionStorage.getItem('dk-liv3d')!=='0';}catch(e){return true;}})();
 window.DK_LIV3D=park3d;
-if(park3d)window.GRAM_PARK_3D_MODEL='grammatik/liv/liv.vrm?v=b8f3d4dcf78a';
+window.DK_LIV_MODEL='grammatik/liv/liv.vrm?v=6dc4e88ecbe5';   // one address (and so one cached copy) for the park and every Liv scene
+if(park3d)window.GRAM_PARK_3D_MODEL=window.DK_LIV_MODEL;
 window.loadFilmPark=()=>filmParkP||(filmParkP=scriptFile('grammatik/liv/liv-art.js?v=a64a41fac175').then(()=>scriptFile('grammatik/liv/engine.js?v=75f3efbf3ad3')).then(()=>scriptFile('grammatik/liv/film-park.js?v=29f7ef151ec7')).then(()=>park3d?scriptFile('grammatik/liv/film-park-3d.js?v=3a014e1c90ed').catch(()=>{}):undefined).catch(e=>{filmParkP=null;throw e;}));
 function loadFilm(){
   if(window.GRAM_FILM)return Promise.resolve();

@@ -146,16 +146,21 @@ Python server on 127.0.0.1:8794 that saves POST bodies; not part of the repo). A
 
 ## Liv's own model (14 Nov 2026)
 
-`grammatik/liv/liv.vrm` (4.6 MB, served with the site) is made in two steps, both repeatable:
+`grammatik/liv/liv.vrm` (2.6 MB, 1.5 MB as the server sends it; served with the site) is made in three steps, all repeatable:
 
 1. **VRoid Studio** gives the base (`models/liv-vroid.vrm`, project `models/Liv.vroid`): child body, dress preset, boots, wavy
    hair. `vroid_params.py` and `liv_textures.py` set the body sliders and recolour the preset inside the `.vroid` file.
 2. **`vrm_fit.py`** turns that export into Liv directly in the VRM file (no VRoid Studio, no clicking):
 
 ```sh
-python3 tools/liv3d/vrm_fit.py tools/liv3d/models/liv-vroid.vrm grammatik/liv/liv.vrm
-npm run assets        # new version hash for the model in index.html
+python3 tools/liv3d/vrm_fit.py tools/liv3d/models/liv-vroid.vrm tools/liv3d/models/liv.vrm
+python3 tools/liv3d/vrm_pack.py tools/liv3d/models/liv.vrm grammatik/liv/liv.vrm
+node tools/version-assets.cjs   # new version hash for the model in index.html (npm run assets also rebuilds the catalog)
 ```
+
+3. **`vrm_pack.py`** stores the same model smaller (nothing visible changes; checked with pictures side by side): textures
+   as WebP (`EXT_texture_webp`; colour lossy at quality 92 with exact alpha, so cut-out edges stay; normal maps lossless;
+   the thumbnail stays PNG), 16-bit indices, joints and weights as bytes. 2.84 MB to 1.49 MB gzipped.
 
 | Step (`--no-<step>` switches it off) | What it does |
 |---|---|
@@ -186,7 +191,7 @@ Open on this model:
   but it does not look right yet.
 - The hair is a wavy bob, smoother than the painted curls; no loose curl on top yet.
 - Eyes are smaller than painted; the boots have a heel and are slimmer; the satchel prop is still a plain box.
-- 4.6 MB (the `web` step: no flat body normal map, sparse morph targets, nothing unreferenced; was 13.5 MB), 40k
+- 2.6 MB (the `web` step: no flat body normal map, sparse morph targets, nothing unreferenced; then `vrm_pack.py`; was 13.5 MB), 40k
   triangles, 13 materials: fine on a laptop, not measured on real phones.
 
 ## Weak spots (honest list)

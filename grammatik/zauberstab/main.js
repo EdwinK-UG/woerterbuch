@@ -167,11 +167,11 @@ function palmWorld() {
 async function loadLiv() {
   const { LivActor } = await import('../../tools/liv3d/liv3d.js');
   const { shapeRow } = await import('../../tools/liv3d/hands.js');
-  const model = (TEST && qs.get('livmodel')) || new URL('../liv/liv.vrm', import.meta.url).href;
+  const model = (TEST && qs.get('livmodel')) || window.LIV_MODEL;   // set (and already downloading) in index.html
   const a = await Promise.race([LivActor.load(model), new Promise((_, no) => setTimeout(() => no(new Error('Liv: the model took too long')), 45000))]);
   liv = a; rig = a.rig; scene.add(a.root); const sp = SPOT(); a.reset({ x: sp.x, z: 0, yaw: sp.yaw }); a.setExpression('happy');
   ST.grip = shapeRow('gripHandle', 0.92);
-  ST.hand.copy(restHand());
+  ST.hand.copy(restHand()); ST.livAt = Math.round(performance.now());
 }
 
 /* ---------------- the swing ---------------- */
@@ -427,13 +427,13 @@ resize();
   const go = (m) => { sfx.ensure(); $('start').remove(); setMode(m); started = true; };
   $('goWatch').disabled = false; $('goWatch').textContent = 'Zuschauen'; $('goWatch').onclick = () => go('watch');
   $('goTry').disabled = false; $('goTry').onclick = () => go('try'); $('goTry').focus();
-  startRound(0);
+  startRound(0); ST.readyAt = Math.round(performance.now());
 })();
 if (!TEST) requestAnimationFrame(frame); else renderer.render(scene, camera);
 
 // hooks for checking without real time (test mode): __z.adv(n) steps, __z.render(), __z.view(pos, at, fov)
 window.__z = {
-  S, orbs, get liv() { return liv; }, renderer, scene, camera, ROUNDS, sparks,
+  S, ST, orbs, get liv() { return liv; }, renderer, scene, camera, ROUNDS, sparks,
   adv(n = 1) { for (let i = 0; i < n; i++) step(1 / 60); renderer.render(scene, camera); return S.t; },
   render() { renderer.render(scene, camera); },
   mode(m) { $('start') && $('start').remove(); setMode(m); },

@@ -28,6 +28,17 @@ from the tip); tapping an orb, the buttons 1 · 2 · 3 or the keys 1 2 3 do the 
 Sound is synthesized (swish, chime, fizzle, a rising arpeggio for a wish); "Ton aus" turns it off. Reduced motion:
 smaller float, no pulsing gap.
 
+## Loading
+
+- The lesson page downloads Liv's model while the learner reads lesson 94 (about 2.5 s after the page, when the browser
+  is idle; not with data saving or on 2G), so the scene usually finds it in the browser's cache. `window.DK_LIV_MODEL`
+  in `index.html` is the one versioned address for the park and all Liv scenes; `openWerkstatt` passes its version as `?lv=`.
+- The scene's `index.html` starts the model download and preloads every module (three.js minified, GLTFLoader,
+  three-vrm, `tools/liv3d/*`) at once, instead of one import after another.
+- Measured (14 Nov 2026), opened directly with an empty cache: before, the model request started 1.35 s after the
+  scene's code and took 4.9 s for 2.84 MB; now it starts with the page and is 1.49 MB. Building Liv after the download
+  takes 0.3 to 0.5 s.
+
 ## Lesson text stays private
 
 `wishes.js` holds no sentence. The lesson page posts its texts (`werkstatt-ready` → `werkstatt-texts`, as for the

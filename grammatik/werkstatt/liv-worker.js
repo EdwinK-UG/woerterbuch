@@ -15,7 +15,7 @@ import { shapeRow } from '../../tools/liv3d/hands.js';
 
 const QS = new URLSearchParams(location.search), TESTING = QS.has('test');
 // the model; in test mode another file can be named (also used to check that a missing model brings the workman back)
-const MODEL = (TESTING && QS.get('livmodel')) || new URL('../liv/liv.vrm', import.meta.url).href;
+const MODEL = (TESTING && QS.get('livmodel')) || new URL('../liv/liv.vrm' + (/^[a-z0-9]{1,20}$/.test(QS.get('lv') || '') ? '?v=' + QS.get('lv') : ''), import.meta.url).href;   // ?lv= from the lesson page: the address the app page caches
 const V = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);
 const clamp = (x, a, b) => Math.min(b, Math.max(a, x)), lerp = (a, b, k) => a + (b - a) * k;
 const smooth = (k) => { const x = clamp(k, 0, 1); return x * x * (3 - 2 * x); };

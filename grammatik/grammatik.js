@@ -1179,12 +1179,21 @@ const watchBtn = c => (hasWatch(c) ? `<button class="btn sm" data-watch="${c.n}"
    chapter's own sentences. */
 // Interactive scenes that open in a full-screen frame from a lesson (they get the lesson's texts by message, see werkTexts).
 const WERKSTATT = {
-  57: { liv: ['grammatik/liv/werkstatt/index.html?v=1', 'Trennbar-Werkstatt mit Liv'], '3d': ['grammatik/werkstatt/index.html?v=2', 'Trennbar-Werkstatt 3D'],
+  57: { liv: ['grammatik/liv/werkstatt/index.html?v=1', 'Trennbar-Werkstatt mit Liv'], '3d': ['grammatik/werkstatt/index.html?v=3', 'Trennbar-Werkstatt 3D'],
     btn: ['liv', 'hammer', 'Werkstatt mit Liv'], card: ['Die Säge zeigt es', 'Trennbare Verben lassen sich zersägen, untrennbare nicht. Sieh Liv zu oder säge selbst – mit Ton.', [['liv', 'Werkstatt mit Liv', 'hammer'], ['3d', '3D-Werkstatt']]] },
-  94: { wand: ['grammatik/zauberstab/index.html?v=1', 'Wunschzauber mit Liv'], exercises: true,
+  94: { wand: ['grammatik/zauberstab/index.html?v=2', 'Wunschzauber mit Liv'], exercises: true, vrm: true,
     btn: ['wand', 'wand-sparkles', 'Zauberstab'], card: ['Wünsch dir was!', 'Liv hat einen Zauberstab. Jeder Wunsch braucht den Konjunktiv II – schwing den Stab zum richtigen Wort, mit Ton.', [['wand', 'Zauberstab schwingen', 'wand-sparkles']]] },
 };
-const werkBtn = c => { const w = WERKSTATT[c.n]; return w && !c.vocab ? `<button class="btn sm" data-werkstatt="${c.n}" data-werk="${w.btn[0]}">${icn(w.btn[1])} ${w.btn[2]}</button>` : ''; };
+// Scenes marked vrm open with the 3D Liv first: her model (about 1.5 MB) downloads while the learner reads the lesson, so
+// the scene takes it from the browser's cache. Not on a data-saving or 2G connection.
+let livWarm = false;
+function warmLiv() {
+  const cn = navigator.connection; if (livWarm || !window.DK_LIV_MODEL || (cn && (cn.saveData || /2g/.test(cn.effectiveType || '')))) return;
+  livWarm = true; const go = () => fetch(window.DK_LIV_MODEL, { priority: 'low' }).then(r => r.arrayBuffer()).catch(() => { livWarm = false; });
+  setTimeout(() => (window.requestIdleCallback ? requestIdleCallback(go, { timeout: 4000 }) : go()), 2500);
+}
+const livVersion = () => (/[?&]v=([a-z0-9]{1,20})/.exec(window.DK_LIV_MODEL || '') || [])[1];
+const werkBtn = c => { const w = WERKSTATT[c.n]; if (w && w.vrm && !c.vocab) warmLiv(); return w && !c.vocab ? `<button class="btn sm" data-werkstatt="${c.n}" data-werk="${w.btn[0]}">${icn(w.btn[1])} ${w.btn[2]}</button>` : ''; };
 const werkCard = c => { const w = WERKSTATT[c.n]; return w && !c.vocab ? `<div class="gr-cream" style="display:flex;gap:.8rem;align-items:center;flex-wrap:wrap;margin:0 0 1rem"><div style="flex:1;min-width:14rem"><b>${w.card[0]}</b><br><span style="color:var(--mut)">${w.card[1]}</span></div>${w.card[2].map(([k, t, i]) => `<button class="btn sm" data-werkstatt="${c.n}" data-werk="${k}">${i ? icn(i) + ' ' : ''}${t}</button>`).join('')}</div>` : ''; };
 function werkTexts(c) {
   const out = [], walk = x => { if (out.length > 4000) return; if (typeof x === 'string') out.push(x); else if (Array.isArray(x)) x.forEach(walk); else if (x && typeof x === 'object') Object.values(x).forEach(walk); };
@@ -1195,7 +1204,7 @@ function openWerkstatt(n, kind) {
   const previous = document.activeElement, scroll = document.body.style.overflow;
   const d = document.createElement('dialog'); d.setAttribute('aria-label', w[1]);
   d.style.cssText = 'position:fixed;inset:0;width:100vw;height:100dvh;max-width:none;max-height:none;margin:0;padding:0;border:0;background:#f3e9d8';
-  const f = document.createElement('iframe'); f.title = w[1]; f.src = w[0] + (kind === '3d' && window.DK_LIV3D ? '&liv=1' : ''); f.allow = 'autoplay; fullscreen';      // Liv at the saw unless the app page was opened with ?liv3d=0
+  const f = document.createElement('iframe'); f.title = w[1]; f.src = w[0] + (kind === '3d' && window.DK_LIV3D ? '&liv=1' : '') + (livVersion() ? '&lv=' + livVersion() : ''); f.allow = 'autoplay; fullscreen';      // Liv at the saw unless the app page was opened with ?liv3d=0
   f.style.cssText = 'display:block;width:100%;height:100%;border:0';
   const send = () => f.contentWindow?.postMessage({ type: 'werkstatt-texts', texts: werkTexts(c) }, location.origin);
   const onMsg = e => { if (e.source !== f.contentWindow || e.origin !== location.origin) return; if (e.data?.type === 'werkstatt-ready') send(); else if (e.data?.type === 'werkstatt-close') close(); };
