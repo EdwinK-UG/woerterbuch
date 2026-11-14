@@ -1177,15 +1177,21 @@ const watchBtn = c => (hasWatch(c) ? `<button class="btn sm" data-watch="${c.n}"
 /* Kapitel 57: the saw workshop, with Liv in 2D (grammatik/liv/werkstatt/) and in 3D (grammatik/werkstatt/). Neither holds
    lesson text: when a workshop is ready it asks this page, which loaded the chapter with the learner's enrolment, for the
    chapter's own sentences. */
-const WERKSTATT = { 57: { liv: ['grammatik/liv/werkstatt/index.html?v=1', 'Trennbar-Werkstatt mit Liv'], '3d': ['grammatik/werkstatt/index.html?v=2', 'Trennbar-Werkstatt 3D'] } };
-const werkBtn = c => (WERKSTATT[c.n] && !c.vocab ? `<button class="btn sm" data-werkstatt="${c.n}" data-werk="liv">${icn('hammer')} Werkstatt mit Liv</button>` : '');
-const werkCard = c => (WERKSTATT[c.n] && !c.vocab ? `<div class="gr-cream" style="display:flex;gap:.8rem;align-items:center;flex-wrap:wrap;margin:0 0 1rem"><div style="flex:1;min-width:14rem"><b>Die Säge zeigt es</b><br><span style="color:var(--mut)">Trennbare Verben lassen sich zersägen, untrennbare nicht. Sieh Liv zu oder säge selbst – mit Ton.</span></div><button class="btn sm" data-werkstatt="${c.n}" data-werk="liv">${icn('hammer')} Werkstatt mit Liv</button><button class="btn sm" data-werkstatt="${c.n}" data-werk="3d">3D-Werkstatt</button></div>` : '');
+// Interactive scenes that open in a full-screen frame from a lesson (they get the lesson's texts by message, see werkTexts).
+const WERKSTATT = {
+  57: { liv: ['grammatik/liv/werkstatt/index.html?v=1', 'Trennbar-Werkstatt mit Liv'], '3d': ['grammatik/werkstatt/index.html?v=2', 'Trennbar-Werkstatt 3D'],
+    btn: ['liv', 'hammer', 'Werkstatt mit Liv'], card: ['Die Säge zeigt es', 'Trennbare Verben lassen sich zersägen, untrennbare nicht. Sieh Liv zu oder säge selbst – mit Ton.', [['liv', 'Werkstatt mit Liv', 'hammer'], ['3d', '3D-Werkstatt']]] },
+  94: { wand: ['grammatik/zauberstab/index.html?v=1', 'Wunschzauber mit Liv'], exercises: true,
+    btn: ['wand', 'wand-sparkles', 'Zauberstab'], card: ['Wünsch dir was!', 'Liv hat einen Zauberstab. Jeder Wunsch braucht den Konjunktiv II – schwing den Stab zum richtigen Wort, mit Ton.', [['wand', 'Zauberstab schwingen', 'wand-sparkles']]] },
+};
+const werkBtn = c => { const w = WERKSTATT[c.n]; return w && !c.vocab ? `<button class="btn sm" data-werkstatt="${c.n}" data-werk="${w.btn[0]}">${icn(w.btn[1])} ${w.btn[2]}</button>` : ''; };
+const werkCard = c => { const w = WERKSTATT[c.n]; return w && !c.vocab ? `<div class="gr-cream" style="display:flex;gap:.8rem;align-items:center;flex-wrap:wrap;margin:0 0 1rem"><div style="flex:1;min-width:14rem"><b>${w.card[0]}</b><br><span style="color:var(--mut)">${w.card[1]}</span></div>${w.card[2].map(([k, t, i]) => `<button class="btn sm" data-werkstatt="${c.n}" data-werk="${k}">${i ? icn(i) + ' ' : ''}${t}</button>`).join('')}</div>` : ''; };
 function werkTexts(c) {
   const out = [], walk = x => { if (out.length > 4000) return; if (typeof x === 'string') out.push(x); else if (Array.isArray(x)) x.forEach(walk); else if (x && typeof x === 'object') Object.values(x).forEach(walk); };
-  walk(c.understand); walk(c.examples); walk(c.speak); return out;
+  walk(c.understand); walk(c.examples); walk(c.speak); if (WERKSTATT[c.n]?.exercises) walk(c.exercises); return out;
 }
 function openWerkstatt(n, kind) {
-  const c = cur && cur.n === n ? cur : CH[n], w = WERKSTATT[n] && (WERKSTATT[n][kind] || WERKSTATT[n].liv); if (!c || !w) return;
+  const W = WERKSTATT[n], c = cur && cur.n === n ? cur : CH[n], w = W && (Array.isArray(W[kind]) ? W[kind] : W[W.btn[0]]); if (!c || !w) return;
   const previous = document.activeElement, scroll = document.body.style.overflow;
   const d = document.createElement('dialog'); d.setAttribute('aria-label', w[1]);
   d.style.cssText = 'position:fixed;inset:0;width:100vw;height:100dvh;max-width:none;max-height:none;margin:0;padding:0;border:0;background:#f3e9d8';
