@@ -4,7 +4,7 @@
 // floor side. So she stands on a wooden platform with two steps, high enough (68 cm) that she can lean over the bench
 // with her skirt clear of the bench top. Her hands are pinned to the saw's two handle points every frame (the player's
 // arm IK), her shoulders lean in with the saw so the arms never overstretch, and the workman's reactions are mapped to
-// her own actions. Needs '@pixiv/three-vrm' in the page's import map and the model file tools/liv3d/models/liv.vrm
+// her own actions. Needs '@pixiv/three-vrm' in the page's import map and the model file grammatik/liv/liv.vrm
 // (not in the repository); if either is missing, main.js keeps the workman.
 // No lesson text in here: the sentences still come from the lesson page.
 import * as THREE from 'three';
@@ -15,7 +15,7 @@ import { shapeRow } from '../../tools/liv3d/hands.js';
 
 const QS = new URLSearchParams(location.search), TESTING = QS.has('test');
 // the model; in test mode another file can be named (also used to check that a missing model brings the workman back)
-const MODEL = (TESTING && QS.get('livmodel')) || new URL('../../tools/liv3d/models/liv.vrm', import.meta.url).href;
+const MODEL = (TESTING && QS.get('livmodel')) || new URL('../liv/liv.vrm', import.meta.url).href;
 const V = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);
 const clamp = (x, a, b) => Math.min(b, Math.max(a, x)), lerp = (a, b, k) => a + (b - a) * k;
 const smooth = (k) => { const x = clamp(k, 0, 1); return x * x * (3 - 2 * x); };

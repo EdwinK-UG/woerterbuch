@@ -8,7 +8,7 @@ import { ROUNDS, loadRounds } from './rounds.js?v=1';
 import { Sfx } from './sfx.js?v=1';
 
 const qs = new URLSearchParams(location.search), TEST = qs.has('test');
-const LIVQ = qs.get('liv') === '1'; let LIV = null;      // opt-in: Liv instead of the workman (liv-worker.js)
+const LIVQ = qs.get('liv') === '1'; let LIV = null, livCam = LIVQ;      // opt-in: Liv instead of the workman (liv-worker.js); livCam: a closer camera for her
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const sfx = new Sfx();
 
@@ -529,8 +529,8 @@ canvas.addEventListener('pointerup', () => { if (!S.dragging) return; S.dragging
 function resize() {
   const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false); camera.aspect = w / h;
   const portrait = w / h < 0.9; const changed = portrait !== S.portrait; S.portrait = portrait;
-  if (portrait) { camera.fov = 40; const half = 1.15, d = half / (Math.tan(THREE.MathUtils.degToRad(20)) * camera.aspect); camera.position.set(0.15, 1.2 + d * 0.28, d); camera.lookAt(0.05, 0.92, 0.3); shelfUnit.visible = false; for (const o of shelfObjs) o.visible = false; }
-  else { camera.fov = 35; const half = 2.0, d = Math.max(3.3, half / (Math.tan(THREE.MathUtils.degToRad(17.5)) * camera.aspect)); camera.position.set(0.75, 1.2 + d * 0.2, d + 0.25); camera.lookAt(-0.15, 1.02, 0.2); shelfUnit.visible = true; for (const o of shelfObjs) o.visible = true; }
+  if (portrait) { camera.fov = 40; const half = livCam ? 1.0 : 1.15, d = half / (Math.tan(THREE.MathUtils.degToRad(20)) * camera.aspect); camera.position.set(0.15, 1.2 + d * 0.28, d); camera.lookAt(0.05, livCam ? 1.0 : 0.92, 0.3); shelfUnit.visible = false; for (const o of shelfObjs) o.visible = false; }
+  else { camera.fov = 35; const half = livCam ? 1.65 : 2.0, d = Math.max(livCam ? 2.75 : 3.3, half / (Math.tan(THREE.MathUtils.degToRad(17.5)) * camera.aspect)); camera.position.set(0.75, 1.2 + d * 0.2, d + 0.25); camera.lookAt(-0.15, livCam ? 1.1 : 1.02, 0.2); shelfUnit.visible = true; for (const o of shelfObjs) o.visible = true; }
   if (qs.get('cam') === 'face') { camera.fov = 18; camera.position.set(-0.12, 1.78, 0.45); camera.lookAt(-0.36, 1.7, -0.52); }
   if (qs.get('cam') === 'close') { camera.fov = 30; camera.position.set(0.55, 1.62, 1.55); camera.lookAt(-0.12, 1.25, -0.35); }
   camera.updateProjectionMatrix(); baseCam = camera.position.clone(); if (changed && BL.pre) { layoutSentence(); }
@@ -593,7 +593,7 @@ if (TEST) window.__tbLoad = takeTexts;
   const livReady = LIVQ && (async () => {
     showWorkman(false);
     try { LIV = await (await import('./liv-worker.js?v=1')).attach({ scene, camera, canvas, S, sawState, handlePts, K: { BENCH_Y, BOARD_Z, CUT_X, BH, RAISED, TOUCH, THROUGH }, kit: { box, mat, woodMat, shadowy, C } }); }
-    catch (e) { console.warn('liv', e); showWorkman(true); }
+    catch (e) { console.warn('liv', e); showWorkman(true); livCam = false; resize(); }
   })();
   resize(); rebuildShelves(); renderer.render(scene, camera);
   const go = $('go');

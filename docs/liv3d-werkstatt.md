@@ -10,8 +10,8 @@ With `?liv=1` on the workshop page the 3D Liv (`tools/liv3d`) takes his place at
 - The workshop page alone shows "Nicht verfügbar": it gets its sentences from the lesson page by message. For local
   work a harness outside git (`.local/w57/`, git-ignored) embeds it and posts the texts it reads at run time from the
   private folder. No lesson sentence is in any repository file.
-- The model is not in the repository (`tools/liv3d/models/liv.vrm`). Without it, or on any error, the workman comes back
-  (one console warning). The open button waits for her; after 45 s the workman takes over.
+- The model is `grammatik/liv/liv.vrm` (4.6 MB, served with the site). Without it, or on any error, the workman comes
+  back (one console warning). The open button waits for her; after 45 s the workman takes over.
 
 ## What was built
 
@@ -44,10 +44,10 @@ shrugs. "Selbst sägen" (dragging the handle) moves her hands with it.
 
 - **She stands on a 68 cm platform**, not a low step: her arms are 28 cm, the handle is 20 cm in from the bench edge and
   the bench is 95 cm high, built for an adult. From lower down she cannot reach it without the skirt cutting into the bench.
-- **She is small on screen**: about 200 px tall at 1280 x 800, about 110 px in phone portrait. The scene is framed for
-  the bench and the sentence row.
+- With Liv the camera comes closer (landscape: 1.65 m half width instead of 2.0; portrait: 1.0 instead of 1.15), so she
+  is about a quarter bigger; shelves, bench and sentence row stay in the picture.
 - She bows up to 43° at the bottom of the cut (knees stay straight, or the skirt opens over the thighs).
 - After a failed cut the block slides forward by itself (the workman pushed it; she cannot reach bench level).
 - The handle is thicker (52 mm) than her hands can close around: her fingers lie over it.
 - Her thumbs-up face is a laugh, not the player's wink.
-- Not tested: real phones, Safari, Firefox, the signed-in lesson page, sound, loading 13.5 MB over a real network.
+- Not tested: real phones, Safari, Firefox, the signed-in lesson page, sound.

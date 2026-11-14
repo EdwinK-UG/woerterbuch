@@ -15,6 +15,7 @@ What it changes (each step can be switched off with --no-<step>):
   face     the paintings' skin tone, blush, freckles, short thick brows, peach skin shadows
   look     dark-brown outlines (also on the hair), hair gloss toned down
   slim     a small thumbnail instead of the 2048 px one
+  web      a smaller file: no flat body normal map, sparse morph targets (positions only), nothing unreferenced
 
 The VRM is a GLB: JSON + one binary buffer. Everything not touched is copied as it is.
 """
@@ -40,7 +41,18 @@ class GLB:
         self.views = [bytes(bin_[bv.get('byteOffset', 0):bv.get('byteOffset', 0) + bv['byteLength']]) for bv in self.j['bufferViews']]
 
     def acc(self, i):
-        a = self.j['accessors'][i]; bv = self.j['bufferViews'][a['bufferView']]; dt = np.dtype(CT[a['componentType']]); n = NC[a['type']]
+        a = self.j['accessors'][i]; dt = np.dtype(CT[a['componentType']]); n = NC[a['type']]
+        if 'bufferView' not in a or 'sparse' in a:
+            out = np.zeros((a['count'], n), dt) if 'bufferView' not in a else self._dense(a, dt, n)
+            sp = a.get('sparse')
+            if sp:
+                idx = np.frombuffer(self.views[sp['indices']['bufferView']], np.dtype(CT[sp['indices']['componentType']]), count=sp['count'], offset=sp['indices'].get('byteOffset', 0))
+                out[idx] = np.frombuffer(self.views[sp['values']['bufferView']], dt, count=sp['count'] * n, offset=sp['values'].get('byteOffset', 0)).reshape(-1, n)
+            return out
+        return self._dense(a, dt, n)
+
+    def _dense(self, a, dt, n):
+        bv = self.j['bufferViews'][a['bufferView']]
         raw = self.views[a['bufferView']]; off = a.get('byteOffset', 0); st = bv.get('byteStride', 0)
         if st and st != dt.itemsize * n:
             m = np.frombuffer(raw, np.uint8, count=st * a['count'], offset=off).reshape(a['count'], st)[:, :dt.itemsize * n]
@@ -435,6 +447,82 @@ def blouse_on_body(g):
     g.set_image(bi, img(a)); print(f'blouse: {n} skin texels on the chest and nape painted cream; shorts: {ns} texels')
 
 
+def slim(g):
+    """Smaller file for the web: no near-flat body normal map, morph targets as sparse positions only (most face shapes
+    move a few hundred of the 3989 face vertices; toon shading does not need morphed normals), and every buffer, accessor
+    and image nothing refers to any more is dropped."""
+    j = g.j
+    for m in j['materials']:
+        if 'Body_00_SKIN' in m['name'] and 'normalTexture' in m:
+            a = np.asarray(g.image(j['textures'][m['normalTexture']['index']]['source']).convert('RGB')).astype(np.float32)
+            if a.std(axis=(0, 1)).max() < 12: del m['normalTexture']
+    done = {}
+    for me in j['meshes']:
+        for pr in me['primitives']:
+            for t in pr.get('targets', []):
+                t.pop('NORMAL', None); t.pop('TANGENT', None); k = t['POSITION']
+                if k in done: t['POSITION'] = done[k]; continue
+                P = g.acc(k).astype(np.float32); idx = np.where(np.abs(P).max(1) > 1e-7)[0].astype(np.uint32)
+                g.views.append(np.ascontiguousarray(idx).tobytes()); g.j['bufferViews'].append({'buffer': 0, 'byteLength': idx.nbytes}); iv = len(g.views) - 1
+                vals = np.ascontiguousarray(P[idx]); g.views.append(vals.tobytes()); g.j['bufferViews'].append({'buffer': 0, 'byteLength': vals.nbytes}); vv = len(g.views) - 1
+                acc = {'componentType': 5126, 'count': int(len(P)), 'type': 'VEC3', 'min': [float(x) for x in (P.min(0) if len(P) else [0, 0, 0])], 'max': [float(x) for x in (P.max(0) if len(P) else [0, 0, 0])]}
+                if len(idx): acc['sparse'] = {'count': int(len(idx)), 'indices': {'bufferView': iv, 'componentType': 5125}, 'values': {'bufferView': vv}}
+                j['accessors'].append(acc); done[k] = t['POSITION'] = len(j['accessors']) - 1
+    # what is still referred to
+    accs = set(); texs = set()
+    def scan(o):
+        if isinstance(o, dict):
+            for k, v in o.items():
+                if k == 'index' and isinstance(v, int) and isinstance(o.get('texCoord', 0), int) and ('extensions' in o or 'texCoord' in o or 'scale' in o or len(o) <= 3): pass
+                scan(v)
+        elif isinstance(o, list): [scan(x) for x in o]
+    for me in j['meshes']:
+        for pr in me['primitives']:
+            accs.update(pr['attributes'].values()); accs.add(pr['indices']); [accs.update(t.values()) for t in pr.get('targets', [])]
+    for sk in j['skins']: accs.add(sk['inverseBindMatrices'])
+    def texrefs(o):
+        if isinstance(o, dict):
+            for k, v in o.items():
+                if (k.endswith('Texture') or k == 'matcapTexture') and isinstance(v, dict) and 'index' in v: texs.add(v['index'])
+                texrefs(v)
+        elif isinstance(o, list): [texrefs(x) for x in o]
+    texrefs(j['materials'])
+    imgs = {j['textures'][t]['source'] for t in texs}; th = j['extensions']['VRMC_vrm']['meta'].get('thumbnailImage')
+    if th is not None: imgs.add(th)
+    # renumber textures, images, accessors, buffer views
+    tmap = {o: n for n, o in enumerate(sorted(texs))}; imap = {o: n for n, o in enumerate(sorted(imgs))}; amap = {o: n for n, o in enumerate(sorted(accs))}
+    views = set(j['images'][i]['bufferView'] for i in imgs)
+    for a in (j['accessors'][k] for k in accs):
+        if 'bufferView' in a: views.add(a['bufferView'])
+        if 'sparse' in a: views.update((a['sparse']['indices']['bufferView'], a['sparse']['values']['bufferView']))
+    vmap = {o: n for n, o in enumerate(sorted(views))}
+    def retex(o):
+        if isinstance(o, dict):
+            for k, v in o.items():
+                if (k.endswith('Texture') or k == 'matcapTexture') and isinstance(v, dict) and 'index' in v: v['index'] = tmap[v['index']]
+                retex(v)
+        elif isinstance(o, list): [retex(x) for x in o]
+    retex(j['materials'])
+    j['textures'] = [dict(j['textures'][o], source=imap[j['textures'][o]['source']]) for o in sorted(texs)]
+    j['images'] = [dict(j['images'][o], bufferView=vmap[j['images'][o]['bufferView']]) for o in sorted(imgs)]
+    if th is not None: j['extensions']['VRMC_vrm']['meta']['thumbnailImage'] = imap[th]
+    newacc = []
+    for o in sorted(accs):
+        a = dict(j['accessors'][o])
+        if 'bufferView' in a: a['bufferView'] = vmap[a['bufferView']]
+        if 'sparse' in a: a['sparse'] = {'count': a['sparse']['count'], 'indices': dict(a['sparse']['indices'], bufferView=vmap[a['sparse']['indices']['bufferView']]), 'values': dict(a['sparse']['values'], bufferView=vmap[a['sparse']['values']['bufferView']])}
+        newacc.append(a)
+    j['accessors'] = newacc
+    for me in j['meshes']:
+        for pr in me['primitives']:
+            pr['attributes'] = {k: amap[v] for k, v in pr['attributes'].items()}; pr['indices'] = amap[pr['indices']]
+            if 'targets' in pr: pr['targets'] = [{k: amap[v] for k, v in t.items()} for t in pr['targets']]
+    for sk in j['skins']: sk['inverseBindMatrices'] = amap[sk['inverseBindMatrices']]
+    j['bufferViews'] = [j['bufferViews'][o] for o in sorted(views)]; g.views = [g.views[o] for o in sorted(views)]
+    for bv in j['bufferViews']: bv.pop('byteStride', None) if False else None
+    print(f'slim: {len(j["images"])} images, {len(j["accessors"])} accessors, {len(j["bufferViews"])} buffer views')
+
+
 def main():
     ap = argparse.ArgumentParser(); ap.add_argument('src'); ap.add_argument('dst')
     ap.add_argument('--head', type=float, default=0.66)
@@ -442,7 +530,7 @@ def main():
     ap.add_argument('--hair-width', type=float, default=1.0); ap.add_argument('--hair-blunt', type=float, default=0.84); ap.add_argument('--hair-drop', default='_01,_02'); ap.add_argument('--hair-fly', type=float, default=0.99); ap.add_argument('--hair-report', action='store_true'); ap.add_argument('--hair-drop-tips', default='74,0.935')
     ap.add_argument('--hair-wave', type=float, default=0.014); ap.add_argument('--hair-volume', type=float, default=0.046); ap.add_argument('--hair-flick', type=float, default=0.012)
     ap.add_argument('--outline', type=float, default=0.0016); ap.add_argument('--hair-gloss', type=float, default=0.4)
-    for s in ('head', 'hair', 'dress', 'socks', 'boots', 'face', 'slim', 'look'): ap.add_argument('--no-' + s, action='store_true')
+    for s in ('head', 'hair', 'dress', 'socks', 'boots', 'face', 'slim', 'look', 'web'): ap.add_argument('--no-' + s, action='store_true')
     o = ap.parse_args(); g = GLB(o.src)
     if not o.no_hair: hair_bob(g, o)
     if not o.no_head: head_scale(g, o.head)
@@ -473,6 +561,7 @@ def main():
     if not o.no_slim:
         t = g.j['extensions']['VRMC_vrm']['meta'].get('thumbnailImage')
         if t is not None: g.set_image(t, g.image(t).convert('RGBA').resize((256, 256), Image.LANCZOS))
+    if not o.no_web: slim(g)
     n = g.save(o.dst); print(f'wrote {o.dst}: {n / 1e6:.1f} MB')
 
 

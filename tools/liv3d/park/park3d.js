@@ -181,7 +181,7 @@ function fx(id, t, P) {
 
 export class ParkScene {
   static async create(o = {}) {
-    const actor = await LivActor.load(o.model || new URL('../models/liv.vrm', import.meta.url).href, { scale: o.scale || 1 });
+    const actor = await LivActor.load(o.model || new URL('../../../grammatik/liv/liv.vrm', import.meta.url).href, { scale: o.scale || 1 });
     return new ParkScene(actor, o);
   }
   constructor(actor, o = {}) {

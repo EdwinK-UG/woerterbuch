@@ -24,7 +24,7 @@ going forward it continues the simulation in steps of 1/60 s, anything else repl
 
 ```js
 import { ParkScene } from './tools/liv3d/park/park3d.js';
-const park = await ParkScene.create({ model: 'tools/liv3d/models/liv.vrm' });
+const park = await ParkScene.create({ model: 'grammatik/liv/liv.vrm' });
 park.seek('goal', audio.currentTime); park.render(renderer);
 ```
 
@@ -40,9 +40,8 @@ same flag puts Liv into the 3D workshop of Kapitel 57 (`docs/liv3d-werkstatt.md`
 - The 3D libraries (Three.js r160, three-vrm 3.0.0 from jsDelivr) and their import map are in a hidden same-origin frame,
   `grammatik/liv/park3d-frame.html`. The app page itself gets no import map and no new library. Each film frame is
   rendered in that frame and copied onto the film's canvas; the tag pill is drawn on top as before.
-- The model is not in the repository. Locally it is `tools/liv3d/models/liv.vrm`; for the live site set
-  `window.GRAM_PARK_3D_MODEL` to wherever it is hosted before the park loads. Until a model is hosted, the flag on the
-  live site simply shows the 2D park (one warning in the console).
+- The model is served with the site: `grammatik/liv/liv.vrm` (4.6 MB, built by `vrm_fit.py`, versioned in `index.html`
+  by `npm run assets`). `window.GRAM_PARK_3D_MODEL` can point elsewhere.
 - `npm run assets` versions the new script like the others (`tools/version-assets.cjs`).
 
 Checked in the app page served locally (14 Nov 2026), calling `loadFilmPark()` and `GRAM_PARK.draw` as `film.js` does:

@@ -72,7 +72,7 @@ Hand shapes: relaxed, open, flat, wave, fist, point, thumbsUp, pinch, gripSphere
 ### Pointing it at liv.vrm
 
 Put the model at `tools/liv3d/models/liv.vrm` (git-ignored; copy it from the lead's checkout when it exists). The demo
-loads `../models/liv.vrm` by default and falls back to `../models/sample.vrm` (the three-vrm sample
+loads `grammatik/liv/liv.vrm` by default and falls back to `../models/sample.vrm` (the three-vrm sample
 `VRM1_Constraint_Twist_Sample.vrm`, download it there for development). `?model=<url>` loads any other VRM,
 `?scale=0.7` scales the model, `?ui=0` hides the panel.
 
@@ -146,14 +146,15 @@ Python server on 127.0.0.1:8794 that saves POST bodies; not part of the repo). A
 
 ## Liv's own model (14 Nov 2026)
 
-`tools/liv3d/models/liv.vrm` (git-ignored, 13.5 MB) is made in two steps, both repeatable:
+`grammatik/liv/liv.vrm` (4.6 MB, served with the site) is made in two steps, both repeatable:
 
 1. **VRoid Studio** gives the base (`models/liv-vroid.vrm`, project `models/Liv.vroid`): child body, dress preset, boots, wavy
    hair. `vroid_params.py` and `liv_textures.py` set the body sliders and recolour the preset inside the `.vroid` file.
 2. **`vrm_fit.py`** turns that export into Liv directly in the VRM file (no VRoid Studio, no clicking):
 
 ```sh
-python3 tools/liv3d/vrm_fit.py tools/liv3d/models/liv-vroid.vrm tools/liv3d/models/liv.vrm
+python3 tools/liv3d/vrm_fit.py tools/liv3d/models/liv-vroid.vrm grammatik/liv/liv.vrm
+npm run assets        # new version hash for the model in index.html
 ```
 
 | Step (`--no-<step>` switches it off) | What it does |
@@ -174,7 +175,7 @@ and `--head`, `--outline`, `--hair-gloss` are options.
 Checked on this model with `demo/sheets.js` (contact sheets posted to `demo/shot_server.py`): four views against the
 paintings, eight expressions, all 27 actions, walk and run from the side. Feet while planted move 0.14 mm per frame on
 average in the walk and 0.39 mm in the run (ankle bone, flat phase). Pictures and a 12 s clip are in `tools/liv3d/preview/`
-(the clip and the park videos were recorded before the last bodice fix: the lacing sat a little higher).
+(the park videos were recorded before the last bodice fix: the lacing sat a little higher there).
 The bodice was re-checked close up with the arms forward, down, raised and waving after that fix.
 
 Scenes built on her: the park (`docs/liv3d-park.md`) and the Kapitel 57 workshop (`docs/liv3d-werkstatt.md`), both opt-in.
@@ -185,7 +186,8 @@ Open on this model:
   but it does not look right yet.
 - The hair is a wavy bob, smoother than the painted curls; no loose curl on top yet.
 - Eyes are smaller than painted; the boots have a heel and are slimmer; the satchel prop is still a plain box.
-- 13.5 MB, 40k triangles, 13 materials: fine on a laptop, not measured on phones.
+- 4.6 MB (the `web` step: no flat body normal map, sparse morph targets, nothing unreferenced; was 13.5 MB), 40k
+  triangles, 13 materials: fine on a laptop, not measured on real phones.
 
 ## Weak spots (honest list)
 

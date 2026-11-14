@@ -629,7 +629,8 @@ let filmParkP=null;
 // ?liv3d=1 (or ?park3d=1) switches it on for this browser tab, ?liv3d=0 off.
 const park3d=(()=>{try{const p=new URLSearchParams(location.search),q=p.get('liv3d')||p.get('park3d');if(q==='1')sessionStorage.setItem('dk-liv3d','1');else if(q==='0')sessionStorage.removeItem('dk-liv3d');return sessionStorage.getItem('dk-liv3d')==='1';}catch(e){return false;}})();
 window.DK_LIV3D=park3d;
-window.loadFilmPark=()=>filmParkP||(filmParkP=scriptFile('grammatik/liv/liv-art.js?v=a64a41fac175').then(()=>scriptFile('grammatik/liv/engine.js?v=75f3efbf3ad3')).then(()=>scriptFile('grammatik/liv/film-park.js?v=29f7ef151ec7')).then(()=>park3d?scriptFile('grammatik/liv/film-park-3d.js?v=178ae3758c64').catch(()=>{}):undefined).catch(e=>{filmParkP=null;throw e;}));
+if(park3d)window.GRAM_PARK_3D_MODEL='grammatik/liv/liv.vrm?v=b8f3d4dcf78a';
+window.loadFilmPark=()=>filmParkP||(filmParkP=scriptFile('grammatik/liv/liv-art.js?v=a64a41fac175').then(()=>scriptFile('grammatik/liv/engine.js?v=75f3efbf3ad3')).then(()=>scriptFile('grammatik/liv/film-park.js?v=29f7ef151ec7')).then(()=>park3d?scriptFile('grammatik/liv/film-park-3d.js?v=1a2302a75c79').catch(()=>{}):undefined).catch(e=>{filmParkP=null;throw e;}));
 function loadFilm(){
   if(window.GRAM_FILM)return Promise.resolve();
   if(!filmP){

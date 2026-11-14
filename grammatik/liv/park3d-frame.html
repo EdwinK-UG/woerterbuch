@@ -25,7 +25,7 @@ try {
   const canvas = document.getElementById('c'), qs = new URLSearchParams(location.search);
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
   renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.NoToneMapping; renderer.setPixelRatio(1);
-  const park = await ParkScene.create({ model: qs.get('model') || new URL('../../tools/liv3d/models/liv.vrm', import.meta.url).href });
+  const park = await ParkScene.create({ model: qs.get('model') || new URL('./liv.vrm', import.meta.url).href });
   let W = 0, H = 0;
   // one picture: route 'into' | 'within', t seconds into the action (held after the 8 s run), size in device pixels
   window.__park3dOk({ park, draw(route, t, w, h) {

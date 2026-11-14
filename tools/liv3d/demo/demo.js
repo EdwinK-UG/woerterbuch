@@ -6,7 +6,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { LivActor, ACTION_NAMES, EXPRESSION_NAMES, SHAPE_NAMES } from '../liv3d.js';
 
 const qs = new URLSearchParams(location.search);
-const modelUrl = qs.get('model') || '../models/liv.vrm';
+const modelUrl = qs.get('model') || '../../../grammatik/liv/liv.vrm';
 const fallback = '../models/sample.vrm';
 const canvas = document.getElementById('c');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });

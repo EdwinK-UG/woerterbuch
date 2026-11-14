@@ -124,7 +124,7 @@ $('seek').oninput = (e) => { const was = playing; pause(); t = e.target.value * 
 $('s-location').onclick = () => choose('location'); $('s-goal').onclick = () => choose('goal');
 
 size();
-[park, priv] = await Promise.all([ParkScene.create({ model: qs.get('model') || '../models/liv.vrm' }), loadPrivate()]);
+[park, priv] = await Promise.all([ParkScene.create({ model: qs.get('model') || '../../../grammatik/liv/liv.vrm' }), loadPrivate()]);
 $('note').textContent = priv ? 'Narration: recorded clips found (Elisa). Press Play.' : 'No narration folder (tools/liv3d/park/.local): the scene plays silently, without captions.';
 choose(qs.get('scene') === 'location' ? 'location' : 'goal');
 // hooks for checking without real-time playback

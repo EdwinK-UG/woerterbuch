@@ -6,7 +6,7 @@
    The picture comes from tools/liv3d/park/park3d.js (Three.js, the VRM Liv). The 3D libraries and their import map live
    in a hidden same-origin frame (park3d-frame.html), so the app page itself loads nothing new; each frame of the film is
    rendered there and copied onto the film's canvas. Until the model has loaded, and whenever it cannot load (no WebGL,
-   the libraries or the model file missing: the model is not in the repository, see docs/liv3d-park.md), the 2D park that
+   the libraries or the model file missing), the 2D park that
    was loaded before this file is drawn instead, so a park scene never stays empty. */
 (function (root) {
   'use strict';
@@ -18,7 +18,7 @@
       const model = root.GRAM_PARK_3D_MODEL;
       frame = doc.createElement('iframe'); frame.setAttribute('aria-hidden', 'true'); frame.tabIndex = -1; frame.title = '';
       frame.style.cssText = 'position:fixed;left:0;top:0;width:2px;height:2px;border:0;opacity:0;pointer-events:none;visibility:hidden';
-      frame.src = (root.GRAM_PARK_3D_FRAME || SRC) + (model ? '?model=' + encodeURIComponent(model) : '');
+      frame.src = (root.GRAM_PARK_3D_FRAME || SRC) + (model ? '?model=' + encodeURIComponent(new URL(model, root.location.href).href) : '');
       frame.onload = () => {
         const w = frame.contentWindow, p = w && w.PARK3D_READY;
         if (!p) { fail(new Error('frame did not start')); return; }
