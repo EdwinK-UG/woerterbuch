@@ -8,6 +8,7 @@ import { ROUNDS, loadRounds } from './rounds.js?v=1';
 import { Sfx } from './sfx.js?v=1';
 
 const qs = new URLSearchParams(location.search), TEST = qs.has('test');
+const LIVQ = qs.get('liv') === '1'; let LIV = null, livCam = LIVQ;      // opt-in: Liv instead of the workman (liv-worker.js); livCam: a closer camera for her
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const sfx = new Sfx();
 
@@ -256,6 +257,7 @@ for (const side of ['L', 'R']) {
   ARMS[side] = { sign, upper: limb(0.055, shirtMat), fore: limb(0.045, skinMat), cuff: limb(0.062, shirtMat), band: side === 'R' ? limb(0.052, mat(0x2a2c30, 0.6)) : null, sJ: sph(0.075, shirtMat), eJ: sph(0.052, shirtMat), hand: makeHand(sign) };
   scene.add(ARMS[side].sJ, ARMS[side].eJ); ARMS[side].sJ.castShadow = ARMS[side].eJ.castShadow = true;
 }
+const showWorkman = (on) => { W.visible = on; for (const A of Object.values(ARMS)) for (const o of [A.upper, A.fore, A.cuff, A.band, A.sJ, A.eJ, A.hand.g]) if (o) o.visible = on; };
 
 // ---------- state ----------
 const S = { mode: 0, round: 0, t: 0, kind: 'cut', waiting: false, decided: false, playing: true, slow: false, hold: 0, drag: 0, dragging: false,
@@ -388,6 +390,7 @@ function solveArm(side) {
   }
 }
 function updateWorkman(dt) {
+  if (LIV) { LIV.update(dt); return; }
   smoothHands(dt);
   torso.rotation.x = handState.lean; torso.position.y = 0.98 - Math.abs(handState.lean) * 0.03;
   headG.position.y = 0.72 + handState.shrug * 0.02 - handState.shrug * 0.03;
@@ -526,8 +529,8 @@ canvas.addEventListener('pointerup', () => { if (!S.dragging) return; S.dragging
 function resize() {
   const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false); camera.aspect = w / h;
   const portrait = w / h < 0.9; const changed = portrait !== S.portrait; S.portrait = portrait;
-  if (portrait) { camera.fov = 40; const half = 1.15, d = half / (Math.tan(THREE.MathUtils.degToRad(20)) * camera.aspect); camera.position.set(0.15, 1.2 + d * 0.28, d); camera.lookAt(0.05, 0.92, 0.3); shelfUnit.visible = false; for (const o of shelfObjs) o.visible = false; }
-  else { camera.fov = 35; const half = 2.0, d = Math.max(3.3, half / (Math.tan(THREE.MathUtils.degToRad(17.5)) * camera.aspect)); camera.position.set(0.75, 1.2 + d * 0.2, d + 0.25); camera.lookAt(-0.15, 1.02, 0.2); shelfUnit.visible = true; for (const o of shelfObjs) o.visible = true; }
+  if (portrait) { camera.fov = 40; const half = livCam ? 1.0 : 1.15, d = half / (Math.tan(THREE.MathUtils.degToRad(20)) * camera.aspect); camera.position.set(0.15, 1.2 + d * 0.28, d); camera.lookAt(0.05, livCam ? 1.0 : 0.92, 0.3); shelfUnit.visible = false; for (const o of shelfObjs) o.visible = false; }
+  else { camera.fov = 35; const half = livCam ? 1.65 : 2.0, d = Math.max(livCam ? 2.75 : 3.3, half / (Math.tan(THREE.MathUtils.degToRad(17.5)) * camera.aspect)); camera.position.set(0.75, 1.2 + d * 0.2, d + 0.25); camera.lookAt(-0.15, livCam ? 1.1 : 1.02, 0.2); shelfUnit.visible = true; for (const o of shelfObjs) o.visible = true; }
   if (qs.get('cam') === 'face') { camera.fov = 18; camera.position.set(-0.12, 1.78, 0.45); camera.lookAt(-0.36, 1.7, -0.52); }
   if (qs.get('cam') === 'close') { camera.fov = 30; camera.position.set(0.55, 1.62, 1.55); camera.lookAt(-0.12, 1.25, -0.35); }
   camera.updateProjectionMatrix(); baseCam = camera.position.clone(); if (changed && BL.pre) { layoutSentence(); }
@@ -560,6 +563,10 @@ function frame(now) {
 window.__tb = {
   S, seek(round, kind, t, mode = 0) { if (mode !== S.mode) setMode(mode); S.sepList = []; S.insList = []; for (let i = 0; i < round; i++) (ROUNDS[i].sep ? S.sepList : S.insList).push(i); rebuildShelves(); startRound(round); if (kind) S.kind = kind; const st = 1 / 60; let x = 0; while (x < t) { step(st); x += st; } resize(); ui(); renderer.render(scene, camera); return S.t; },
   decide, setMode,
+  // advance n fixed steps from where the round is; put the camera somewhere (after a seek, which resets it)
+  adv(n = 1) { for (let i = 0; i < n; i++) step(1 / 60); ui(); renderer.render(scene, camera); return S.t; },
+  view(pos, at, fov = camera.fov) { camera.fov = fov; camera.position.set(...pos); camera.lookAt(...at); camera.updateProjectionMatrix(); baseCam = camera.position.clone(); renderer.render(scene, camera); },
+  renderer, scene, camera, get liv() { return LIV; },
 };
 
 // The example sentences come from the lesson page (Kapitel 57, loaded with the learner's enrolment), never from this
@@ -582,6 +589,12 @@ if (TEST) window.__tbLoad = takeTexts;
 (async () => {
   try { await document.fonts.load('500 80px Inter'); } catch (e) { console.warn('font', e); }
   if (TEST) document.getElementById('start')?.remove();
+  // ?liv=1: Liv loads while the texts arrive; without her model (or on any error) the workman stays
+  const livReady = LIVQ && (async () => {
+    showWorkman(false);
+    try { LIV = await (await import('./liv-worker.js?v=1')).attach({ scene, camera, canvas, S, sawState, handlePts, K: { BENCH_Y, BOARD_Z, CUT_X, BH, RAISED, TOUCH, THROUGH }, kit: { box, mat, woodMat, shadowy, C } }); }
+    catch (e) { console.warn('liv', e); showWorkman(true); livCam = false; resize(); }
+  })();
   resize(); rebuildShelves(); renderer.render(scene, camera);
   const go = $('go');
   if (go) { go.disabled = true; go.textContent = 'Lädt …'; }
@@ -590,7 +603,7 @@ if (TEST) window.__tbLoad = takeTexts;
     const p = document.querySelector('#start p'); if (p) p.textContent = 'Die Werkstatt braucht die Beispielsätze aus Kapitel 57. Öffne sie in der Lektion „Trennbar oder untrennbar?“ (mit Anmeldung).';
     if (go) go.textContent = 'Nicht verfügbar';
   }, 6000);
-  await roundsReady; clearTimeout(late);
+  await roundsReady; clearTimeout(late); if (livReady) await livReady;
   if (go) { go.disabled = false; go.textContent = 'Werkstatt öffnen'; go.focus(); }
   startRound(0); ui(); requestAnimationFrame(frame);
   if (TEST) { started = !qs.has('still'); window.__tbReady = true; }

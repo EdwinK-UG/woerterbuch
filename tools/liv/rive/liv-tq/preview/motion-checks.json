@@ -1,0 +1,32 @@
+{
+  "frames": 1320,
+  "plantedPairs": {
+    "A": 297,
+    "B": 276
+  },
+  "maxControllerSlideViewPx": {
+    "A": 0.0013,
+    "B": 0.0012
+  },
+  "maxFlatStanceDriftStagePx": {
+    "A": 0.96,
+    "B": 0.87
+  },
+  "pixelPairs": {
+    "A": 47,
+    "B": 103
+  },
+  "maxPixelSlideStagePx": {
+    "A": 0.81,
+    "B": 0.87
+  },
+  "p95PixelSlideStagePx": {
+    "A": 0.28,
+    "B": 0.55
+  },
+  "maxSpeedMps": 2.5,
+  "heelStrikesA": 29,
+  "strideSeconds": 0.638,
+  "maxFootLiftViewPx": 183.9,
+  "maxLegReach": 0.978
+}

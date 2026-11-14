@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Liv im Park (3D)</title>
+<!-- Local preview of the park scene with the 3D Liv. The recorded narration (Elisa), the captions and the example sentence
+     are private lesson material: they are read at run time from ./.local/ (git-ignored, see docs/liv3d-park.md) and are
+     never part of this repository. Without that folder the scene plays silently with no text. -->
+<style>
+  :root { --bg: #f3e9d8; --ink: #3a1c0c; --goal: #d9622b; --place: #2f5d50; --paper: rgba(255, 250, 240, .96); }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.35 "Avenir Next", "Segoe UI", system-ui, sans-serif; }
+  main { max-width: 1100px; margin: 0 auto; padding: 12px; }
+  #stage { position: relative; aspect-ratio: 16 / 9; border-radius: 14px; overflow: hidden; background: #f6efe0; box-shadow: 0 2px 14px rgba(58, 28, 12, .14); }
+  #c { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  #tag { position: absolute; top: 2.2%; right: 1.6%; padding: .25em .8em; border-radius: 99px; background: var(--paper); border: 2px solid var(--place); color: var(--place); font-weight: 700; font-size: clamp(10px, 1.9vw, 19px); white-space: nowrap; }
+  #tag.goal { border-color: var(--goal); color: var(--goal); }
+  #sentence { position: absolute; top: 2.2%; left: 1.6%; display: flex; gap: .45em; align-items: flex-start; background: var(--paper); border-radius: 12px; padding: .35em .7em; font-size: clamp(12px, 2.5vw, 26px); font-weight: 600; white-space: nowrap; transition: opacity .3s; }
+  #sentence:empty { display: none; }
+  #sentence span { display: inline-flex; flex-direction: column; align-items: center; padding: 0 .12em; border-radius: 8px; transition: background .35s, color .35s; }
+  #sentence span small { font-size: .5em; font-weight: 700; letter-spacing: .02em; height: 1.3em; opacity: 0; transition: opacity .35s; }
+  #sentence span.em { color: #fff; background: var(--place); } #sentence.goal span.em { background: var(--goal); }
+  #sentence span.em small { opacity: 1; }
+  .caption { background: rgba(42, 30, 22, .82); color: #fff8ec; border-radius: 10px; padding: .4em .8em; font-size: clamp(13px, 1.75vw, 18px); text-align: center; }
+  .caption:empty { display: none; }
+  #caption { position: absolute; left: 6%; right: 6%; bottom: 3%; width: fit-content; margin: 0 auto; }
+  #caption2 { display: none; margin-top: 8px; }
+  @media (max-width: 720px) { #caption { display: none; } #caption2:not(:empty) { display: block; } #tag { top: auto; bottom: 3%; } }
+  #bar { display: flex; gap: 8px; align-items: center; margin-top: 10px; flex-wrap: wrap; }
+  button { padding: 7px 12px; border: 1px solid #c9b18f; border-radius: 8px; background: #fffaf2; color: var(--ink); font: inherit; cursor: pointer; }
+  button.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+  #play { min-width: 92px; font-weight: 700; }
+  #seek { flex: 1; min-width: 160px; accent-color: var(--goal); }
+  #time { font: 13px ui-monospace, monospace; min-width: 96px; text-align: right; }
+  #note { margin-top: 8px; font-size: 13px; opacity: .75; }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
+  "@pixiv/three-vrm": "https://cdn.jsdelivr.net/npm/@pixiv/three-vrm@3.0.0/lib/three-vrm.module.min.js"
+} }
+</script>
+</head>
+<body>
+<main>
+  <div id="stage"><canvas id="c"></canvas><div id="sentence"></div><div id="tag"></div><div id="caption" class="caption"></div></div>
+  <div id="caption2" class="caption"></div>
+  <div id="bar">
+    <button id="s-location">im Park</button><button id="s-goal">in den Park</button>
+    <button id="play">▶ Play</button><input id="seek" type="range" min="0" max="1" step="0.001" value="0"><span id="time"></span>
+  </div>
+  <div id="note"></div>
+</main>
+<script type="module">
+import * as THREE from 'three';
+import { ParkScene, SCENES } from './park3d.js';
+
+const qs = new URLSearchParams(location.search), $ = (id) => document.getElementById(id);
+const canvas = $('c'), renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
+renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.NoToneMapping;
+function size() { const r = canvas.getBoundingClientRect(); renderer.setPixelRatio(Math.min(2, devicePixelRatio)); renderer.setSize(Math.max(2, r.width), Math.max(2, r.height), false); }
+addEventListener('resize', () => { size(); draw(); });
+
+// private lesson material (optional): narration clips, captions, the example sentence
+const LOCAL = './.local/'; let priv = null;
+async function loadPrivate() {
+  try {
+    const [lessons, manifest, overlay] = await Promise.all(['data/lessons.json', 'data/audio-manifest.json', 'overlay/visual-overlay.json'].map((u) => fetch(LOCAL + u).then((r) => { if (!r.ok) throw new Error(u); return r.json(); })));
+    const out = {};
+    for (const id of ['location', 'goal']) {
+      const key = 'space-park-' + id, sc = lessons.lessons['B2-109'].scenes.find((s) => s.id === key), au = manifest.lessons['B2-109'].scenes.find((s) => s.id === key);
+      out[id] = { from: sc.from, to: sc.to, cues: sc.cues.map((c, i) => ({ say: c.say, wav: LOCAL + au.cues[i].wav, start: au.cues[i].startInScene / manifest.sampleRate, plan: (overlay.films['B2-109'].cues[c.id] || {}).visual?.sentencePlan || [] })), length: au.pcmFrames / manifest.sampleRate };
+    }
+    return out;
+  } catch (e) { return null; }
+}
+
+let park, id = 'goal', t = 0, playing = false, ctx = null, buffers = {}, sources = [], t0 = 0, wall = 0;
+const len = () => (priv && priv[id] ? priv[id].length : SCENES[id].length);
+
+function text() {
+  const s = SCENES[id], p = priv && priv[id]; $('tag').textContent = s.tag; $('tag').className = s.goal ? 'goal' : ''; $('sentence').className = s.goal ? 'goal' : '';
+  if (!p) { $('caption').textContent = $('caption2').textContent = ''; $('sentence').innerHTML = ''; return; }
+  let i = 0; while (i + 1 < p.cues.length && t >= p.cues[i + 1].start) i++;
+  const cue = p.cues[i], end = i + 1 < p.cues.length ? p.cues[i + 1].start : p.length, fr = (t - cue.start) / (end - cue.start);
+  let plan = null; for (const q of cue.plan) if (fr >= q.cueFraction) plan = q;
+  $('caption').textContent = $('caption2').textContent = cue.say;
+  const toks = plan ? p[plan.source] : p.from, em = plan ? plan.emphasis : [], key = (plan ? plan.source : 'from') + '|' + em.join(',');
+  if ($('sentence').dataset.key !== id + key) {
+    $('sentence').dataset.key = id + key; $('sentence').innerHTML = '';
+    toks.forEach((tk, k) => { const sp = document.createElement('span'); sp.textContent = tk.text; const sm = document.createElement('small'); sm.textContent = tk.label || ''; sp.appendChild(sm); if (em.includes(k)) sp.className = 'em'; $('sentence').appendChild(sp); });
+  }
+}
+function draw() { if (!park) return; park.seek(id, t); park.render(renderer); text(); $('seek').value = t / len(); $('time').textContent = t.toFixed(1) + ' / ' + len().toFixed(1) + ' s'; }
+
+// the clock: the audio position when narration plays, the wall clock otherwise
+async function audioFor(scene) {
+  const p = priv && priv[scene]; if (!p) return null;
+  ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
+  if (!buffers[scene]) buffers[scene] = await Promise.all(p.cues.map((c) => fetch(c.wav).then((r) => r.arrayBuffer()).then((b) => ctx.decodeAudioData(b))));
+  return buffers[scene];
+}
+function stopAudio() { for (const s of sources) { try { s.stop(); } catch (e) {} } sources = []; }
+async function play() {
+  if (t >= len() - 0.05) t = 0;
+  const bufs = await audioFor(id).catch(() => null); playing = true; $('play').textContent = '❚❚ Pause'; wall = performance.now() - t * 1000;
+  if (bufs) {
+    await ctx.resume(); stopAudio(); t0 = ctx.currentTime + 0.06 - t;
+    priv[id].cues.forEach((c, i) => { const end = c.start + bufs[i].duration; if (end <= t) return; const s = ctx.createBufferSource(); s.buffer = bufs[i]; s.connect(ctx.destination); const off = Math.max(0, t - c.start); s.start(t0 + c.start + off, off); sources.push(s); });
+  }
+  requestAnimationFrame(tick);
+}
+function pause() { playing = false; stopAudio(); $('play').textContent = '▶ Play'; }
+function tick() {
+  if (!playing) return;
+  t = sources.length && ctx ? Math.max(0, ctx.currentTime - t0) : (performance.now() - wall) / 1000;
+  if (t >= len()) { t = len(); draw(); pause(); return; }
+  draw(); requestAnimationFrame(tick);
+}
+function choose(scene) { pause(); id = scene; t = 0; for (const k of ['location', 'goal']) $('s-' + k).classList.toggle('on', k === id); draw(); }
+$('play').onclick = () => (playing ? pause() : play());
+$('seek').oninput = (e) => { const was = playing; pause(); t = e.target.value * len(); draw(); if (was) play(); };
+$('s-location').onclick = () => choose('location'); $('s-goal').onclick = () => choose('goal');
+
+size();
+[park, priv] = await Promise.all([ParkScene.create({ model: qs.get('model') || '../../../grammatik/liv/liv.vrm' }), loadPrivate()]);
+$('note').textContent = priv ? 'Narration: recorded clips found (Elisa). Press Play.' : 'No narration folder (tools/liv3d/park/.local): the scene plays silently, without captions.';
+choose(qs.get('scene') === 'location' ? 'location' : 'goal');
+// hooks for checking without real-time playback
+window.__park = park; window.__renderer = renderer; window.__THREE = THREE; window.__priv = () => priv;
+window.__seek = (scene, sec) => { if (scene !== id) { id = scene; for (const k of ['location', 'goal']) $('s-' + k).classList.toggle('on', k === id); } t = sec; draw(); return { t: park.t, x: +park.actor.x.toFixed(3), crossed: park.crossed, cue: park.cueAt() }; };
+window.__ready = true;
+</script>
+</body>
+</html>

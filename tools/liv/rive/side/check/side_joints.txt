@@ -1,0 +1,23 @@
+joint             x        y
+neck          516.0    471.0
+pelvis        505.0    912.0
+hipA          427.9    934.9
+kneeA         359.1   1121.6
+ankleA        327.0   1318.0
+hipB          577.2    926.1
+kneeB         603.5   1123.3
+ankleB        634.0   1320.0
+A.sh          496.0    529.0
+A.elbow       398.3    641.5
+A.wrist       309.8    743.4
+B.sh          533.8    529.0
+B.elbow       629.5    643.2
+B.wrist       711.3    740.3
+
+checks:
+  arm A: upper 149.0 px (0.15 m = 149.4), sh->wrist 284.0, forearm bone 135.0, |dir| 1.000
+  leg A: thigh 199.0 shin 199.0 (0.20 m = 199.2), hip->ankle 396.2 = 0.995 of full reach, knee between hip and ankle (y): True, knee off the hip-ankle line +19.0 px, bend 10.9 deg
+  arm B: upper 149.0 px (0.15 m = 149.4), sh->wrist 276.0, forearm bone 127.0, |dir| 1.000
+  leg B: thigh 199.0 shin 199.0 (0.20 m = 199.2), hip->ankle 398.0 = 1.000 of full reach, knee between hip and ankle (y): True, knee off the hip-ankle line +2.1 px, bend 1.2 deg
+  hips apart 149.5 px, pelvis->hip mid 18.7 px
+  neck above pelvis by 441.0 px (0.386 m torso + neck = ~430)

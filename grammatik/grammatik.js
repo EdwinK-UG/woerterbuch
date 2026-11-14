@@ -1229,21 +1229,37 @@ async function loadChapter(n) {
 const WATCH_LEVELS = ['A1', 'B2', 'C1'];   // levels that have the video button; widen when more lessons are checked
 const hasWatch = c => !c.vocab && !isRef(c.n) && WATCH_LEVELS.includes(c.level) && !!c.understand?.length && (c.level === 'A1' || !!c.film);
 const watchBtn = c => (hasWatch(c) ? `<button class="btn sm" data-watch="${c.n}">${icn('play')} ${c.film ? 'Animation ansehen' : 'Video ansehen'}</button>` : '');
-/* Kapitel 57: the 3D saw workshop (grammatik/werkstatt/). It holds no lesson text: when it is ready it asks this page,
-   which loaded the chapter with the learner's enrolment, for the chapter's own sentences. */
-const WERKSTATT = { 57: 'grammatik/werkstatt/index.html?v=2' };
-const werkBtn = c => (WERKSTATT[c.n] && !c.vocab ? `<button class="btn sm" data-werkstatt="${c.n}">${icn('hammer')} 3D-Werkstatt</button>` : '');
-const werkCard = c => (WERKSTATT[c.n] && !c.vocab ? `<div class="gr-cream" style="display:flex;gap:.8rem;align-items:center;flex-wrap:wrap;margin:0 0 1rem"><div style="flex:1;min-width:14rem"><b>Die Säge zeigt es</b><br><span style="color:var(--mut)">Trennbare Verben lassen sich zersägen, untrennbare nicht. Sieh zu oder säge selbst – mit Ton.</span></div><button class="btn sm" data-werkstatt="${c.n}">${icn('hammer')} 3D-Werkstatt öffnen</button></div>` : '');
+/* Kapitel 57: the saw workshop, with Liv in 2D (grammatik/liv/werkstatt/) and in 3D (grammatik/werkstatt/). Neither holds
+   lesson text: when a workshop is ready it asks this page, which loaded the chapter with the learner's enrolment, for the
+   chapter's own sentences. */
+// Interactive scenes that open in a full-screen frame from a lesson (they get the lesson's texts by message, see werkTexts).
+const WERKSTATT = {
+  57: { liv: ['grammatik/liv/werkstatt/index.html?v=1', 'Trennbar-Werkstatt mit Liv'], '3d': ['grammatik/werkstatt/index.html?v=3', 'Trennbar-Werkstatt 3D'],
+    btn: ['liv', 'hammer', 'Werkstatt mit Liv'], card: ['Die Säge zeigt es', 'Trennbare Verben lassen sich zersägen, untrennbare nicht. Sieh Liv zu oder säge selbst – mit Ton.', [['liv', 'Werkstatt mit Liv', 'hammer'], ['3d', '3D-Werkstatt']]] },
+  94: { wand: ['grammatik/zauberstab/index.html?v=2', 'Wunschzauber mit Liv'], exercises: true, vrm: true,
+    btn: ['wand', 'wand-sparkles', 'Zauberstab'], card: ['Wünsch dir was!', 'Liv hat einen Zauberstab. Jeder Wunsch braucht den Konjunktiv II – schwing den Stab zum richtigen Wort, mit Ton.', [['wand', 'Zauberstab schwingen', 'wand-sparkles']]] },
+};
+// Scenes marked vrm open with the 3D Liv first: her model (about 1.5 MB) downloads while the learner reads the lesson, so
+// the scene takes it from the browser's cache. Not on a data-saving or 2G connection.
+let livWarm = false;
+function warmLiv() {
+  const cn = navigator.connection; if (livWarm || !window.DK_LIV_MODEL || (cn && (cn.saveData || /2g/.test(cn.effectiveType || '')))) return;
+  livWarm = true; const go = () => fetch(window.DK_LIV_MODEL, { priority: 'low' }).then(r => r.arrayBuffer()).catch(() => { livWarm = false; });
+  setTimeout(() => (window.requestIdleCallback ? requestIdleCallback(go, { timeout: 4000 }) : go()), 2500);
+}
+const livVersion = () => (/[?&]v=([a-z0-9]{1,20})/.exec(window.DK_LIV_MODEL || '') || [])[1];
+const werkBtn = c => { const w = WERKSTATT[c.n]; if (w && w.vrm && !c.vocab) warmLiv(); return w && !c.vocab ? `<button class="btn sm" data-werkstatt="${c.n}" data-werk="${w.btn[0]}">${icn(w.btn[1])} ${w.btn[2]}</button>` : ''; };
+const werkCard = c => { const w = WERKSTATT[c.n]; return w && !c.vocab ? `<div class="gr-cream" style="display:flex;gap:.8rem;align-items:center;flex-wrap:wrap;margin:0 0 1rem"><div style="flex:1;min-width:14rem"><b>${w.card[0]}</b><br><span style="color:var(--mut)">${w.card[1]}</span></div>${w.card[2].map(([k, t, i]) => `<button class="btn sm" data-werkstatt="${c.n}" data-werk="${k}">${i ? icn(i) + ' ' : ''}${t}</button>`).join('')}</div>` : ''; };
 function werkTexts(c) {
   const out = [], walk = x => { if (out.length > 4000) return; if (typeof x === 'string') out.push(x); else if (Array.isArray(x)) x.forEach(walk); else if (x && typeof x === 'object') Object.values(x).forEach(walk); };
-  walk(c.understand); walk(c.examples); walk(c.speak); return out;
+  walk(c.understand); walk(c.examples); walk(c.speak); if (WERKSTATT[c.n]?.exercises) walk(c.exercises); return out;
 }
-function openWerkstatt(n) {
-  const c = cur && cur.n === n ? cur : CH[n]; if (!c || !WERKSTATT[n]) return;
+function openWerkstatt(n, kind) {
+  const W = WERKSTATT[n], c = cur && cur.n === n ? cur : CH[n], w = W && (Array.isArray(W[kind]) ? W[kind] : W[W.btn[0]]); if (!c || !w) return;
   const previous = document.activeElement, scroll = document.body.style.overflow;
-  const d = document.createElement('dialog'); d.setAttribute('aria-label', 'Trennbar-Werkstatt 3D');
+  const d = document.createElement('dialog'); d.setAttribute('aria-label', w[1]);
   d.style.cssText = 'position:fixed;inset:0;width:100vw;height:100dvh;max-width:none;max-height:none;margin:0;padding:0;border:0;background:#f3e9d8';
-  const f = document.createElement('iframe'); f.title = 'Trennbar-Werkstatt 3D'; f.src = WERKSTATT[n]; f.allow = 'autoplay; fullscreen';
+  const f = document.createElement('iframe'); f.title = w[1]; f.src = w[0] + (kind === '3d' && window.DK_LIV3D ? '&liv=1' : '') + (livVersion() ? '&lv=' + livVersion() : ''); f.allow = 'autoplay; fullscreen';      // Liv at the saw unless the app page was opened with ?liv3d=0
   f.style.cssText = 'display:block;width:100%;height:100%;border:0';
   const send = () => f.contentWindow?.postMessage({ type: 'werkstatt-texts', texts: werkTexts(c) }, location.origin);
   const onMsg = e => { if (e.source !== f.contentWindow || e.origin !== location.origin) return; if (e.data?.type === 'werkstatt-ready') send(); else if (e.data?.type === 'werkstatt-close') close(); };
@@ -1712,7 +1728,7 @@ function onClick(ev) {
   const tb = t.closest('[data-toc]'); if (tb) { tocAll(tb.dataset.toc === 'open'); return; }
   const ex = t.closest('[data-exp]'); if (ex) { const r = ex.closest('.gr-row'), st = tocState(), open = !r.classList.contains('open'); st['c:' + r.dataset.n] = open ? 1 : 0; tocSave(st); rowOpen(r, open); icons(); return; }
   const wb = t.closest('[data-watch]'); if (wb) { openWatch(+wb.dataset.watch); return; }
-  const wk = t.closest('[data-werkstatt]'); if (wk) { openWerkstatt(+wk.dataset.werkstatt); return; }
+  const wk = t.closest('[data-werkstatt]'); if (wk) { openWerkstatt(+wk.dataset.werkstatt, wk.dataset.werk); return; }
   const sa = t.closest('[data-secall]'); if (sa) { secToggleAll(sa); return; }
   const sh2 = t.closest('.gr-ch .gr-sec>h2'); if (sh2) { sh2.parentNode.classList.toggle('closed'); return; }
   const ch = t.closest('.gr-ch'); if (!ch || !cur) return;

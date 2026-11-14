@@ -1,0 +1,22 @@
+<!doctype html><meta charset="utf-8"><title>Liv in the Rive web runtime</title>
+<style>body{margin:0;background:#f3ebdd;font:16px system-ui;color:#4c4038}#log{position:fixed;left:8px;bottom:8px;max-width:60vw;font:12px monospace;white-space:pre-wrap}canvas{width:min(100vw,1240px);height:auto;aspect-ratio:1240/1020;display:block}</style>
+<canvas id="c" width="1240" height="1020"></canvas><div id="log"></div>
+<script>
+const log=(m)=>{document.getElementById('log').textContent+=m+'\n'};
+const pkg=new URLSearchParams(location.search).get('pkg')||'canvas';
+const s=document.createElement('script');s.src='https://unpkg.com/@rive-app/'+pkg;s.onload=()=>{
+ log('runtime loaded: '+pkg+' '+(window.rive&&rive.RuntimeLoader?'':''));
+ try{
+  const r=new rive.Rive({src:'Liv-TQ.riv',canvas:document.getElementById('c'),autoplay:true,autoBind:true,stateMachines:'Liv',
+   onLoad:()=>{log('loaded');r.resizeDrawingSurfaceToCanvas();window.R=r;
+     const vm=r.viewModelInstance;log('viewModelInstance: '+(vm?'yes':'no'));
+     window.setN=(n,v)=>{const p=vm.number(n);if(p)p.value=v;return p?p.value:null};
+     window.getN=(n)=>{const p=vm.number(n);return p?p.value:null};
+   },
+   onLoadError:(e)=>log('load error '+JSON.stringify(e)),
+   onStateChange:(e)=>{}});
+ }catch(e){log('exception '+e)}
+};
+s.onerror=()=>log('could not load runtime from unpkg');
+document.head.appendChild(s);
+</script>
