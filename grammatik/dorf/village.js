@@ -39,8 +39,8 @@ export function createVillage(bg, fg) {
     V.W = W; V.H = H; V.dpr = dpr; V.cacheKey = '';
     for (const c of [bg, fg]) { c.width = Math.round(W * dpr); c.height = Math.round(H * dpr); }
   }
-  function setCam(x, z) {
-    V.cam.x = x; V.cam.z = z; V.gy = V.H * 0.8; V.hz = V.gy - m(1.05);
+  function setCam(x, z, ty = 0) {     // ty: metres the ground moves down (close-ups keep the faces in the picture)
+    V.cam.x = x; V.cam.z = z; V.gy = V.H * 0.8 + ty * z; V.hz = V.gy - m(1.05);
   }
 
   /* ---------- the parts ---------- */
@@ -209,7 +209,7 @@ export function createVillage(bg, fg) {
   }
 
   function cache() {
-    const key = [V.W, V.H, V.cam.x.toFixed(3), V.cam.z.toFixed(2)].join('|'); if (key === V.cacheKey) return; V.cacheKey = key;
+    const key = [V.W, V.H, V.cam.x.toFixed(3), V.cam.z.toFixed(2), V.gy.toFixed(1)].join('|'); if (key === V.cacheKey) return; V.cacheKey = key;
     for (const cv of [V.A, V.B]) { cv.width = bg.width; cv.height = bg.height; }
     const a = V.A.getContext('2d'), b = V.B.getContext('2d');
     for (const c of [a, b]) c.setTransform(V.dpr, 0, 0, V.dpr, 0, 0);

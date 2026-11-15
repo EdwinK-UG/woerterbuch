@@ -28,7 +28,7 @@ const LOAD_ORDER = ['liv', 'opa', 'huber', 'lena', 'berger', 'max'];
 const PRON = { ich: 'ich', wir: 'ich', du: 'du', ihr: 'du', Sie: 'Sie', er: 'er', sie: 'sie', es: 'es' };
 
 const village = createVillage($('bg'), $('fg'));
-const S = { t: 0, paused: false, gen: 0, scene: -1, mode: 'idle', cam: { x: 8, k: 1 }, waits: [], tweens: [], muted: false, lines: null, practice: null, audio: new Map(), Z0: 100, score: 0, asked: 0 };
+const S = { t: 0, paused: false, gen: 0, scene: -1, mode: 'idle', cam: { x: 8, k: 1, ty: 0 }, base: { x: 8, k: 1 }, close: false, waits: [], tweens: [], muted: false, lines: null, practice: null, audio: new Map(), Z0: 100, score: 0, asked: 0 };
 const A = {};          // actors by key
 
 /* ---------- loading ---------- */
@@ -133,7 +133,7 @@ function drawActors() {
     // the picture, invisible, so it is ready the moment it walks in
     const sx = a.clean ? f.x - w / 2 : 0, sy = a.clean ? f.y - h * a.C.g / 2048 : 0;
     a.cv.style.transform = `translate(${sx.toFixed(1)}px, ${sy.toFixed(1)}px)`; a.cv.style.zIndex = 10 + i;
-    if (Math.abs(h - a.cssH) > a.cssH * 0.08 + 1) { a.cssH = h; a.cv.width = Math.round(w * dpr); a.cv.height = Math.round(h * dpr); a.r.resizeDrawingSurfaceToCanvas(); }
+    if (Math.abs(h - a.cssH) > a.cssH * 0.08 + 1) { a.cssH = h; a.r.resizeDrawingSurfaceToCanvas(Math.min(dpr, 2048 / h)); }   // close-ups: at most the artboard's own 2048 px
   });
 }
 // a rectangle around a person's body on screen, for taps and for the ring
@@ -146,7 +146,23 @@ function fitStage() {
   // on a narrow (portrait) picture keep at least 3.6 m in view, so two people fit side by side
   S.Z0 = Math.min(S.Z0, W / 3.6);
 }
-const cam = (x, k = 1, dur = 1.2) => Promise.all([tween(S.cam, 'x', x, dur), tween(S.cam, 'k', k, dur)]);
+// The scene's own framing (wide). Dialogue lines move in close on the speaker(s) (see say), the narrator goes back to it.
+function cam(x, k = 1, dur = 1.2) { S.base = { x, k }; S.close = false; return Promise.all([tween(S.cam, 'x', x, dur), tween(S.cam, 'k', k, dur), tween(S.cam, 'ty', 0, dur)]); }
+const figH = (a) => a.C.m / 1.18;                         // the artboard has 18 % room above the head
+// close on one or two people: from about the waist up, faces in the upper third, a little room in the looking direction
+function closeUp(list, dur = 0.7) {
+  const H = village.V.H, W = village.V.W, Z0 = S.Z0, tall = Math.max(...list.map(figH));
+  let k = 1.65 * H / (tall * Z0), x;                     // the figure 1.65 times the picture's height: head to about the waist
+  if (list.length === 1) { const a = list[0]; x = a.x + (a.left ? -1 : 1) * 0.1 * figH(a); }
+  else { const xs = list.map((a) => a.x), span = Math.max(...xs) - Math.min(...xs) + 0.9; x = (Math.max(...xs) + Math.min(...xs)) / 2; k = Math.min(k, W * 0.92 / (span * Z0)); }
+  // someone further back (Frau Huber behind her counter) stands higher in the picture: add that to the head's height
+  const lift = Math.max(...list.map((a) => (a.d < 0 ? -a.d / 2.6 * 1.05 : -a.d * 0.55)));
+  k = Math.max(S.base.k, Math.min(4.6, k)); const Z = Z0 * k, head = tall * 0.87 + lift;
+  const ty = Math.max(0, (0.37 * H + head * Z - 0.8 * H) / Z);
+  S.close = true; tween(S.cam, 'x', x, dur); tween(S.cam, 'k', k, dur); tween(S.cam, 'ty', ty, dur);
+}
+function wide(dur = 0.8) { if (!S.close) return; S.close = false; tween(S.cam, 'x', S.base.x, dur); tween(S.cam, 'k', S.base.k, dur); tween(S.cam, 'ty', 0, dur); }
+const inBase = (a) => a.show && Math.abs(a.x - S.base.x) < village.V.W / (2 * S.Z0 * S.base.k) - 0.15;
 
 /* ---------- words ---------- */
 const plain = (s) => s.replace(/\*([^*:]+)(?::[^*]+)?\*/g, '$1');
@@ -172,10 +188,14 @@ function table() {
 let playing = [];
 function stopAudio() { for (const au of playing) { au.pause(); } playing = []; for (const a of Object.values(A)) setB(a, 'talking', false); }
 // one or more lines at the same moment (a chorus); waits until all have been said
-async function say(...ids) {
+// say('l01'), say('l09', 'm02') (both at once), say('l04', { frame: ['liv', 'opa'] }) or { frame: false } (no close-up)
+async function say(...args) {
+  const opt = typeof args[args.length - 1] === 'object' ? args.pop() : {}, ids = args;
   const gen = S.gen, lns = ids.map((id) => [id, S.lines.lines[id]]).filter(([, l]) => l); if (!lns.length) return;
   const [id0, l0] = lns[0]; caption(l0.who, l0.text);
   const talkers = [...new Set(lns.flatMap(([, l]) => l.who.split('+')))].map((k) => A[k]).filter(Boolean);
+  const framed = opt.frame === false ? [] : (opt.frame ? opt.frame.map((k) => A[k]) : talkers).filter(inBase);
+  if (l0.who === 'elisa') wide(); else if (framed.length && framed.length === (opt.frame || talkers).length) closeUp(framed);
   if (l0.who === 'lamb') village.bleat();
   const clips = lns.map(([id]) => S.audio.get(id)).filter(Boolean).slice(0, PLAYERS.length);
   let dur = Math.max(1.2, plain(l0.text).length * 0.068 + 0.5);    // reading time when a line has no recording
@@ -218,7 +238,7 @@ const SCENES = [
   { name: 'er · sie · es', async run() {
     clearCards(); cast('liv'); await need('liv', 'opa', 'huber');
     place(A.liv, -1.6, { left: true }); await cam(-2.6, 1.05, 1.2);
-    trig(A.liv, 'point'); await say('l04'); trig(A.opa, 'wave'); await say('o01'); card('er');
+    trig(A.liv, 'point'); await say('l04', { frame: ['liv', 'opa'] }); trig(A.opa, 'wave'); await say('o01'); card('er');
     await cam(PLACES.bakery - 0.4, 1.0, 1.3); trig(A.huber, 'wave'); await say('l05'); card('sie');
     await cam(PLACES.pen + 0.6, 1.1, 1.6); await say('l06'); await say('f01'); card('es');
     await cam(-2.6, 0.9, 1.4); await say('e05');
@@ -226,10 +246,10 @@ const SCENES = [
   { name: 'wir · ihr', async run() {
     clearCards(); cast('liv', 'max'); await need('liv', 'max', 'opa'); place(A.liv, -1.6, { left: false }); cam(-1.0, 0.95, 1.2);
     await walkTo(A.liv, 0.3, { run: true }); turn(A.liv, true);
-    place(A.max, -6, { left: false }); await say('l07'); await walkTo(A.max, -0.5, { run: true }); trig(A.max, 'wave'); await say('m01');
-    turn(A.max, false); trig(A.liv, 'cheer'); trig(A.max, 'cheer'); await say('l08'); card('wir');
-    turn(A.liv, true); turn(A.max, true); A.opa.sit = false; setB(A.opa, 'sitting', false); await wait(1.0); await say('o02'); card('ihr');
-    await say('l09', 'm02'); walkTo(A.liv, PLACES.bench + 1.2, { run: true }); walkTo(A.max, PLACES.bench + 0.7, { run: true }); await say('e06');
+    place(A.max, -6, { left: false }); await say('l07', { frame: false }); await walkTo(A.max, -0.5, { run: true }); trig(A.max, 'wave'); await say('m01');
+    turn(A.max, false); trig(A.liv, 'cheer'); trig(A.max, 'cheer'); await say('l08', { frame: ['liv', 'max'] }); wide(0.6); card('wir');
+    turn(A.liv, true); turn(A.max, true); A.opa.sit = false; setB(A.opa, 'sitting', false); await wait(1.0); await say('o02', { frame: false }); card('ihr');
+    await say('l09', 'm02', { frame: ['liv', 'max'] }); wide(0.6); walkTo(A.liv, PLACES.bench + 1.2, { run: true }); walkTo(A.max, PLACES.bench + 0.7, { run: true }); await say('e06');
   } },
   { name: 'sie · Sie', async run() {
     clearCards(); cast('lena', 'berger'); await need('lena', 'berger', 'huber');
@@ -350,7 +370,7 @@ function frame(now) {
     const due = S.waits.filter((w) => w.gen !== S.gen || (w.at != null ? S.t >= w.at : w.fn()));
     S.waits = S.waits.filter((w) => !due.includes(w)); due.forEach((w) => (w.gen !== S.gen ? w.no(new Abort()) : w.ok()));
   }
-  village.setCam(S.cam.x, S.Z0 * S.cam.k);
+  village.setCam(S.cam.x, S.Z0 * S.cam.k, S.cam.ty);
   if (visible) { village.draw(S.t, S.paused ? 0 : dt); drawActors(); }
   if (!TEST) requestAnimationFrame(frame);
 }

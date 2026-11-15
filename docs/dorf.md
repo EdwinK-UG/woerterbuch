@@ -13,24 +13,37 @@ the 2D Rive cast (`docs/rive2d-test.md`); the village is drawn in code.
 
 ## Cast and voices
 
-| Figure | Rive | Voice |
+| Figure | Rive | Voice (ElevenLabs unless noted) |
 |---|---|---|
-| Erzählerin | – | Elisa (ElevenLabs) |
-| Liv | C01 | Gisela (Microsoft Azure, `de-DE-GiselaNeural`, the only German child voice there) |
-| Max | C02 | KidVoice "Ellis Story" (German boy voices page) |
-| Lena | A03 | ElevenLabs |
-| Herr Berger | A05 | ElevenLabs (Theo) |
-| Opa Sepp | A01 | ElevenLabs |
-| Frau Huber | A04 | ElevenLabs |
+| Erzählerin | – | Elisa |
+| Liv | C01 | Lucy (German, young; a little livelier and faster) |
+| Max | C02 | KidVoice "Ellis Story" (German boy voices page; free plan = test only, not uploaded) |
+| Lena | A03 | Alice – Young and Vibrant (German) |
+| Herr Berger | A05 | Theo |
+| Opa Sepp | A01 | Cornelius (Voice Library, used by id; the API key may not add voices) |
+| Frau Huber | A04 | Petra |
 
-ElevenLabs does not allow child or child-like voices. KidVoice audio needs a paid plan for commercial use. A line
-without a recording is shown with a reading time instead (the scene still plays).
+ElevenLabs does not allow child or child-like voices, so the children are adults' voices made livelier, or KidVoice.
+`tools/dorf-audio.cjs record` records every line of the private lines file with `.local/a1k1/voices.json`, keeps
+unchanged lines (hash), and `pack --no-max` builds the upload. A line without a recording is shown with a reading
+time instead (the scene still plays).
+
+## Camera
+
+Each scene sets a wide framing (`cam(x, zoom)`). A dialogue line moves the camera in on its speaker, from the head to
+about the waist (`closeUp`: the figure 1.65 times the picture's height, the face in the upper third, a little room in
+the direction the person looks; two people at once get a two-shot), so the talking mouth is visible on a phone; the
+narrator's lines go back to the wide framing with the cards. `say(id, { frame: ['liv', 'opa'] })` frames other people
+(Liv pointing at Opa), `{ frame: false }` keeps the wide shot. Nobody is framed who is outside the scene's wide shot
+(Liv speaking off-screen while the camera shows the bakery). People standing further back (Frau Huber behind her
+counter) are framed by their real height in the picture. Close-ups draw the figures at up to the artboard's own 2048 px.
 
 ## Text stays private
 
 Like the other lesson scenes, the public files hold no spoken text. Every line and practice item is in a private
-lines file: `.local/a1k1/lines.json` (git-ignored) for `?local`, and later from the lesson page (`dorf-lines`
-message), with signed audio links like the film narration. `*word*` marks a pronoun to colour; `*Sie:sie*` colours a
+lines file: `.local/a1k1/lines.json` (git-ignored) for `?local`; in the lesson, the page asks the Worker's
+`/film-audio?chapter=1` (signed in, enrolled in A1, or staff) and posts the cues to the scene (`werkstatt-audio`):
+id `dorf|<line>|<who>`, the line as `say`, a 12-hour signed audio link; the practice is one cue with its JSON. `*word*` marks a pronoun to colour; `*Sie:sie*` colours a
 sentence-initial *Sie* as the 3rd person.
 
 ## Phones and loading
