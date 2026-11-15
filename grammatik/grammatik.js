@@ -1234,6 +1234,10 @@ const watchBtn = c => (hasWatch(c) ? `<button class="btn sm" data-watch="${c.n}"
    chapter's own sentences. */
 // Interactive scenes that open in a full-screen frame from a lesson (they get the lesson's texts by message, see werkTexts).
 const WERKSTATT = {
+  // inline: opens in the page under its card (sized to fit a phone), not over the whole screen. audio: the scene's
+  // lines and recordings come through the private film-audio route of the chapter (signed in, enrolled).
+  1: { dorf: ['grammatik/dorf/index.html?v=1', 'Im Dorf – Personalpronomen'], inline: true, audio: true,
+    btn: ['dorf', 'users', 'Im Dorf'], card: ['Im Dorf: ich, du, Sie …', 'Liv und ihre Nachbarn stellen sich vor – mit Ton. Danach fragt Liv dich.', [['dorf', 'Animation starten', 'play']]] },
   57: { liv: ['grammatik/liv/werkstatt/index.html?v=1', 'Trennbar-Werkstatt mit Liv'], '3d': ['grammatik/werkstatt/index.html?v=3', 'Trennbar-Werkstatt 3D'],
     btn: ['liv', 'hammer', 'Werkstatt mit Liv'], card: ['Die Säge zeigt es', 'Trennbare Verben lassen sich zersägen, untrennbare nicht. Sieh Liv zu oder säge selbst – mit Ton.', [['liv', 'Werkstatt mit Liv', 'hammer'], ['3d', '3D-Werkstatt']]] },
   94: { wand: ['grammatik/zauberstab/index.html?v=2', 'Wunschzauber mit Liv'], exercises: true, vrm: true,
@@ -1249,13 +1253,30 @@ function warmLiv() {
 }
 const livVersion = () => (/[?&]v=([a-z0-9]{1,20})/.exec(window.DK_LIV_MODEL || '') || [])[1];
 const werkBtn = c => { const w = WERKSTATT[c.n]; if (w && w.vrm && !c.vocab) warmLiv(); return w && !c.vocab ? `<button class="btn sm" data-werkstatt="${c.n}" data-werk="${w.btn[0]}">${icn(w.btn[1])} ${w.btn[2]}</button>` : ''; };
-const werkCard = c => { const w = WERKSTATT[c.n]; return w && !c.vocab ? `<div class="gr-cream" style="display:flex;gap:.8rem;align-items:center;flex-wrap:wrap;margin:0 0 1rem"><div style="flex:1;min-width:14rem"><b>${w.card[0]}</b><br><span style="color:var(--mut)">${w.card[1]}</span></div>${w.card[2].map(([k, t, i]) => `<button class="btn sm" data-werkstatt="${c.n}" data-werk="${k}">${i ? icn(i) + ' ' : ''}${t}</button>`).join('')}</div>` : ''; };
+const werkCard = c => { const w = WERKSTATT[c.n]; return w && !c.vocab ? `<div class="gr-cream" style="display:flex;gap:.8rem;align-items:center;flex-wrap:wrap;margin:0 0 1rem"><div style="flex:1;min-width:14rem"><b>${w.card[0]}</b><br><span style="color:var(--mut)">${w.card[1]}</span></div>${w.card[2].map(([k, t, i]) => `<button class="btn sm" data-werkstatt="${c.n}" data-werk="${k}">${i ? icn(i) + ' ' : ''}${t}</button>`).join('')}</div>${w.inline ? `<div data-werk-host="${c.n}"></div>` : ''}` : ''; };
 function werkTexts(c) {
   const out = [], walk = x => { if (out.length > 4000) return; if (typeof x === 'string') out.push(x); else if (Array.isArray(x)) x.forEach(walk); else if (x && typeof x === 'object') Object.values(x).forEach(walk); };
   walk(c.understand); walk(c.examples); walk(c.speak); if (WERKSTATT[c.n]?.exercises) walk(c.exercises); return out;
 }
+// An inline scene: a frame under its card, as tall as the scene asks (werkstatt-height), closed by the scene's ✕.
+// When it is ready it gets the chapter's private lines and signed audio links (or null: not signed in / not enrolled).
+function openInline(n, w) {
+  const host = document.querySelector(`[data-werk-host="${n}"]`); if (!host) return false;
+  if (host.firstChild) { host.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); return true; }
+  const f = document.createElement('iframe'); f.title = w[1]; f.src = w[0]; f.allow = 'autoplay; fullscreen; microphone';
+  f.style.cssText = 'display:block;width:100%;height:min(80vh,560px);border:0;border-radius:1rem;margin:0 0 1rem;background:#f4efe4';
+  const onMsg = async e => {
+    if (e.source !== f.contentWindow || e.origin !== location.origin) return;
+    const d = e.data || {};
+    if (d.type === 'werkstatt-ready') { const audio = await Promise.race([filmAudio(n), new Promise(r => setTimeout(() => r(null), 6000))]); f.contentWindow?.postMessage({ type: 'werkstatt-audio', audio }, location.origin); }
+    else if (d.type === 'werkstatt-height' && d.h > 100) f.style.height = Math.min(4000, Math.ceil(d.h)) + 'px';
+    else if (d.type === 'werkstatt-close') { removeEventListener('message', onMsg); f.remove(); }
+  };
+  addEventListener('message', onMsg); host.append(f); f.scrollIntoView({ behavior: 'smooth', block: 'start' }); return true;
+}
 function openWerkstatt(n, kind) {
   const W = WERKSTATT[n], c = cur && cur.n === n ? cur : CH[n], w = W && (Array.isArray(W[kind]) ? W[kind] : W[W.btn[0]]); if (!c || !w) return;
+  if (W.inline && openInline(n, w)) return;
   const previous = document.activeElement, scroll = document.body.style.overflow;
   const d = document.createElement('dialog'); d.setAttribute('aria-label', w[1]);
   d.style.cssText = 'position:fixed;inset:0;width:100vw;height:100dvh;max-width:none;max-height:none;margin:0;padding:0;border:0;background:#f3e9d8';

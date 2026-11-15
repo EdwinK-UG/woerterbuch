@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Im Dorf – Personalpronomen</title>
+<link rel="icon" href="../../favicon.svg?v=3">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@rive-app/canvas@2.49.0/rive.js" as="script" crossorigin>
+<link rel="modulepreload" href="main.js?v=1">
+<link rel="modulepreload" href="village.js?v=1">
+<style>
+  :root { --ink: #2a2f3a; --mut: #6b7482; --paper: #fffcf6; --line: #e6dccb; --bg: #f4efe4; --acc: #2f7d5b;
+          --ich: #7c4dff; --du: #1f6feb; --Sie: #b45309; --er: #2563eb; --sie: #e11d48; --es: #0f9d6b; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); font-family: Inter, system-ui, -apple-system, sans-serif; }
+  #app { max-width: 980px; margin: 0 auto; padding: 0; }
+  /* the picture: 16:9 on wide screens, 4:3 on phones, never taller than about 60 % of the screen */
+  #stage { position: relative; width: 100%; aspect-ratio: 16 / 9; max-height: 62vh; margin: 0 auto; overflow: hidden; background: #cfe7f5; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+  @media (max-width: 640px) { #stage { aspect-ratio: 4 / 3; max-height: 58vh; } }
+  #stage > canvas { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; }
+  #bg { z-index: 0; } #fg { z-index: 20; pointer-events: none; }
+  #people { position: absolute; inset: 0; pointer-events: none; z-index: 5; }
+  #people canvas { position: absolute; left: 0; top: 0; width: 10px; height: 10px; opacity: 0; transition: opacity .35s; }
+  #people canvas.on { opacity: 1; }
+  #cards { position: absolute; left: 10px; top: 10px; right: 10px; display: flex; flex-wrap: wrap; gap: 6px; pointer-events: none; z-index: 30; }
+  .card { background: rgba(255,252,246,.95); border-radius: 12px; padding: 5px 10px 6px; box-shadow: 0 2px 10px rgba(30,40,60,.12); border-left: 5px solid var(--c, var(--acc)); animation: pop .35s ease-out; }
+  .card b { font-size: 20px; color: var(--c); font-family: Fraunces, Georgia, serif; font-weight: 600; margin-right: 6px; }
+  .card span { font-size: 12px; color: var(--mut); }
+  @keyframes pop { from { transform: scale(.7); opacity: 0; } to { transform: none; opacity: 1; } }
+  #table { position: absolute; left: 12%; right: 12%; top: 8%; max-height: 84%; background: rgba(255,252,246,.97); border-radius: 16px; box-shadow: 0 8px 30px rgba(30,40,60,.2); display: none; z-index: 31; padding: 10px 14px; overflow: auto; }
+  #table.on { display: block; animation: pop .4s ease-out; }
+  #table table { width: 100%; border-collapse: collapse; font-size: clamp(12px, 2.4vw, 16px); }
+  #table th, #table td { padding: 4px 6px; border-bottom: 1px solid var(--line); text-align: left; }
+  #table th { color: var(--mut); font-weight: 600; font-size: .8em; }
+  #table td b { font-family: Fraunces, Georgia, serif; font-size: 1.15em; }
+  #ring { position: absolute; border: 3px solid #f1c64c; border-radius: 50%; pointer-events: none; display: none; z-index: 29; box-shadow: 0 0 0 4px rgba(241,198,76,.3); animation: pulse 1.2s ease-in-out infinite; }
+  @keyframes pulse { 50% { transform: scale(1.08); } }
+  #corner { position: absolute; right: 8px; top: 8px; display: flex; gap: 6px; z-index: 32; }
+  #corner button { width: 38px; height: 38px; min-height: 0; padding: 0; border-radius: 50%; background: rgba(255,252,246,.9); font-size: 17px; }
+  #start { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(40,60,80,.28); z-index: 40; }
+  #start .box { background: var(--paper); border-radius: 18px; padding: 16px 20px; text-align: center; max-width: 86%; box-shadow: 0 10px 30px rgba(20,30,50,.25); }
+  #start h2 { font-family: Fraunces, Georgia, serif; font-weight: 500; margin: 0 0 4px; font-size: clamp(18px, 4.4vw, 24px); }
+  #start p { margin: 0 0 12px; color: var(--mut); font-size: 14px; line-height: 1.4; }
+  #start .row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+  #load { font-size: 12px; color: var(--mut); margin-top: 8px; min-height: 1em; }
+  @media (max-width: 480px) {
+    #start .box { padding: 10px 12px; } #start h2 { font-size: 17px; margin-bottom: 8px; } #start p { display: none; }
+    #start button { font-size: 14px; padding: 7px 11px; min-height: 36px; } #load { margin-top: 4px; }
+    #cap { font-size: 16px; min-height: 56px; } button { min-height: 38px; padding: 7px 11px; }
+    #dots button { width: 24px; height: 24px; }
+    #cards { left: 6px; top: 6px; right: 96px; gap: 4px; } .card { padding: 2px 8px 3px; border-left-width: 4px; } .card b { font-size: 17px; margin-right: 0; } .card span { display: none; }
+  }
+  button { font: inherit; font-size: 15px; border: 1px solid var(--line); border-radius: 12px; padding: 9px 14px; background: #fff; color: var(--ink); cursor: pointer; min-height: 42px; }
+  button:hover:not(:disabled) { background: #f6f1e7; }
+  button.main { background: var(--acc); border-color: var(--acc); color: #fff; }
+  button.main:hover:not(:disabled) { background: #276a4d; }
+  button:disabled { opacity: .45; cursor: default; }
+  button:focus-visible { outline: 3px solid #f1c64c; outline-offset: 2px; }
+  /* below the picture */
+  #panel { padding: 10px 12px 14px; display: flex; flex-direction: column; gap: 10px; }
+  #cap { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 9px 12px; min-height: 62px; font-size: 17px; line-height: 1.45; }
+  #cap .who { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--mut); letter-spacing: .02em; margin-bottom: 2px; }
+  #cap .who i { width: 10px; height: 10px; border-radius: 50%; background: var(--c); display: inline-block; }
+  #cap .t { display: block; }
+  .pr { font-weight: 700; color: var(--c); }
+  #ctl { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  #dots { display: flex; gap: 5px; align-items: center; flex: 1; min-width: 120px; }
+  #dots button { min-height: 0; width: 26px; height: 26px; padding: 0; border-radius: 50%; font-size: 11px; color: var(--mut); }
+  #dots button.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+  #dots button.done { background: #e9f3ec; border-color: #b7d8c3; }
+  #practice { display: none; flex-direction: column; gap: 8px; }
+  #practice.on { display: flex; }
+  #practice.busy #answers, #practice.busy #say { opacity: .45; pointer-events: none; }
+  #ctl.pr #prev, #ctl.pr #play, #ctl.pr #next, #ctl.pr #dots { display: none; }
+  #prompt { font-size: 14px; color: var(--mut); }
+  #answers { display: flex; flex-wrap: wrap; gap: 8px; }
+  #answers button { font-size: 17px; }
+  #say { display: flex; gap: 8px; }
+  #say input { flex: 1; min-width: 0; font: inherit; font-size: 17px; padding: 9px 12px; border: 1px solid var(--line); border-radius: 12px; }
+  #mic.rec { background: #fde8ea; border-color: #e11d48; }
+  #score { font-size: 13px; color: var(--acc); font-weight: 600; }
+  .ok { color: var(--acc); font-weight: 700; } .no { color: #c8503d; font-weight: 700; }
+  @media (prefers-reduced-motion: reduce) { .card, #table.on { animation: none; } #ring { animation: none; } }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="stage" aria-label="Ein grünes Bergdorf mit einem Bach und einer Brücke. Liv, ein Mädchen im roten Dirndl, und ihre Nachbarn stellen sich vor.">
+    <canvas id="bg"></canvas>
+    <div id="people"></div>
+    <canvas id="fg"></canvas>
+    <div id="ring"></div>
+    <div id="cards" aria-live="polite"></div>
+    <div id="table"></div>
+    <div id="corner"><button id="sound" aria-pressed="true" title="Ton an/aus" aria-label="Ton an">🔊</button><button id="full" title="Vollbild" aria-label="Vollbild">⛶</button></div>
+    <div id="start"><div class="box">
+      <h2>Im Dorf: ich, du, Sie …</h2>
+      <p>Liv und ihre Nachbarn stellen sich vor. Danach fragt Liv dich.</p>
+      <div class="row"><button id="goWatch" class="main" disabled>▶ Zuschauen</button><button id="goTry" disabled>Selbst sprechen</button></div>
+      <div id="load">Lädt …</div>
+    </div></div>
+  </div>
+  <div id="panel">
+    <div id="cap" aria-live="polite"></div>
+    <div id="practice">
+      <div id="prompt"></div>
+      <div id="answers"></div>
+      <div id="say"><input id="inp" autocomplete="off" autocapitalize="sentences" spellcheck="false" placeholder="Schreib oder sprich …" aria-label="Deine Antwort"><button id="mic" title="Sprechen" aria-label="Sprechen">🎤</button><button id="ok" class="main">OK</button></div>
+    </div>
+    <div id="ctl">
+      <button id="prev" aria-label="Szene zurück">⏮</button><button id="play" aria-label="Pause">❚❚</button><button id="next" aria-label="Nächste Szene">⏭</button>
+      <div id="dots"></div>
+      <button id="try" class="main">Selbst sprechen</button><span id="score"></span>
+    </div>
+  </div>
+</div>
+<script type="module" src="main.js?v=1"></script>
+</body>
+</html>
