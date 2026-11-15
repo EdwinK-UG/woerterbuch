@@ -19,6 +19,21 @@ def torso(t, L, pad=0.03):
     return t.ax < L.x('shoulder') + pad
 
 
+def trunk(t, L, pad=-0.018, soft=0.03):
+    """The trunk for a garment worn over the shirt (a vest): torso() plus the trunk's sides below the armpit. torso()
+    alone stops at the shoulder joint's |x|, but a child's or a stout man's waist is wider than that, and the cloth
+    under the arm belongs to the trunk once the arm hangs down: the vest ended in a ragged strip of shirt down each
+    side, which showed as torn cloth whenever an arm was lifted. The armhole is a smooth curve that keeps off the
+    sleeve: straight down two centimetres inside the shoulder joint (on the joint's line the edge ran through the
+    sleeve's seam and frayed, and the sleeve's top carried scraps of vest), opening outward only below the sleeve's
+    underside (measured on the mesh; the arms are level in the rest pose)."""
+    B = F.mesh_points(t.g, t.part); xs = L.x('shoulder')
+    S = B[(np.abs(B[:, 0]) > xs + 0.02) & (np.abs(B[:, 0]) < xs + 0.07) & (B[:, 1] > L.y('shoulder') - 0.16)]
+    pit = (float(np.percentile(S[:, 1], 2)) if len(S) > 10 else L.y('shoulder') - 0.06) - 0.008     # just below the sleeve
+    below = np.clip((pit - t.y) / soft, 0, 1)                                 # 0 at the armpit, 1 a little below it
+    return t.ax < xs + pad + 0.5 * below * below * (3 - 2 * below)
+
+
 def arm(t, L, pad=0.03, band=0.13):
     """Texels of a sleeve: outside the trunk, at shoulder height (the arms are level in the rest pose)."""
     return ~torso(t, L, pad) & (np.abs(t.y - L.y('shoulder')) < band)
@@ -27,9 +42,52 @@ def arm(t, L, pad=0.03, band=0.13):
 def sleeve_cut(t, L, at, roll_rgb=None, roll=0.035):
     """Rolled sleeves: the sleeve ends at |x| = at (fraction of the way elbow -> wrist), with a darker rolled band."""
     xe, xw = L.x('elbow'), L.x('wrist'); xc = xe + at * (xw - xe)
-    t.hide((t.ax > xc) & arm(t, L))
+    sleeve_end(t, L, xc)
     if roll_rgb is not None: t.fill((t.ax > xc - roll) & (t.ax <= xc) & arm(t, L), roll_rgb, keep=0.4)
     return xc
+
+
+def arm_skin(g, L):
+    """Where the body's own arm skin begins (|x|): the presets have no body under a long sleeve from the shoulder to
+    about 0.42 of the way from the elbow to the wrist. Also the arm's centre and radius along |x|, per side."""
+    B = F.mesh_points(g, 'Body_00_SKIN'); xs0 = L.x('shoulder') + 0.02
+    A = B[(np.abs(B[:, 0]) > xs0) & (np.abs(B[:, 1] - L.y('shoulder')) < 0.1)]
+    start = float(np.abs(A[:, 0]).min()) + 0.01
+    def ring(side, x):                       # centre (y, z) and radius of the skin around |x| on one side
+        m = (np.sign(A[:, 0]) == side) & (np.abs(np.abs(A[:, 0]) - x) < 0.012)
+        if m.sum() < 4: return None
+        c = A[m][:, 1:].mean(0); return c, float(np.median(np.linalg.norm(A[m][:, 1:] - c, axis=1)))
+    return start, ring
+
+
+def sleeve_end(t, L, xc):
+    """A sleeve that ends at |x| = xc. Hiding the cloth below xc left a hole down to where the body's arm skin begins,
+    and the sleeve's open end showed its dark inside (hands floating below a cuff, in 3D and in the 2D cut-outs). So
+    the cloth from xc down to the skin is painted as the bare arm, only the rest is hidden, and the sleeve's end is
+    drawn in round the forearm so no inside shows."""
+    start, ring = arm_skin(t.g, L); xh = max(xc, start + 0.012)
+    if xh > xc: t.fill(t.cov & arm(t, L) & (t.ax > xc) & (t.ax <= xh), C(*L['skin']), keep=0.25)
+    t.hide((t.ax > xh) & arm(t, L))
+    close_sleeve(t.g, L, xh, ring)
+    return xh
+
+
+def close_sleeve(g, L, xh, ring, lead=0.035):
+    """Pull the sleeve's vertices near its (new) end in onto the forearm's skin, a little outside it."""
+    done = {}
+    for pr in F.prims_of(g, 'Tops'):
+        ai = pr['attributes']['POSITION']
+        if ai in done: pr['attributes']['POSITION'] = done[ai]; continue
+        P = g.acc(ai).astype(np.float64).copy(); ax = np.abs(P[:, 0])
+        m = (ax > xh - lead) & (np.abs(P[:, 1] - L.y('shoulder')) < 0.13) & (ax > L.x('shoulder') + 0.03); n = 0
+        for i in np.where(m)[0]:
+            r = ring(np.sign(P[i, 0]), min(ax[i], xh + 0.01))
+            if r is None: continue
+            c, rad = r; d = P[i, 1:] - c; dl = float(np.linalg.norm(d)); want = rad + 0.0025
+            if dl <= want: continue
+            w = sstep(xh - lead, xh, ax[i]); P[i, 1:] = c + d / dl * (dl + (want - dl) * w); n += 1
+        na = g.new_acc(P.astype(np.float32), 'VEC3', True); pr['attributes']['POSITION'] = na; done[ai] = na
+        print(f'sleeve end at |x| {xh:.3f}: {n} vertices drawn in')
 
 
 def socks(t, L, top, rgb, rib=True, cuff=0.014, slouch=0.0):
@@ -51,7 +109,7 @@ def buttons(t, L, ys, x=0.0, r=0.006, rgb=(250, 246, 236), ring=(150, 130, 110),
         t.a[m, :3] = ring; t.a[m & (d < r * 0.7), :3] = rgb
 
 
-def tuck(t, g, L, over=0.015):
+def tuck(t, g, L, over=0.015, smooth=3):
     """Hide the shirt inside the trousers: below the trousers' own waistline, measured all round (it dips at the front
     and rises at the back), smoothed so belt loops do not comb the edge."""
     from scipy.ndimage import uniform_filter1d
@@ -59,7 +117,7 @@ def tuck(t, g, L, over=0.015):
     c = L['hips']; ab = np.arctan2(B[:, 0] - c[0], B[:, 2] - c[2]); n = 24; bins = np.linspace(-np.pi, np.pi, n + 1)
     top = np.array([np.percentile(B[(ab >= a) & (ab < b), 1], 80) if ((ab >= a) & (ab < b)).sum() > 3 else np.nan for a, b in zip(bins[:-1], bins[1:])])
     ok = ~np.isnan(top); top = np.interp(np.arange(n), np.where(ok)[0], top[ok], period=n)
-    top = uniform_filter1d(top, 3, mode='wrap'); mid = (bins[:-1] + bins[1:]) / 2
+    top = uniform_filter1d(top, smooth, mode='wrap'); mid = (bins[:-1] + bins[1:]) / 2
     at = np.interp(np.arctan2(t.x - c[0], t.z - c[2]), mid, top, period=2 * np.pi)
     t.hide(t.cov & torso(t, L, 0.06) & (t.y < at - over) & (t.y < L.y('chest')))
 
@@ -163,7 +221,7 @@ def fit_c02(g, L, k):
     t, ttop = boy_common(g, L, k, SHIRT, TROU, ((22, 16, 12), (44, 31, 22), (92, 70, 52)), None, None, None, 0.03, 0.016)
     ny = L.y('neck'); front = t.z > L['chest'][2] - 0.01
     gap = 0.010 + 0.055 * sstep(L.y('chest') - 0.02, ny - 0.02, t.y)              # the vest's V opening
-    vest = t.cov & torso(t, L, 0.012) & (t.y > ttop - 0.03) & (t.y < ny - 0.012) & ~(front & (t.ax < gap))
+    vest = t.cov & trunk(t, L) & (t.y > ttop - 0.03) & (t.y < ny - 0.012) & ~(front & (t.ax < gap))
     t.fill(vest, VEST, keep=0.35)
     t.flat(vest & front & (np.abs(t.ax - gap) < 0.004), VEST * 0.7)
     buttons(t, L, np.linspace(L.y('chest') - 0.01, ttop - 0.03, 4), x=0.022, r=0.0055, rgb=(150, 110, 70), ring=(70, 45, 28))
@@ -309,7 +367,7 @@ def shoes(g, rgb, keep=0.5):
 def vest_on(t, L, ttop, rgb, gap0=0.016, gap_top=0.07, hem=0.04, nbut=4, but_rgb=(150, 110, 70)):
     ny = L.y('neck'); front = t.z > L['chest'][2] - 0.01
     gap = gap0 + gap_top * sstep(L.y('chest') - 0.02, ny - 0.02, t.y)
-    vest = t.cov & torso(t, L, 0.012) & (t.y > ttop - hem) & (t.y < ny - 0.015) & ~(front & (t.ax < gap))
+    vest = t.cov & trunk(t, L) & (t.y > ttop - hem) & (t.y < ny - 0.015) & ~(front & (t.ax < gap))
     t.fill(vest, rgb, keep=0.35); t.flat(vest & front & (np.abs(t.ax - gap) < 0.004), np.asarray(rgb) * 0.7)
     buttons(t, L, np.linspace(L.y('chest') - 0.01, ttop - hem * 0.5, nbut), x=gap0 + 0.012, r=0.0065, rgb=but_rgb, ring=np.asarray(rgb) * 0.6)
     return vest
@@ -340,7 +398,7 @@ def fit_a02(g, L, k):
     SHIRT, TROU, APRON, STRAP = C(228, 191, 139), C(74, 55, 38), (116, 76, 41), C(104, 68, 38)
     hair_set(g, L, k, ((60, 36, 18), (103, 64, 34), (150, 100, 60)), y_end=lambda d: float(np.interp(abs(d), [0, 40, 60, 180], [L['brow'] + 0.03, L['brow'] + 0.02, -9, -9])), vol=0.02, wave=0.03, flick=0.012)
     ttop = top_of(g, 'Bottoms_01_CLOTH')
-    t = cloth(g, 'Tops', SHIRT, 0.55); tuck(t, g, L); sleeve_cut(t, L, 0.12, roll_rgb=SHIRT * 0.9)
+    t = cloth(g, 'Tops', SHIRT, 0.55); tuck(t, g, L, smooth=7); sleeve_cut(t, L, 0.12, roll_rgb=SHIRT * 0.9)   # an even hem: it shows over the dark trousers from behind
     # apron straps: up from the bib's corners over the shoulders, crossed on the back down to the waist ties
     front = t.z > L['chest'][2] - 0.012; sh = L.y('shoulder') + 0.04; yb = L.y('uchest') + 0.02
     for sx in (-1, 1):
@@ -371,7 +429,10 @@ def fit_a05(g, L, k):
     tie = s.cov & (s.ax < 0.012 + 0.004 * sstep(ny - 0.03, ny - 0.12, s.y)) & (s.y < ny - 0.02) & (s.z > L['neck'][2])
     vest = s.cov & (s.y < ny - 0.075) & ~tie & (s.z > L['neck'][2])
     s.fill(vest, VEST, keep=0.3); s.fill(tie, TIE, keep=0.3)
-    buttons(s, L, np.linspace(ny - 0.09, ny - 0.2, 3), x=0.022, r=0.005, rgb=(150, 116, 84), ring=(70, 50, 36)); s.save()
+    buttons(s, L, np.linspace(ny - 0.09, ny - 0.2, 3), x=0.022, r=0.005, rgb=(150, 116, 84), ring=(70, 50, 36))
+    # the shirt's sleeves lie inside the coat's and are never seen, except at the cuffs; where the two meshes end
+    # differently at the shoulder a white edge of shirt showed on the coat's sleeve once the arm was a layer of its own
+    s.hide(~torso(s, L, -0.01) & (s.ax < L.x('wrist') - 0.035) & (np.abs(s.y - L.y('shoulder')) < 0.16)); s.save()
     for m in g.j['materials']:
         if 'Bottoms' in m['name']:
             i = g.j['textures'][m['pbrMetallicRoughness']['baseColorTexture']['index']]['source']; b = Tex(g, m['name'], i); recolour_all(b, TROU, 0.5); b.save()
@@ -409,7 +470,8 @@ def fit_a03(g, L, k):
     t = Tex(g, 'Tops_01_CLOTH_01'); ny = L.y('neck'); front = t.z > L['chest'][2] - 0.02
     recolour_all(t, MAUVE, 0.35)
     sleeve = t.cov & arm(t, L, 0.035); t.fill(sleeve, BLOUSE, keep=0.45)
-    xc = sleeve_cut(t, L, -0.18, roll_rgb=BLOUSE * 0.93, roll=0.025)                  # puff sleeves to above the elbow, a cuff
+    xe, xw = L.x('elbow'), L.x('wrist'); xc = xe - 0.18 * (xw - xe); sleeve_end(t, L, xc)       # puff sleeves to above the elbow
+    t.fill((t.ax > xc - 0.025) & (t.ax <= xc) & arm(t, L), BLOUSE * 0.93, keep=0.4)
     neck = t.cov & front & (t.ax < 0.062) & (t.y > ny - 0.115); t.fill(neck, BLOUSE, keep=0.4)      # the blouse in the square neckline
     t.flat(t.cov & front & (np.abs(t.ax - 0.062) < 0.004) & (t.y > ny - 0.115) & (t.y < ny - 0.01), MAUVE * 0.75)
     t.flat(t.cov & front & (t.ax < 0.062) & (np.abs(t.y - (ny - 0.115)) < 0.004), MAUVE * 0.75)

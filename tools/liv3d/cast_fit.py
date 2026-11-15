@@ -506,7 +506,7 @@ def run(cid, src=None, dst=None, only=None):
     g = GLB(src); L = landmarks(g)
     k = spec.get('head') or heads_k(L, spec['heads'])
     print(f'{cid}: {spec["name"]}: export {L["crown"] - L["chin"]:.3f} m head, {L["crown"]:.3f} m to the crown; head joint x{k:.3f}')
-    L['k'] = k
+    L['k'] = k; L['skin'] = spec.get('skin') or (240, 200, 165)
     if spec.get('skin'): skin_tone(g, spec['skin'])           # first, so socks and clothes painted later keep their colour
     spec['fit'](g, L, k)
     print(f'face lines: {face_lines(g, L)} texels')           # nose and mouth readable at scene distance                                  # hair, paint, parts (all in the export's unscaled space)

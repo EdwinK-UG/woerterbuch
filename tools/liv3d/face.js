@@ -6,11 +6,11 @@ import { clamp, lerp } from './rig.js';
 
 export const EXPRESSIONS = {
   happy: { relaxed: 0.38 },            // her resting face: a soft closed-mouth smile, eyes open (VRoid's 'happy' closes the eyes and opens the mouth)
-  smile: { relaxed: 0.8 },
+  smile: { relaxed: 0.75, happy: 0.3 },  // an open smile: reads as a smile at scene distance (relaxed alone looked like the resting face)
   neutral: {},
   laugh: { happy: 1.0, aa: 0.45 },
   surprised: { surprised: 1.0 },
-  sad: { sad: 0.9 },
+  sad: { sad: 0.5, angry: 0.6, blink: 0.28 },   // VRoid's sad alone has a small round mouth that reads as surprise: angry's mouth is a small frown
   think: { sad: 0.12, ou: 0.3 },
   ouch: { sad: 0.55, angry: 0.3, ih: 0.4, blink: 0.4 },
   effort: { angry: 0.6, ee: 0.35, blink: 0.18 },

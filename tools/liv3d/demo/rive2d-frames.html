@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>2D cast: exact frames</title>
+<style>html, body { margin: 0; background: #f3e9d8; font: 13px system-ui; color: #3a1c0c; } #log { padding: 8px; white-space: pre-wrap; }</style>
+</head>
+<body>
+<div id="log">loading…</div>
+<script type="module">
+// Exact frames of the 2D cast, for checking (docs/rive2d-test.md). The test page (rive2d.html) plays in real time, so
+// a picture of it shows whatever frame the clock happened to reach. Here the state machine is stepped by hand, 1/60 s
+// at a time, with Rive's low-level runtime: the same frames every time, any of them, at any zoom, and no splash.
+//   served by shot_server.py; sheets are saved through POST /save
+//   await __sheet('name', 'C03', '3q', STEPS, { zoom: 2, cx: 0.5, cy: 0.45, cw: 380, ch: 420, cols: 10 })
+//     STEPS: a list of  ['set', prop, value] | ['trig', name] | ['face', name] | ['run', frames] | ['shot', label]
+//            | ['shots', n, every, label]  (n pictures, `every` frames apart)
+//   await __motion('name', 'C03', '3q', 'holding', opts)   a ready-made list for one motion: clap, wave, point, cheer,
+//     think, pull, walk, run, sitting, holding, faces, left
+//   zoom: 1 = the whole artboard in a cell 384 x 512; cx, cy: the centre of the cell on the artboard (0..1)
+import RiveCanvas from 'https://cdn.jsdelivr.net/npm/@rive-app/canvas-advanced@2.49.0/canvas_advanced.mjs';
+const log = (s) => { document.getElementById('log').textContent = s; };
+const rive = await RiveCanvas({ locateFile: () => 'https://cdn.jsdelivr.net/npm/@rive-app/canvas-advanced@2.49.0/rive.wasm' });
+const SUF = { '3q': '', front: '-front', back: '-back' };
+const open = {};
+async function load(id, view) {
+  const key = id + ' ' + view; if (open[key]) return open[key];
+  const buf = await (await fetch(`../models/cast/2d/${id.toLowerCase()}${SUF[view]}.riv?r=${Date.now()}`, { cache: 'no-store' })).arrayBuffer();
+  const file = await rive.load(new Uint8Array(buf));
+  await new Promise((r) => setTimeout(r, 900));                          // the pictures decode after the file has loaded
+  return (open[key] = { file, name: key });
+}
+function start(o) {
+  const ab = o.file.artboardByName(o.name), sm = new rive.StateMachineInstance(ab.stateMachineByName('Character'), ab);
+  const vm = o.file.defaultArtboardViewModel(ab), vi = vm.defaultInstance ? vm.defaultInstance() : vm.instance();
+  ab.bindViewModelInstance(vi); sm.bindViewModelInstance(vi);
+  return { ab, sm, vi };
+}
+// the pictures of one view as canvases
+async function cellsOf(id, view, steps, { zoom = 1, cx = 0.5, cy = 0.5, cw = 384, ch = 512, bg = '#f3e9d8' } = {}) {
+  const o = await load(id, view), { ab, sm, vi } = start(o);
+  const cv = document.createElement('canvas'); cv.width = cw; cv.height = ch; const renderer = rive.makeRenderer(cv);
+  const cells = []; const W = ab.bounds.maxX, H = ab.bounds.maxY, s = 512 / H * zoom;
+  const step = (n) => { for (let i = 0; i < n; i++) { sm.advance(1 / 60); ab.advance(1 / 60); } };
+  const shot = async (label) => {
+    const tx = cw / 2 - cx * W * s, ty = ch / 2 - cy * H * s;
+    renderer.clear(); renderer.save(); renderer.align(rive.Fit.fill, rive.Alignment.topLeft, { minX: tx, minY: ty, maxX: tx + W * s, maxY: ty + H * s }, ab.bounds); ab.draw(renderer); renderer.restore(); renderer.flush && renderer.flush();
+    rive.resolveAnimationFrame && rive.resolveAnimationFrame();
+    await new Promise((r) => requestAnimationFrame(r));
+    const c = document.createElement('canvas'); c.width = cw; c.height = ch; const g = c.getContext('2d'); g.fillStyle = bg; g.fillRect(0, 0, cw, ch); g.drawImage(cv, 0, 0);
+    if (label) { g.font = '13px system-ui'; g.fillStyle = 'rgba(243,233,216,.8)'; g.fillRect(0, 0, g.measureText(label).width + 12, 20); g.fillStyle = '#3a1c0c'; g.fillText(label, 6, 15); } cells.push(c);
+  };
+  step(30);
+  for (const st of steps) {
+    const [k, a, b, c] = st;
+    if (k === 'set') vi.boolean(a).value = b; else if (k === 'trig') vi.trigger(a).trigger(); else if (k === 'face') vi.enum('face').value = a;
+    else if (k === 'run') step(a); else if (k === 'shot') await shot(a);
+    else if (k === 'shots') for (let i = 0; i < a; i++) { step(b); await shot(i ? String((i + 1) * b) : (c || '') + ' ' + b); }
+  }
+  sm.delete(); ab.delete(); return cells;
+}
+async function saveGrid(name, cells, cols, cw, ch, bg = '#f3e9d8') {
+  const rows = Math.ceil(cells.length / cols), out = document.createElement('canvas'); out.width = cw * Math.min(cols, cells.length); out.height = ch * rows;
+  const g = out.getContext('2d'); g.fillStyle = bg; g.fillRect(0, 0, out.width, out.height); cells.forEach((c, i) => g.drawImage(c, (i % cols) * cw, Math.floor(i / cols) * ch));
+  const blob = await new Promise((r) => out.toBlob(r, 'image/jpeg', 0.9)); await fetch('/save?name=' + name + '.jpg', { method: 'POST', body: blob }); log('saved ' + name); return name;
+}
+window.__sheet = async (name, id, view, steps, o = {}) => saveGrid(name, await cellsOf(id, view, steps, o), o.cols || 10, o.cw || 384, o.ch || 512);
+// one row per character: the same steps for each
+window.__rows = async (name, ids, view, steps, o = {}) => {
+  const all = []; let n = 0;
+  for (const id of ids) { const c = await cellsOf(id, view, typeof steps === 'string' ? MOTIONS[steps] : steps, o); n = c.length; const g = c[0].getContext('2d'); g.fillStyle = '#b3261e'; g.font = 'bold 14px system-ui'; g.fillText(id, 6, 34); all.push(...c); }
+  return saveGrid(name, all, n, o.cw || 384, o.ch || 512);
+};
+const MOTIONS = {
+  clap: [['trig', 'clap'], ['shots', 20, 4, 'clap']], wave: [['trig', 'wave'], ['shots', 10, 9, 'wave']], point: [['trig', 'point'], ['shots', 8, 9, 'point']],
+  cheer: [['trig', 'cheer'], ['shots', 10, 8, 'cheer']], think: [['trig', 'think'], ['shots', 8, 12, 'think']], pull: [['trig', 'pull'], ['shots', 10, 10, 'pull']],
+  walk: [['set', 'walking', true], ['run', 40], ['shots', 10, 6, 'walk']], run: [['set', 'running', true], ['run', 40], ['shots', 10, 4, 'run']],
+  sitting: [['set', 'sitting', true], ['shots', 10, 9, 'sit down'], ['run', 30], ['set', 'sitting', false], ['shots', 10, 9, 'stand up']],
+  holding: [['set', 'holding', true], ['shots', 20, 7, 'pick up'], ['set', 'holding', false], ['shots', 20, 7, 'put down']],
+  faces: [['shot', 'happy'], ['face', 'smile'], ['run', 12], ['shot', 'smile'], ['face', 'laugh'], ['run', 12], ['shot', 'laugh'], ['face', 'surprised'], ['run', 12], ['shot', 'surprised'],
+    ['face', 'sad'], ['run', 12], ['shot', 'sad'], ['face', 'happy'], ['set', 'talking', true], ['run', 3], ['shot', 'talk'], ['run', 8], ['shot', 'talk']],
+  left: [['set', 'facingLeft', true], ['run', 30], ['shot', 'left'], ['trig', 'wave'], ['run', 50], ['shot', 'left wave'], ['run', 130], ['set', 'walking', true], ['run', 40], ['shots', 4, 8, 'left walk'],
+    ['set', 'walking', false], ['run', 30], ['trig', 'clap'], ['run', 40], ['shots', 2, 6, 'left clap'], ['run', 130], ['set', 'holding', true], ['shots', 4, 25, 'left pick']],
+};
+window.__motion = (name, id, view, m, opts) => window.__sheet(name, id, view, MOTIONS[m], opts);
+// everything of one view on one sheet, the whole figure (overview); and the zoomed sheets for the hard motions
+window.__all = async (id, view) => {
+  const st = []; for (const m of ['wave', 'point', 'cheer', 'think', 'clap', 'pull']) st.push(...MOTIONS[m].map((x) => x[0] === 'shots' ? ['shots', 6, Math.round(x[1] * x[2] / 6), x[3]] : x), ['run', 200]);
+  st.push(...MOTIONS.walk, ['set', 'walking', false], ['run', 40], ...MOTIONS.run, ['set', 'running', false], ['run', 40], ...MOTIONS.sitting, ['run', 60], ...MOTIONS.holding, ['run', 60], ...MOTIONS.faces);
+  if (view === '3q') st.push(['set', 'talking', false], ...MOTIONS.left);
+  return window.__sheet(`fr_${id.toLowerCase()}_${view}`, id, view, st, { zoom: 1.15, cy: 0.52, cw: 300, ch: 470, cols: 16 });
+};
+// the review of a set of characters: one row each, per view three sheets (the clap close up, picking up and putting
+// down, everything else), saved as <tag>_clap_<view>.jpg and so on
+const REVIEW = {
+  clap: [['trig', 'clap'], ['run', 4], ['shots', 9, 5, 'clap'], ['run', 110], ['shot', 'after']],
+  pick: [['set', 'holding', true], ['shots', 8, 15, 'pick up'], ['run', 40], ['shot', 'holding'], ['set', 'holding', false], ['shots', 4, 24, 'put down']],
+  rest: [['trig', 'wave'], ['run', 36], ['shot', 'wave'], ['run', 14], ['shot', 'wave'], ['run', 150], ['trig', 'point'], ['run', 45], ['shot', 'point'], ['run', 120], ['trig', 'cheer'], ['run', 30], ['shot', 'cheer'], ['run', 70], ['shot', 'cheer'],
+    ['run', 100], ['trig', 'think'], ['run', 60], ['shot', 'think'], ['run', 170], ['trig', 'pull'], ['run', 50], ['shot', 'pull'], ['run', 70], ['shot', 'pull'], ['run', 120], ['set', 'walking', true], ['run', 50], ['shot', 'walk'], ['run', 16], ['shot', 'walk'],
+    ['set', 'walking', false], ['run', 30], ['set', 'running', true], ['run', 40], ['shot', 'run'], ['run', 9], ['shot', 'run'], ['set', 'running', false], ['run', 40], ['set', 'sitting', true], ['run', 40], ['shot', 'sit down'], ['run', 80], ['shot', 'sitting'],
+    ['set', 'sitting', false], ['run', 45], ['shot', 'stand up']],
+};
+window.__reviewRows = (tag, ids, views = ['3q', 'front', 'back'], kinds = ['clap', 'pick', 'rest']) => window.__job(views.flatMap((v) => kinds.map((kd) => ['__rows', `${tag}_${kd}_${v}`, ids, v, REVIEW[kd],
+  kd === 'clap' ? { zoom: 1.7, cx: v === '3q' ? 0.57 : 0.5, cy: 0.37, cw: 250, ch: 290 } : { zoom: 0.86, cx: v === '3q' ? 0.53 : 0.5, cy: 0.52, cw: kd === 'pick' ? 196 : 166, ch: 420 }])));
+// the cast sheet of one view (tools/liv3d/preview/cast/rive2d-cast-<view>.jpg): every character in every state
+const NAMES = { C01: 'Liv', C02: 'Village boy', C03: 'Blonde girl', C04: 'Ginger boy', A01: 'Grandfather', A02: 'Craftsman', A03: 'Young woman', A04: 'Housekeeper', A05: 'Scholar', A06: 'Lady' };
+window.__castSheet = async (view, ids = Object.keys(NAMES)) => {
+  const T = (n, w) => [['trig', n], ['run', w], ['shot', n], ['run', 190]], B = (n, w, lab) => [['set', n, true], ['run', w], ['shot', lab], ['set', n, false], ['run', 150]];
+  const steps = [['shot', 'idle'], ...T('wave', 40), ...T('point', 45), ...T('cheer', 40), ...T('think', 60), ...T('clap', 26), ...T('pull', 70), ...B('walking', 50, 'walk'), ...B('running', 42, 'run'),
+    ...B('sitting', 120, 'sitting'), ...B('holding', 60, 'pick up'), ...B('holding', 180, 'holding'), ['face', 'smile'], ['run', 12], ['shot', 'smile'], ['face', 'laugh'], ['run', 12], ['shot', 'laugh'], ['face', 'sad'], ['run', 12], ['shot', 'sad'], ['face', 'happy'],
+    ...(view === '3q' ? [['set', 'facingLeft', true], ['run', 30], ['shot', 'facing left']] : [])];
+  const cw = 150, ch = 236, L = 104, H0 = 22, rows = [];
+  for (const id of ids) rows.push(await cellsOf(id, view, steps.map((x) => x[0] === 'shot' ? ['shot', ''] : x), { zoom: 0.5, cx: 0.5, cy: 0.5, cw, ch }));
+  const labels = steps.filter((x) => x[0] === 'shot').map((x) => x[1]), out = document.createElement('canvas'); out.width = L + cw * labels.length; out.height = H0 + ch * rows.length;
+  const g = out.getContext('2d'); g.fillStyle = '#f3e9d8'; g.fillRect(0, 0, out.width, out.height); g.fillStyle = '#3a1c0c'; g.font = '13px system-ui';
+  labels.forEach((l, i) => g.fillText(l, L + i * cw + 6, 15)); rows.forEach((r, k) => { g.fillText(NAMES[ids[k]], 8, H0 + k * ch + ch / 2); r.forEach((c, i) => g.drawImage(c, L + i * cw, H0 + k * ch)); });
+  const blob = await new Promise((r) => out.toBlob(r, 'image/jpeg', 0.86)); await fetch('/save?name=cast2d_' + view + '.jpg', { method: 'POST', body: blob }); log('saved cast2d_' + view); return 'cast2d_' + view;
+};
+window.__job = (list) => { window.__jobdone = []; (async () => { for (const [fn, ...a] of list) { try { await window[fn](...a); window.__jobdone.push(a[0]); } catch (e) { window.__jobdone.push('ERR ' + a[0] + ' ' + e.message); } } await fetch('/save?name=job_done.txt', { method: 'POST', body: window.__jobdone.join('\n') }); })(); return 'started'; };
+window.__ready = true; log('ready');
+</script>
+</body>
+</html>

@@ -20,7 +20,15 @@ def('wave', 2.6, (t, a) => { const s = Math.sin(t * 9.5); return { [a.n]: arm([0
 def('point', 2.0, (t, a) => ({ [a.f]: arm([0.9, 0.1, 0.22], [0.3, -1, -0.3], [0, -1, 0], 'point'), ctw: (a.n === 'aR' ? 1 : -1) * 0.06, hy: (a.n === 'aR' ? 1 : -1) * 0.35 }));
 def('pointUp', 2.0, (t, a) => ({ [a.n]: arm([0.6, 0.62, 0.3], [0.9, -0.6, 0], [-1, 0, 0.2], 'point'), hp: -0.08 }));
 def('thumb', 2.0, (t, a) => { const b = 0.03 * Math.sin(t * 11) * pulse(t, 0.2, 0.5, 1.2, 1.5); return { [a.n]: arm([0.3, -0.12 + b, 0.66], [0.7, -0.8, -0.2], [-1, 0, 0.15], 'thumbsUp'), hr: 0.05 }; }, { expr: 'wink' });
-def('clap', 2.4, (t) => { const g = Math.abs(Math.sin(t * PI / 0.3)), A = arm([0.03 + 0.14 * g, -0.22, 0.62], [0.9, -0.7, 0], [-1, 0, 0], 'flat', { m: 1 }); return { aL: A, aR: A, py: 0.985 + 0.006 * g }; }, { expr: 'laugh' });
+// clap: the hands speed up toward each other, the palms meet flat for a moment, and they spring apart more slowly
+// (0.42 s a clap). The fingers are turned up (bend) so they do not run on along the forearms and cross, and the wrists
+// stay a hand's thickness apart, so the palms meet instead of sinking into each other.
+def('clap', 2.4, (t) => {
+  const p = (t % 0.42) / 0.42, k1 = p / 0.28, k2 = (p - 0.36) / 0.64;
+  const o = p < 0.28 ? 1 - k1 * k1 : p < 0.36 ? 0 : 1 - (1 - k2) * (1 - k2), hit = p >= 0.28 && p < 0.42 ? 1 : 0;
+  const A = arm([0.07 + 0.17 * o, -0.2 + 0.05 * o, 0.62 - 0.04 * o], [0.9, -0.7, 0], [-1, 0.1, 0], 'flat', { m: 1, bend: -0.95 });
+  return { aL: A, aR: A, py: 0.985 + 0.004 * (1 - o), hp: 0.03 * hit };
+}, { expr: 'laugh' });
 def('shrug', 2.2, () => { const A = arm([0.5, -0.46, 0.42], [0.5, -0.9, -0.3], [0, 1, 0.2], 'open'); return { aL: A, aR: A, shL: 1.3, shR: 1.3, hr: 0.1 }; }, { expr: 'think' });
 def('think', 3.0, (t, a) => ({ [a.n]: arm([-0.01, -0.03, 0.04], [0.9, -0.8, 0.2], [-0.3, 0, -1], mixRow('point', 'fist', 0.35), { at: 'chin', bend: 0.1, free: 1 }), [a.f]: arm([-0.05, -0.62, 0.32], [0.9, -0.6, -0.2], [0, 0, -1], 'relaxed', { m: 0.5 }), hr: -0.09, hp: -0.04 }), { expr: 'think' });
 // cheer: two little jumps with the arms up, then the arms stay up on the ground. Each jump is a real one: the knees

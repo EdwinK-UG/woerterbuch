@@ -89,6 +89,39 @@ python3 tools/liv3d/demo/shot_server.py 8797 /tmp/shots      # then open /tools/
   crosses a neighbour (two arms through each other also made the toon outlines look as if a hand were in front and
   behind at once).
 
+## Polish on 15 Nov 2026 (night)
+
+- **Clap** (`actions.js`): the hands used to meet at the wrists with the fingers running on along the forearms, so
+  the fingers crossed and the palms seemed to lock and rub. Now the fingers point up (bend), the wrists stay a hand's
+  thickness apart, and each clap speeds up into the contact, holds it a moment and springs apart more slowly (0.42 s).
+- **Smile** and **sad** (`face.js`) read at scene distance: the smile is an open smile (a little teeth); sad has
+  drooping lids, the sad brows and a small frown (VRoid's own sad has a small round mouth that read as surprise). Both
+  are also what the 3D workshop and the Zauberstab scene show when they call `smile`.
+- **Arms below short and rolled sleeves** (`sleeve_end` in `cast_specs.py`; A01, A02, A03, A04, C02, C04): the
+  sleeves were cut by hiding the cloth below the cuff, but the presets have no body skin under a long sleeve from the
+  shoulder to about 0.42 of the way from elbow to wrist. Cut above that (A01, A02, A03, A04) the arm had a hole
+  between cuff and forearm, so the forearm and hand floated; cut at it (the boys) the sleeve's open end showed its
+  dark inside as a ring. Now the cloth from the cuff down to the body's skin is painted as the bare arm, only the rest
+  is hidden, and the vertices near the sleeve's new end are drawn in onto the forearm, so the arm is whole and no
+  inside shows. A slight step in width is left where the painted sleeve meets the forearm.
+
+## For the 2D cut-outs (15 Nov 2026, afternoon)
+
+Four things in the 3D models only showed once every body part was drawn alone for the 2D figures
+(`docs/rive2d-test.md`), and are fixed in `cast_specs.py` (C02, A01, A02, A05 refitted):
+
+- **Vests** (C02, A01; `trunk`): the vest was painted on the shirt out to the shoulder joint's |x|, so on a child's
+  or a stout man's trunk, wider than that at the waist, a ragged strip of shirt ran down each side under the arm and
+  showed as torn cloth whenever an arm was lifted; and its edge ran through the sleeve's seam, leaving scraps of
+  vest on the sleeve's top. Now the armhole is a smooth curve two centimetres inside the shoulder joint that opens
+  outward only below the sleeve's underside (measured on the mesh), and the vest goes round the sides.
+- **A05's shirt sleeves** lie inside the coat's sleeves and ended differently at the shoulder: a white edge of
+  shirt on the black sleeve. The shirt's sleeves are hidden from the shoulder to just above the cuff.
+- **A02's tucked shirt** ended in an uneven line over the dark trousers, plain to see from behind: its hem follows
+  the trousers' waistline more smoothly (`tuck(..., smooth=7)`).
+- The body's skin under the clothes carries painted underwear (black on the male base). Nothing changed in the
+  models; the 2D layer export leaves those triangles out.
+
 ## Weak (honest list)
 
 - **A05** wears a hip-length blazer: VRoid has no frock coat and the length slider does not lengthen it. The vest shows

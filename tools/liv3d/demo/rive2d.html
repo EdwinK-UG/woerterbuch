@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>2D cast (Rive)</title>
+<style>
+  :root { --bg: #f3e9d8; --ink: #3a1c0c; --on: #d9622b; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); font: 14px/1.4 system-ui, sans-serif; }
+  #stage { position: relative; height: 66vh; overflow: hidden; }
+  #ground { position: absolute; left: 0; right: 0; bottom: 0; height: 22%; background: #ece0cb; }
+  #walker { position: absolute; bottom: 4%; left: 50%; height: 92%; aspect-ratio: 768 / 1024; transform: translateX(-50%); }
+  canvas { width: 100%; height: 100%; display: block; }
+  .ui { padding: 6px 16px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  button { padding: 7px 12px; border: 1px solid #c9b18f; border-radius: 8px; background: #fffaf2; color: var(--ink); font: inherit; cursor: pointer; }
+  button.on { background: var(--on); border-color: var(--on); color: #fff; }
+  .lab { font-size: 12px; opacity: .7; width: 64px; }
+  #stats { padding: 4px 16px; font: 12px ui-monospace, monospace; opacity: .8; white-space: pre-wrap; }
+</style>
+</head>
+<body>
+<div id="stage"><div id="ground"></div><div id="walker"><canvas id="c" width="768" height="1024"></canvas></div></div>
+<div class="ui" id="who"><span class="lab">Character</span></div>
+<div class="ui" id="views"><span class="lab">View</span></div>
+<div class="ui"><span class="lab">Body</span>
+  <button data-bool="walking">Walk</button><button data-bool="running">Run</button><button data-bool="sitting">Sit</button><button data-bool="holding">Pick up / hold</button>
+  <button data-trig="wave">Wave</button><button data-trig="point">Point</button><button data-trig="cheer">Cheer</button><button data-trig="think">Think</button><button data-trig="clap">Clap</button><button data-trig="pull">Pull</button>
+  <button id="left">Face left</button><button id="travel">Walk across</button></div>
+<div class="ui" id="faces"><span class="lab">Face</span><button id="talk">Talk</button></div>
+<div id="stats">loading…</div>
+<script type="module">
+// Every character has three .riv files, one per view: models/cast/2d/<id>.riv (three-quarter, facing right; the mirror
+// faces left), <id>-front.riv, <id>-back.riv. Each holds its images, bones, motions and a state machine "Character"
+// driven by the view model Cast2D: walking, running, sitting, holding, talking, facingLeft (booleans), face (enum:
+// happy, smile, laugh, surprised, sad), wave, point, cheer, think, clap, pull (triggers). See docs/rive2d-test.md. The page only loads a file and sets those properties; a native app does
+// the same through the Rive runtime for iOS, Android, Flutter or React Native.
+const CAST = [['C01', 'Liv'], ['C02', 'Village boy'], ['C03', 'Blonde girl'], ['C04', 'Ginger boy'], ['A01', 'Grandfather'], ['A02', 'Craftsman'],
+  ['A03', 'Young woman'], ['A04', 'Housekeeper'], ['A05', 'Scholar'], ['A06', 'Lady']];
+const VIEWS = [['3q', 'Three-quarter', ''], ['front', 'Front', '-front'], ['back', 'Back', '-back']];
+const stats = document.getElementById('stats');
+if (location.protocol === 'file:') { stats.textContent = 'This page has to be served over http (the browser does not let a file:// page load the .riv files).\nRun: python3 tools/liv3d/demo/shot_server.py 8797 /tmp/shots   then open http://127.0.0.1:8797/tools/liv3d/demo/rive2d.html'; throw new Error('file://'); }
+const qs = new URLSearchParams(location.search);
+await new Promise((ok, bad) => { const sc = document.createElement('script'); sc.src = 'https://cdn.jsdelivr.net/npm/@rive-app/canvas@2.49.0/rive.js'; sc.onload = ok; sc.onerror = bad; document.head.appendChild(sc); });
+const { Rive } = window.rive;
+const state = { walking: false, running: false, sitting: false, holding: false, talking: false, facingLeft: false, face: 'happy' };
+let who = qs.get('id') || 'C02', view = qs.get('view') || '3q', r = null, vm = null;
+const bufs = {};
+const file = (id, v) => `../models/cast/2d/${id.toLowerCase()}${VIEWS.find((x) => x[0] === v)[2]}.riv`;
+const canvas = document.getElementById('c');
+async function open(id, v) {
+  who = id; view = v; const url = file(id, v), t1 = performance.now(); window.__ready = false;
+  try { const res = await fetch(url, { cache: 'no-store' }); if (!res.ok) throw new Error(res.status); bufs[url] ??= await res.arrayBuffer(); }
+  catch (e) { stats.textContent = 'cannot load ' + url; return; }
+  const buf = bufs[url]; if (r) r.cleanup();
+  r = new Rive({ buffer: buf, canvas, artboard: `${id} ${v}`, stateMachines: 'Character', autoplay: true, autoBind: true,
+    onLoad: () => {
+      r.resizeDrawingSurfaceToCanvas(); vm = r.viewModelInstance;
+      for (const k of Object.keys(state)) if (k !== 'face' && vm.boolean(k)) vm.boolean(k).value = state[k];   // a new file continues where the old one was
+      vm.enum('face').value = state.face;
+      stats.textContent = `${url.split('/').pop()}  ${(buf.byteLength / 1024).toFixed(0)} KB, shown ${(performance.now() - t1).toFixed(0)} ms after the click (the free Rive plan then plays its 2.4 s splash)`;
+      window.__ready = true; window.__rive = r; window.__vm = vm;
+    },
+    onLoadError: (e) => { stats.textContent = 'error: ' + e; } });
+  document.querySelectorAll('#who button').forEach((b) => b.classList.toggle('on', b.dataset.id === id));
+  document.querySelectorAll('#views button').forEach((b) => b.classList.toggle('on', b.dataset.view === v));
+}
+window.__open = open;
+for (const [id, name] of CAST) { const b = document.createElement('button'); b.textContent = name; b.dataset.id = id; b.onclick = () => open(id, view); document.getElementById('who').appendChild(b); }
+for (const [v, name] of VIEWS) { const b = document.createElement('button'); b.textContent = name; b.dataset.view = v; b.onclick = () => open(who, v); document.getElementById('views').appendChild(b); }
+for (const f of ['happy', 'smile', 'laugh', 'surprised', 'sad']) { const b = document.createElement('button'); b.textContent = f; b.dataset.face = f; b.classList.toggle('on', f === 'happy');
+  b.onclick = () => { state.face = f; vm.enum('face').value = f; document.querySelectorAll('#faces [data-face]').forEach((x) => x.classList.toggle('on', x.dataset.face === f)); };
+  document.getElementById('faces').appendChild(b); }
+const btn = (id) => document.getElementById(id);
+const set = (name, v) => { state[name] = v; const p = vm.boolean(name); if (p) p.value = v; };
+document.querySelectorAll('[data-bool]').forEach((b) => { b.onclick = () => { const k = b.dataset.bool; set(k, !state[k]); b.classList.toggle('on', state[k]); }; });
+btn('talk').onclick = (e) => { set('talking', !state.talking); e.target.classList.toggle('on', state.talking); };
+btn('left').onclick = (e) => { set('facingLeft', !state.facingLeft); e.target.classList.toggle('on', state.facingLeft); };
+document.querySelectorAll('[data-trig]').forEach((b) => { b.onclick = () => vm.trigger(b.dataset.trig).trigger(); });
+// walking across the stage and back: the app moves the character and turns it round (facingLeft); the .riv walks on
+// the spot (same split as the 3D player). 14 % of the stage width per second matches the stride on this page.
+const walker = document.getElementById('walker'); let x = 50, dir = 1, travelling = false, last = performance.now();
+btn('travel').onclick = (e) => {
+  travelling = !travelling; e.target.classList.toggle('on', travelling);
+  if (travelling && view !== '3q') open(who, '3q');
+  set('walking', travelling); document.querySelector('[data-bool=walking]').classList.toggle('on', travelling);
+};
+(function loop(t) {
+  const dt = Math.min(0.1, (t - last) / 1000); last = t;
+  if (travelling && vm) {
+    x += dir * dt * 14;
+    if (x > 85 && dir > 0) { dir = -1; set('facingLeft', true); btn('left').classList.add('on'); }
+    if (x < 15 && dir < 0) { dir = 1; set('facingLeft', false); btn('left').classList.remove('on'); }
+    walker.style.left = x + '%';
+  }
+  requestAnimationFrame(loop);
+})(last);
+open(who, view);
+</script>
+</body>
+</html>
