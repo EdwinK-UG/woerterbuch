@@ -108,7 +108,7 @@ function unlockedSet() {
 }
 // a learner opens exactly the levels they are enrolled in (until they unenroll); teachers, schools and the owner open everything
 function canOpen(l) {
-  if (!LV.includes(l)) return true;
+  if (!LV.includes(l) || window.APP_CONFIG?.openAccess) return true;
   if (!me()) return false;
   return !!P && P.user_id === me().id && (isStaff() || unlockedSet().includes(l));
 }
@@ -152,7 +152,7 @@ const mode = f => (SITE.features && FMODES().some(m => m[0] === SITE.features[f]
 const isFounder = () => !!(P && P.role === 'founder');
 const enrolled = () => !!(me() && P && (isStaff() || unlockedSet().length));
 function can(f) {
-  if (!FDEF[f] || isFounder()) return true;
+  if (!FDEF[f] || isFounder() || window.APP_CONFIG?.openAccess) return true;
   const m = mode(f);
   if (m === 'everyone') return true;
   if (m === 'off' || !me()) return false;

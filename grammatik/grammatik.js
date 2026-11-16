@@ -196,7 +196,7 @@ const TOTAL = GROUPS.reduce((s, g) => s + (g.ref || g.vocab ? 0 : g.ch.length), 
 const LVS = ['A1', 'A2', 'B1', 'B2', 'C1'];
 const myLevel = () => (window.KONTO && KONTO.level && KONTO.level()) || null;
 const chLevel = n => { for (const g of GROUPS) for (const c of g.ch) if (c[0] === n) return c[3]; return null; };
-const lvOpen = l => !!(window.KONTO && KONTO.profile() && (LVS.includes(l) ? KONTO.canOpen(l) : KONTO.profile().role !== 'learner' || KONTO.unlocked().length));
+const lvOpen = l => !!window.APP_CONFIG?.openAccess || !!(window.KONTO && KONTO.profile() && (LVS.includes(l) ? KONTO.canOpen(l) : KONTO.profile().role !== 'learner' || KONTO.unlocked().length));
 const allowed = n => lvOpen(chLevel(n));
 const topicNo = n => n > 260 ? n - 260 : n > 240 ? n - 240 : n > 220 ? n - 220 : n - 200;
 const en = () => !!(window.KONTO && KONTO.lang && KONTO.lang() === 'en');
@@ -1188,16 +1188,17 @@ function clearLessons() {
 window.addEventListener('acct:in', clearLessons);
 window.addEventListener('acct:out', clearLessons);
 async function loadChapter(n) {
-  const user = acct(), epoch = lessonEpoch;
-  if (!user || !allowed(n)) throw new Error('Enrolment required');
+  // While APP_CONFIG.openAccess is on, signed-out visitors load lessons too (the function serves them without sign-in).
+  const user = acct(), epoch = lessonEpoch, open = !!window.APP_CONFIG?.openAccess;
+  if ((!user && !open) || !allowed(n)) throw new Error('Enrolment required');
   // Authorize every opening, including a previously loaded lesson, so a revoked level closes.
   if (lessonLoads.has(n)) return lessonLoads.get(n);
-  const current = () => epoch === lessonEpoch && acct()?.id === user.id && allowed(n);
+  const current = () => epoch === lessonEpoch && acct()?.id === user?.id && allowed(n);
   const loading = (async () => {
-    const token = await ACCT.token();
+    const token = user ? await ACCT.token() : null;
     if (!current()) throw new Error('account changed');
     const response = await fetch(APP_CONFIG.supabaseUrl + '/functions/v1/lessons?chapter=' + encodeURIComponent(n), {
-      headers: { apikey: APP_CONFIG.supabaseKey, Authorization: 'Bearer ' + token }, cache: 'no-store',
+      headers: { apikey: APP_CONFIG.supabaseKey, ...(token ? { Authorization: 'Bearer ' + token } : {}) }, cache: 'no-store',
     });
     if (!current()) throw new Error('account changed');
     if (!response.ok) {
@@ -1299,8 +1300,8 @@ window.addEventListener('acct:in',()=>filmAudioLists.clear());window.addEventLis
 function filmAudio(n){
   const hit=filmAudioLists.get(n);if(hit&&Date.now()-hit.at<6*3600e3)return hit.list;
   const list=(async()=>{
-    const token=await ACCT.token();
-    const r=await fetch(APP_CONFIG.workerUrl+'/film-audio?chapter='+encodeURIComponent(n),{headers:{Authorization:'Bearer '+token},cache:'no-store'});
+    const token=acct()||!window.APP_CONFIG?.openAccess?await ACCT.token():null;   // open access: signed-out visitors hear it too
+    const r=await fetch(APP_CONFIG.workerUrl+'/film-audio?chapter='+encodeURIComponent(n),{headers:token?{Authorization:'Bearer '+token}:{},cache:'no-store'});
     if(!r.ok)return null;   // not recorded yet or not enrolled: silent
     const d=await r.json();return Object.fromEntries((d.cues||[]).map(c=>[c.id,{url:c.url,seconds:c.seconds,say:c.say}]));
   })().catch(()=>{filmAudioLists.delete(n);return null;});   // network trouble: try again next time

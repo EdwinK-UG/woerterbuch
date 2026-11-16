@@ -493,7 +493,7 @@ test('film narration follows the lesson rule and plays only through signed, shor
       body: buf.slice(start, end + 1), json: async () => JSON.parse(new TextDecoder().decode(buf)) };
   };
   const FILM_AUDIO = { get: async (k, o) => object(k, o?.range), head: async (k) => object(k) };
-  const env = { FILM_AUDIO, FILM_AUDIO_SIGNING_KEY: 'test-signing-key-that-is-long-enough-123', SUPABASE_URL: 'https://auth.invalid', SUPABASE_PUBLISHABLE_KEY: 'fixture', ALLOWED_ORIGINS: 'https://deutschklinik.com' };
+  const env = { FILM_AUDIO, FILM_AUDIO_SIGNING_KEY: 'test-signing-key-that-is-long-enough-123', SUPABASE_URL: 'https://auth.invalid', SUPABASE_PUBLISHABLE_KEY: 'fixture', ALLOWED_ORIGINS: 'https://deutschklinik.com', OPEN_ACCESS: 'false' };
   const people = { learnerB2: { role: 'learner', unlocked: ['B2'] }, founder: { role: 'founder', unlocked: [] } };
   const old = globalThis.fetch;
   globalThis.fetch = async (url, init) => {
@@ -512,6 +512,10 @@ test('film narration follows the lesson rule and plays only through signed, shor
     assert.equal((await list(487, null)).status, 401);
     assert.equal((await list(487, 'stranger')).status, 401);
     assert.equal((await list(487, 'learnerB2')).status, 403);                                      // B2 learner, C1 film
+    const opened = { ...env, OPEN_ACCESS: 'true' };                                                // the temporary open-access switch
+    assert.equal((await list(487, null, opened)).status, 200);                                     // signed out
+    assert.equal((await list(487, 'learnerB2', opened)).status, 200);                              // not enrolled in C1
+    assert.equal((await list(487, null, opened, {})).status, 403);                                 // still only from the site
     assert.equal((await list(999, 'founder')).status, 404);
     assert.equal((await list('../k1', 'founder')).status, 400);
     const ok = await list(487, 'founder'), body = await ok.json();

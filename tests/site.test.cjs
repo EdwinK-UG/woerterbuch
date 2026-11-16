@@ -25,6 +25,9 @@ async function site(hash = "", options = {}) {
         new URL(url).hostname === "site.test"
           ? (options.catalog && new URL(url).pathname === "/grammatik/catalog.js"
             ? Buffer.from(options.catalog)
+            // the suite tests the protected site; options.openAccess turns the temporary open-access switch on
+            : new URL(url).pathname === "/config.js"
+            ? Buffer.from(read("config.js").toString().replace(/openAccess: (true|false),/, "openAccess: " + !!options.openAccess + ","))
             : read(decodeURIComponent(new URL(url).pathname.slice(1))))
           : Buffer.from(""),
       );
@@ -393,6 +396,18 @@ test("failed profiles close enrolled content and retry restores only enrolled le
   } finally {
     await s.close();
   }
+});
+test("with openAccess on, a signed-out visitor opens every level and course", async () => {
+  assert.match(read("config.js").toString(), /^  openAccess: (true|false),$/m);
+  const s = await site("#/g", { openAccess: true, features: { grammar: "enrolled", vocab: "off" } });
+  try {
+    await until(() => s.document.querySelector("#grlist"));
+    assert.equal(s.window.ACCT.user(), null);
+    for (const l of ["A1", "A2", "B1", "B2", "C1"]) assert.equal(s.window.KONTO.canOpen(l), true);
+    for (const f of ["grammar", "vocab", "lists", "cards"]) assert.equal(s.window.KONTO.can(f), true);
+    assert.equal(s.document.querySelector("#grlist .gr-pp .lucide-lock, #grlist [data-lucide=lock]"), null);
+    assert.deepEqual(s.errors, []);
+  } finally { await s.close(); }
 });
 test("a late account language updates the games page without navigation", async () => {
   let release;

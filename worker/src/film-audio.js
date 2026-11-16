@@ -1,10 +1,14 @@
 // Recorded narration for the B2/C1 films, kept in the private R2 bucket bound as FILM_AUDIO.
-//   GET /film-audio?chapter=487   signed in; the lesson rule decides -> {chapter, expires, cues:[{id, say, seconds, url}]}
+//   GET /film-audio?chapter=487   signed in; the lesson rule decides (anyone while OPEN_ACCESS is on) -> {chapter, expires, cues:[{id, say, seconds, url}]}
 //   GET /film-audio/clip?k=&e=&s=  a short-lived signed link to one clip (an <audio> element cannot send a sign-in)
 // Same rule as the lessons Edge Function: staff (teacher, school, founder) hear every film, learners the levels
 // they are enrolled in. The bucket holds kN/manifest.json and kN/<sha256 of the audio>.mp3, written by
 // tools/upload-film-audio.cjs. Without the bucket or the signing secret the route answers 404 and films stay silent.
 const LEVELS = ["A1", "A2", "B1", "B2", "C1"], STAFF = ["teacher", "school", "founder"];
+// Temporary: every film's narration is open to everyone, signed in or not. Set to false and redeploy to require
+// sign-in and enrolment again (see README, "Open access"). An OPEN_ACCESS var ("true"/"false") overrides it.
+export const OPEN_ACCESS = true;
+const isOpen = (env) => String(env.OPEN_ACCESS ?? OPEN_ACCESS) === "true";
 export const LINK_SECONDS = 12 * 3600;
 const CLIP = /^k\d{1,4}\/[0-9a-f]{64}\.mp3$/;
 
@@ -20,14 +24,8 @@ export async function signClip(env, key, expires) {
   return b64url(await crypto.subtle.sign("HMAC", await hmac(env), new TextEncoder().encode(key + "|" + expires)));
 }
 
-export async function filmAudioList(req, env, h) {
-  if (req.method !== "GET") return reply(405, { error: "GET only" }, h);
-  if (!ready(env)) return reply(404, { error: "Recorded narration is not available." }, h);
-  const authorization = req.headers.get("Authorization") || "";
-  if (!/^Bearer \S+$/i.test(authorization)) return reply(401, { error: "Sign in to hear the narration." }, h);
-  const chapter = new URL(req.url).searchParams.get("chapter") || "";
-  if (!/^\d{1,4}$/.test(chapter)) return reply(400, { error: "Choose a film." }, h);
-
+// The caller's profile, or the Response that refuses them.
+async function enrolment(env, authorization, h) {
   const base = new URL(env.SUPABASE_URL);
   if (base.protocol !== "https:") throw Error("Invalid Auth endpoint");
   const auth = { apikey: env.SUPABASE_PUBLISHABLE_KEY, Authorization: authorization };
@@ -41,12 +39,26 @@ export async function filmAudioList(req, env, h) {
   if (!profileResponse.ok) return reply(503, { error: "Enrolment service unavailable." }, h);
   const profile = (await profileResponse.json())[0];
   if (!profile) return reply(403, { error: "An enrolled account is required." }, h);
+  return profile;
+}
+
+export async function filmAudioList(req, env, h) {
+  if (req.method !== "GET") return reply(405, { error: "GET only" }, h);
+  if (!ready(env)) return reply(404, { error: "Recorded narration is not available." }, h);
+  const open = isOpen(env), authorization = req.headers.get("Authorization") || "";
+  if (!open && !/^Bearer \S+$/i.test(authorization)) return reply(401, { error: "Sign in to hear the narration." }, h);
+  const chapter = new URL(req.url).searchParams.get("chapter") || "";
+  if (!/^\d{1,4}$/.test(chapter)) return reply(400, { error: "Choose a film." }, h);
+  const profile = open ? null : await enrolment(env, authorization, h);
+  if (profile instanceof Response) return profile;
 
   const stored = await env.FILM_AUDIO.get("k" + Number(chapter) + "/manifest.json");
   if (!stored) return reply(404, { error: "This film has no recorded narration yet." }, h);
   const manifest = await stored.json();
-  const levels = Array.isArray(profile.unlocked) ? profile.unlocked.filter((l) => LEVELS.includes(l)) : [];
-  if (!STAFF.includes(profile.role) && !levels.includes(manifest.level)) return reply(403, { error: "Enrol in this level to hear the film." }, h);
+  if (!open) {
+    const levels = Array.isArray(profile.unlocked) ? profile.unlocked.filter((l) => LEVELS.includes(l)) : [];
+    if (!STAFF.includes(profile.role) && !levels.includes(manifest.level)) return reply(403, { error: "Enrol in this level to hear the film." }, h);
+  }
 
   const expires = Math.floor(Date.now() / 1000) + LINK_SECONDS, origin = new URL(req.url).origin, cues = [];
   for (const c of manifest.cues || []) {

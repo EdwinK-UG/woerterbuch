@@ -77,13 +77,25 @@ Generate vocabulary from private reviewed inputs using `tools/vocabulary/README.
 
 The current dictionary text is due to be replaced with openly licensed sources. Do not expand its publication (for example as search-indexed word pages) before then. Keep Wiktionary, Tatoeba and image/audio attribution with generated lessons. Fluency, translation quality and level suitability need editorial review.
 
-The service worker caches the page shell. The dictionary search page offers an explicit offline download. Lessons require an online account and a current enrolment check. The release deletes the old public lesson cache. A signed-in account's pending saves stay in its own local cache after sign-out. Browser storage can be cleared or evicted, so synchronize before moving devices.
+The service worker caches the page shell. The dictionary search page offers an explicit offline download. Lessons require an online connection and, unless open access is on, an account with a current enrolment check. The release deletes the old public lesson cache. A signed-in account's pending saves stay in its own local cache after sign-out. Browser storage can be cleared or evicted, so synchronize before moving devices.
 
 ## Private lessons
 
 Lesson source files are no longer published through GitHub Pages. Restore the private lesson archive into `.local/lessons/`, or set `LESSON_SOURCE_DIR` to its location. `npm run lessons:bundle` checks all ready sources against the public exercise catalog and builds `.local/lesson-bundle/lessons.json`. Deploy that file with `supabase/functions/lessons/index.ts` and `handler.mjs` as the `lessons` Edge Function, keeping JWT verification enabled. Deploy the function before publishing a site that uses it. Never commit the generated bundle or private lesson sources.
 
-The function verifies the account with Supabase Auth and reads its current profile using that account's JWT and database policies. Learners receive only their unlocked levels. Teachers, schools and the founder can receive all lessons. Reference lessons require at least one unlocked level for learners. The public catalog contains titles and exercise IDs, without lesson bodies or answers. Marking a course as visible to everyone affects its overview, while opening a lesson always requires enrolment. Account changes discard lessons held in browser memory.
+The function verifies the account with Supabase Auth and reads its current profile using that account's JWT and database policies. Learners receive only their unlocked levels. Teachers, schools and the founder can receive all lessons. Reference lessons require at least one unlocked level for learners. The public catalog contains titles and exercise IDs, without lesson bodies or answers. Marking a course as visible to everyone affects its overview, while opening a lesson requires enrolment (except while open access is on, below). Account changes discard lessons held in browser memory.
+
+### Open access (temporary)
+
+Since 16 November 2026 every course, lesson, film and scene is open to everyone, signed in or not. The enrolment checks are still in the code, switched off in three places. To require sign-in and enrolment again, change each line and redeploy that service:
+
+| Service | Line | Redeploy |
+| --- | --- | --- |
+| Lessons function | `const OPEN_ACCESS = true;` in `supabase/functions/lessons/index.ts` → `false` | Copy the bundle that is live (normally `.local/lesson-bundle/lessons.json`; compare its SHA-256 with the last receipt in `.local/release/`) beside `index.ts`, run `supabase functions deploy lessons --project-ref vnnhyhicppkexdibuqyu`, then delete the copy |
+| Worker narration (`/film-audio`) | `export const OPEN_ACCESS = true;` in `worker/src/film-audio.js` → `false` | `cd worker && npx wrangler deploy` |
+| Site | `openAccess: true,` in `config.js` → `false` | `npm run assets`, commit and push to `main` |
+
+Switch the site back last, after the function and Worker, so no page loads lessons without a sign-in once the services refuse them. While open, the site also ignores the feature modes the owner sets in Settings (`KONTO.can`), so switched-off features show too. Progress of signed-out visitors stays in their browser only. A Worker `OPEN_ACCESS` variable (`"true"` or `"false"`) overrides the constant without a code change.
 
 Public Git history may retain earlier copies of lessons. They cannot be recalled from existing clones or downloads. B2 remains empty until the owner supplies its content.
 

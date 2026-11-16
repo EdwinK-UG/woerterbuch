@@ -3,6 +3,9 @@ window.APP_CONFIG = {
   supabaseUrl: "https://vnnhyhicppkexdibuqyu.supabase.co",
   supabaseKey: "sb_publishable_sNNNyEu6D9_Sjy0O0MaS5Q_VyReD7Tj",
   workerUrl: "https://woerterbuch-bilder.edwin1kitaka.workers.dev",
+  // Temporary: every course, lesson and film is open to everyone, signed in or not. Set to false to require
+  // sign-in and enrolment again, together with OPEN_ACCESS in the lessons function and the Worker (see README).
+  openAccess: true,
   readOnly:
     ["localhost", "127.0.0.1", "[::1]"].includes(location.hostname) ||
     location.protocol === "file:",

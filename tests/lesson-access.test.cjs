@@ -43,6 +43,19 @@ test("lesson delivery checks a fresh profile, rejects missing or wrong enrolment
   assert.equal((await get(1)).status, 503);
 });
 
+test("the open-access switch serves lessons without sign-in and still refuses unknown chapters", async () => {
+  const { lessonHandler } = await import("../supabase/functions/lessons/handler.mjs");
+  const handler = lessonHandler({ url: "https://project.invalid", key: "public", open: true,
+    lessons: { 109: { level: "B2", source: "PRIVATE B2" } }, fetcher: async () => { throw Error("no account lookup when open"); } });
+  const get = number => handler(new Request("https://project.invalid/functions/v1/lessons?chapter=" + number));
+  const response = await get(109);
+  assert.equal(await response.text(), "PRIVATE B2");
+  assert.match(response.headers.get("Cache-Control"), /no-store/);
+  assert.equal((await get(1)).status, 404);
+  assert.equal((await get("x")).status, 404);
+  assert.match(fs.readFileSync("supabase/functions/lessons/index.ts", "utf8"), /^const OPEN_ACCESS = (true|false);$/m);
+});
+
 test("sign-out invalidates an in-flight lesson before it can execute", async () => {
   const source = fs.readFileSync("grammatik/grammatik.js", "utf8");
   const listeners = {}, CH = {};
@@ -63,4 +76,23 @@ test("sign-out invalidates an in-flight lesson before it can execute", async () 
   await assert.rejects(loading, /account changed/);
   assert.equal(executed, false);
   assert.deepEqual(CH, {});
+});
+
+test("with openAccess on, a signed-out visitor loads a lesson without sending a sign-in", async () => {
+  const source = fs.readFileSync("grammatik/grammatik.js", "utf8");
+  const CH = {}, APP_CONFIG = { supabaseUrl: "https://test.invalid", supabaseKey: "public", openAccess: true };
+  let sent;
+  const context = vm.createContext({
+    CH, cur: null, acct: () => null, allowed: () => true,
+    window: { addEventListener() {}, APP_CONFIG, GRAM: { lessonEpoch: () => 0 } },
+    ACCT: { token: async () => { throw Error("Nicht angemeldet"); } }, APP_CONFIG,
+    fetch: async (url, options) => { sent = options.headers; return new Response("CH[109] = { n: 109 };"); },
+    document: { createElement: () => ({ remove() {} }), head: { appendChild(script) { CH[109] = { n: 109 }; script.onload(); } } },
+    URL: { createObjectURL: () => "blob:fixture", revokeObjectURL() {} }, Blob,
+  });
+  vm.runInContext(source.slice(source.indexOf("let lessonEpoch"), source.indexOf("function jump(anchor)")), context);
+  assert.deepEqual(await context.loadChapter(109), { n: 109 });
+  assert.deepEqual(JSON.parse(JSON.stringify(sent)), { apikey: "public" });
+  APP_CONFIG.openAccess = false;
+  await assert.rejects(context.loadChapter(110), /Enrolment required/);
 });

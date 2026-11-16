@@ -1,5 +1,6 @@
 // Uses the caller's JWT and database policies. No service-role credential is needed.
-export function lessonHandler({ url, key, lessons, fetcher = fetch }) {
+// open: true serves every lesson without sign-in or enrolment (the temporary OPEN_ACCESS switch in index.ts).
+export function lessonHandler({ url, key, lessons, fetcher = fetch, open = false }) {
   const headers = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-client-info",
@@ -13,6 +14,12 @@ export function lessonHandler({ url, key, lessons, fetcher = fetch }) {
   return async (request) => {
     if (request.method === "OPTIONS") return new Response(null, { headers });
     if (request.method !== "GET") return error(405, "GET only");
+    if (open) {
+      const number = new URL(request.url).searchParams.get("chapter");
+      const lesson = /^\d+$/.test(number || "") && Object.hasOwn(lessons, number) ? lessons[number] : null;
+      if (!lesson) return error(404, "Lesson unavailable.");
+      return new Response(lesson.source, { headers: { ...headers, "Content-Type": "text/javascript; charset=utf-8" } });
+    }
     const authorization = request.headers.get("Authorization") || "";
     if (!/^Bearer \S+$/i.test(authorization)) return error(401, "Sign in to open a lesson.");
     try {
