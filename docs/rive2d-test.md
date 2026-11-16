@@ -83,15 +83,25 @@ then `http://127.0.0.1:8797/tools/liv3d/demo/rive2d.html`): every character, vie
      and the far one of the three-quarter clap, which is cut by the body as it stands and, with its hand, stacked in
      front of the body while the clap plays (it comes out from behind the chest). Seen from the front such a forearm
      points at the camera with the hand at its near end, so there the posed hand is stacked in front of the posed
-     forearm (behind it, a long sleeve's white cuff covered the hand: a white disc on the chest with no hand in it).
+     forearm (behind it, a long sleeve's white cuff covered the hand: a white disc on the chest with no hand in it),
+     and the clap's hands in front of everything: on their way to the chest they pass before the shoulders, and
+     behind the upper arms they showed as fingers sticking up from behind the shoulder.
 2. **Prepare** (`tools/liv3d/rive2d/rive_prep.py`): crops, WebP at quality 90 (a fifth of PNG), one JSON per view.
    - **Round joints.** Upper arms, forearms, thighs and calves end at the joint they hang from in a ball: a disc
      round the joint as wide as the limb, filled with the piece's own cloth or skin, and where the piece begins some
      way below the joint (a trouser leg below the hip, a thigh below a skirt's hem) joined to it by a straight piece
      of the same. What is added stays under the piece it hangs from as that stands at rest, so the rest pose is
-     unchanged. An arm stacked in front of the body gets a smaller ball, inside the figure's outline, and where that
-     ball lies over the same garment it takes the colours the whole figure's picture has there (filled from the
-     sleeve's own cloth it showed on the chest as a disc of another shade). At the far end (elbow, knee, wrist) a
+     unchanged. An arm stacked in front of the body gets a smaller ball, inside the figure's outline, and its top
+     is closed to one convex shape (the hollow between the ball and the sleeve's inner edge filled): left open, that
+     hollow was a wedge of background in the armpit as soon as the arm swung out from the body, in every frame of
+     the front clap. Both are added only where the whole figure's picture shows this same cloth at rest, and in
+     exactly that picture's colours, so nothing of them shows at rest. (Filled from the sleeve's own cloth the ball
+     was a disc of another shade on the chest, and over a bodice of another colour, Liv's and A03's, a
+     sleeve-coloured lobe at each shoulder; a strip of sleeve left on the body to close the armpit instead stood
+     out as a bump under a raised arm.) A forearm's top is closed the same way: between the elbow's ball and a
+     cuff wider than it there was a notch, hidden under the upper arm at rest and a pale streak across the far
+     sleeve once the elbow bent (the three-quarter cheer). The whole outline of an upper arm is smoothed a little,
+     so the hem of a short or puffed sleeve does not end in two sharp corners. At the far end (elbow, knee, wrist) a
      piece is trimmed to the joint's disc; a garment that reaches far
      past the joint on purpose (breeches over the knee) keeps its end. The cut at the shoulder and the hip follows
      the mesh's triangles, a zigzag: there the piece's outline is smoothed.
@@ -116,17 +126,21 @@ then `http://127.0.0.1:8797/tools/liv3d/demo/rive2d.html`): every character, vie
      as a wing under the raised arm; on the arm it turns in over the body, where it does not show); the rest goes to
      the body if it lies against it. Specks and hairlines are left out: they would hang in the air once the arm
      moves away.
-   - **A strip of sleeve on the body** (front view, sleeve and body one garment): a wide sleeve hangs beside the body
-     from the shoulder down, and as soon as the arm swung out a little (the clap) a wedge of background opened
-     between the two. The body keeps a strip of the sleeve as it hangs at rest, widest at the joint and running out
-     below it, hidden under the arm at rest.
    - **A long skirt's bow** (three-quarter view; A03, A04, A06). The skirt's one picture reaches from the waist down
      and turns forward with the thighs on the hip joints. Bowing to pick something up, the body leans forward from
      the hips while the skirt's top stayed upright and swung back: a square flap behind the waist. For the bow the
      skirt is two pictures, shown instead of the one while the bow lasts: a waistband from the waist to a little
-     below the hip joints, and behind it the skirt from the hip line down. (Sitting and walking keep the one picture:
-     its top, turned back under the body, is the seat she sits on; cut off at the hips for good, a seated skirt was
-     hollow behind and its lap rose in a peak.)
+     below the hip joints, fading out downwards and round its lower back corner, and behind it the skirt from a
+     little above the hip line down. (Sitting and walking keep the one picture: its top, turned back under the body,
+     is the seat she sits on; cut off at the hips for good, a seated skirt was hollow behind and its lap rose in a
+     peak.)
+   - **Thighs seen from behind.** From behind the calves are stacked over the thighs (a heel kicked back comes
+     toward the camera), so the calf has no ball at the knee and is cut off along the thigh's lower edge. Two
+     additions, both hidden at rest. The thigh carries a copy of the calf's knee under the calf: when the calf gets
+     shorter in a step its top draws back, and the background showed across the back of the knee. And each thigh
+     has a second drawing (`ulegL_sit`, `ulegR_sit`: the same picture, its outline a little smoother) stacked over
+     the calves and shown only while she sits or squats: with the calves in front of the shortened thighs, shorts
+     showed bare calves up to the seat with rags of cloth beside them and background along the hem.
    - **Neck.** What a head picture holds below the neck (a piece of collar, long hair) is moved into the body
      picture: bowing the head swung the collar piece out like a ribbon (a beard below the neck, A01's, stays with
      the head). The head's picture fades out over a few pixels below that line, and the body's copy of the hair
@@ -139,18 +153,28 @@ then `http://127.0.0.1:8797/tools/liv3d/demo/rive2d.html`): every character, vie
    the picture's outline, one laughing face came out with a hole over the eyes), the heads rigid on the head bone,
    limb pieces rigid with the joint covered by the layer in front.
    **The bow of a long skirt**: the waistband is weighted between the hips and the body like the body's own picture,
-   so it leans with the body at the waist and stays on the hips below; the skirt under it turns on the back of the
-   seat (the point where its back edge crosses the hip line, which goes with the hips) as far as the body leans
-   over, and is stretched to reach where its knee end would be. Turning on the hip joints, further forward, its back
-   edge sank away under the waistband. (The editor's mesh tool binds bones and solves weights automatically; it
-   cannot set a weight per vertex, so "the skirt's top on the pelvis alone" is done with pictures, not weights. And
-   on the pelvis alone it was worse: the body's picture ends at the waist, well above the hip joint it leans on,
-   and slid forward off an upright waistband.)
+   so it leans with the body at the waist and stays on the hips below. The skirt under it is on a finer mesh,
+   weighted between the hips, the skirt's bones and the hem's with a wide blend (0.7; everything else 0.3), and its
+   bones turn on the back of the seat (the point where its back edge crosses the hip line, which goes with the
+   hips) as far as the body leans over, stretched to reach where the knee end would be: so its back stays with the
+   seat at the top and curves from there to the hem. The knee end is as far from the hips as the knees are in the
+   picture (the two thighs' average): the thighs of a deep bow point partly at the camera, and at their full
+   length the skirt's knees were a hand's breadth in front of hers, so the far calf stood out behind the skirt. Rigid on its bones it met the waistband in a corner, a boxy
+   seat with flat facets; turning on the hip joints its back edge sank away under the waistband; with the body
+   among its bones it swung forward like a bell and left the legs standing behind it. The two pictures come in with
+   the motion itself, and the skirt's own picture stays under them until the motion has blended in (and is back
+   before they go): swapped at one frame inside that blend, both were half transparent for a few frames and the
+   legs showed through the skirt. (The editor's mesh tool binds bones and solves weights automatically; it cannot
+   set a weight per vertex, so "the skirt's top on the pelvis alone" is done with pictures, not weights. And on the
+   pelvis alone it was worse: the body's picture ends at the waist, well above the hip joint it leans on, and slid
+   forward off an upright waistband.)
    **Foreshortening**: a limb that points partly at the camera is shorter in the picture, and a cut-out piece kept
    its full length, so it ran on past its joint (a forearm beyond the hand, a thigh beyond the knee). Upper arms,
    forearms and thighs are drawn on a bone of their own inside the joint's bone, scaled along its length to the
    length the 3D limb has in the picture (not below 0.45, forearms 0.3; scaling the joint's bone itself would scale
-   and shear what hangs from it). Then keys for every motion, thinned to where the motion bends; faces, mirror,
+   and shear what hangs from it). In the front and back views the calves as well (not below 0.25): running, a heel
+   kicked up points the calf at the camera, a fifth of its length in the picture, and drawn at its full length it
+   stuck out sideways past its own boot for a third of every stride. Then keys for every motion, thinned to where the motion bends; faces, mirror,
    view model and state machine; a simulated run at the end.
    **No whole turns between animations**: angles are keyed as the nearest turn to the frame before, so nothing
    spins inside an animation, but a hand or forearm that points at the camera passes through every direction in the
@@ -185,7 +209,10 @@ Rive's low-level runtime, and saves sheets of chosen frames at any zoom through 
 every time, the frames in the middle of a motion, and no splash. `await __reviewRows('tag', ['C01', …])` saves, per
 view, the clap close up, picking up and putting down, and everything else, one row per character;
 `__sheet(name, id, view, steps, {zoom, cx, cy, …})` any frames of one view. The page keeps every file it has
-loaded: reload it after a rebuild, or it goes on showing the old file. The test page plays in real time, so a
+loaded: reload it after a rebuild, or it goes on showing the old file. It does not wait for animation frames, so it
+also works in a tab that is hidden or behind another. Make the cells wide enough for the whole figure with its arms
+out: in a sheet of narrow cells the arms were cut off at the cell's edge, and the background between an arm and the
+body read as a pale, pointed "broken arm". The test page plays in real time, so a
 picture of it shows whichever frame the clock reached; the cast sheets below are made with the frames page.
 
 ## Staged for a flat picture
@@ -203,6 +230,10 @@ motions are unchanged):
   forearms that point at the camera are drawn in the clap's pose and the rest is foreshortened by the rig; from
   behind only the elbows show. On the way in and out the hands rise and sink apart, each on its own side, and close
   only for the first clap (going straight to the meeting point, the forearms crossed at the waist for a few frames).
+  Seen from the front the drawings in the clap's pose show from frame 5 to frame 67 of 75 (from 8 to 63, as in the three-quarter view,
+  the resting hand stood upright at the shoulder for three frames before and after), and outside them the forearm is not
+  squeezed below 0.72 of its length: it only swings through the camera's direction for a moment on its way down,
+  and squeezed to a third a long sleeve's cuff was a pale stripe across the arm.
 - **Picking up** (`pickUp`, `pickSide`): a bow from the hips with the knees bent, the hand down in front to about
   shin height (the top of a box, a basket's handle), the head going down with the body; then up, holding it at the
   waist with the elbow at the side. It used to be a deep squat with the hand at the ankles: the thighs turned to
@@ -213,13 +244,15 @@ motions are unchanged):
 - Sitting, bowing and standing up, seen from the front or back: the recorded thighs point at the camera or out to
   the sides. There the thighs hang as at rest and get shorter (never below half): a long skirt keeps its shape and
   only gets shorter, shorts and trousers end at the knee, and the shins run from there to the recorded ankles
-  (`drape_leg` in `rive_build.py`).
+  (`drape_leg` in `rive_build.py`). From behind the thighs' second drawings show meanwhile, over the calves, and
+  the calves go up a little way under them: on with the motion, the resting drawings hidden once it has blended in
+  and back before it blends out, so nothing is half transparent in between.
 
 ## Results
 
 | | 2D (Rive), one view | 3D (VRM) |
 |---|---|---|
-| Character file | three-quarter and front 256–426 KB (median 310 KB; C03's long hair is the largest), back 169–213 KB; 108–360 KB compressed; all three views of one character 0.7–1.1 MB, all thirty files 8.4 MB | 2.6 MB (1.6 MB compressed) |
+| Character file | three-quarter and front 259–428 KB (median 319 KB; C03's long hair is the largest), back 180–225 KB; 114–363 KB compressed; all three views of one character 0.7–1.1 MB, all thirty files 8.3 MB | 2.6 MB (1.6 MB compressed) |
 | Player, first visit on the web | rive.js 0.12 MB + rive.wasm 0.73 MB (compressed) | three.js + three-vrm about 0.26 MB |
 | First frame, local server, libraries cached | about 0.2–0.5 s | 0.88 s |
 | Native apps | the same .riv in the official runtimes | VRM importers or a WebView |
@@ -247,38 +280,29 @@ another file and shows the splash for that file. With a paid Rive plan the expor
   0.2 s, so the figure narrows to its middle and opens facing the other way. Changing between three-quarter, front and
   back means changing file; the park page turns the figure there the way 2D animation does (the old view narrows to
   its edge and the new one opens from it, 0.2 s), and an app has to do the same.
-- Joints are cut-out joints. They are round and closed now, but a puffed sleeve keeps the facets of its mesh when
-  the arm is raised, a sharply bent elbow or knee shows the sleeve's or trouser's end as an edge, and a limb
-  pointing straight at the camera is a squeezed side view, not a view along it (except where it is drawn in the
-  pose: the clap's forearms, the holding forearm from the front).
+- Joints are cut-out joints. They are round and closed, but a sharply bent elbow or knee shows the sleeve's or
+  trouser's end as an edge, and a limb pointing straight at the camera is a squeezed side view, not a view along it
+  (except where it is drawn in the pose: the clap's forearms, the holding forearm from the front). Running, seen
+  from the front or from behind, the leg kicked up is a short stub of calf with the boot at the knee, and from the
+  front the thigh above it ends bluntly.
 - Stacking is fixed per view. From the front an arm swinging back is still drawn over the hip; from behind the
   arms are behind the body and legs, so a hand swinging back is hidden by the thigh's edge. In the three-quarter
   view the near sleeve covers a lock of hair that in 3D hangs in front of it (C03), and a far hand that points at the
   camera (running in a long-sleeved coat) is hidden under its own squeezed sleeve.
 - Picking up reaches shin height, not the ground (a child's arm does not reach it without a full squat, which
   cut-out clothes cannot do). From the front and back it is a small bow with the hand down beside the leg.
-- A long skirt in a bow (A03, A04, A06, three-quarter view). The square flap behind the waist is gone (see "A long
-  skirt's bow" above): the back now runs from the waist out over the seat and down in one closed outline. That
-  outline is still a cut-out's: the seat stands out behind as a rounded shape with a few flat facets rather than
-  cloth draped over it, and the bow's two pictures are swapped in a few frames after the bow begins and out again
-  as she comes upright (nothing moves at the swap, but it is two drawings). Tried and dropped on the way: the
-  skirt's top rigid on the pelvis (worse: the body slid forward off it), a round lower edge on the waistband (a
-  balloon behind the seat), and the skirt cut off at the hips in every motion (a seated skirt was hollow behind and
-  its lap rose in a peak). A05's jacket tails still stand out a little behind in a bow.
-- Shoulders seen from the front on the two characters whose sleeves and bodice differ in colour (C01, A03): the
-  arm's ball at the shoulder is sleeve-coloured and lies over the bodice, a round lobe at each shoulder that stays
-  there when the arms go up. On the others it is the same garment and takes the figure's own colours, so it does
-  not show. Raised arms from the front and back still leave a small bump or corner at the shoulder on some (A02,
-  A05, A06): the shoulder's own outline, where the sleeve was attached.
-- A puffed sleeve raised from behind (C01, A03) is the sleeve's own picture turned upward: closed and smooth now,
-  but its cuff keeps the two corners it has at rest, and under the arm the sleeve's filled-out top ends in a blunt
-  corner.
-- The front clap: on the way out, for about a tenth of a second after the posed forearms are swapped back, the
-  resting forearm is squeezed to a third of its length and a long sleeve's cuff shows as a pale stripe across the
-  arm (A05, A06). While the hands are together a thin sliver of background shows in the armpit of the two with
-  wide sleeves and broad arms (A02, A01).
-- The three-quarter cheer: the far forearm's cuff shows as a pale streak from under the far upper arm (A03, A04,
-  A06).
+- A long skirt in a bow (A03, A04, A06, three-quarter view) rounds from the waist over the seat to the hem in one
+  curve now. It is still two drawings shown instead of the skirt's one while the bow lasts, and the waistband's
+  faded lower edge is a faint soft line behind the seat when looked at closely. A05's jacket tails still stand out
+  a little behind in a bow.
+- A raised puff sleeve (C01, A03) is the sleeve's own picture turned upward, its cuff corners rounded off.
+- The front clap: for one frame on the way in (frame 10 of 75), before the posed hands show, a long sleeve's cuff
+  can be seen without its hand (A06).
+- Running seen from behind, a shorts leg squeezed to half its length shows its folds as small teeth along the hem
+  for two or three frames of a stride (C02, C04, A01). Seated in the three-quarter view the far calf shows behind
+  the hanging part of a long skirt (A03 and A06, whose pale stockings make it visible): the figure sits with its knees apart and
+  the skirt covers only as far as the near knee. Seen from behind in a bow, a small notch of A02's apron shows
+  between his trouser legs.
 - Long skirts and A02's apron are one picture hung from two skirt bones that follow the thighs (together fully,
   apart only a third, and in a walk or run they lean at most 8 degrees), each with a lower bone that lies along the
   shins: seated, the skirt lies on the lap and falls from the knees; it does not swing or fold like cloth. A02's
@@ -286,7 +310,8 @@ another file and shows the splash for that file. With a paid Rive plan the expor
   hangs nearly straight down from the waist, a flat sheet. Under a
   floor-length skirt there are no thighs: a leg kicked up behind in a run is a calf and a boot coming out of the
   skirt. Knee-length skirts stay with the hips (the legs move behind them).
-- Sitting seen from the front or back shortens the thighs to half; shorts become a low band.
+- Sitting seen from the front or back shortens the thighs to half; shorts become a low band. From behind the
+  thighs' second drawings are a little softer in outline than the standing ones.
 - 3D-side: A03's bare upper arms (cloth painted as skin below the puff sleeve) are banded; the tucked shirt's lower
   edge on the boys and A01 is uneven (the texture's cut), which a bow makes more visible (A02's is evened out).
 - A gesture asked for while the previous one is blending out (its last 0.12 s) is not taken. A gesture during a walk

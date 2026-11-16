@@ -116,7 +116,10 @@ if LONG:
 # arms, forearms and thighs are therefore drawn on a bone of their own inside the joint's bone, and that bone is
 # scaled along its length to the length the 3D limb has in the picture. Scaling the joint's bone itself would also
 # scale and shear everything hanging from it.
-SKIN = [f'{p}{s}' for s in 'RL' for p in ('uarm', 'larm', 'uleg')]
+# (From the front and from behind the calves as well: running, a heel kicked up points the calf at the camera, a fifth
+# of its length in the picture, and drawn at its full length it stuck out sideways past its own foot.)
+FB = abs(math.sin(D['view'])) < 0.3          # front or back view: in idle and walk the arms swing toward the camera
+SKIN = [f'{p}{s}' for s in 'RL' for p in ('uarm', 'larm', 'uleg') + (('lleg',) if FB else ())]
 B += [(n + '_s', s_, e_, None) for n, s_, e_, _ in list(B) if n in SKIN]
 # a front apron over trousers (A02), as against a skirt that goes all round the legs
 APRON = LONG and 'ulegR' in D['order']
@@ -143,7 +146,7 @@ BLENDED = {'pelvis', 'torso'} | {p for p in D['order'] if p.startswith('head_')}
 # could come out with a hole (a laughing face showed the background through a patch over the eyes). The blended
 # pieces (body, long skirt) get it subdivided into a fine grid: sparse, long triangles reached from the waist to the
 # shoulders, and in a deep bend one with a corner on the hips and two on the shoulders stretched into a thin sliver.
-mesh = {p: call('mesh_rigging_tool', {'command': 'generateMesh', 'data': {'generateMesh': {'imageId': img[p], 'subdivisions': 3 if p in ('pelvis', 'torso', 'pelvis_bow', 'waist_bow') else 1,
+mesh = {p: call('mesh_rigging_tool', {'command': 'generateMesh', 'data': {'generateMesh': {'imageId': img[p], 'subdivisions': 4 if p == 'pelvis_bow' else 3 if p in ('pelvis', 'torso', 'pelvis_bow', 'waist_bow') else 1,
         'trace': False}}})['meshId'] for p in D['order']}
 heads = [p for p in D['order'] if p.startswith('head_')]
 swaps = [p for p in D['order'] if '_' in p and not p.startswith('head_')]             # posed parts, e.g. handR_wave, larmL_clap
@@ -153,20 +156,23 @@ swaps = [p for p in D['order'] if '_' in p and not p.startswith('head_')]       
 # The heads are rigid on the head bone and the body does not follow the head: weighted partly to it, a few points of
 # the collar or a shoulder were dragged out into a long thin spike when she bent down to pick something up.
 # A long skirt's pictures for the bow (rive_prep, three-quarter view; shown instead of the skirt's while she bows to
-# pick something up): the waistband bends between the hips and the body as the body's own picture does, the skirt
-# cut off at the hips hangs from the hips and the skirt's bones.
+# pick something up): the waistband bends between the hips and the body as the body's own picture does; the skirt
+# cut off above the hips hangs from the hips and the skirt's bones on a finer mesh with a wide blend between them,
+# so its back curves from the seat to the hem (rigid on its bones it met the waistband in a corner: a boxy seat).
 BOW = [p for p in D['order'] if p.endswith('_bow')]
 CORE = ([(['torso'], ['pelvis', 'torso']), (['pelvis'], ['pelvis', 'torso', 'skirtL', 'skirtR', 'hemL', 'hemR'])] if LONG else [(['pelvis', 'torso'], ['pelvis', 'torso'])]) + \
        ([(['waist_bow'], ['pelvis', 'torso']), (['pelvis_bow'], ['pelvis', 'skirtL', 'skirtR', 'hemL', 'hemR'])] if BOW else []) + \
        [([h], ['head']) for h in heads]
 CHAINS = CORE + \
          [([f'{p}{s}'], [f'{p}{s}' + ('_s' if f'{p}{s}' in SKIN else '')]) for s in 'RL' for p in ('uarm', 'larm', 'hand', 'uleg', 'lleg', 'foot')] + \
-         [([p], [p.split('_')[0]]) for p in swaps if p not in BOW] + [(['apron'], ['pelvis'])]     # a part drawn in a pose is already as short as it looks: on the joint's bone
+         [([p], [p.split('_')[0] + ('_s' if p.endswith('_sit') else '')]) for p in swaps if p not in BOW] + [(['apron'], ['pelvis'])]     # a part drawn in a pose is already as short as it looks: on the joint's bone
+# (a thigh's second drawing for sitting, seen from behind (rive_prep), is the thigh again: on its scaled bone)
 CHAINS = [([p for p in parts if p in mesh], bn) for parts, bn in CHAINS]   # layers that are empty (thighs under a long skirt) were left out
 CHAINS = [(parts, bn) for parts, bn in CHAINS if parts]
 for parts, bn in CHAINS:
     for p in parts: call('mesh_rigging_tool', {'command': 'bindBones', 'data': {'bindBones': {'targetId': mesh[p], 'boneIds': [bones[b] for b in bn]}}})
-    if len(bn) > 1: call('mesh_rigging_tool', {'command': 'autoWeight', 'data': {'autoWeight': {'targetIds': [mesh[p] for p in parts], 'blend': 0.3, 'maxInfluences': 3}}})   # narrower: the hips pull on the body only near the waist
+    if len(bn) > 1: call('mesh_rigging_tool', {'command': 'autoWeight', 'data': {'autoWeight': {'targetIds': [mesh[p] for p in parts], 'blend': 0.7 if parts == ['pelvis_bow'] else 0.3,
+                                                                                                 'maxInfluences': 4 if parts == ['pelvis_bow'] else 3}}})   # narrower: the hips pull on the body only near the waist
 LOG['meshes'] = mesh
 
 tick('meshes')
@@ -177,9 +183,12 @@ dist = lambda j, a, b: math.hypot(j[b][0] - j[a][0], j[b][1] - j[a][1])
 def rot(p, deg):
     c, s = math.cos(math.radians(deg)), math.sin(math.radians(deg)); return [p[0] * c - p[1] * s, p[0] * s + p[1] * c]
 head_rest = ang(J, 'neck', 'top') - ang(J, 'hips', 'neck'); head_rel0 = ang(J, 'neck', 'head') - ang(J, 'hips', 'neck')
-FB = abs(math.sin(D['view'])) < 0.3          # front or back view: in idle and walk the arms swing toward the camera
 # scale of a limb's picture, per cent. Not below 0.45 (a forearm 0.3: kept longer, it ran on over the hand)
-fore = lambda j, a, b: 100 * max(0.3 if a.startswith('el') else 0.45, min(1.15, dist(j, a, b) / max(1e-3, dist(J, a, b))))
+# (the front and back clap: 0.72. There the forearm only swings through the camera's direction for a moment on its way
+# down, outside the frames drawn in the pose, and squeezed to a third a long sleeve's cuff was a pale stripe.)
+# (a calf 0.25: it is only that short for a few frames of a run, in front of or behind its own thigh)
+LIM = {'el': 0.3, 'kn': 0.25}
+fore = lambda j, a, b: 100 * max(LIM.get(a[:2], 0.45), min(1.15, dist(j, a, b) / max(1e-3, dist(J, a, b))))
 def channels(j, steady=False, drape=False, gait=False, bow=False):
     out = {}; off = [j['hips'][0] - J['hips'][0], j['hips'][1] - J['hips'][1]]
     out[(body, GX)], out[(body, GY)] = off
@@ -202,6 +211,7 @@ def channels(j, steady=False, drape=False, gait=False, bow=False):
         b = bones['uleg' + s]; out[(b, X)] = j['hip' + s][0] - off[0]; out[(b, Y)] = j['hip' + s][1] - off[1]; out[(b, R)] = ul; out[(b, LEN)] = dist(j, 'hip' + s, 'kn' + s)
         out[(bones[f'uleg{s}_s'], SX)] = fore(j, 'hip' + s, 'kn' + s)
         b = bones['lleg' + s]; out[(b, R)] = ll - ul; out[(b, LEN)] = dist(j, 'kn' + s, 'an' + s)
+        if f'lleg{s}_s' in bones: out[(bones[f'lleg{s}_s'], SX)] = fore(j, 'kn' + s, 'an' + s)
         b = bones['foot' + s]; out[(b, R)] = ft - ll; out[(b, LEN)] = dist(j, 'an' + s, 'to' + s)
         if drape: drape_leg(out, j, s)
     if LONG:
@@ -226,7 +236,12 @@ def channels(j, steady=False, drape=False, gait=False, bow=False):
             if bow:
                 lean = max(0.0, min(1.0, (abs((gt - ang(J, 'hips', 'neck') + 180) % 360 - 180) - 12) / 25))
                 hip0, hip = J['hip' + s], [out[(b, X)], out[(b, Y)]]; L0 = dist(J, 'hip' + s, 'kn' + s); a_ = math.radians(out[(b, R)])
-                kn = [hip[0] + L0 * math.cos(a_), hip[1] + L0 * math.sin(a_)]                                # where the skirt's knee end goes
+                # where the skirt's knee end goes: as far from the hips as the knees are in the picture (both together).
+                # In this view the thighs of a deep bow point partly at the camera; at their full length the
+                # skirt's knees were a hand's breadth in front of hers, and below them the skirt hung so far
+                # forward that the far calf stood out behind it.
+                L0 *= min(1.0, sum(dist(j, 'hip' + q, 'kn' + q) / max(1.0, dist(J, 'hip' + q, 'kn' + q)) for q in 'RL') / 2)
+                kn = [hip[0] + L0 * math.cos(a_), hip[1] + L0 * math.sin(a_)]
                 st = rot([J['seat'][0] - J['hips'][0], J['seat'][1] - J['hips'][1]], out[(bones['pelvis'], R)] - ang(J, 'hips', 'midhip'))
                 st = [J['hips'][0] + st[0], J['hips'][1] + st[1]]                                            # the seat now
                 q0 = [hip0[0] + lean * (J['seat'][0] - hip0[0]), hip0[1] + lean * (J['seat'][1] - hip0[1])]  # the point it turns on, at rest
@@ -256,11 +271,16 @@ def drape_leg(out, j, s):
     if LONG: sc = (HEM - 0.08 * max(0, drop) - hip[1]) / max(1, HEM - hip0[1])
     else: sc = kd / max(1, dist(J, 'hip' + s, 'kn' + s))
     sc = max(0.5, min(1.0, sc))                   # squeezed further, shorts were a ragged strip
+    # Seen from behind, the calf is cut off along the thigh's lower edge (a shorts hem) and that edge changes shape as
+    # the thigh gets shorter: the background showed between them. The thigh's sitting drawing lies over the calf, so
+    # the calf goes up a little way under it.
+    if f'uleg{s}_sit' in img: kd = max(4.0, kd - 14 * K * min(1.0, (1 - sc) / 0.15))
     knee = (hip[0] + u[0] * kd, hip[1] + u[1] * kd)
     b = bones['uleg' + s]; out[(b, R)] = a0; out[(b, LEN)] = kd; out[(bones[f'uleg{s}_s'], SX)] = 100 * sc
     ll = math.degrees(math.atan2(j['an' + s][1] - knee[1], j['an' + s][0] - knee[0]))
     b = bones['lleg' + s]; out[(b, R)] = ll - a0; out[(b, LEN)] = math.hypot(j['an' + s][0] - knee[0], j['an' + s][1] - knee[1])
     out[(bones['foot' + s], R)] = ang(j, 'an' + s, 'to' + s) - ll
+    if f'lleg{s}_s' in bones: out[(bones[f'lleg{s}_s'], SX)] = 100.0     # from that knee the calf keeps its length
 rest = channels(J)
 
 # ------------------------------------------------------------------ animations
@@ -293,7 +313,7 @@ def thin(vals, tol):
 # a turn of the rest pose: a whole turn too many is taken out in one step, between two frames, where it does not show.
 LAST = {}
 def body_anim(name, F, act=None, swap=(), after=None, home=True):
-    keys, prev, series = [], dict(LAST.get(after, {})), {}
+    keys, prev, series = [], dict(LAST.get(after, {})), {}; LIM['el'] = 0.72 if FB and name == 'Clap' else 0.3
     for f, j in enumerate(F):
         # front and back: standing and walking the arms keep their lengths; running and sitting the forearms point at
         # the camera and are foreshortened (kept long they crossed over the belly); the hands stay in line throughout
@@ -319,16 +339,19 @@ def body_anim(name, F, act=None, swap=(), after=None, home=True):
     # its blend-out); every other posed hand stays hidden
     span = {}                                         # posed hand -> (first frame, frame it goes again)
     # (the clap's drawings later and shorter: its hands rise and sink apart first, see cast.js clapPose)
-    if act: span = {p: ((8, len(F) - 12) if act == 'clap' else (6, len(F) - 8)) for p in swaps if p.endswith('_' + act)}
-    for p, f0, f1 in swap or ():
-        if p in img: span[p] = (f0, f1 if f1 is not None else len(F) + 1)
+    if act: span = {p: (((5, len(F) - 8) if FB else (8, len(F) - 12)) if act == 'clap' else (6, len(F) - 8)) for p in swaps if p.endswith('_' + act)}
+    hide = {}                                         # ... and when its resting drawing is hidden, where that differs
+    for p, f0, f1, *b in swap or ():
+        if p in img: span[p] = (f0, f1 if f1 is not None else len(F) + 1); hide.update({p: tuple(b)} if b else {})
     for p in swaps:
         keys.append(hk(img[p], OPA, 0))
     for base in {p.split('_')[0] for p in swaps} & set(img): keys.append(hk(img[base], OPA, 100))
     for p, (on, off) in span.items():
         base = p.split('_')[0]
-        keys += [hk(img[p], OPA, 100, on)] + ([hk(img[base], OPA, 0, on)] if base in img else [])    # (the bow's waistband replaces nothing)
-        if off < len(F): keys += [hk(img[p], OPA, 0, off)] + ([hk(img[base], OPA, 100, off)] if base in img else [])
+        hon, hoff = hide.get(p, (on, off))
+        keys += [hk(img[p], OPA, 100, on)] + ([hk(img[base], OPA, 0, hon)] if base in img else [])   # (the bow's waistband replaces nothing)
+        if off < len(F): keys.append(hk(img[p], OPA, 0, off))
+        if hoff < len(F) and base in img: keys.append(hk(img[base], OPA, 100, hoff))
     add(name, keys); STATS[name] = len(keys)
     return len(F)
 F = [dict(f) for f in D['anims']['idle']['frames'][:59]]; n = len(F)

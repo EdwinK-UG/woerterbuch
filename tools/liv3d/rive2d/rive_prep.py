@@ -44,11 +44,16 @@ for pname, parts, front in posed:
         else: images.insert(images.index(part) + 1, name)
 # Seen from the front, the clap's and the holding forearm point at the camera and the hand is at their near end: the
 # hand's drawing goes in front of the forearm's (behind it, a long sleeve's cuff showed as a white disc with no hand).
+# The clap's forearms and hands go in front of everything, the hands last: the forearm comes forward from the elbow, in
+# front of its own upper arm, and the hands pass before the shoulders on their way to the chest. (Under the upper arm
+# the forearm was hidden wherever the two overlap, a child's short arm entirely, and the hand floated on the sleeve;
+# behind the upper arms the hands showed as fingers sticking up from behind the shoulder.)
 if M['kind'] in ('f', 'fb'):
-    for nm in ('clap', 'pick'):
-        for s_ in 'LR':
-            h_, l_ = f'hand{s_}_{nm}', f'larm{s_}_{nm}'
-            if h_ in images and l_ in images: images.remove(h_); images.insert(images.index(l_) + 1, h_)
+    for s_ in 'LR':
+        h_, l_ = f'hand{s_}_pick', f'larm{s_}_pick'
+        if h_ in images and l_ in images: images.remove(h_); images.insert(images.index(l_) + 1, h_)
+    top = [x for x in ('larmL_clap', 'larmR_clap', 'handL_clap', 'handR_clap') if x in images]
+    if 'larmL_clap' in top or 'larmR_clap' in top: images = [x for x in images if x not in top] + top
 import numpy as np
 from scipy import ndimage
 A_ = lambda im: np.array(im.getchannel('A'), float)
@@ -85,6 +90,13 @@ def smooth_cut(im, j, r, reach=2.0):
     new = a * (1 - w) + sm * w
     fill_from(t, (new > 8) & (a < 250), ndimage.binary_erosion(a > 200, iterations=max(2, round(3 * k))))
     t[..., 3] = new; return Image.fromarray(full.clip(0, 255).astype(np.uint8), 'RGBA')
+# The whole outline of an upper arm, smoothed more gently than its cut: the hem of a short or puffed sleeve stands out
+# in two sharp corners, which a raised arm turned into spikes.
+def smooth_outline(im, sigma):
+    t = np.array(im).astype(float); a = t[..., 3].copy()
+    new = np.clip((ndimage.gaussian_filter(a / 255, sigma) - 0.5) * 6 + 0.5, 0, 1) * 255
+    fill_from(t, (new > 8) & (a < 250), ndimage.binary_erosion(a > 200, iterations=max(2, round(3 * k))))
+    t[..., 3] = new; return Image.fromarray(t.clip(0, 255).astype(np.uint8), 'RGBA')
 RADIUS = {}
 WHOLE = np.array(Image.open(f'{S}/{pf}_whole.png').getchannel('A'))
 WHOLE_RGB = np.array(Image.open(f'{S}/{pf}_whole.png').convert('RGB'))
@@ -136,11 +148,32 @@ def cap(im, part):
         t = full[y0:y1, x0:x1]; a = t[..., 3].copy(); yy, xx = np.mgrid[y0:y1, x0:x1]; Q0, Q1 = xx - c[0], yy - c[1]
         al = Q0 * d[0] + Q1 * d[1]; pe = -Q0 * d[1] + Q1 * d[0]; dist = np.hypot(Q0, Q1)
         disc = np.clip((r - dist) / 1.5 + 0.5, 0, 1)                            # 1.5 px soft edge
-        if near and not behind:                     # keeps its own end; only the small ball is added, inside the figure
-            ball = np.clip((rr - dist) / 1.5 + 0.5, 0, 1) * (WHOLE[y0:y1, x0:x1] > 128)
+        if near and not behind:
+            # A piece stacked in front of the body keeps its own end. Added to it, inside the figure: the small ball
+            # round the joint, and (an upper arm) what closes its top to one convex shape, the hollow between the
+            # ball and the sleeve's inner edge. All of it only where the whole figure's picture shows this same
+            # cloth at rest, and in exactly that picture's colours, so nothing of it shows at rest: filled from the
+            # sleeve's own cloth the ball was a disc of another shade on the chest, and over a bodice of another
+            # colour a sleeve-coloured lobe at each shoulder. The hollow, left open, was a wedge of background in
+            # the armpit as soon as the arm swung out from the body (the clap seen from the front).
             inner = ndimage.binary_erosion(a > 200, iterations=max(2, round(3 * k))) & (al > -0.5 * r) & (al < 1.8 * r)
-            # (filled from its own cloth the ball showed on the body as a disc of another shade)
-            fill_from(t, (ball > 0) & (a < 250), inner); as_whole(t, (ball > 0) & (a < 250), y0, x0); t[..., 3] = np.maximum(a, 255 * ball); continue
+            if not inner.any(): continue
+            W_ = WHOLE_RGB[y0:y1, x0:x1].astype(float)
+            same = (WHOLE[y0:y1, x0:x1] > 200) & (np.abs(W_ - np.median(t[inner, :3], axis=0)).max(-1) < 55)
+            same = ndimage.binary_closing(same, iterations=2) & (WHOLE[y0:y1, x0:x1] > 200)        # (not its fine dark lines: a seam, a fold)
+            want = (dist < rr) & same & (a < 250)
+            if part.startswith('uarm'):
+                top = ((a > 128) | (dist < rr)) & (dist < 3.2 * r); rim = top & ~ndimage.binary_erosion(top); py, px = np.nonzero(rim)
+                if len(px) > 8:
+                    from scipy.spatial import ConvexHull
+                    hull = Image.new('L', (x1 - x0, y1 - y0), 0); pts = np.stack([px, py], 1)
+                    ImageDraw.Draw(hull).polygon([tuple(map(float, pts[i])) for i in ConvexHull(pts).vertices], fill=255)
+                    want |= (np.array(hull) > 0) & same & (a < 128)
+            want = ndimage.binary_opening(want, iterations=2) | ((dist < rr) & same & (a < 250))
+            # ... and only what hangs together with the piece itself: beyond a bodice's strap of another colour the
+            # ball came back as an island on the blouse, a blob that left the strap dotted when the arm went up
+            lab, _ = ndimage.label(want | (a > 128)); own = np.unique(lab[a > 128]); want &= np.isin(lab, own[own > 0])
+            t[want, :3] = W_[want]; t[want, 3] = 255; continue
         if near:
             tube = np.clip((r - np.abs(pe - pc * np.clip(al / max(lo, 1.0), 0, 1))) / 1.5 + 0.5, 0, 1) * (al >= 0) * (al <= lo + 0.06 * L)
             shape = np.maximum(disc * (al < 0.4 * r), tube)                     # the ball and its join to the piece
@@ -186,6 +219,27 @@ def cap(im, part):
         body = np.array(Image.open(f'{S}/{pf}_torso.png').getchannel('A'))[y0:y1, x0:x1] > 128
         band = ndimage.binary_dilation(a > 128, iterations=n) & body & (a < 250) & (np.hypot(xx - c[0], yy - c[1]) < 2.4 * r)   # under the body only: what is open beside it is the body's (mend)
         fill_from(t, band, ndimage.binary_erosion(a > 200, iterations=max(2, round(3 * k)))); a[band] = 255
+    # A forearm's top, closed to one convex shape like an upper arm's: between the elbow's ball and a sleeve end or
+    # cuff wider than it there was a wedge-shaped notch, hidden under the upper arm at rest and a pale streak of
+    # background across the far sleeve once the elbow bent (the three-quarter cheer). Behind the body, whatever of
+    # that shape lies inside the figure at rest; in front of it, only where the figure shows this same cloth, in
+    # the figure's colours.
+    if part.startswith('larm') and 'el' + part[-1] in RADIUS:
+        r = RADIUS['el' + part[-1]]; c = np.array(J['el' + part[-1]], float)
+        m = int(3.2 * r + 8); x0, y0, x1, y1 = max(int(c[0]) - m, 0), max(int(c[1]) - m, 0), min(int(c[0]) + m, FW), min(int(c[1]) + m, FH)
+        t = full[y0:y1, x0:x1]; a = t[..., 3]; solid = a > 128; yy, xx = np.mgrid[y0:y1, x0:x1]
+        top = solid & (np.hypot(xx - c[0], yy - c[1]) < 3.2 * r); rim = top & ~ndimage.binary_erosion(top); py, px = np.nonzero(rim)
+        inner = ndimage.binary_erosion(a > 200, iterations=max(2, round(3 * k)))
+        if len(px) > 8 and inner.any():
+            from scipy.spatial import ConvexHull
+            hull = Image.new('L', (x1 - x0, y1 - y0), 0); pts = np.stack([px, py], 1)
+            ImageDraw.Draw(hull).polygon([tuple(map(float, pts[i])) for i in ConvexHull(pts).vertices], fill=255)
+            add = (np.array(hull) > 0) & ~solid & (WHOLE[y0:y1, x0:x1] > 128)
+            if 'torso' in images and images.index(part) > images.index('torso'):
+                W_ = WHOLE_RGB[y0:y1, x0:x1].astype(float); add &= np.abs(W_ - np.median(t[inner, :3], axis=0)).max(-1) < 55
+                add = ndimage.binary_opening(add, iterations=2); t[add, :3] = W_[add]
+            else: fill_from(t, add | (ndimage.binary_dilation(add, iterations=2) & (a < 250) & (a > 8)), inner)
+            a[add] = 255
     if part.startswith('larm') and 'wr' + part[-1] in RADIUS:      # the cuff's end: scraps of the ring into the hand, a frayed edge when the hand is hidden
         return smooth_cut(Image.fromarray(full.clip(0, 255).astype(np.uint8), 'RGBA'), 'wr' + part[-1], RADIUS['wr' + part[-1]])
     return Image.fromarray(full.clip(0, 255).astype(np.uint8), 'RGBA')
@@ -213,20 +267,10 @@ def shoulders(im, arms):
         if hole.any() and ball.sum() > 20:
             t[hole, :3] = np.median(u[ball, :3], axis=0); t[hole, 3] = 255
         ua = u[..., 3:4] / 255 * np.clip((r - dist) / 1.5 + 0.5, 0, 1)[..., None]
+        # (not over cloth of another colour the body has there itself: where a sleeve's edge lies over a bodice's
+        # strap at rest, that left dots of sleeve on the strap once the arm was raised)
+        ua *= ((t[..., 3] < 128) | (np.abs(t[..., :3] - u[..., :3]).max(-1) < 55))[..., None]
         t[..., :3] = u[..., :3] * ua + t[..., :3] * (1 - ua); t[..., 3] = np.maximum(t[..., 3], 255 * ua[..., 0])
-        # Seen from the front, a wide sleeve hangs beside the body from the shoulder down, and as soon as the arm
-        # swings out a little (the clap) a wedge of background opened between the two, from the shoulder's ball
-        # down. The body keeps a strip of the sleeve as it hangs at rest, widest at the shoulder and running out
-        # below it: hidden under the arm at rest, it closes that wedge. Only where sleeve and body are one garment.
-        if M['kind'] in ('f', 'fb'):
-            # (all that the figure has there: the sleeve, and what lies between it and the body, see `mend`; nothing
-            # above the joint, where it would stand out beside a raised arm)
-            tor = t[..., 3] > 128; ar = u[..., 3] > 128; dy = yy - sh[1]; fig = WHOLE[y0:y1, x0:x1] > 128
-            wide = 0.6 * r * np.clip((3 * r - dy) / (1.5 * r), 0, 1) * np.clip((dy + 0.5 * r) / (0.5 * r), 0, 1)
-            strip = fig & ~tor & (ndimage.distance_transform_edt(~tor) <= wide) & ndimage.binary_dilation(ar, iterations=int(0.6 * r))
-            edge = tor & ndimage.binary_dilation(strip, iterations=max(4, round(4 * k)))
-            if (strip & ar).sum() > 20 and edge.sum() > 20 and np.abs(np.median(u[strip & ar, :3], axis=0) - np.median(t[edge, :3], axis=0)).max() < 50:
-                t[strip, :3] = np.where(ar[strip][:, None], u[strip, :3], WHOLE_RGB[y0:y1, x0:x1][strip]); t[strip, 3] = 255
     return Image.fromarray(full.clip(0, 255).astype(np.uint8), 'RGBA')
 # Collars. Each head picture reaches a little past the neck into the body picture behind it, so it carries a piece of
 # collar (and long hair hanging down the back). Bowing the head deeply (picking something up) swung the collar piece
@@ -269,10 +313,10 @@ def armhole(im, s):
 # Closed at rest. Round the shoulders, whatever of the whole figure's picture no piece covers as the pieces stand at
 # rest is added in the figure's own colours: the top of a puffed sleeve that neither the body's nor the arm's part
 # of the mesh drew (a wedge of background between sleeve and body, even standing still), the outline along the top
-# of a sleeve. What lies against an arm goes to that arm (stacked in front of the body only if sleeve and body are
-# one garment: on the body the sleeve's point stood out as a wing under the raised arm, on the arm it turns in over
-# the body where it does not show); the rest goes to the body if it lies against it. Hairlines along outlines and
-# specks are left out: they would hang in the air once the arm moves away.
+# of a sleeve. What lies against an arm goes to that arm: on the body the point of a sleeve stood out as a wing or a
+# spike under the raised arm; on the arm it goes up with the sleeve it belongs to. The rest goes to the body if it
+# lies against it. Hairlines along outlines and specks are left out: they would hang in the air once the arm moves
+# away.
 def mend(im, pieces, front, behind):
     arms = {}; R_ = [RADIUS['sh' + s] for s in 'LR' if 'sh' + s in RADIUS]
     if not R_: return im, arms
@@ -297,7 +341,6 @@ def mend(im, pieces, front, behind):
         if s not in dist: continue
         u = np.array(arm.crop(box)).astype(np.float32); d = dist[s]; r = RADIUS['sh' + s]
         mine, body = (u[..., 3] > 200) & (d < 2.5 * r), (full[..., 3] > 200) & (d < 2.5 * r)
-        if s in front and (mine.sum() < 20 or body.sum() < 20 or np.abs(np.median(u[mine, :3], axis=0) - np.median(full[body, :3], axis=0)).max() > 50): continue
         ids = np.unique(lab[gap & ndimage.binary_dilation(u[..., 3] > 128, iterations=3) & (d < 4 * r)]); g = np.isin(lab, ids[ids > 0]) & gap
         if g.any(): give(u, g); gap &= ~g; arms[s] = back(arm, u); print(pf, ' of that to the arm', s, int(g.sum()))
     lab, n = ndimage.label(gap); touch = np.unique(lab[gap & ndimage.binary_dilation(full[..., 3] > 128, iterations=3)])   # what is left must lie against the body:
@@ -330,19 +373,27 @@ SEAT = []
 def waistband(im):
     if M['kind'] != 'q' or 'ulegL' in images or 'ulegR' in images: return
     t = np.array(im).astype(float); a = t[..., 3]; y0 = (J['hipL'][1] + J['hipR'][1]) / 2
-    yy = np.mgrid[0:a.shape[0], 0:a.shape[1]][0]; row = np.nonzero(a[int(y0)] > 128)[0]
-    wb = t.copy(); wb[..., 3] = a * np.clip((y0 + 14 * k - yy) / (12 * k), 0, 1)
-    if len(row) < 20 or (wb[..., 3] > 128).sum() < 200: return
+    yy, xx = np.mgrid[0:a.shape[0], 0:a.shape[1]]; row = np.nonzero(a[int(y0)] > 128)[0]
+    if len(row) < 20: return
     right = J['toR'][0] + J['toL'][0] > J['anR'][0] + J['anL'][0]                 # which way the figure faces
-    SEAT[:] = [float(row[0] + 6 * k if right else row[-1] - 6 * k), float(y0)]   # where the skirt's back edge crosses the hip line
+    back = row[0] if right else row[-1]
+    # it fades out downwards over a long stretch (the skirt's picture is whole under all of it), and round its lower
+    # back corner: there the skirt's edge draws a little away from it in the bow, and a hard corner stood out
+    wb = t.copy(); wb[..., 3] = a * np.clip((y0 + 14 * k - yy) / (26 * k), 0, 1) * np.clip((np.hypot(xx - back, yy - (y0 + 14 * k)) - 4 * k) / (16 * k), 0, 1)
+    # and near the hip line it keeps clear of the back edge altogether: the outline there is the skirt's own, which
+    # bends; the waistband's, standing a little behind it in the bow, was a faint smear behind the seat
+    wb[..., 3] *= np.clip((np.abs(xx - back) - 12 * k * np.clip((yy - (y0 - 24 * k)) / (14 * k), 0, 1)) / (6 * k) + 1, 0, 1)
+    if (wb[..., 3] > 128).sum() < 200: return
+    SEAT[:] = [float(back + (6 * k if right else -6 * k)), float(y0)]             # where the skirt's back edge crosses the hip line
     done['waist_bow'] = Image.fromarray(wb.clip(0, 255).astype(np.uint8), 'RGBA')
-    t[..., 3] = a * np.clip((yy - (y0 - 10 * k)) / (8 * k), 0, 1); done['pelvis_bow'] = Image.fromarray(t.clip(0, 255).astype(np.uint8), 'RGBA')
+    t[..., 3] = a * np.clip((yy - (y0 - 24 * k)) / (8 * k), 0, 1); done['pelvis_bow'] = Image.fromarray(t.clip(0, 255).astype(np.uint8), 'RGBA')
 done = {}
 rank = lambda p: 3 if p == 'torso' else 2 if p == 'pelvis' else 1 if p[:4] in ('larm', 'lleg') else 0
 for p in sorted(images, key=lambda p: (rank(p), p)):       # forearms and calves after what they hang from; the body last: it takes the arms' shoulders
     im = Image.open(f'{S}/{pf}_{src.get(p, p)}.png').convert('RGBA')
     if p == 'pelvis' or p.split('_')[0] in CAPS: im = despeck(im)
     if p in CAPS: im = cap(im, p)
+    if p.startswith('uarm') and '_' not in p and 'sh' + p[-1] in RADIUS: im = smooth_outline(im, max(3.0, 0.2 * RADIUS['sh' + p[-1]]))
     if p == 'pelvis':                                  # the stubs of its ring into the thighs: a zigzag under the seat when the thighs lift
         for s_ in 'LR':
             if 'hip' + s_ in RADIUS: im = smooth_cut(im, 'hip' + s_, RADIUS['hip' + s_])
@@ -359,6 +410,26 @@ for p in sorted(images, key=lambda p: (rank(p), p)):       # forearms and calves
     done[p] = im; store(p, im)
 for q_ in ('waist_bow', 'pelvis_bow'):            # stacked: skirt, the bow's skirt, the bow's waistband
     if q_ in done: store(q_, done[q_]); images.insert(images.index('pelvis') + 1, q_)
+# Seen from behind the calves are stacked over the thighs (a heel kicked back comes toward the camera). Sitting or
+# squatting, the thighs get shorter and the calves, cut off along the thigh's lower edge, then stood in front of
+# them: shorts showed bare calves up to the seat with rags of cloth left and right of them, and background along the
+# hem. While she sits or squats a second drawing of each thigh shows instead, stacked over the calves (rive_build),
+# its outline a little smoother: squeezed to half its length, the folds of a shorts leg were teeth.
+# Under the calf the thigh carries a copy of the calf's knee (what the calf shows above its knee joint and in a disc
+# round it), hidden behind the calf at rest: the thigh ended above the knee and the calf's top lay over it, so when
+# the calf got shorter in a step (rive_build) its top drew back and the background showed across the knee.
+SIT = []
+if M['kind'] == 'b':
+    for s_ in 'LR':
+        u_, l_ = 'uleg' + s_, 'lleg' + s_
+        if u_ in done and l_ in done and images.index(l_) > images.index(u_):
+            c_ = np.array(J['kn' + s_], float); d_ = c_ - np.array(J['hip' + s_], float); d_ /= max(np.linalg.norm(d_), 1e-6)
+            T_ = np.array(done[u_]); G_ = np.array(done[l_]); yy, xx = np.mgrid[0:T_.shape[0], 0:T_.shape[1]]
+            r_ = RADIUS.get('kn' + s_) or 0.5 * (G_[int(c_[1]) + 4, :, 3] > 128).sum()
+            want = ndimage.binary_erosion(G_[..., 3] > 200, iterations=2) & (T_[..., 3] < 250) & \
+                   (((xx - c_[0]) * d_[0] + (yy - c_[1]) * d_[1] <= 0) | (np.hypot(xx - c_[0], yy - c_[1]) < 0.9 * r_))
+            if want.any(): T_[want] = G_[want]; T_[want, 3] = 255; done[u_] = Image.fromarray(T_, 'RGBA'); store(u_, done[u_])
+            done[u_ + '_sit'] = smooth_outline(done[u_], 2.0 * k); store(u_ + '_sit', done[u_ + '_sit']); images.insert(images.index('pelvis'), u_ + '_sit'); SIT.append(u_ + '_sit')
 anims = {}
 gaits = [g for g in ('walk', 'run') if os.path.exists(f'{S}/{pf}_anim_{g}.json')]
 for name, mode in [('idle', 'idle')] + [(g, g) for g in gaits] + [(a['name'], a['mode']) for a in M['actions']]:
@@ -373,11 +444,23 @@ for q in M.get('seqs', []):
     # swaps: [drawing, first frame it shows, frame it goes again or None]
     sw = q.get('swaps') or ([[q.get('hand', 'handR'), q['swapFrom']]] if 'swapFrom' in q else [])
     anims[q['name']] = {'dt': A['dt'], 'frames': F, 'loop': bool(q.get('loop')), 'swaps': [[f'{h}_pick', f0, None] for h, f0 in sw if f'{h}_pick' in images]}
-    # the bow's skirt and waistband, from just after it begins until she stands upright again
-    if q['name'] == 'pickup' and 'waist_bow' in done: anims['pickup']['swaps'] += [[b_, 3, len(F) - 3] for b_ in ('pelvis_bow', 'waist_bow')]
+    # The bow's skirt and waistband: [drawing, shown from, until, the resting skirt hidden from, until]. They come
+    # in with the motion itself and the skirt's own picture stays under them until the motion has blended in (and
+    # is back before they go): swapped at one frame inside that blend, both were half transparent for a few frames
+    # and the legs showed through the skirt.
+    if q['name'] == 'pickup' and 'pelvis_bow' in done: anims['pickup']['swaps'] += [[b_, 0, len(F) - 3, 9, len(F) - 9] for b_ in ('pelvis_bow', 'waist_bow') if b_ in done]
+    # The thighs' second drawings (seen from behind, above): on with the motion, the resting drawing hidden once it has
+    # blended in; held states show them throughout
+    n_ = len(F) + 1
+    anims[q['name']]['swaps'] += [[u_, 0, n_, 0 if q.get('loop') else 9, n_] for u_ in SIT]
 if 'pickup' in anims:
     p = anims['pickup']; n = len(p['frames'])
-    anims['putdown'] = {'dt': p['dt'], 'frames': p['frames'][::-1], 'loop': False, 'swaps': [[h, 0 if f1 is None else n - f1, n - f0] for h, f0, f1 in p['swaps']]}
+    anims['putdown'] = {'dt': p['dt'], 'frames': p['frames'][::-1], 'loop': False,
+                        'swaps': [[h, 0 if f1 is None else n - f1, n - f0] + [n - x for x in b[::-1]] for h, f0, f1, *b in p['swaps'] if h not in SIT]}
+    anims['putdown']['swaps'] += [[u_, 0, n + 1, 0, n - 9] for u_ in SIT]         # back to the resting drawing before the motion blends out
+if 'standup' in anims:
+    for w_ in anims['standup']['swaps']:
+        if w_[0] in SIT: w_[3:] = [0, len(anims['standup']['frames']) - 9]
 # the artboard's height in metres (cast.js orthoCam: the figure's top times 1.18); older renders lack it in the rig
 TOP = {'C01': 1.1042, 'C02': 1.245, 'C03': 1.0921, 'C04': 1.1999, 'A01': 1.4931, 'A02': 1.8065, 'A03': 1.6743, 'A04': 1.4598, 'A05': 1.8649, 'A06': 1.6545}
 metres = rig.get('metres') or TOP[M['id']] * 1.18

@@ -23,6 +23,7 @@ const log = (s) => { document.getElementById('log').textContent = s; };
 const rive = await RiveCanvas({ locateFile: () => 'https://cdn.jsdelivr.net/npm/@rive-app/canvas-advanced@2.49.0/rive.wasm' });
 const SUF = { '3q': '', front: '-front', back: '-back' };
 const open = {};
+const tick = () => new Promise((r) => { const c = new MessageChannel(); c.port1.onmessage = () => r(); c.port2.postMessage(0); });
 async function load(id, view) {
   const key = id + ' ' + view; if (open[key]) return open[key];
   const buf = await (await fetch(`../models/cast/2d/${id.toLowerCase()}${SUF[view]}.riv?r=${Date.now()}`, { cache: 'no-store' })).arrayBuffer();
@@ -46,7 +47,7 @@ async function cellsOf(id, view, steps, { zoom = 1, cx = 0.5, cy = 0.5, cw = 384
     const tx = cw / 2 - cx * W * s, ty = ch / 2 - cy * H * s;
     renderer.clear(); renderer.save(); renderer.align(rive.Fit.fill, rive.Alignment.topLeft, { minX: tx, minY: ty, maxX: tx + W * s, maxY: ty + H * s }, ab.bounds); ab.draw(renderer); renderer.restore(); renderer.flush && renderer.flush();
     rive.resolveAnimationFrame && rive.resolveAnimationFrame();
-    await new Promise((r) => requestAnimationFrame(r));
+    await tick();                                                        // (not requestAnimationFrame: a hidden or background tab gets none)
     const c = document.createElement('canvas'); c.width = cw; c.height = ch; const g = c.getContext('2d'); g.fillStyle = bg; g.fillRect(0, 0, cw, ch); g.drawImage(cv, 0, 0);
     if (label) { g.font = '13px system-ui'; g.fillStyle = 'rgba(243,233,216,.8)'; g.fillRect(0, 0, g.measureText(label).width + 12, 20); g.fillStyle = '#3a1c0c'; g.fillText(label, 6, 15); } cells.push(c);
   };
@@ -90,8 +91,9 @@ window.__all = async (id, view) => {
   if (view === '3q') st.push(['set', 'talking', false], ...MOTIONS.left);
   return window.__sheet(`fr_${id.toLowerCase()}_${view}`, id, view, st, { zoom: 1.15, cy: 0.52, cw: 300, ch: 470, cols: 16 });
 };
-// the review of a set of characters: one row each, per view three sheets (the clap close up, picking up and putting
-// down, everything else), saved as <tag>_clap_<view>.jpg and so on
+// the review of a set of characters: one row each, per view three sheets (the clap, picking up and putting down,
+// everything else), saved as <tag>_clap_<view>.jpg and so on. The clap's cells are wide enough for both elbows: in
+// narrower ones the arms were cut off at the cell's edge and the background beside the body read as a broken arm.
 const REVIEW = {
   clap: [['trig', 'clap'], ['run', 4], ['shots', 9, 5, 'clap'], ['run', 110], ['shot', 'after']],
   pick: [['set', 'holding', true], ['shots', 8, 15, 'pick up'], ['run', 40], ['shot', 'holding'], ['set', 'holding', false], ['shots', 4, 24, 'put down']],
@@ -101,7 +103,7 @@ const REVIEW = {
     ['set', 'sitting', false], ['run', 45], ['shot', 'stand up']],
 };
 window.__reviewRows = (tag, ids, views = ['3q', 'front', 'back'], kinds = ['clap', 'pick', 'rest']) => window.__job(views.flatMap((v) => kinds.map((kd) => ['__rows', `${tag}_${kd}_${v}`, ids, v, REVIEW[kd],
-  kd === 'clap' ? { zoom: 1.7, cx: v === '3q' ? 0.57 : 0.5, cy: 0.37, cw: 250, ch: 290 } : { zoom: 0.86, cx: v === '3q' ? 0.53 : 0.5, cy: 0.52, cw: kd === 'pick' ? 196 : 166, ch: 420 }])));
+  kd === 'clap' ? { zoom: 1.35, cx: v === '3q' ? 0.54 : 0.5, cy: 0.42, cw: 250, ch: 280 } : { zoom: 0.86, cx: v === '3q' ? 0.53 : 0.5, cy: 0.52, cw: kd === 'pick' ? 196 : 166, ch: 420 }])));
 // the cast sheet of one view (tools/liv3d/preview/cast/rive2d-cast-<view>.jpg): every character in every state
 const NAMES = { C01: 'Liv', C02: 'Village boy', C03: 'Blonde girl', C04: 'Ginger boy', A01: 'Grandfather', A02: 'Craftsman', A03: 'Young woman', A04: 'Housekeeper', A05: 'Scholar', A06: 'Lady' };
 window.__castSheet = async (view, ids = Object.keys(NAMES)) => {
