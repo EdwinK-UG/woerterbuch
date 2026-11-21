@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Liv 2.5D: the rig's geometry, checked before it is built in Rive</title>
+<style> html, body { margin: 0; background: #f3e9d8; font: 13px system-ui, sans-serif; } canvas { display: block; } </style>
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+</script>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script type="module">
+// Draws the prepared pieces (tools/liv3d/models/liv25d/work) as depth-displaced pictures turned by the same formulas
+// the Rive rig uses, with every vertex at its true depth: the best the rig can look. __strip(name, turns, tilt) saves
+// a row of these above the same turns rendered from the 3D model (l25_ref_*.png).
+import * as THREE from 'three';
+const D = '../models/liv25d/', J = await (await fetch(D + 'work/liv25d.json?' + Date.now())).json();
+const W = J.W, H = J.H, rad = Math.PI / 180;
+const canvas = document.getElementById('c');
+const R = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, preserveDrawingBuffer: true });
+R.setPixelRatio(1); R.setSize(W, H, false); R.setClearColor(0xf3e9d8, 1);
+const scene = new THREE.Scene(), cam = new THREE.OrthographicCamera(0, W, 0, -H, -10, 10);
+const Ps = J.joints.spine, Ph = J.joints.head;
+// Artboard position of a point of a piece at a turn and tilt (each -1..1). The point is given as the piece's capture
+// shows it (x, y, depth z; pixels; the capture made at turn `at` with the head joint at `hd`).
+export function warp(group, x, y, z, turn, tilt, at = 0, hd = Ph) {
+  const tb = turn * J.body * rad, th = turn * J.turn * rad, ti = tilt * J.tilt * rad, t1 = at * J.turn * rad;
+  if (group === 'body') return [Ps[0] + (x - Ps[0]) * Math.cos(tb) + (z - Ps[2]) * Math.sin(tb), y];
+  const phx = Ps[0] + (Ph[0] - Ps[0]) * Math.cos(tb) + (Ph[2] - Ps[2]) * Math.sin(tb);
+  const cx = x - hd[0], cy = y - hd[1], cz = z - hd[2];                                     // from the head joint, as captured
+  const dx = cx * Math.cos(t1) - cz * Math.sin(t1), dz = cx * Math.sin(t1) + cz * Math.cos(t1), dy = cy;   // and with the head straight
+  return [phx + dx * Math.cos(th) + (-dy * Math.sin(ti) + dz * Math.cos(ti)) * Math.sin(th), Ph[1] + dy * Math.cos(ti) + dz * Math.sin(ti)];
+}
+// how much of a capture's pieces shows at a turn: all of it up to half way to the next capture; the one further
+// from the middle comes in over it just before, and it goes just after
+let BAND = J.band; const STEP = J.step, cl = (v) => Math.max(0, Math.min(1, v)); window.__band = (b) => { BAND = b; };
+export function shows(at, turn) {
+  const g = Math.sign(at), u = g ? turn * g : Math.abs(turn), a = Math.abs(at);       // u: the turn toward this capture's side
+  return Math.min(a ? cl((u - (a - STEP / 2) + BAND) / BAND) : 1, a < 0.999 ? cl((a + STEP / 2 + BAND - u) / BAND) : 1);
+}
+export const held = (at, turn) => turn;
+const tl = new THREE.TextureLoader(), parts = [];
+const ORDER = ['hairB', 'body', 'face', 'hairF'].flatMap((b) => J.order.filter((n) => n.endsWith('_' + b)).sort((x, y) => Math.abs(J.pieces[x].at) - Math.abs(J.pieces[y].at)));
+for (const [i, name] of ORDER.entries()) {
+  const p = J.pieces[name], g = p.grid, ny = g.z.length - 1, nx = g.z[0].length - 1;
+  const geo = new THREE.PlaneGeometry(1, 1, nx, ny), tex = await tl.loadAsync(D + 'work/' + name + '.png?' + Date.now()); tex.colorSpace = THREE.SRGBColorSpace;
+  const uv = geo.attributes.uv; for (let r = 0; r <= ny; r++) for (let c = 0; c <= nx; c++) uv.setXY(r * (nx + 1) + c, c * g.step / p.w, 1 - r * g.step / p.h);
+  const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthTest: false })); m.renderOrder = i; m.frustumCulled = false; scene.add(m);
+  parts.push({ name, p, g, nx, ny, m });
+}
+function pose(turn, tilt, hair = turn) {
+  for (const { p, g, nx, ny, m } of parts) {
+    const pos = m.geometry.attributes.position, t = p.group === 'hair' ? hair : turn;
+    m.material.opacity = p.group === 'body' ? 1 : shows(p.at, t); m.visible = m.material.opacity > 0;
+    for (let r = 0; r <= ny; r++) for (let c = 0; c <= nx; c++) {
+      const [x, y] = warp(p.group === 'body' ? 'body' : 'head', p.x + c * g.step, p.y + r * g.step, g.z[r][c], p.group === 'body' ? t : held(p.at, t), tilt, p.at, p.head);
+      pos.setXYZ(r * (nx + 1) + c, x, -y, 0);
+    }
+    pos.needsUpdate = true;
+  }
+  R.render(scene, cam);
+}
+window.__pose = pose;
+const img = (src) => new Promise((r) => { const i = new Image(); i.onload = () => r(i); i.onerror = () => r(null); i.src = src; });
+window.__strip = async (name, turns = [-1, -0.5, 0, 0.5, 1], tilt = 0, s = 0.5) => {
+  const o = document.createElement('canvas'); o.width = W * s * turns.length; o.height = H * s * 2; const g = o.getContext('2d'); g.fillStyle = '#f3e9d8'; g.fillRect(0, 0, o.width, o.height);
+  for (const [i, t] of turns.entries()) {
+    pose(t, tilt); g.drawImage(canvas, i * W * s, 0, W * s, H * s);
+    const ref = await img(`${D}src/l25_ref_${t}_${tilt}.png?` + Date.now()); if (ref) g.drawImage(ref, i * W * s, H * s, W * s, H * s); else { pose(t, tilt); g.globalAlpha = 1; g.drawImage(canvas, W * 0.2, H * 0.08, W * 0.6, H * 0.5, i * W * s, H * s, W * s, H * s * 0.83); }
+    g.fillStyle = '#3a1c0c'; g.font = '14px system-ui'; g.fillText(`turn ${t} tilt ${tilt}: 2.5D geometry above, 3D below`, i * W * s + 8, 18);
+  }
+  const blob = await new Promise((r) => o.toBlob(r, 'image/jpeg', 0.9)); await fetch('/save?name=' + name + '.jpg', { method: 'POST', body: blob }); return name;
+};
+pose(0, 0); window.__ready = true;
+</script>
+</body>
+</html>

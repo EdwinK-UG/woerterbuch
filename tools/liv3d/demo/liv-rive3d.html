@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Liv 3D inside Rive</title>
+<style>
+  :root { --bg: #f3e9d8; --ink: #3a1c0c; --panel: #fffaf0; --line: #c9b18f; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.45 system-ui, sans-serif; }
+  main { max-width: 760px; margin: 0 auto; padding: 14px 16px 30px; }
+  h1 { font-size: 20px; margin: 4px 0 6px; }
+  canvas { display: block; width: 100%; max-width: 520px; aspect-ratio: 1; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
+  .box { margin: 12px 0; padding: 10px 12px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
+  table { border-collapse: collapse; } td, th { padding: 3px 14px 3px 0; text-align: left; vertical-align: top; } th { font-weight: 600; }
+</style>
+</head>
+<body>
+<main>
+<h1>Liv 3D inside Rive</h1>
+<div class="box" id="status">Looking for the file…</div>
+<canvas id="c" width="1040" height="1040"></canvas>
+<div class="box">
+  <table>
+    <tr><th></th><th>file</th><th>player</th><th>ready after</th></tr>
+    <tr><td>3D Liv in Rive (this page)</td><td id="size">not built</td><td>@rive-app/webgl2 2.42 or later with enableGPUCanvas (experimental)</td><td id="time">–</td></tr>
+    <tr><td>3D Liv, three.js</td><td>2.6 MB (VRM)</td><td>three.js + three-vrm, about 0.26 MB compressed</td><td>about 0.9 s</td></tr>
+    <tr><td>2D Liv, one view</td><td>337 KB</td><td>Rive runtime, about 0.85 MB compressed</td><td>about 0.2–0.5 s</td></tr>
+  </table>
+</div>
+</main>
+<script type="module">
+// Liv 3D inside Rive · test page (docs/liv-rive-25d-3d.md, part B). The file it would play does not exist yet: a
+// script that draws (a Node script) cannot be put on an artboard, and a binary asset cannot be added, through the
+// editor's local endpoint; both need the editor's own window. When tools/liv3d/models/liv25d/liv-rive3d.riv is
+// there, this page plays it with the GPU Canvas switched on and measures it.
+const $ = (id) => document.getElementById(id), SRC = new URLSearchParams(location.search).get('src') || '../models/liv25d/liv-rive3d.riv';
+const head = await fetch(SRC, { method: 'HEAD' }).catch(() => null);
+if (!head || !head.ok) {
+  $('status').innerHTML = 'Not built. <b>' + SRC + '</b> does not exist. Rive can do it (scripts read binary assets with <code>context:blob(name)</code>, ' +
+    'draw 3D with <code>context:gpuCanvas</code> and WGSL shaders, and @rive-app/webgl2 plays that from 2.42.0 with <code>enableGPUCanvas: true</code>), ' +
+    'but the two steps that put it into a file need the editor’s window: placing the script on an artboard and adding the mesh as a binary asset. See docs/liv-rive-25d-3d.md.';
+} else {
+  const t0 = performance.now(), rive = await import('https://cdn.jsdelivr.net/npm/@rive-app/webgl2@2.54.0/+esm'), t1 = performance.now();
+  $('size').textContent = Math.round((+head.headers.get('content-length') || 0) / 1024) + ' KB';
+  const r = new rive.Rive({ src: SRC, canvas: $('c'), autoplay: true, autoBind: true, enableGPUCanvas: true, stateMachines: 'State Machine 1',
+    onLoad: () => { r.resizeDrawingSurfaceToCanvas(); $('status').textContent = 'Playing ' + SRC; $('time').textContent = ((performance.now() - t1) / 1000).toFixed(2) + ' s after the runtime (' + ((t1 - t0) / 1000).toFixed(2) + ' s)'; },
+    onLoadError: (e) => { $('status').textContent = 'The file did not load: ' + (e && e.data || e); } });
+  window.__rive = r;
+}
+</script>
+</body>
+</html>

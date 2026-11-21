@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Liv 2.5D (Rive)</title>
+<style>
+  :root { --bg: #f3e9d8; --ink: #3a1c0c; --panel: #fffaf0; --line: #c9b18f; --on: #d9622b; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.4 system-ui, sans-serif; }
+  main { max-width: 1040px; margin: 0 auto; padding: 14px 16px 30px; }
+  h1 { font-size: 20px; margin: 4px 0 2px; } p { margin: 4px 0 10px; }
+  .stage { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  figure { margin: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+  figcaption { padding: 6px 10px; font-size: 13px; border-top: 1px solid var(--line); }
+  canvas, #ref { display: block; width: 100%; aspect-ratio: 900 / 1100; background: var(--bg); object-fit: contain; }
+  .row { display: flex; flex-wrap: wrap; gap: 14px 22px; align-items: center; margin: 12px 0; padding: 10px 12px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
+  label { display: inline-flex; align-items: center; gap: 6px; } input[type=range] { width: 220px; accent-color: var(--on); }
+  table { border-collapse: collapse; } td, th { padding: 3px 12px 3px 0; text-align: left; font-variant-numeric: tabular-nums; } th { font-weight: 600; }
+  @media (max-width: 700px) { .stage { grid-template-columns: 1fr; } input[type=range] { width: 150px; } }
+</style>
+</head>
+<body>
+<main>
+<h1>Liv 2.5D in Rive</h1>
+<p>One .riv file. Her head and upper body turn smoothly from side to side and nod; the hair follows a moment late. The
+   picture on the right is the 3D model rendered at the nearest of 41 turns, to compare.</p>
+<div class="stage">
+  <figure><canvas id="c" width="900" height="1100"></canvas><figcaption>2.5D, Rive runtime <span id="st">loading…</span></figcaption></figure>
+  <figure><img id="ref" alt="The 3D model at the same turn"><figcaption>3D model, rendered beforehand <span id="rt"></span></figcaption></figure>
+</div>
+<div class="row">
+  <label>turn <input id="turn" type="range" min="-1" max="1" step="0.005" value="0"> <output id="turnV">0.00</output></label>
+  <label>tilt <input id="tilt" type="range" min="-1" max="1" step="0.01" value="0"> <output id="tiltV">0.00</output></label>
+  <label><input id="follow" type="checkbox"> follow the pointer</label>
+  <label><input id="lag" type="checkbox" checked> hair lags</label>
+  <label>face <select id="face"><option>happy</option><option>smile</option><option>laugh</option><option>surprised</option><option>sad</option></select></label>
+  <label><input id="talk" type="checkbox"> talking</label>
+</div>
+<div class="row">
+  <table>
+    <tr><th></th><th>file</th><th>player</th><th>ready after</th></tr>
+    <tr><td>2.5D Liv (this page)</td><td id="size">…</td><td>Rive runtime, about 0.85 MB compressed (shared)</td><td id="time">…</td></tr>
+    <tr><td>2D Liv, one fixed view</td><td>337 KB (three views 1.0 MB)</td><td>the same runtime</td><td>about 0.2–0.5 s</td></tr>
+    <tr><td>3D Liv</td><td>2.6 MB (VRM)</td><td>three.js + three-vrm, about 0.26 MB compressed</td><td>about 0.9 s</td></tr>
+  </table>
+</div>
+</main>
+<script type="module">
+// Liv 2.5D · test page (docs/liv-rive-25d-3d.md). The file's animations Turn, HairTurn and Tilt are not played: the
+// page sets their time from the turn and tilt values (Turn/HairTurn: (turn + 1) * 4 s; Tilt: (tilt + 1) * 2 s); the
+// state machine runs breathing, blinking and the faces. __frames(name, turns, tilt) saves chosen turns above the
+// 3D model's through the shot server.
+import RiveCanvas from 'https://cdn.jsdelivr.net/npm/@rive-app/canvas-advanced@2.54.0/canvas_advanced.mjs';
+const $ = (id) => document.getElementById(id), qs = new URLSearchParams(location.search);
+const SRC = qs.get('src') || '../models/liv25d/liv25d.riv', REF = '../models/liv25d/ref/';
+const t0 = performance.now();
+const rive = await RiveCanvas({ locateFile: () => 'https://cdn.jsdelivr.net/npm/@rive-app/canvas-advanced@2.54.0/rive.wasm' });
+const t1 = performance.now();
+const buf = await (await fetch(SRC + '?r=' + Date.now(), { cache: 'no-store' })).arrayBuffer();
+const file = await rive.load(new Uint8Array(buf));
+const ab = file.artboardByName('Liv25D') || file.defaultArtboard(), sm = new rive.StateMachineInstance(ab.stateMachineByName('Character'), ab);
+const vm = file.defaultArtboardViewModel(ab), vi = vm.defaultInstance ? vm.defaultInstance() : vm.instance();
+ab.bindViewModelInstance(vi); sm.bindViewModelInstance(vi);
+// The export drops the animations' names (Optimization: Full), so they are found by their place: the build makes Turn,
+// HairTurn (both 240 frames) and Tilt (120 frames) first, in that order.
+const all = Array.from({ length: ab.animationCount() }, (_, i) => ab.animationByIndex(i)), named = (n) => all.find((a) => a.name === n);
+const long = all.filter((a) => a.duration === 240), pick = { Turn: named('Turn') || long[0], HairTurn: named('HairTurn') || long[1], Tilt: named('Tilt') || all.find((a) => a.duration === 120) };
+const A = Object.fromEntries(Object.entries(pick).map(([n, a]) => [n, new rive.LinearAnimationInstance(a, ab)]));
+const canvas = $('c'), renderer = rive.makeRenderer(canvas);
+const S = { turn: 0, tilt: 0, hair: 0, want: { turn: 0, tilt: 0 } };
+function frame(dt) {
+  sm.advance(dt);
+  A.Turn.time = (S.turn + 1) * 4; A.Turn.apply(1); A.HairTurn.time = (S.hair + 1) * 4; A.HairTurn.apply(1); A.Tilt.time = (S.tilt + 1) * 2; A.Tilt.apply(1);
+  ab.advance(dt);
+  renderer.clear(); renderer.save(); renderer.align(rive.Fit.contain, rive.Alignment.center, { minX: 0, minY: 0, maxX: canvas.width, maxY: canvas.height }, ab.bounds); ab.draw(renderer); renderer.restore();
+  renderer.flush && renderer.flush();
+}
+let refName = '';
+function showRef() {
+  const t = Math.round(S.turn * 20) / 20, ti = Math.abs(S.tilt) > 0.5 && [-1, -0.5, 0, 0.5, 1].includes(t) ? Math.sign(S.tilt) : 0, n = `l25_ref_${t}_${ti}.webp`;
+  if (n !== refName) { refName = n; $('ref').src = REF + n; $('rt').textContent = `(turn ${t.toFixed(2)}${ti ? ', tilt ' + ti : ''})`; }
+}
+let last = performance.now(), first = true;
+function loop(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  // the sliders are followed quickly, the pointer a little softer; the hair a moment behind either
+  const k = 1 - Math.exp(-dt * ($('follow').checked ? 9 : 30)); S.turn += (S.want.turn - S.turn) * k; S.tilt += (S.want.tilt - S.tilt) * k;
+  S.hair = $('lag').checked ? S.hair + (S.turn - S.hair) * (1 - Math.exp(-dt * 11)) : S.turn;
+  frame(dt); showRef(); $('turnV').textContent = S.turn.toFixed(2); $('tiltV').textContent = S.tilt.toFixed(2);
+  if (first) { first = false; $('st').textContent = ''; $('time').textContent = `${((performance.now() - t1) / 1000).toFixed(2)} s after the runtime (${((t1 - t0) / 1000).toFixed(2)} s) was there; first load also shows Rive's splash`; }
+  rive.requestAnimationFrame(loop);
+}
+$('size').textContent = `${Math.round(buf.byteLength / 1024)} KB`;
+$('turn').oninput = (e) => { S.want.turn = +e.target.value; }; $('tilt').oninput = (e) => { S.want.tilt = +e.target.value; };
+$('face').onchange = (e) => { vi.enum('face').value = e.target.value; }; $('talk').onchange = (e) => { vi.boolean('talking').value = e.target.checked; };
+addEventListener('pointermove', (e) => {
+  if (!$('follow').checked) return; const r = canvas.getBoundingClientRect();
+  S.want.turn = Math.max(-1, Math.min(1, (e.clientX - (r.left + r.width / 2)) / (r.width * 0.9))); S.want.tilt = Math.max(-1, Math.min(1, (e.clientY - (r.top + r.height * 0.4)) / (r.height * 0.6)));
+  $('turn').value = S.want.turn; $('tilt').value = S.want.tilt;
+});
+// checking: exact poses, no clock
+const tick = () => new Promise((r) => { const c = new MessageChannel(); c.port1.onmessage = () => r(); c.port2.postMessage(0); });
+const img = (src) => new Promise((r) => { const i = new Image(); i.onload = () => r(i); i.onerror = () => r(null); i.src = src; });
+window.__pose = async (turn, tilt = 0, hair = turn, steps = 1) => { S.turn = S.want.turn = turn; S.tilt = S.want.tilt = tilt; S.hair = hair; for (let i = 0; i < steps; i++) frame(1 / 60); rive.resolveAnimationFrame && rive.resolveAnimationFrame(); await tick(); };
+window.__frames = async (name, turns = [-1, -0.5, 0, 0.5, 1], tilt = 0, { s = 0.5, zoom = 1, cx = 0.5, cy = 0.35, ref = true, face = null, hair = null } = {}) => {
+  window.__hold = true; if (face) { vi.enum('face').value = face; for (let i = 0; i < 20; i++) await __pose(S.turn, S.tilt, S.hair); }   // (one drawn frame at a time: the renderer draws when the frame is resolved)
+  const W = 900 * s, H = 1100 * s, o = document.createElement('canvas'); o.width = W * turns.length; o.height = H * (ref ? 2 : 1); const g = o.getContext('2d'); g.fillStyle = '#f3e9d8'; g.fillRect(0, 0, o.width, o.height);
+  const put = (im, i, row) => { g.save(); g.beginPath(); g.rect(i * W, row * H, W, H); g.clip(); g.drawImage(im, i * W + W / 2 - cx * W * zoom, row * H + H / 2 - cy * H * zoom, W * zoom, H * zoom); g.restore(); };
+  for (const [i, t] of turns.entries()) {
+    await __pose(t, tilt, hair === null ? t : t + hair); put(canvas, i, 0);
+    if (ref) { const r = await img(`${REF}l25_ref_${t}_${tilt}.webp`); if (r) put(r, i, 1); }
+    g.fillStyle = '#3a1c0c'; g.font = '13px system-ui'; g.fillText(`turn ${t}${tilt ? ' tilt ' + tilt : ''}${face ? ' ' + face : ''}`, i * W + 6, 15);
+  }
+  const blob = await new Promise((r) => o.toBlob(r, 'image/jpeg', 0.9)); await fetch('/save?name=' + name + '.jpg', { method: 'POST', body: blob }); window.__hold = false; return name;
+};
+// a short clip: n frames of her looking from side to side and nodding, as the page would play them (hair lagging),
+// posted one by one as <name>_000.jpg ...
+window.__clip = async (name, n = 150, s = 0.5) => {
+  window.__hold = true; const o = document.createElement('canvas'); o.width = 900 * s; o.height = 1100 * s; const g = o.getContext('2d'); let hair = 0;
+  for (let i = 0; i < n; i++) {
+    const u = i / n, turn = Math.sin(u * Math.PI * 2) * (0.5 - 0.5 * Math.cos(Math.min(1, u * 4) * Math.PI)), tilt = 0.6 * Math.sin(u * Math.PI * 4 + 0.6) * Math.min(1, u * 3);
+    hair += (turn - hair) * (1 - Math.exp(-(1 / 30) * 11)); S.turn = S.want.turn = turn; S.tilt = S.want.tilt = tilt; S.hair = hair; frame(1 / 30);
+    rive.resolveAnimationFrame && rive.resolveAnimationFrame(); await tick();
+    g.fillStyle = '#f3e9d8'; g.fillRect(0, 0, o.width, o.height); g.drawImage(canvas, 0, 0, o.width, o.height);
+    await fetch(`/save?name=${name}_${String(i).padStart(3, '0')}.jpg`, { method: 'POST', body: await new Promise((r) => o.toBlob(r, 'image/jpeg', 0.88)) });
+  }
+  window.__hold = false; return n;
+};
+await new Promise((r) => setTimeout(r, 600));          // the pictures decode after the file has loaded
+window.__ready = true; rive.requestAnimationFrame((t) => { last = t; loop(t); });
+</script>
+</body>
+</html>

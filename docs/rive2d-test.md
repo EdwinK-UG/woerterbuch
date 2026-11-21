@@ -276,10 +276,11 @@ another file and shows the splash for that file. With a paid Rive plan the expor
 
 - The Rive splash on the free plan (above).
 - Not tested in a native app, and on a phone only as the web page in a phone-sized browser window.
-- No in-between angles. Turning round in the three-quarter view is in the file: `facingLeft` blends the mirror over
-  0.2 s, so the figure narrows to its middle and opens facing the other way. Changing between three-quarter, front and
-  back means changing file; the park page turns the figure there the way 2D animation does (the old view narrows to
-  its edge and the new one opens from it, 0.2 s), and an app has to do the same.
+- No in-between angles (a head and upper body that turn smoothly were tried separately: `docs/liv-rive-25d-3d.md`).
+  Turning round in the three-quarter view is in the file: `facingLeft` blends the mirror over 0.2 s, so the figure
+  narrows to its middle and opens facing the other way. Changing between three-quarter, front and back means changing
+  file; the park page turns the figure there the way 2D animation does (the old view narrows to its edge and the new
+  one opens from it, 0.2 s), and an app has to do the same.
 - Joints are cut-out joints. They are round and closed, but a sharply bent elbow or knee shows the sleeve's or
   trouser's end as an edge, and a limb pointing straight at the camera is a squeezed side view, not a view along it
   (except where it is drawn in the pose: the clap's forearms, the holding forearm from the front). Running, seen

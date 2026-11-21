@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Liv 2.5D: pieces and depth from the 3D model</title>
+<style>
+  html, body { margin: 0; background: #f3e9d8; color: #3a1c0c; font: 13px/1.4 system-ui, sans-serif; }
+  canvas { display: block; background: repeating-conic-gradient(#e9dcc6 0 25%, #f3e9d8 0 50%) 0 0 / 24px 24px; }
+  #log { position: fixed; left: 8px; bottom: 8px; font: 12px ui-monospace, monospace; white-space: pre; }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
+  "@pixiv/three-vrm": "https://cdn.jsdelivr.net/npm/@pixiv/three-vrm@3.0.0/lib/three-vrm.module.min.js"
+} }
+</script>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="log">loading…</div>
+<script type="module" src="./liv25d-export.js"></script>
+</body>
+</html>
