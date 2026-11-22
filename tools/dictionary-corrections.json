@@ -5,5 +5,13 @@
     "syllables": "Haus·halts·jahr",
     "source": "https://www.duden.de/rechtschreibung/Haushaltsjahr",
     "note": "Correct the extracted headword and syllables; preserve the existing definition."
+  },
+  {
+    "lemma": "à",
+    "oldLemma": "ä",
+    "syllables": "à",
+    "headOnly": true,
+    "source": "https://www.duden.de/rechtschreibung/a_je_zu",
+    "note": "The preposition 'zum Preis von je' is à (grave accent), as its own example sentence shows; the extracted headword was ä."
   }
 ]

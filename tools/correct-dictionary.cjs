@@ -22,8 +22,11 @@ for (const fix of corrections) {
     } else {
       row[0] = full[0] = fix.lemma; row[1] = full[1] = fix.syllables;
       core.a[fix.oldLemma] = legacy.a[fix.oldLemma] = fix.lemma;
-      definitions[i][0] = definitions[i][0].replaceAll(fix.oldLemma, fix.lemma);
-      full[4] = full[4].replaceAll(fix.oldLemma, fix.lemma);
+      // headOnly: the old lemma is also an ordinary string in the text (e.g. "ä" in "Präposition"),
+      // so only the bold headword is replaced.
+      const swap = text => fix.headOnly ? text.replace("<b>" + fix.oldLemma + "</b>", "<b>" + fix.lemma + "</b>") : text.replaceAll(fix.oldLemma, fix.lemma);
+      definitions[i][0] = swap(definitions[i][0]);
+      full[4] = swap(full[4]);
     }
   }
   if (fix.before) {
