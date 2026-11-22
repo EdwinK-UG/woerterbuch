@@ -411,13 +411,13 @@ kbd{font:600 .66rem Inter,system-ui,sans-serif;padding:.1rem .35rem;border-radiu
 
 <script src="config.js?v=a958ffb84f29"></script>
 <script src="js/email-verification.js?v=dc82e0086602"></script>
-<script src="js/pages.js?v=6ce2364e41e8"></script>
+<script src="js/pages.js?v=5332979f2b1c"></script>
 <script src="js/course-counts.js?v=62cb83e2a6b4"></script>
 <script src="js/study-sync.js?v=9de759f82df1"></script>
 <script src="js/game-i18n.js?v=9cb89f5a1bfd"></script>
 <script src="js/game-messages.js?v=f0e0633452ab"></script>
 <script src="js/render-safety.js?v=cbceea56a80a"></script>
-<script src="js/dictionary-english.js?v=422aef8ffb62" data-curated="content/dictionary-english.json?v=422a7563148c"></script>
+<script src="js/dictionary-english.js?v=2cd9abb8ed63" data-curated="content/dictionary-english.json?v=422a7563148c" data-shards="content/english/{xx}.json?v=1497a4840e8b"></script>
 <script src="js/site-design.js?v=3b981b6c88ad"></script>
 <script id="data" type="application/octet-stream" data-src="core.bin?v=2a6842e1378a" data-defs="defs.bin?v=e5dfed095d11"></script>
 <script>
@@ -503,6 +503,9 @@ async function downloadDictionary(button){
     await navigator.serviceWorker.ready;
     const data=document.getElementById('data').dataset,cache=await caches.open('wb-data');
     for(const url of [data.src,data.defs])if(!await cache.match(url))await cache.add(url);
+    // The pre-translated English goes along, so English works offline too (256 small files).
+    const english=window.DictionaryEnglish?.shardURLs?.()||[];
+    for(let k=0;k<english.length;k+=16)await Promise.all(english.slice(k,k+16).map(async url=>{if(!await cache.match(url)){const r=await fetch(url);if(r.ok)await cache.put(url,r)}}));
     button.textContent=KONTO.T('Dictionary saved on this device','Wörterbuch auf diesem Gerät gespeichert');
   }catch{button.disabled=false;toast(KONTO.T('Download failed. Please try again online.','Download fehlgeschlagen. Bitte online erneut versuchen.'))}
 }

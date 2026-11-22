@@ -166,7 +166,7 @@ test("the homepage live-class link opens the class catalogue without loading the
     await s.close();
   }
 });
-test('English meanings follow their senses, examples stay folded and the German-only choice persists', async () => {
+test('English meanings follow their senses, examples show by default and both choices persist', async () => {
   const s = await site('#/w/lernen');
   try {
     await until(()=>s.document.querySelector('.english-gloss')?.textContent);
@@ -176,7 +176,11 @@ test('English meanings follow their senses, examples stay folded and the German-
     assert.ok(Object.keys(s.window.localStorage).some(key=>key.startsWith('gd_en_')));
     assert.ok(meanings.some(line=>line.textContent==='to study; to revise (for an exam or for school)'));
     const examples = [...s.document.querySelectorAll('.english-example')];
+    await until(()=>examples[0].dataset.ready);
+    assert.equal(examples[0].hidden,false);
+    s.document.querySelector('.english-examples-toggle').click();
     assert.ok(examples.every(line=>line.hidden));
+    assert.equal(s.window.localStorage.getItem('gd_english_examples'),'off');
     s.document.querySelector('.english-examples-toggle').click();
     assert.equal(examples[0].hidden,false);
     assert.equal(examples[0].textContent,"I've been learning German at the adult education centre for two years.");
@@ -201,7 +205,7 @@ test('generated translations render as text and a failed request can be retried'
     failing=false; s.document.querySelector('.english-retry').click();
     await until(()=>s.document.querySelector('.english-gloss')?.textContent.includes('garden; park'));
     assert.equal(s.document.querySelector('.english-gloss img'),null);
-    assert.match(s.document.querySelector('.english-status').textContent,/Machine translated/);
+    assert.doesNotMatch(s.document.querySelector('.english-status').textContent,/Machine translated|Maschinell/);
     assert.deepEqual(s.errors,[]);
   } finally {await s.close();}
 });

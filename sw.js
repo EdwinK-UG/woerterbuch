@@ -72,6 +72,22 @@ self.addEventListener('fetch', e => {
     return;
   }
 
+  // Pre-translated English (content/english/xx.json?v=…): kept like the dictionary data, one copy per file.
+  if (/\/content\/english\/[0-9a-f]{2}\.json$/.test(u.pathname)) {
+    e.respondWith(caches.open(DATA).then(async c => {
+      const hit = await c.match(req);
+      if (hit) return hit;
+      const r = await fetch(req);
+      if (r.ok) {
+        await c.put(req, r.clone());
+        const path = new URL(req.url).pathname;
+        (await c.keys()).forEach(k => { if (new URL(k.url).pathname === path && k.url !== req.url) c.delete(k); });
+      }
+      return r;
+    }).catch(() => fetch(req)));
+    return;
+  }
+
   if (/\/(?:konto\.js|js\/[^/]+\.js|content\/dictionary-english\.json|grammatik\/[^/]+\.js|icon-[^/]+\.png|favicon\.ico)$/.test(u.pathname)) {
     e.respondWith((async()=>{
       const cache=await caches.open(SHELL),hit=await cache.match(req);

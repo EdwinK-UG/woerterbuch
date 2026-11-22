@@ -43,6 +43,13 @@ for (const file of ["core.bin", "defs.bin"]) {
   index = index.replace(new RegExp(file.replace(".", "\\.") + "\\?v=[a-zA-Z0-9]+", "g"),
     file + "?v=" + hash(fs.readFileSync(path.join(root, file))));
 }
+// Pre-translated English: one version for all 256 files, from their combined contents.
+{
+  const dir = path.join(root, "content/english");
+  const shards = fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => /^[0-9a-f]{2}\.json$/.test(f)).sort() : [];
+  const combined = hash(shards.map((f) => f + hash(fs.readFileSync(path.join(dir, f)))).join(""));
+  index = index.replace(/content\/english\/\{xx\}\.json\?v=[a-zA-Z0-9]+/g, "content/english/{xx}.json?v=" + combined);
+}
 for (const file of files) {
   const escaped = file.replace(/[.*+?^$\{\}()|[\]\\]/g, "\\$&");
   index = index.replace(

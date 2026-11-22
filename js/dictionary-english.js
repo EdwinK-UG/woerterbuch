@@ -39,12 +39,27 @@
   globalThis.DictionaryEnglish = api;
   if (typeof document === 'undefined') return;
   const curatedURL = document.currentScript?.dataset.curated || 'content/dictionary-english.json';
+  // Pre-translated English, split by the first two hex digits of the source fingerprint
+  // (content/english/00.json … ff.json). Entries missing there still use the Worker.
+  const shardURL = document.currentScript?.dataset.shards || '';
+  const shards = new Map();
+  async function pretranslated(hash) {
+    if (!shardURL) return null;
+    const id = hash.slice(0, 2);
+    if (!shards.has(id)) shards.set(id, fetch(shardURL.replace('{xx}', id)).then(r => r.ok ? r.json() : null).catch(() => null));
+    const data = await shards.get(id);
+    if (!data) { shards.delete(id); return null; }
+    return Array.isArray(data[hash]) ? data[hash] : null;
+  }
+  api.shardURLs = () => shardURL ? Array.from({length:256}, (_, n) => shardURL.replace('{xx}', n.toString(16).padStart(2, '0'))) : [];
 
   const jobs = new Map(), batches = new Map();
   let seeds;
   const tr = (en, de) => globalThis.KONTO?.T(en, de) || en;
   const BATCH = 10;
   const preference = () => { try { return localStorage.getItem('gd_english') !== 'off'; } catch { return true; } };
+  // Example sentences are translated too, so show them unless the learner turned them off.
+  const examplePreference = () => { try { return localStorage.getItem('gd_english_examples') !== 'off'; } catch { return true; } };
   const stored = key => { try { return JSON.parse(localStorage.getItem('gd_en_'+key) || 'null'); } catch { return null; } };
   function save(key, value) {
     try {
@@ -59,6 +74,8 @@
     if (!seeds) seeds = fetch(curatedURL).then(r => r.ok ? r.json() : {}).catch(() => ({}));
     const seed = (await seeds)[hash];
     if (seed) { const result = {version:1,reviewed:true,items:seed.slice(batch*BATCH,(batch+1)*BATCH)}; batches.set(key, result); save(key, result); return result; }
+    const pre = await pretranslated(hash);
+    if (pre) { const result = {version:1,reviewed:false,items:pre.slice(batch*BATCH,(batch+1)*BATCH)}; batches.set(key, result); return result; }
     if (local?.version === 1 && Array.isArray(local.items)) { batches.set(key, local); return local; }
     const jobKey = key+':'+generate;
     if (jobs.has(jobKey)) return jobs.get(jobKey);
@@ -94,7 +111,7 @@
         const item=result.items.find(x=>x.key===key), target=container.querySelector(selector);
         if(item&&target&&typeof item.en==='string'){target.textContent=item.en;target.hidden=false;}
       }
-      if(status)status.textContent=result.reviewed?'':tr('Machine translated','Maschinell übersetzt');
+      if(status)status.textContent='';
     } catch(error) {
       if(current()&&status)status.textContent=error.status===429?tr('Daily English limit reached','Englisch-Tageslimit erreicht'):tr('English unavailable right now','Englisch gerade nicht verfügbar');
     }
@@ -107,7 +124,7 @@
     const toolbar = document.createElement('div'); toolbar.className = 'english-toolbar'; toolbar.lang = document.documentElement.lang;
     const toggle = document.createElement('button'); toggle.type = 'button'; toggle.className = 'english-toggle';
     toggle.textContent = tr('English translations', 'Englische Übersetzungen'); toggle.setAttribute('aria-pressed', String(preference()));
-    const exampleToggle = document.createElement('button'); exampleToggle.type = 'button'; exampleToggle.className = 'english-toggle english-examples-toggle'; exampleToggle.setAttribute('aria-pressed','false');
+    const exampleToggle = document.createElement('button'); exampleToggle.type = 'button'; exampleToggle.className = 'english-toggle english-examples-toggle'; exampleToggle.setAttribute('aria-pressed',String(examplePreference()));
     exampleToggle.textContent = tr('Example translations', 'Beispiele übersetzen');
     const note = document.createElement('span'); note.className = 'english-status'; note.setAttribute('role','status');
     toolbar.append(toggle, exampleToggle, note); root.querySelector('.def').before(toolbar);
@@ -123,7 +140,7 @@
         example.append(text); targets.set(key,text);
       });
     });
-    let hash, enabled = preference(), showExamples = false, observer;
+    let hash, enabled = preference(), showExamples = examplePreference(), observer;
     exampleToggle.hidden = !items.some(x => x.kind === 'example');
     const apply = result => {
       for (const item of result.items) {
@@ -133,7 +150,7 @@
         if (target.classList.contains('english-gloss')) target.hidden = !enabled;
         else target.hidden = !enabled || !showExamples;
       }
-      note.textContent = result.reviewed ? '' : tr('Machine translated', 'Maschinell übersetzt');
+      note.textContent = '';
     };
     async function load(batch, generate, target) {
       if (!hash || !root.isConnected) return;
@@ -158,6 +175,7 @@
     };
     exampleToggle.onclick = () => {
       showExamples = !showExamples; exampleToggle.setAttribute('aria-pressed', String(showExamples));
+      try { localStorage.setItem('gd_english_examples', showExamples ? 'on' : 'off'); } catch {}
       root.querySelectorAll('.english-example').forEach(line => line.hidden = !enabled || !showExamples || !line.dataset.ready);
       observe();
     };
