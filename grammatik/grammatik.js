@@ -1247,9 +1247,9 @@ const WERKSTATT = {
     btn: ['dorf', 'users', 'Im Dorf'], card: ['Im Dorf: ich, du, Sie …', 'Liv und ihre Nachbarn stellen sich vor – mit Ton. Danach fragt Liv dich.', [['dorf', 'Animation starten', 'play']]] },
   // the shared animation stage (grammatik/buehne/, docs/buehne.md): lines, boards and recordings come through the
   // chapter's private film-audio route, like Im Dorf
-  5: { klammer: ['grammatik/klammer/index.html?v=3', 'Die Klammer-Werkstatt – Modalverben'], inline: true, audio: true, hero: true,
+  5: { klammer: ['grammatik/klammer/index.html?v=4', 'Die Klammer-Werkstatt – Modalverben'], inline: true, audio: true, hero: true,
     btn: ['klammer', 'hammer', 'Klammer-Werkstatt'], card: ['Die Klammer-Werkstatt', 'Meister Anton zeigt mit Liv und Lena, wie die Satzklammer funktioniert – mit Ton und Bildern. Danach baust du selbst Sätze.', [['klammer', 'Animation starten', 'play']]] },
-  17: { jagd: ['grammatik/jagd/index.html?v=3', 'Wer jagt wen? – Akkusativ'], inline: true, audio: true, hero: true,
+  17: { jagd: ['grammatik/jagd/index.html?v=4', 'Wer jagt wen? – Akkusativ'], inline: true, audio: true, hero: true,
     btn: ['jagd', 'users', 'Wer jagt wen?'], card: ['Wer jagt wen?', 'Max, ein Hund und ein Ball zeigen den Akkusativ – mit Ton. Danach lässt du die Tiere spielen: Sie machen genau, was dein Satz sagt.', [['jagd', 'Animation starten', 'play']]] },
   57: { liv: ['grammatik/liv/werkstatt/index.html?v=1', 'Trennbar-Werkstatt mit Liv'], '3d': ['grammatik/werkstatt/index.html?v=3', 'Trennbar-Werkstatt 3D'],
     btn: ['liv', 'hammer', 'Werkstatt mit Liv'], card: ['Die Säge zeigt es', 'Trennbare Verben lassen sich zersägen, untrennbare nicht. Sieh Liv zu oder säge selbst – mit Ton.', [['liv', 'Werkstatt mit Liv', 'hammer'], ['3d', '3D-Werkstatt']]] },
@@ -1283,6 +1283,11 @@ function openInline(n, w) {
 // A scene marked hero is the chapter's main picture: it loads at the top of the page, under a slim title, and fills
 // the rest of the screen (no scrolling needed to see it whole on a phone). The rest of the chapter follows below.
 const heroOf = c => !!(WERKSTATT[c.n] && WERKSTATT[c.n].hero && !c.vocab);
+function topBar() {         // the bottom of the site's header when it stays on screen (sticky or fixed)
+  let el = document.elementFromPoint(innerWidth / 2, 2), b = 0;
+  while (el && el !== document.body) { const st = getComputedStyle(el); if (st.position === 'fixed' || st.position === 'sticky') { const r = el.getBoundingClientRect(); if (r.top < innerHeight / 3) b = Math.max(b, r.bottom); } el = el.parentElement; }
+  return Math.max(0, Math.min(b, innerHeight / 3));
+}
 function bottomBar() {      // the height of a bar fixed at the bottom of the screen (the phone's Home/Search/Games)
   let el = document.elementFromPoint(innerWidth / 2, innerHeight - 4);
   while (el && el !== document.body) { const st = getComputedStyle(el); if (st.position === 'fixed' || st.position === 'sticky') { const r = el.getBoundingClientRect(); return r.top > innerHeight / 2 ? innerHeight - r.top : 0; } el = el.parentElement; }
@@ -1295,7 +1300,7 @@ function sceneFrameMessages(n, f, onClose) {   // the protocol of a scene frame:
     if (d.type === 'werkstatt-ready') { const audio = await Promise.race([filmAudio(n), new Promise(r => setTimeout(() => r(null), 6000))]); f.contentWindow?.postMessage({ type: 'werkstatt-audio', audio }, location.origin); }
     else if (d.type === 'werkstatt-max') { f.classList.toggle('werk-max', !!d.on); document.documentElement.style.overflow = d.on ? 'hidden' : ''; }
     else if (d.type === 'werkstatt-height' && d.h > 100 && !f.dataset.hero) f.style.height = Math.min(4000, Math.ceil(d.h)) + 'px';
-    else if (d.type === 'werkstatt-need' && f.dataset.hero) { f.dataset.need = String(Math.min(1400, Math.ceil(+d.h || 0))); f.dispatchEvent(new Event('need')); }
+    else if (d.type === 'werkstatt-focus' && f.dataset.hero) { const r = f.getBoundingClientRect(), top = topBar(), room = innerHeight - bottomBar(); if (r.top < top + 2 || r.bottom > room + 2) scrollBy({ top: r.top - top - 6, behavior: 'smooth' }); }
     else if (d.type === 'werkstatt-close' && onClose) { removeEventListener('message', onMsg); onClose(); }
   };
   addEventListener('message', onMsg);
@@ -1307,10 +1312,9 @@ function mountHero(c) {
   const host = document.querySelector(`[data-werk-hero="${c.n}"]`); if (!host) return;
   const W = WERKSTATT[c.n], w = W[W.btn[0]];
   const f = document.createElement('iframe'); f.title = w[1]; f.src = w[0] + '&hero=1'; f.allow = 'autoplay; fullscreen'; f.dataset.hero = '1'; f.className = 'gr-sceneframe';
-  // as tall as the screen allows below the title (the page opens at the top), between 380 and 920 px
-  // (taller when the scene asks for room for its practice: the page scrolls then, the picture is not squeezed)
-  const size = () => { if (f.classList.contains('werk-max')) return; const top = Math.max(0, host.getBoundingClientRect().top + scrollY); f.style.height = Math.round(Math.max(380, +f.dataset.need || 0, Math.min(920, innerHeight - top - bottomBar() - 10))) + 'px'; };
-  host.append(f); size(); requestAnimationFrame(size); f.addEventListener('need', size);
+  // as tall as the screen under the site's header (the film or the practice scrolls it into view), 300 to 920 px
+  const size = () => { if (f.classList.contains('werk-max')) return; f.style.height = Math.round(Math.max(300, Math.min(920, innerHeight - topBar() - bottomBar() - 12))) + 'px'; };
+  host.append(f); size(); requestAnimationFrame(size);
   const off = sceneFrameMessages(c.n, f); addEventListener('resize', size);
   heroCleanup = () => { off(); removeEventListener('resize', size); };
 }

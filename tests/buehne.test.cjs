@@ -52,13 +52,16 @@ test('every stage and scene module parses as a JavaScript module', () => {
   } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
 });
 
-test('the panel under the picture never squeezes its parts (they would overlap); a hero frame grows for the practice', () => {
+test('the practice stays on one screen with the picture: beside it when wide, compact under it when tall', () => {
   const css = fs.readFileSync(path.join(__dirname, '..', 'grammatik', 'buehne', 'stage.css'), 'utf8');
-  assert.match(css, /#panel > \* \{ flex-shrink: 0; \}/);
+  assert.match(css, /#panel > \* \{ flex-shrink: 0; \}/);                       // nothing squeezed (text ran over the task)
+  assert.match(css, /@media \(min-aspect-ratio: 3\/2\) \{\s*#app:has\(#panel\.pr\) \{ flex-direction: row; \}/);
+  assert.match(css, /#panel\.pr \.sb\.tiles \{ flex-flow: row wrap;/);             // the check button beside the tiles
   const stage = fs.readFileSync(path.join(__dirname, '..', 'grammatik', 'buehne', 'stage.js'), 'utf8');
   const page = fs.readFileSync(path.join(__dirname, '..', 'grammatik', 'grammatik.js'), 'utf8');
-  assert.match(stage, /type: 'werkstatt-need'/);
-  assert.match(page, /d\.type === 'werkstatt-need' && f\.dataset\.hero/);
+  assert.match(stage, /type: 'werkstatt-focus'/);                                    // starting brings the frame into view
+  assert.match(page, /d\.type === 'werkstatt-focus' && f\.dataset\.hero/);
+  assert.doesNotMatch(page, /werkstatt-need/);                                        // the frame no longer grows past the screen
 });
 
 test('short character lines are recorded with German enforced ("Super!" was read the English way)', () => {

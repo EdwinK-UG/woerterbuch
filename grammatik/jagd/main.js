@@ -5,16 +5,16 @@
    chases – and the articles swap – Der Ball jagt den Hund: now the ball chases the dog across the meadow.
    Practice: Regie (the learner's sentence is acted out, exactly as it is grammatically), Max packs his backpack
    (den / das / die) and "Doch, ich habe …". All lesson text comes from the private .local/scenes/k17/lines.json. */
-import { createStage, $, rich, LANG, LONG, T } from '../buehne/stage.js?v=3';
-import { actsToScenes } from '../buehne/regie.js?v=3';
-import { createVillage } from '../dorf/village.js?v=3';
-import { createStrip } from '../buehne/satzband.js?v=3';
-import { createPractice } from '../buehne/practice.js?v=3';
-import { createFx } from '../buehne/tiere.js?v=3';
-import { createBlase } from '../buehne/blase.js?v=3';
-import { createTafel } from '../buehne/tafel.js?v=3';
-import { createLicht } from '../buehne/licht.js?v=3';
-import { sfx, play, unlockSfx } from '../buehne/sfx.js?v=3';
+import { createStage, $, rich, LANG, LONG, T } from '../buehne/stage.js?v=4';
+import { actsToScenes } from '../buehne/regie.js?v=4';
+import { createVillage } from '../dorf/village.js?v=4';
+import { createStrip } from '../buehne/satzband.js?v=4';
+import { createPractice } from '../buehne/practice.js?v=4';
+import { createFx } from '../buehne/tiere.js?v=4';
+import { createBlase } from '../buehne/blase.js?v=4';
+import { createTafel } from '../buehne/tafel.js?v=4';
+import { createLicht } from '../buehne/licht.js?v=4';
+import { sfx, play, unlockSfx } from '../buehne/sfx.js?v=4';
 
 const set = createVillage($('bg'), $('fg'));
 // four versions: k17 (German), k17-en (English with German examples), and their long versions k17-long, k17-en-long
@@ -32,6 +32,7 @@ const dog = fx.animal('dog', 'dog'), cat = fx.animal('cat', 'cat'), ball = fx.an
 const PETS = { dog, cat, ball };
 const HOME = { max: -2.35, dog: -0.95, ball: -0.15, cat: -3.25, pack: -1.55 };
 const BASE = -1.3;                                    // the meadow's wide shot
+const PBASE = -1.7;                                   // in the practice: the cat, Max, the dog and the ball (a narrow picture beside the exercise)
 
 /* ---------- helpers ---------- */
 const st = (id) => (B.data('strips')[id] || []).map(([w, r, key]) => ({ w, r, id: key || w }));
@@ -73,7 +74,7 @@ async function chase(chaser, chased) {
   await Promise.all([a, b, out]);
   await wait(0.25); const c = fx.moveTo(chased, Math.min(from, -0.6) - 0.6, { run: true, speed: v }); await wait(0.35); const d = fx.moveTo(chaser, Math.min(from, -0.6) - 0.6 + gap, { run: true, speed: v });
   await Promise.all([c, d]); chased.mood = chaser.mood = 'idle';
-  await cam(BASE, 1.0, 0.9);
+  await cam(S.mode === 'practice' ? PBASE : BASE, 1.0, 0.9);
 }
 const backHome = () => Promise.all(['dog', 'ball', 'cat'].filter((k) => PETS[k].show).map((k) => fx.moveTo(PETS[k], HOME[k])));
 
@@ -213,7 +214,7 @@ async function practise() {
   B.abortAll(); clearAll(); S.mode = 'practice'; B.setPaused(false); setPractice(true); PR.reset(); PR.busy(true); const gen = S.gen;
   try {
     await need('max');
-    B.cast('max'); place(A.max, HOME.max, { left: false }); home('dog', 'ball', 'cat'); await cam(BASE, 1.0, 0.8);
+    B.cast('max'); place(A.max, HOME.max, { left: false }); home('dog', 'ball', 'cat'); await cam(PBASE, 1.0, 0.8);
     let part = null; const parts = B.data('parts');
     for (const item of B.data('practice') || []) {
       B.live(gen); strip.clear(); PR.tell('', ''); flyer = null;

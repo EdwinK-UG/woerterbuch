@@ -296,3 +296,49 @@ html.shot #corner { display: none; }
 @media (max-width: 520px) { .tf-cards:has(.tf-card.ic) { grid-template-columns: repeat(2, auto); } }
 .tf-cards .tf-card:not(.ic) { width: 124px; }
 @media (max-width: 520px) { .tf-cards .tf-card:not(.ic) { width: 96px; } .tf-card figcaption { font-size: 12px; } }
+
+/* ---------- the practice: always on one screen with the picture, never squeezed (owner, 22 Nov) ----------
+   The animals and figures act out the learner's sentence, so the picture stays in view while they play: on a wide
+   screen the exercise is a column beside the picture, on a tall one a compact panel under it. Everything is sized so
+   that it fits without a scroll; the check button sits beside the tiles, the film button shares a row with the switches. */
+#panel.pr { display: grid; grid-template-columns: auto 1fr; align-content: start; gap: 6px; padding: 8px 10px; }
+#panel.pr > * { grid-column: 1 / -1; min-height: auto; }
+#panel.pr > #ctl { grid-column: 1; align-self: center; }
+#panel.pr > #meta { grid-column: 2; justify-content: flex-end; gap: 5px; min-width: 0; }
+#panel.pr #cap { padding: 4px 10px 5px; font-size: clamp(14px, 1.9vw, 16px); line-height: 1.3; }
+#panel.pr #cap .gl { margin-top: 0; }
+#panel.pr #practice { gap: 2px; }
+#panel.pr #prompt { font-size: 16px; line-height: 1.3; }
+#panel.pr #prompt small { font-size: 12.5px; line-height: 1.3; }
+#panel.pr #verdict { font-size: 14px; line-height: 1.3; }
+/* the verdict takes the place of the instructions (read by then): the panel keeps its height */
+#panel.pr #verdict:empty { display: none; }
+#panel.pr #practice:has(#verdict:not(:empty)) #prompt small { display: none; }
+#panel.pr .sb.tiles { flex-flow: row wrap; align-items: center; gap: 6px; }
+#panel.pr .sb.tiles > .sb-rail { flex: 1 0 100%; min-height: 66px; padding-top: 20px; }
+#panel.pr .sb.tiles .sb-row { padding-bottom: 8px; }
+#panel.pr .sb.tiles > .sb-bank { flex: 1 1 auto; gap: 5px; }
+#panel.pr .sb.tiles > .sb-act { flex: 0 0 auto; margin-left: auto; }
+#panel.pr .sb-tile { font-size: clamp(15px, 1.9vw, 17px); padding: 5px 10px; min-height: 36px; }
+#panel.pr .sb-check { min-height: 36px; padding: 5px 14px; }
+#panel.pr #answers button { font-size: 16px; padding: 6px 12px; min-height: 36px; }
+#panel.pr #try { min-height: 34px; padding: 0 12px; font-size: 13px; font-weight: 700; border-radius: 999px; }
+#panel.pr #meta #langsw button, #panel.pr #meta #formsw button { min-height: 32px; padding: 0 9px; font-size: 12px; }
+#panel.pr #meta #fbBtn { min-height: 32px; padding: 0 10px; }
+#panel.pr #fbBtn .t, #panel.pr #meta .meta-l { display: none; }
+/* wide (a laptop window, a tablet on its side, full screen): the exercise in a column beside the picture */
+@media (min-aspect-ratio: 3/2) {
+  #app:has(#panel.pr) { flex-direction: row; }
+  #app:has(#panel.pr) #stage { flex: 1 1 auto; min-height: 0; min-width: 0; height: 100%; }
+  #app:has(#panel.pr) #panel { flex: 0 0 clamp(300px, 46%, 470px); height: 100%; border-left: 1px solid var(--line); grid-template-rows: auto auto auto auto 1fr; }
+  #app:has(#panel.pr) #panel > #ctl, #app:has(#panel.pr) #panel > #meta { align-self: end; }
+}
+#panel.pr .sb-w.empty { min-width: 48px; }
+#panel.pr .sb.tiles .sb-row { gap: 4px; }
+#panel.pr .sb.tiles .sb-w { padding-left: .42em; padding-right: .42em; }
+#panel.pr #score { display: none; }
+/* very short (a phone on its side): the spoken caption and the general instruction give way (Max is still heard;
+   the task, the strip, the tiles and the verdict stay) */
+@media (max-height: 360px) {
+  #panel.pr #cap, #panel.pr #prompt small { display: none; }
+}

@@ -34,8 +34,9 @@ export function createStrip(root, { cases = false } = {}) {
   const rect = (el) => el.getBoundingClientRect();
   // a long sentence on a phone: the wagons shrink (down to 60 %) until the strip fits its width
   function fit() {
-    row.style.setProperty('--sbk', 1); const have = row.parentElement.clientWidth - 6, need = row.scrollWidth;
-    if (need > have) row.style.setProperty('--sbk', Math.max(0.6, (have / need) * 0.97).toFixed(3));
+    // (gaps and the wagons' least width do not shrink with the font, so a few rounds until it fits)
+    let k = 1; row.style.setProperty('--sbk', k); const have = row.parentElement.clientWidth - 6;
+    for (let i = 0; i < 4 && row.scrollWidth > have && k > 0.6; i++) { k = Math.max(0.6, k * (have / row.scrollWidth) * 0.97); row.style.setProperty('--sbk', k.toFixed(3)); }
   }
   function flip(mutate, dur = 520) {
     const before = new Map([...row.children].map((el) => [el.dataset.id, rect(el)]));
