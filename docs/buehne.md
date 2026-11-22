@@ -114,10 +114,14 @@ English word in a German one):
 ## Feedback
 
 **★ Feedback** in every pilot opens a form: stars for the German and for the English version (a version not yet
-watched in this browser is marked, with a link to it), which one helps more, *What worked well?*, *What was unclear,
-wrong, broken or missing?*, and the kind of device (phone · iOS · Safari; nothing personal). It is sent to the
-Worker (`POST /scene-feedback`, `worker/src/scene-feedback.js`) and stored in D1 (`scene_feedback`,
-`worker/migrations/0006_scene_feedback.sql`) without names, accounts or IP addresses; one visitor can send 20 a day.
+watched in this browser is marked, with a link to it), which one helps more, a box to write freely, and then one
+folding section for each part of a scene: **Understanding** (where people got lost), **Pictures & animation** (ideas
+for what to draw), **Practice** (making the exercises more fun), **Problems** and **What you liked**. Each section has
+quick-tap chips ("Too fast", "Make it a game" …) that add their phrase to its text. The kind of device is added
+(phone · iOS · Safari; nothing personal). It is sent to the Worker (`POST /scene-feedback`,
+`worker/src/scene-feedback.js`) and stored in D1 (`scene_feedback`, migrations 0006 and 0007: columns `free`,
+`understand`, `pictures`, `practice`, `bugs`, `good`) without names, accounts or IP addresses; one visitor can send
+20 a day.
 
 To read it all:
 
@@ -126,5 +130,11 @@ node tools/scene-feedback.cjs export
 ```
 
 This writes `.local/feedback/scene-feedback-<date>.json` (every entry), `.csv` (spreadsheet) and `.md` (a summary to
-read or to hand to an agent: stars per version, preferences, devices, then every text, problems first). Add
+read or to hand to an agent: stars per version, preferences, devices, then every text grouped by section). Add
 `--since 2026-11-23` for only the newest.
+
+## Announcement emails
+
+Calls to test and new-feature emails are designs in `worker/src/announce.js`, picked in the founder's email composer
+(Konto → Email users → Design) and previewed there as the real email before sending. The pilots' design is
+`pilots`; the draft and how to send it: `.local/feedback/email-draft.md`. Artwork: `tools/mail/README.md`.

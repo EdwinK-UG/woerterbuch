@@ -39,3 +39,21 @@ test('daily recipient limit is durable and the route rejects untrusted origins b
 test('mail treats user-authored message text as text, including HTML and long words',()=>{
  const c=messageContent({subject:'<img onerror=bad>',body:'<script>bad()</script>\nA & B',name:'<Learner>',org:{name:'<School>',theme:'#ffffff'}});assert.ok(!c.html.includes('<script>'));assert.ok(c.html.includes('&lt;script&gt;'));assert.ok(c.html.includes('&lt;img onerror=bad&gt;'));assert.ok(c.text.includes('<script>bad()</script>'));assert.ok(c.html.includes('white-space:pre-wrap'));
 });
+test('founder announcements use a design from the registry; teachers cannot send them and unknown designs are refused',()=>fixture(async({call,sent})=>{
+ assert.equal((await call({design:'pilots'})).status,400);assert.equal(sent.length,0);
+ assert.equal((await call({class_id:null,design:'nope'})).status,400);assert.equal((await call({class_id:null,design:'__proto__'})).status,400);
+ assert.equal((await call({class_id:null,design:'pilots',subject:'Sneak <peek>',body:'Hi <b>all</b>\n\nTwo lessons.'})).status,200);
+ const [, , to, subject, text, html]=sent[0];assert.equal(to,'real3@example.invalid');assert.equal(subject,'Sneak <peek>');
+ assert.ok(html.includes('Sneak &lt;peek&gt;')&&html.includes('Hi &lt;b&gt;all&lt;/b&gt;')&&!html.includes('<b>all</b>'));
+ assert.ok(html.includes('https://deutschklinik.com/assets/mail/brand-lockup.png')&&html.includes('https://deutschklinik.com/#/g/17')&&html.includes('Learner &lt;one&gt;'));
+ assert.ok(text.includes('https://deutschklinik.com/#/g/5')&&text.includes('Pictures & animation'));
+ assert.equal((await call({class_id:null,design:'pilots',subject:'Sneak <peek>',body:'Hi <b>all</b>\n\nTwo lessons.'})).status,200);assert.equal(sent.length,1);
+ assert.equal((await call({class_id:null,design:'news',subject:'Sneak <peek>',body:'Hi <b>all</b>\n\nTwo lessons.'})).status,409);
+}));
+test('the design list and preview are public data and an escaped render for signed-in users',()=>fixture(async({env})=>{
+ const list=await (await worker.fetch(new Request('https://worker.invalid/messages/designs',{headers:{Origin:'https://deutschklinik.com'}}),env,{})).json();
+ assert.ok(list.designs.some(d=>d.id==='pilots'&&d.subject&&d.body));
+ const r=await worker.fetch(new Request('https://worker.invalid/messages/designs',{method:'POST',headers:{Origin:'https://deutschklinik.com',Authorization:'Bearer fixture'},body:JSON.stringify({design:'pilots',subject:'<x>',body:'y'})}),env,{});
+ assert.equal(r.status,200);assert.ok((await r.json()).html.includes('&lt;x&gt;'));
+ assert.equal((await worker.fetch(new Request('https://worker.invalid/messages/designs',{method:'POST',headers:{Origin:'https://deutschklinik.com'},body:'{}'}),env,{})).status,401);
+}));

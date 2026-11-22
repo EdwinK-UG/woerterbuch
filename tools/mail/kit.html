@@ -1,0 +1,58 @@
+<!doctype html>
+<!-- The artwork of Deutschklinik's announcement emails, rendered to PNG with tools/shoot.cjs (see tools/mail/README.md).
+     Brand: the round cat logo, the wordmark "Deutsch" + "klinik" (Fraunces 700, klinik in #1f6feb), paper #f6f4ef,
+     ink #20242b, muted #6b7482, line #e7e2d7, blue #1f6feb, light blue #e9f1ff. Each part is one element with an id;
+     the images it shows are given in the address: ?a=<picture 1>&b=<picture 2>. -->
+<html lang="de"><head><meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@600;700;800&display=block" rel="stylesheet">
+<style>
+  :root { --paper: #f6f4ef; --ink: #20242b; --mut: #6b7482; --line: #e7e2d7; --blue: #1f6feb; --salt: #e9f1ff; --sun: #f2c94c; --rose: #e88fa0; }
+  body { margin: 0; padding: 24px; background: #ccc; font-family: Inter, system-ui, sans-serif; display: flex; flex-direction: column; gap: 24px; align-items: flex-start; }
+  /* the logo lockup (header of every mail) */
+  #lockup { display: inline-flex; align-items: center; gap: 12px; padding: 7px 20px 7px 7px; background: #fff; border-radius: 999px; box-shadow: inset 0 0 0 1px var(--line); }
+  html.clear body { background: transparent; }
+  #lockup img { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; }
+  #lockup span { font-family: Fraunces, serif; font-weight: 700; font-size: 26px; letter-spacing: -.01em; color: var(--ink); }
+  #lockup b { color: var(--blue); font-weight: 700; }
+  /* the sneak-peek banner */
+  #hero { position: relative; width: 512px; height: 312px; border-radius: 26px; overflow: hidden; background: linear-gradient(160deg, #fbfaf6 0%, var(--paper) 60%, #efe9dd 100%); }
+  #hero .blob { position: absolute; border-radius: 50%; }
+  #hero .b1 { width: 260px; height: 260px; left: -60px; top: -90px; background: var(--salt); }
+  #hero .b2 { width: 220px; height: 220px; right: -50px; bottom: -110px; background: #fdecc8; }
+  #hero .scr { position: absolute; width: 236px; padding: 6px; background: #fff; border-radius: 16px; box-shadow: 0 12px 28px rgba(32,36,43,.18), 0 2px 4px rgba(32,36,43,.08); }
+  #hero .scr img { display: block; width: 100%; border-radius: 11px; }
+  #hero .s1 { left: 34px; top: 66px; transform: rotate(-5deg); }
+  #hero .s2 { left: 236px; top: 98px; transform: rotate(4deg); }
+  #hero .s1::after, #hero .s2::after { content: attr(data-l); position: absolute; left: 12px; bottom: -13px; background: var(--ink); color: #fff; font-size: 11px; font-weight: 800; letter-spacing: .02em; padding: 4px 9px; border-radius: 999px; }
+  #hero .sticker { position: absolute; right: 26px; top: 22px; width: 86px; height: 86px; border-radius: 50%; background: var(--blue); color: #fff; display: grid; place-items: center; text-align: center; transform: rotate(10deg);
+                   box-shadow: 0 8px 18px rgba(31,111,235,.35); font-family: Fraunces, serif; font-weight: 700; font-size: 22px; line-height: .95; }
+  #hero .sticker small { display: block; font-family: Inter, sans-serif; font-size: 10px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; opacity: .9; margin-top: 3px; }
+  #hero .label { position: absolute; left: 26px; top: 22px; font-size: 11px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--blue); background: #fff; padding: 6px 11px; border-radius: 999px; box-shadow: 0 2px 6px rgba(32,36,43,.08); }
+  #hero .spark { position: absolute; color: var(--sun); font-size: 22px; }
+  #hero .cat { position: absolute; left: 22px; bottom: 18px; display: flex; align-items: flex-end; gap: 6px; }
+  #hero .cat img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 3px #fff, 0 4px 10px rgba(32,36,43,.2); }
+  #hero .cat span { background: #fff; color: var(--ink); font-family: Fraunces, serif; font-weight: 600; font-size: 14px; padding: 6px 10px; border-radius: 14px 14px 14px 4px; box-shadow: 0 3px 8px rgba(32,36,43,.12); margin-bottom: 16px; }
+  /* a feature picture: rounded, with a fine frame */
+  .card { width: 512px; padding: 0; border-radius: 18px; overflow: hidden; background: #fff; box-shadow: inset 0 0 0 1px var(--line); }
+  .card img { display: block; width: 100%; height: 288px; object-fit: cover; object-position: center; }
+</style></head>
+<body>
+  <div id="lockup"><img src="../../icon-180.png" alt=""><span>Deutsch<b>klinik</b></span></div>
+  <div id="hero">
+    <i class="blob b1"></i><i class="blob b2"></i>
+    <span class="label">Sneak peek</span>
+    <div class="scr s1" data-l="A1 · Kapitel 18"><img id="ha" alt=""></div>
+    <div class="scr s2" data-l="A1 · Kapitel 13"><img id="hb" alt=""></div>
+    <div class="sticker"><div>Neu!<small>New</small></div></div>
+    <span class="spark" style="left:212px;top:44px">✦</span><span class="spark" style="right:120px;top:118px;font-size:16px;color:#e88fa0">✦</span><span class="spark" style="left:470px;top:250px;font-size:14px;color:#1f6feb">✦</span>
+    <div class="cat"><img src="../../icon-180.png" alt=""><span>Probier’s aus!</span></div>
+  </div>
+  <div class="card" id="cardA"><img id="ca" alt=""></div>
+  <div class="card" id="cardB"><img id="cb" alt=""></div>
+<script>
+  const q = new URLSearchParams(location.search); if (q.has('clear')) document.documentElement.classList.add('clear');
+  for (const [id, k] of [['ha', 'a'], ['ca', 'a'], ['hb', 'b'], ['cb', 'b']]) if (q.get(k)) document.getElementById(id).src = q.get(k);
+  Promise.all([document.fonts.ready, ...[...document.images].map((i) => i.complete ? 0 : new Promise((r) => { i.onload = i.onerror = r; }))]).then(() => { window.__ready = true; });
+</script>
+</body></html>

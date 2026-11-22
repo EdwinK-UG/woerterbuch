@@ -17,3 +17,16 @@ test('sign-out stops dispatching further recipients while in-flight work finishe
  let finish;const gate=new Promise(r=>finish=r),sent=[],users=Array.from({length:5},(_,i)=>({id:id(i+2),name:'Learner '+i})),s=setup({recipients:async()=>({total:5,users}),send:async b=>{sent.push(b);await gate;return{state:'sent'};}});
  try{await tick();s.click('select-page');s.click('compose');s.q('[data-cm="subject"]').value='Hello';s.q('[data-cm="body"]').value='Message';s.click('review');s.click('send');assert.equal(sent.length,2);s.w.dispatchEvent(new s.w.Event('acct:out'));finish();await tick();await tick();assert.equal(sent.length,2);}finally{s.dom.window.close();}
 });
+test('founder can pick an announcement design: it fills the text, previews the real email in a sandbox and sends the design',async()=>{
+ const sent=[],previews=[],s=setup({designs:async()=>[{id:'pilots',label:'Pilots',subject:'Sneak peek',body:'Two lessons'}],preview:async b=>{previews.push(b);return '<p>rendered</p>';},send:async b=>{sent.push(b);return {state:'sent'};}});
+ try{await tick();s.q('.cm-person input').click();s.click('compose');await tick();await tick();
+  const pick=s.q('[data-cm="design"]');assert.ok(pick);pick.value='pilots';pick.dispatchEvent(new s.w.Event('change'));
+  assert.equal(s.q('[data-cm="subject"]').value,'Sneak peek');assert.equal(s.q('[data-cm="body"]').value,'Two lessons');
+  s.click('review');await tick();const frame=s.q('[data-cm="frame"]');assert.equal(frame.getAttribute('sandbox'),'');assert.equal(frame.srcdoc,'<p>rendered</p>');assert.equal(previews[0].design,'pilots');
+  s.click('send');await tick();await tick();assert.equal(sent.length,1);assert.equal(sent[0].design,'pilots');assert.equal(sent[0].subject,'Sneak peek');
+ }finally{s.dom.window.close();}
+});
+test('teachers never see the design picker',async()=>{
+ const s=setup({mode:'class',classId:id(8),classes:[{id:id(8),name:'A1'}],designs:async()=>[{id:'pilots',label:'P',subject:'S',body:'B'}]});
+ try{await tick();s.q('.cm-person input').click();s.click('compose');assert.equal(s.q('[data-cm="design"]'),null);}finally{s.dom.window.close();}
+});

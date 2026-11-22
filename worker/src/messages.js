@@ -1,6 +1,7 @@
 import { authenticated } from './control.js';
 import { smtpSend } from './mail-body.js';
 import { mailBrand } from './mail-brand.js';
+import { DESIGNS, announceContent, designList } from './announce.js';
 
 const uuid = x => typeof x === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(x);
 const email = x => typeof x === 'string' && /^[^\s@<>]+@[^\s@<>]+$/.test(x);
@@ -22,6 +23,8 @@ export async function sendMessage(req,env,h,send=smtpSend) {
  let b;try{b=JSON.parse(raw);}catch{return reply(400,{error:'Invalid message.'},h);}
  const subject=typeof b?.subject==='string'?b.subject.trim():'',body=typeof b?.body==='string'?b.body.trim():'';
  if(!uuid(b?.draft_id)||!uuid(b?.recipient_id)||(b.class_id!=null&&!uuid(b.class_id))||!subject||subject.length>160||/[\r\n\x00-\x1f\x7f]/.test(subject)||!body||body.length>6000||/\x00/.test(body))return reply(400,{error:'Choose a recipient, a subject (up to 160 characters) and a message (up to 6,000 characters).'},h);
+ const design=b.design==null||b.design===''||b.design==='plain'?'':b.design;
+ if(design&&(!Object.hasOwn(DESIGNS,design)||b.class_id!=null))return reply(400,{error:'Announcement designs are only for founder emails.'},h);
  if(!env.WELCOME_HOOK_SECRET||!env.SMTP_USER||!env.SMTP_PASSWORD)return reply(503,{error:'Email is not configured. Please contact support.'},h);
  let context;
  try{
@@ -31,7 +34,7 @@ export async function sendMessage(req,env,h,send=smtpSend) {
  }catch{return reply(503,{error:'Recipients could not be verified. Please try again.'},h);}
  if(context?.recipient?.id!==b.recipient_id||!email(context.recipient.email))return reply(403,{error:'This recipient is unavailable.'},h);
  const id=user.id+':'+b.draft_id+':'+b.recipient_id,now=Date.now(),day=new Date(now).toISOString().slice(0,10);
- const hash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify([b.class_id||null,subject,body])))),x=>x.toString(16).padStart(2,'0')).join('');
+ const hash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify(design?[b.class_id||null,subject,body,design]:[b.class_id||null,subject,body])))),x=>x.toString(16).padStart(2,'0')).join('');
  const old=await env.DB.prepare('SELECT state,payload_hash,updated_at FROM direct_messages WHERE id=?1').bind(id).first();
  if(old){
   if(old.payload_hash!==hash)return reply(409,{error:'This draft has already been used. Start a new email to change its text.'},h);
@@ -44,7 +47,7 @@ export async function sendMessage(req,env,h,send=smtpSend) {
  WHERE direct_messages.state='failed' AND direct_messages.payload_hash=?4 AND direct_messages.attempts<3
  AND (SELECT coalesce(sum(attempts),0) FROM direct_messages WHERE sender=?2 AND day=?3)<100 RETURNING id`).bind(id,user.id,day,hash,now).first();
  if(!claim)return reply(429,{error:'The sending limit has been reached. Please try again tomorrow or contact support.'},h);
- const brand=mailBrand(context.org||{}),content=messageContent({subject,body,name:context.recipient.name,org:context.org||{},className:context.class_name,senderName:b.class_id?context.sender_name:''});
+ const brand=mailBrand(context.org||{}),content=design?announceContent({design,subject,body,name:context.recipient.name,site:env.SITE_URL||'https://deutschklinik.com/'}):messageContent({subject,body,name:context.recipient.name,org:context.org||{},className:context.class_name,senderName:b.class_id?context.sender_name:''});
  const replyTo=b.class_id?user.email:(env.SUPPORT_EMAIL||'support@deutschklinik.com');
  try{
   await send(env.SMTP_USER.trim(),env.SMTP_PASSWORD.replace(/\s+/g,''),context.recipient.email,content.subject,content.text,content.html,'message-'+b.draft_id+'-'+b.recipient_id,env.SMTP_HOST||'smtppro.zoho.com',Number(env.SMTP_PORT||465),undefined,replyTo,{from:b.class_id?'hello@deutschklinik.com':'support@deutschklinik.com',fromName:brand.name});
@@ -55,4 +58,16 @@ export async function sendMessage(req,env,h,send=smtpSend) {
  }
  await env.DB.prepare("UPDATE direct_messages SET state='sent',updated_at=?2 WHERE id=?1").bind(id,Date.now()).run();
  return reply(200,{state:'sent'},h);
+}
+
+// The composer's design picker and its preview (founder mode). Designs hold no personal data; the preview renders
+// the founder's own subject and text into a design, escaped, for a signed-in user.
+export async function messageDesigns(req,env,h){
+ if(req.method==='GET')return reply(200,{designs:designList()},h);
+ if(req.method!=='POST')return reply(405,{error:'GET or POST'},h);
+ const user=await authenticated(req,env,h);if(user instanceof Response)return user;
+ let b;try{b=JSON.parse((await req.text()).slice(0,16000));}catch{return reply(400,{error:'Invalid preview.'},h);}
+ if(!Object.hasOwn(DESIGNS,b?.design))return reply(400,{error:'Unknown design.'},h);
+ const c=announceContent({design:b.design,subject:String(b.subject||'').slice(0,160),body:String(b.body||'').slice(0,6000),name:String(b.name||'').slice(0,120),site:env.SITE_URL||'https://deutschklinik.com/'});
+ return reply(200,{html:c.html},h);
 }

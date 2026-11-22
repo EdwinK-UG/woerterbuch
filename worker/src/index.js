@@ -4,7 +4,7 @@ import { sendCourseInvitation, previewCourseInvitation, courseInvitationStatus, 
 import { english } from "./english.js";
 import { filmAudioList, filmAudioClip } from "./film-audio.js";
 import { sceneFeedback } from "./scene-feedback.js";
-import { sendMessage } from "./messages.js";
+import { sendMessage, messageDesigns } from "./messages.js";
 import {
   authenticated,
   reserve,
@@ -120,6 +120,10 @@ async function route(req, env, ctx) {
   if(url.pathname==="/site-invitation"){
     if(!ALLOWED.includes(origin))return json({error:"Forbidden"},403,h);
     return sendSiteInvitation(req,env,h);
+  }
+  if(url.pathname==='/messages/designs'){
+    if(!ALLOWED.includes(origin))return json({error:'Forbidden'},403,h);
+    return messageDesigns(req,env,h);
   }
   if(url.pathname==='/messages/send'){
     if(!ALLOWED.includes(origin))return json({error:'Forbidden'},403,h);

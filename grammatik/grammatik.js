@@ -1233,7 +1233,8 @@ async function loadChapter(n) {
 }
 /* "Video ansehen": the lesson as a narrated animation (grammatik/watch.js, loaded on first use) */
 const WATCH_LEVELS = ['A1', 'B2', 'C1'];   // levels that have the video button; widen when more lessons are checked
-const hasWatch = c => !c.vocab && !isRef(c.n) && WATCH_LEVELS.includes(c.level) && !!c.understand?.length && (c.level === 'A1' || !!c.film);
+// not in the pilot chapters: their animation is the chapter's film (the owner's choice)
+const hasWatch = c => !c.vocab && !isRef(c.n) && WATCH_LEVELS.includes(c.level) && !!c.understand?.length && (c.level === 'A1' || !!c.film) && !(WERKSTATT[c.n] && WERKSTATT[c.n].hero);
 const watchBtn = c => (hasWatch(c) ? `<button class="btn sm" data-watch="${c.n}">${icn('play')} ${c.film ? 'Animation ansehen' : 'Video ansehen'}</button>` : '');
 /* Kapitel 57: the saw workshop, with Liv in 2D (grammatik/liv/werkstatt/) and in 3D (grammatik/werkstatt/). Neither holds
    lesson text: when a workshop is ready it asks this page, which loaded the chapter with the learner's enrolment, for the
@@ -1264,7 +1265,7 @@ function warmLiv() {
   setTimeout(() => (window.requestIdleCallback ? requestIdleCallback(go, { timeout: 4000 }) : go()), 2500);
 }
 const livVersion = () => (/[?&]v=([a-z0-9]{1,20})/.exec(window.DK_LIV_MODEL || '') || [])[1];
-const werkBtn = c => { const w = WERKSTATT[c.n]; if (w && w.vrm && !c.vocab) warmLiv(); return w && !c.vocab ? `<button class="btn sm" data-werkstatt="${c.n}" data-werk="${w.btn[0]}">${icn(w.btn[1])} ${w.btn[2]}</button>` : ''; };
+const werkBtn = c => { const w = WERKSTATT[c.n]; if (w && w.vrm && !c.vocab) warmLiv(); return w && !c.vocab && !w.hero ? `<button class="btn sm" data-werkstatt="${c.n}" data-werk="${w.btn[0]}">${icn(w.btn[1])} ${w.btn[2]}</button>` : ''; };
 const werkCard = c => { const w = WERKSTATT[c.n]; return w && !c.vocab ? `<div class="gr-cream" style="display:flex;gap:.8rem;align-items:center;flex-wrap:wrap;margin:0 0 1rem"><div style="flex:1;min-width:14rem"><b>${w.card[0]}</b><br><span style="color:var(--mut)">${w.card[1]}</span></div>${w.card[2].map(([k, t, i]) => `<button class="btn sm" data-werkstatt="${c.n}" data-werk="${k}">${i ? icn(i) + ' ' : ''}${t}</button>`).join('')}</div>${w.inline ? `<div data-werk-host="${c.n}"></div>` : ''}` : ''; };
 function werkTexts(c) {
   const out = [], walk = x => { if (out.length > 4000) return; if (typeof x === 'string') out.push(x); else if (Array.isArray(x)) x.forEach(walk); else if (x && typeof x === 'object') Object.values(x).forEach(walk); };

@@ -853,6 +853,8 @@ function messageSheet(mode,classId=null) {
   CourseMail.open({actor,mode,classId,classes,brand:mode==='class'?D.org?.name:'Deutschklinik',senderName:mode==='class'?P?.display_name:'Deutschklinik',t:T,sheet:openSheet,toast:toastM,
     active:()=>me()?.id===actor,
     recipients:body=>rpc('message_recipients',body),
+    designs:mode==='founder'?async()=>(await (await fetch(APP_CONFIG.workerUrl+'/messages/designs',{signal:AbortSignal.timeout(15000)})).json()).designs:null,
+    preview:async body=>{const r=await fetch(APP_CONFIG.workerUrl+'/messages/designs',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+await A().token()},body:JSON.stringify(body),signal:AbortSignal.timeout(15000)});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||T('The preview could not be loaded.','Die Vorschau konnte nicht geladen werden.'));return d.html;},
     send:async body=>{
       const response=await fetch(APP_CONFIG.workerUrl+'/messages/send',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+await A().token()},body:JSON.stringify(body),signal:AbortSignal.timeout(30000)});
       const data=await response.json().catch(()=>({}));

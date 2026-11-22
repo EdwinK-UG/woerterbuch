@@ -16,6 +16,8 @@ export const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
    English with the German examples woven in, characters speak German with an English gloss under their line, and the
    buttons and feedback are English. */
 export const LANG = qs.get('lang') === 'en' ? 'en' : 'de';
+// short (default) or long: the detailed version with an introduction; VERSION is what the feedback form rates
+export const LONG = qs.get('form') === 'long', VERSION = LANG + (LONG ? '-long' : '');
 const UI = {
   de: { narrator: 'Erzählerin', you: 'Du', watch: '▶ Zuschauen', play: 'Mitspielen', film: 'Film ansehen', check: 'Prüfen', right: 'Richtig!', notyet: 'Noch nicht.',
     nofit: 'Passt nicht.', rightis: 'Richtig ist:', almost: 'Fast.', oops: 'Hoppla!', wait: '…', done: 'Fertig! Beim ersten Versuch richtig: {s} von {n}.', turn: 'Jetzt du! Tipp auf „Mitspielen“.',
@@ -253,7 +255,7 @@ export function createStage({ set, priv, tag, keys, onCast = () => {}, z0 = 2.75
   function markDot() { [...$('dots').children].forEach((b, i) => { b.classList.toggle('on', i === S.scene); b.classList.toggle('done', i < S.scene); }); }
   const resetHooks = [];
   // the versions this visitor has watched (or practised) a part of, per scene, in this browser only
-  function seen() { try { const k = 'buehne-seen-' + tag.replace(/-en$/, ''), v = new Set(JSON.parse(localStorage.getItem(k) || '[]')); v.add(LANG); localStorage.setItem(k, JSON.stringify([...v])); } catch (e) { /* private mode */ } }
+  function seen() { try { const k = 'buehne-seen-' + tag.replace(/(-en)?(-long)?$/, ''), v = new Set(JSON.parse(localStorage.getItem(k) || '[]')); v.add(VERSION); localStorage.setItem(k, JSON.stringify([...v])); } catch (e) { /* private mode */ } }
   async function watch(from = 0) {
     abortAll(); for (const h of resetHooks) h('watch'); S.mode = 'watch'; setPaused(false); const gen = S.gen;
     try {
@@ -289,7 +291,7 @@ export function createStage({ set, priv, tag, keys, onCast = () => {}, z0 = 2.75
   // scenes: [{ name, run }]; practise: the practice (async); welcome: the line shown when the film ends
   // langs: ['de', 'en'] shows the switch (reloads the scene in the other language, kept in the address);
   // feedback: the scene's key, shows the feedback button (meinung.js)
-  function start({ scenes, practise, end, langs, feedback }) {
+  function start({ scenes, practise, end, langs, versions, feedback }) {
     // a slim row under the controls: the language switch (left) and the feedback button (right)
     if ((langs && langs.length > 1) || feedback) { const m = document.createElement('div'); m.id = 'meta'; $('ctl').after(m); }
     if (langs && langs.length > 1) {
@@ -299,7 +301,7 @@ export function createStage({ set, priv, tag, keys, onCast = () => {}, z0 = 2.75
       const lab = document.createElement('span'); lab.className = 'meta-l'; lab.textContent = LANG === 'en' ? 'Explanations:' : 'Erklärung:';
       $('meta').append(lab, sw);
     }
-    if (feedback) import('./meinung.js?v=1').then((m) => m.createMeinung(B, { scene: feedback, langs: langs || [LANG] }));
+    if (feedback) import('./meinung.js?v=3').then((m) => m.createMeinung(B, { scene: feedback, versions: versions || langs || [LANG] }));
     S.scenes = scenes; S.onEnd = end;
     fitStage(); new ResizeObserver(fitStage).observe($('stage'));
     document.addEventListener('visibilitychange', () => { visible = !document.hidden; });
@@ -340,6 +342,13 @@ export function createStage({ set, priv, tag, keys, onCast = () => {}, z0 = 2.75
       $('goWatch').disabled = false; $('goTry').disabled = false; $('load').textContent = '';
       const go = (fn) => { unlockAudio(); $('start').style.display = 'none'; fn(); };
       $('goWatch').onclick = () => go(() => watch(0)); $('goTry').onclick = () => go(() => practise());
+      // capture mode for pictures (tools/shoot.cjs): ?shot=<scene>&at=<line id>&after=<seconds> plays that scene
+      // silently and stops the picture that long after the line starts; window.__shot tells the tool it is ready
+      if (qs.has('shot')) {
+        S.muted = true; $('start').style.display = 'none'; document.documentElement.classList.add('shot'); const at = qs.get('at'), after = +qs.get('after') || 1;
+        sayHooks.push((who, id) => { if (id === at) wait(after).then(() => { setPaused(true); window.__shot = true; }).catch(() => {}); });
+        watch(+qs.get('shot') || 0);
+      }
       return true;
     })();
   }
