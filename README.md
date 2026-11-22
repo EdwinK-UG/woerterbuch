@@ -87,11 +87,12 @@ The function verifies the account with Supabase Auth and reads its current profi
 
 ### Open access (temporary)
 
-Since 16 November 2026 every course, lesson, film and scene is open to everyone, signed in or not. The enrolment checks are still in the code, switched off in three places. To require sign-in and enrolment again, change each line and redeploy that service:
+Since 16 November 2026 every course, lesson, film and scene is open to everyone, signed in or not. The enrolment checks are still in the code, switched off in four places. To require sign-in and enrolment again, change each line and redeploy that service:
 
 | Service | Line | Redeploy |
 | --- | --- | --- |
 | Lessons function | `const OPEN_ACCESS = true;` in `supabase/functions/lessons/index.ts` → `false` | Copy the bundle that is live (normally `.local/lesson-bundle/lessons.json`; compare its SHA-256 with the last receipt in `.local/release/`) beside `index.ts`, run `supabase functions deploy lessons --project-ref vnnhyhicppkexdibuqyu`, then delete the copy |
+| Rive pilot function | `const OPEN_ACCESS = true;` in `supabase/functions/grammar-pilots/index.ts` → `false` | Redeploy with the private pilot payload; see `docs/rive-grammar-pilots.md` |
 | Worker narration (`/film-audio`) | `export const OPEN_ACCESS = true;` in `worker/src/film-audio.js` → `false` | `cd worker && npx wrangler deploy` |
 | Site | `openAccess: true,` in `config.js` → `false` | `npm run assets`, commit and push to `main` |
 

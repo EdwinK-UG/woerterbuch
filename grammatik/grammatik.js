@@ -1237,8 +1237,10 @@ const watchBtn = c => (hasWatch(c) ? `<button class="btn sm" data-watch="${c.n}"
 const WERKSTATT = {
   // inline: opens in the page under its card (sized to fit a phone), not over the whole screen. audio: the scene's
   // lines and recordings come through the private film-audio route of the chapter (signed in, enrolled).
-  1: { dorf: ['grammatik/dorf/index.html?v=1', 'Im Dorf – Personalpronomen'], inline: true, audio: true,
-    btn: ['dorf', 'users', 'Im Dorf'], card: ['Im Dorf: ich, du, Sie …', 'Liv und ihre Nachbarn stellen sich vor – mit Ton. Danach fragt Liv dich.', [['dorf', 'Animation starten', 'play']]] },
+  1: { pilot: ['grammatik/rive-pilots/index.html?v=1#a1', 'Personalpronomen mit Liv und Kathi'], dorf: ['grammatik/dorf/index.html?v=1', 'Im Dorf – Personalpronomen'], inline: true, audio: true,
+    btn: ['pilot', 'play', 'Animation ansehen'], card: ['Wer ist gemeint?', 'Liv und Kathi im Buchladen – hör zu und übe die Personalpronomen.', [['pilot', 'Animation starten', 'play'], ['dorf', 'Im Dorf', 'users']]] },
+  54: { pilot: ['grammatik/rive-pilots/index.html?v=1#b1', 'Präteritum mit Kathi und Sepp'],
+    btn: ['pilot', 'play', 'Animation ansehen'], card: ['Die Bergwinkler Nachrichten', 'Kathi und Sepp erzählen vom Dorffest. Höre ihren Bericht und übe das Präteritum.', [['pilot', 'Animation starten', 'play']]] },
   57: { liv: ['grammatik/liv/werkstatt/index.html?v=1', 'Trennbar-Werkstatt mit Liv'], '3d': ['grammatik/werkstatt/index.html?v=3', 'Trennbar-Werkstatt 3D'],
     btn: ['liv', 'hammer', 'Werkstatt mit Liv'], card: ['Die Säge zeigt es', 'Trennbare Verben lassen sich zersägen, untrennbare nicht. Sieh Liv zu oder säge selbst – mit Ton.', [['liv', 'Werkstatt mit Liv', 'hammer'], ['3d', '3D-Werkstatt']]] },
   94: { wand: ['grammatik/zauberstab/index.html?v=2', 'Wunschzauber mit Liv'], exercises: true, vrm: true,
@@ -1277,6 +1279,7 @@ function openInline(n, w) {
 }
 function openWerkstatt(n, kind) {
   const W = WERKSTATT[n], c = cur && cur.n === n ? cur : CH[n], w = W && (Array.isArray(W[kind]) ? W[kind] : W[W.btn[0]]); if (!c || !w) return;
+  if (kind === 'pilot') { openRivePilot(n, w); return; }
   if (W.inline && openInline(n, w)) return;
   const previous = document.activeElement, scroll = document.body.style.overflow;
   const d = document.createElement('dialog'); d.setAttribute('aria-label', w[1]);
@@ -1289,6 +1292,61 @@ function openWerkstatt(n, kind) {
   addEventListener('message', onMsg); f.addEventListener('load', send);
   d.addEventListener('cancel', e => { e.preventDefault(); close(); });
   d.append(f); document.body.append(d); d.showModal(); document.body.style.overflow = 'hidden'; f.focus();
+}
+// The public frame contains only the player. Scripts and recordings come through the lesson access rule.
+let activeRivePilot = null;
+async function openRivePilot(n, w) {
+  activeRivePilot?.();
+  const epoch = lessonEpoch, user = acct(), previous = document.activeElement;
+  const dialog = document.createElement('dialog');
+  dialog.setAttribute('aria-label', w[1]);
+  dialog.style.cssText = 'position:fixed;inset:0;width:100vw;height:100dvh;max-width:none;max-height:none;margin:0;padding:0;border:0;background:#f3e9d8';
+  const closeButton = document.createElement('button'); closeButton.className = 'btn sm'; closeButton.textContent = 'Schließen';
+  closeButton.style.cssText = 'position:absolute;right:1rem;top:.5rem;z-index:10';
+  const status = document.createElement('p'); status.style.cssText = 'padding:3rem 1rem'; status.textContent = 'Animation wird geladen …';
+  const oldOverflow = document.body.style.overflow;
+  let closed = false, frame, payload;
+  const close = () => {
+    if (closed) return; closed = true;
+    removeEventListener('message', receive); removeEventListener('hashchange', close);
+    removeEventListener('acct:in', close); removeEventListener('acct:out', close);
+    frame?.remove(); payload = null; dialog.close(); dialog.remove();
+    document.body.style.overflow = oldOverflow;
+    if (previous?.isConnected) previous.focus();
+    if (activeRivePilot === close) activeRivePilot = null;
+  };
+  const current = () => !closed && epoch === lessonEpoch && acct()?.id === user?.id && allowed(n);
+  const receive = event => {
+    if (!frame || event.source !== frame.contentWindow || event.origin !== location.origin || !current()) return;
+    if (event.data?.type === 'rive-pilot-ready') frame.contentWindow.postMessage({ type: 'rive-pilot-data', payload }, location.origin);
+    else if (event.data?.type === 'rive-pilot-close') close();
+  };
+  activeRivePilot = close;
+  closeButton.addEventListener('click', close);
+  dialog.addEventListener('cancel', event => { event.preventDefault(); close(); });
+  addEventListener('hashchange', close); addEventListener('acct:in', close); addEventListener('acct:out', close);
+  addEventListener('message', receive);
+  dialog.append(closeButton, status); document.body.append(dialog); dialog.showModal(); document.body.style.overflow = 'hidden';
+  try {
+    if (!current() || (!user && !window.APP_CONFIG?.openAccess)) throw Error('Enrolment required');
+    const token = user ? await ACCT.token() : null;
+    if (!current()) return;
+    const response = await fetch(APP_CONFIG.supabaseUrl + '/functions/v1/grammar-pilots?chapter=' + n, {
+      headers: { apikey: APP_CONFIG.supabaseKey, ...(token ? { Authorization: 'Bearer ' + token } : {}) },
+      cache: 'no-store', signal: AbortSignal.timeout(30000),
+    });
+    if (!response.ok) throw Error('Pilot unavailable');
+    payload = await response.json();
+    if (!current()) return;
+    frame = document.createElement('iframe'); frame.title = w[1]; frame.src = w[0]; frame.allow = 'autoplay; fullscreen';
+    frame.style.cssText = 'display:block;width:100%;height:100%;border:0';
+    status.remove(); closeButton.hidden = true; dialog.append(frame); frame.focus();
+  } catch {
+    if (!current()) return;
+    status.textContent = 'Die Animation konnte nicht geladen werden. Bitte versuche es noch einmal. Die Erklärungen und Übungen im Kapitel kannst du weiter nutzen.';
+    const retry = document.createElement('button'); retry.className = 'btn sm'; retry.textContent = 'Erneut versuchen';
+    retry.addEventListener('click', () => { close(); openRivePilot(n, w); }); status.append(document.createElement('br'), retry);
+  }
 }
 const filmVisual = c => { const v = filmVisuals.get(c.n); return v && v.visual?.n === c.n ? { visual: v, lesson: c } : {}; };
 const filmTheme = () => ({accent:getComputedStyle(document.documentElement).getPropertyValue('--ac').trim(),brand:window.KONTO?.org()?.name || 'Deutschklinik'});
