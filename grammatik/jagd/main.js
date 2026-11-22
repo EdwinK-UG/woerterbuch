@@ -5,20 +5,20 @@
    chases – and the articles swap – Der Ball jagt den Hund: now the ball chases the dog across the meadow.
    Practice: Regie (the learner's sentence is acted out, exactly as it is grammatically), Max packs his backpack
    (den / das / die) and "Doch, ich habe …". All lesson text comes from the private .local/scenes/k17/lines.json. */
-import { createStage, $, rich, LANG, LONG, T } from '../buehne/stage.js?v=4';
-import { actsToScenes } from '../buehne/regie.js?v=4';
-import { createVillage } from '../dorf/village.js?v=4';
-import { createStrip } from '../buehne/satzband.js?v=4';
-import { createPractice } from '../buehne/practice.js?v=4';
-import { createFx } from '../buehne/tiere.js?v=4';
-import { createBlase } from '../buehne/blase.js?v=4';
-import { createTafel } from '../buehne/tafel.js?v=4';
-import { createLicht } from '../buehne/licht.js?v=4';
-import { sfx, play, unlockSfx } from '../buehne/sfx.js?v=4';
+import { createStage, $, rich, LANG, LANGS, LONG, T } from '../buehne/stage.js?v=5';
+import { actsToScenes } from '../buehne/regie.js?v=5';
+import { createVillage } from '../dorf/village.js?v=5';
+import { createStrip } from '../buehne/satzband.js?v=5';
+import { createPractice } from '../buehne/practice.js?v=5';
+import { createFx } from '../buehne/tiere.js?v=5';
+import { createBlase } from '../buehne/blase.js?v=5';
+import { createTafel } from '../buehne/tafel.js?v=5';
+import { createLicht } from '../buehne/licht.js?v=5';
+import { sfx, play, unlockSfx } from '../buehne/sfx.js?v=5';
 
 const set = createVillage($('bg'), $('fg'));
 // four versions: k17 (German), k17-en (English with German examples), and their long versions k17-long, k17-en-long
-const TAG = 'k17' + (LANG === 'en' ? '-en' : '') + (LONG ? '-long' : '');
+const TAG = 'k17' + (LANG === 'de' ? '' : '-' + LANG) + (LONG ? '-long' : '');
 const B = createStage({ set, priv: `../../.local/scenes/${TAG}/`, tag: TAG, keys: ['max'], minW: 4.3 });
 const { A, S, place, trig, face, cam, say, wait, need } = B;
 const fx = createFx(B);
@@ -245,7 +245,7 @@ async function practise() {
 
 /* ---------- start ---------- */
 $('sound').addEventListener('click', () => { sfx.muted = S.muted; });
-B.start({ scenes: LONG ? (lines) => actsToScenes(B, lines.acts, VERBS) : SCENES, practise, langs: ['de', 'en'], long: LONG_READY, feedback: 'k17', end: () => { B.caption('elisa', T('turn')); $('try').focus(); } }).then((ok) => {
+B.start({ scenes: LONG ? (lines) => actsToScenes(B, lines.acts, VERBS) : SCENES, practise, langs: LANGS, long: LONG_READY, feedback: 'k17', end: () => { B.caption('elisa', T('turn')); $('try').focus(); } }).then((ok) => {
   if (!ok) return;
   for (const id of ['goWatch', 'goTry']) $(id).addEventListener('click', unlockSfx, { capture: true });
   place(A.max, HOME.max, { left: false }); home('dog'); S.cam.x = BASE;

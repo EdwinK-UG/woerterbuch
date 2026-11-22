@@ -14,8 +14,10 @@ export const LOCAL = qs.has('local'), EMBED = window.parent !== window, TEST = q
 export const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
 /* The scene's language: German throughout (default), or ?lang=en, the bilingual version: the narrator explains in
    English with the German examples woven in, characters speak German with an English gloss under their line, and the
-   buttons and feedback are English. */
-export const LANG = qs.get('lang') === 'en' ? 'en' : 'de';
+   buttons and feedback are English.
+   ?lang=sw and ?lang=fr are built the same way, explained in Kenyan Swahili and in standard French. */
+export const LANGS = ['de', 'en', 'sw', 'fr'];
+export const LANG = LANGS.includes(qs.get('lang')) ? qs.get('lang') : 'de';
 // short (default) or long: the detailed version with an introduction; VERSION is what the feedback form rates
 export const LONG = qs.get('form') === 'long', VERSION = LANG + (LONG ? '-long' : '');
 const UI = {
@@ -25,6 +27,19 @@ const UI = {
   en: { narrator: 'Narrator', you: 'You', watch: '▶ Watch', play: 'Play along', film: 'Watch the film', check: 'Check', right: 'Correct!', notyet: 'Not yet.',
     nofit: "That doesn't fit.", rightis: 'The right answer:', almost: 'Almost.', oops: 'Oops!', wait: '…', done: 'Done! Right the first time: {s} of {n}.', turn: 'Your turn! Tap “Play along”.',
     signin: 'Sign in with your access, then the scene plays with sound.', none: 'Not available: this scene opens from the lesson.', write: 'Write …', loading: 'Loading …' },
+  sw: { narrator: 'Msimulizi', you: 'Wewe', watch: '▶ Tazama', play: 'Cheza pamoja', film: 'Tazama filamu', check: 'Kagua', right: 'Sahihi!', notyet: 'Bado.',
+    nofit: 'Haifai.', rightis: 'Jibu sahihi:', almost: 'Karibu.', oops: 'Lo!', wait: '…', done: 'Umemaliza! Sahihi mara ya kwanza: {s} kati ya {n}.', turn: 'Sasa ni zamu yako! Bonyeza “Cheza pamoja”.',
+    signin: 'Ingia kwa akaunti yako, kisha onyesho litacheza na sauti.', none: 'Haipatikani: onyesho hili linafunguliwa kutoka kwenye somo.', write: 'Andika …', loading: 'Inapakia …' },
+  fr: { narrator: 'Narratrice', you: 'Toi', watch: '▶ Regarder', play: 'Jouer', film: 'Voir le film', check: 'Vérifier', right: 'Correct\u202f!', notyet: 'Pas encore.',
+    nofit: 'Ça ne va pas.', rightis: 'La bonne réponse\u202f:', almost: 'Presque.', oops: 'Oups\u202f!', wait: '…', done: 'Terminé\u202f! Juste du premier coup\u202f: {s} sur {n}.', turn: 'À toi\u202f! Appuie sur «\u202fJouer\u202f».',
+    signin: 'Connecte-toi avec ton accès, et la scène se joue avec le son.', none: 'Non disponible\u202f: cette scène s’ouvre depuis la leçon.', write: 'Écris …', loading: 'Chargement …' },
+};
+// the switches under the film, in the language of the version being watched (button titles in the button's own language)
+const SW = {
+  de: { group: 'Erklärungen auf', label: 'Erklärung:', length: 'Länge', short: 'Kurz', long: 'Lang', tShort: 'Die kurze Version', tLong: 'Länger, mit Einführung und mehr Details', title: 'Alles auf Deutsch' },
+  en: { group: 'Explanations in', label: 'Explanations:', length: 'Length', short: 'Short', long: 'Long', tShort: 'The short version', tLong: 'Longer, with an introduction and more detail', title: 'Explanations in English, examples in German' },
+  sw: { group: 'Maelezo kwa', label: 'Maelezo:', length: 'Urefu', short: 'Fupi', long: 'Ndefu', tShort: 'Toleo fupi', tLong: 'Ndefu zaidi, na utangulizi na maelezo zaidi', title: 'Maelezo kwa Kiswahili, mifano kwa Kijerumani' },
+  fr: { group: 'Explications en', label: 'Explications\u202f:', length: 'Durée', short: 'Court', long: 'Long', tShort: 'La version courte', tLong: 'Plus long, avec une introduction et plus de détails', title: 'Explications en français, exemples en allemand' },
 };
 export const T = (k, vars = {}) => (UI[LANG][k] || UI.de[k] || k).replace(/\{(\w+)\}/g, (_, v) => vars[v] ?? '');
 // the narrator: Elisa in the German scenes, the English-speaking narrator in the bilingual ones (she has no figure)
@@ -221,7 +236,7 @@ export function createStage({ set, priv, tag, keys, onCast = () => {}, z0 = 2.75
   async function say(...args) {
     const opt = args.length && typeof args[args.length - 1] === 'object' ? args.pop() : {}, ids = args;
     const gen = S.gen, lns = ids.map((id) => [id, S.lines.lines[id]]).filter(([, l]) => l); if (!lns.length) return;
-    const [id0, l0] = lns[0]; caption(l0.who, l0.text, l0.en || (S.lines.glosses || {})[id0]); for (const h of sayHooks) h(l0.who, id0);
+    const [id0, l0] = lns[0]; caption(l0.who, l0.text, l0.gloss || l0.en || (S.lines.glosses || {})[id0]); for (const h of sayHooks) h(l0.who, id0);
     const talkers = [...new Set(lns.flatMap(([, l]) => l.who.split('+')))].map((k) => A[k]).filter(Boolean);
     const framed = opt.frame === false ? [] : (opt.frame ? opt.frame.map((k) => A[k]) : talkers).filter(inBase);
     if (S.zoom === false) { /* the camera stays; the spotlight shows who speaks */ } else if (isNarrator(l0.who)) wide(); else if (framed.length && framed.length === (opt.frame || talkers).length) closeUp(framed);
@@ -255,7 +270,7 @@ export function createStage({ set, priv, tag, keys, onCast = () => {}, z0 = 2.75
   function markDot() { [...$('dots').children].forEach((b, i) => { b.classList.toggle('on', i === S.scene); b.classList.toggle('done', i < S.scene); }); }
   const resetHooks = [];
   // the versions this visitor has watched (or practised) a part of, per scene, in this browser only
-  function seen() { try { const k = 'buehne-seen-' + tag.replace(/(-en)?(-long)?$/, ''), v = new Set(JSON.parse(localStorage.getItem(k) || '[]')); v.add(VERSION); localStorage.setItem(k, JSON.stringify([...v])); } catch (e) { /* private mode */ } }
+  function seen() { try { const k = 'buehne-seen-' + tag.replace(/(-en|-sw|-fr)?(-long)?$/, ''), v = new Set(JSON.parse(localStorage.getItem(k) || '[]')); v.add(VERSION); localStorage.setItem(k, JSON.stringify([...v])); } catch (e) { /* private mode */ } }
   async function watch(from = 0) {
     abortAll(); for (const h of resetHooks) h('watch'); S.mode = 'watch'; setPaused(false); const gen = S.gen;
     try {
@@ -296,21 +311,22 @@ export function createStage({ set, priv, tag, keys, onCast = () => {}, z0 = 2.75
     // a slim row under the controls: the language switch (left) and the feedback button (right)
     if ((langs && langs.length > 1) || long || feedback) { const m = document.createElement('div'); m.id = 'meta'; $('ctl').after(m); }
     if (langs && langs.length > 1) {
-      const sw = document.createElement('div'); sw.id = 'langsw'; sw.setAttribute('role', 'group'); sw.setAttribute('aria-label', LANG === 'en' ? 'Explanations in' : 'Erklärungen auf');
-      sw.innerHTML = langs.map((l) => `<button type="button" data-l="${l}" class="${l === LANG ? 'on' : ''}" aria-pressed="${l === LANG}" title="${l === 'en' ? 'Explanations in English, examples in German' : 'Alles auf Deutsch'}">${l.toUpperCase()}</button>`).join('');
-      sw.onclick = (e) => { const b = e.target.closest('button'); if (!b || b.dataset.l === LANG) return; stopAudio(); const u = new URL(location.href); if (b.dataset.l === 'de') u.searchParams.delete('lang'); else u.searchParams.set('lang', b.dataset.l); location.replace(u); };
-      const lab = document.createElement('span'); lab.className = 'meta-l'; lab.textContent = LANG === 'en' ? 'Explanations:' : 'Erklärung:';
+      const sw = document.createElement('div'); sw.id = 'langsw'; sw.setAttribute('role', 'group'); sw.setAttribute('aria-label', SW[LANG].group);
+      sw.innerHTML = langs.map((l) => `<button type="button" data-l="${l}" class="${l === LANG ? 'on' : ''}" aria-pressed="${l === LANG}" title="${SW[l].title}">${l.toUpperCase()}</button>`).join('');
+      sw.onclick = (e) => { const b = e.target.closest('button'); if (!b) return; if (b.dataset.l === LANG) { sw.classList.toggle('open'); return; }   // .open: a narrow practice panel shows the other languages only on request
+      stopAudio(); const u = new URL(location.href); if (b.dataset.l === 'de') u.searchParams.delete('lang'); else u.searchParams.set('lang', b.dataset.l); location.replace(u); };
+      const lab = document.createElement('span'); lab.className = 'meta-l'; lab.textContent = SW[LANG].label;
       if (long) lab.hidden = true;                    // two switches: no room for the label on a phone
       $('meta').append(lab, sw);
     }
     if (long) {
-      const fw = document.createElement('div'); fw.id = 'formsw'; fw.className = 'seg'; fw.setAttribute('role', 'group'); fw.setAttribute('aria-label', LANG === 'en' ? 'Length' : 'Länge');
-      const names = LANG === 'en' ? { short: 'Short', long: 'Long' } : { short: 'Kurz', long: 'Lang' }, now = LONG ? 'long' : 'short';
-      fw.innerHTML = ['short', 'long'].map((f) => `<button type="button" data-f="${f}" class="${f === now ? 'on' : ''}" aria-pressed="${f === now}" title="${f === 'long' ? (LANG === 'en' ? 'Longer, with an introduction and more detail' : 'Länger, mit Einführung und mehr Details') : (LANG === 'en' ? 'The short version' : 'Die kurze Version')}">${names[f]}</button>`).join('');
+      const fw = document.createElement('div'); fw.id = 'formsw'; fw.className = 'seg'; fw.setAttribute('role', 'group'); fw.setAttribute('aria-label', SW[LANG].length);
+      const names = SW[LANG], now = LONG ? 'long' : 'short';
+      fw.innerHTML = ['short', 'long'].map((f) => `<button type="button" data-f="${f}" class="${f === now ? 'on' : ''}" aria-pressed="${f === now}" title="${f === 'long' ? SW[LANG].tLong : SW[LANG].tShort}">${names[f]}</button>`).join('');
       fw.onclick = (e) => { const b = e.target.closest('button'); if (!b || b.dataset.f === now) return; stopAudio(); const u = new URL(location.href); if (b.dataset.f === 'short') u.searchParams.delete('form'); else u.searchParams.set('form', 'long'); location.replace(u); };
       $('meta').append(fw);
     }
-    if (feedback) import('./meinung.js?v=3').then((m) => m.createMeinung(B, { scene: feedback, versions: (langs || [LANG]).flatMap((l) => (long ? [l, l + '-long'] : [l])) }));
+    if (feedback) import('./meinung.js?v=4').then((m) => m.createMeinung(B, { scene: feedback, versions: (langs || [LANG]).flatMap((l) => (long ? [l, l + '-long'] : [l])) }));
     // scenes: a list, or a function that makes it from the loaded lines (scenes written as data, regie.js)
     S.scenes = typeof scenes === 'function' ? [] : scenes; S.onEnd = end;
     fitStage(); new ResizeObserver(fitStage).observe($('stage'));

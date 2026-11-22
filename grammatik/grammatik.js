@@ -1247,9 +1247,9 @@ const WERKSTATT = {
     btn: ['dorf', 'users', 'Im Dorf'], card: ['Im Dorf: ich, du, Sie …', 'Liv und ihre Nachbarn stellen sich vor – mit Ton. Danach fragt Liv dich.', [['dorf', 'Animation starten', 'play']]] },
   // the shared animation stage (grammatik/buehne/, docs/buehne.md): lines, boards and recordings come through the
   // chapter's private film-audio route, like Im Dorf
-  5: { klammer: ['grammatik/klammer/index.html?v=4', 'Die Klammer-Werkstatt – Modalverben'], inline: true, audio: true, hero: true,
+  5: { klammer: ['grammatik/klammer/index.html?v=5', 'Die Klammer-Werkstatt – Modalverben'], inline: true, audio: true, hero: true,
     btn: ['klammer', 'hammer', 'Klammer-Werkstatt'], card: ['Die Klammer-Werkstatt', 'Meister Anton zeigt mit Liv und Lena, wie die Satzklammer funktioniert – mit Ton und Bildern. Danach baust du selbst Sätze.', [['klammer', 'Animation starten', 'play']]] },
-  17: { jagd: ['grammatik/jagd/index.html?v=4', 'Wer jagt wen? – Akkusativ'], inline: true, audio: true, hero: true,
+  17: { jagd: ['grammatik/jagd/index.html?v=5', 'Wer jagt wen? – Akkusativ'], inline: true, audio: true, hero: true,
     btn: ['jagd', 'users', 'Wer jagt wen?'], card: ['Wer jagt wen?', 'Max, ein Hund und ein Ball zeigen den Akkusativ – mit Ton. Danach lässt du die Tiere spielen: Sie machen genau, was dein Satz sagt.', [['jagd', 'Animation starten', 'play']]] },
   57: { liv: ['grammatik/liv/werkstatt/index.html?v=1', 'Trennbar-Werkstatt mit Liv'], '3d': ['grammatik/werkstatt/index.html?v=3', 'Trennbar-Werkstatt 3D'],
     btn: ['liv', 'hammer', 'Werkstatt mit Liv'], card: ['Die Säge zeigt es', 'Trennbare Verben lassen sich zersägen, untrennbare nicht. Sieh Liv zu oder säge selbst – mit Ton.', [['liv', 'Werkstatt mit Liv', 'hammer'], ['3d', '3D-Werkstatt']]] },

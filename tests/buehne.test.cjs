@@ -72,3 +72,24 @@ test('short character lines are recorded with German enforced ("Super!" was read
   assert.equal(A.isShort({ who: 'narrator', text: 'Super!' }), false);
   assert.equal(A.isShort({ who: 'max+mia', text: 'Super!' }), false);
 });
+
+test('Swahili and French versions: every text in every language, German examples marked, the Swahili duet', (t) => {
+  const stage = fs.readFileSync(path.join(ROOT, 'grammatik', 'buehne', 'stage.js'), 'utf8'), meinung = fs.readFileSync(path.join(ROOT, 'grammatik', 'buehne', 'meinung.js'), 'utf8');
+  assert.match(stage, /export const LANGS = \['de', 'en', 'sw', 'fr'\]/);
+  for (const l of ['sw', 'fr']) { assert.match(stage, new RegExp(`\\n  ${l}: \\{ narrator:`)); assert.match(stage, new RegExp(`\\n  ${l}: \\{ group:`)); assert.match(meinung, new RegExp(`\\n  ${l}: \\{ btn:`)); assert.match(meinung, new RegExp(`\\n  ${l}: \\[\\['understand'`)); }
+  const keys = (src, l) => (src.match(new RegExp(`\\n  ${l}: \\{ ([^]*?)\\},\\n`)) || [, ''])[1].match(/(?:^|, |\n +)(\w+): ['"]/g).map((k) => k.replace(/[^\w]/g, '')).sort().join();
+  assert.equal(keys(stage, 'sw'), keys(stage, 'en')); assert.equal(keys(stage, 'fr'), keys(stage, 'en'));
+  const { NARRATOR } = require('../tools/split-voice.cjs');
+  assert.equal(NARRATOR.sw.de.role, 'narrator', 'Swahili: the German examples are spoken by the native German narrator');
+  assert.ok(!NARRATOR.fr.de, 'French: one voice for both languages');
+  const vs = scenes().filter((s) => /-(sw|fr)(-long)?$/.test(s));
+  if (!vs.length) { t.skip('no private Swahili/French files on this machine'); return; }
+  for (const s of vs) {
+    const d = JSON.parse(fs.readFileSync(path.join(PRIV, s, 'lines.json'), 'utf8'));
+    assert.equal(d.lang, s.split('-')[1], `${s}: lang`);
+    for (const [id, l] of Object.entries(d.lines)) {
+      if (l.who === 'narrator') for (const m of l.text.matchAll(/\{de:([^}]*)\}/g)) assert.ok(/\S+\s+\S+/.test(m[1]), `${s} ${id}: German comes as a phrase of two words or more ("${m[1]}")`);
+      else assert.ok(!l.en, `${s} ${id}: gloss in the version's language, not English`);
+    }
+  }
+});

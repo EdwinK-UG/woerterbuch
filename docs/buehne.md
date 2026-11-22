@@ -171,3 +171,47 @@ dance" against "Ich kann gut tanzen").
   tools/upload-film-audio.cjs --remote --only 5` (needs wrangler in `worker/node_modules`).
 - Local testing: the dev server in `.claude/launch.json` needs a long connection queue (`request_queue_size`), or
   Chrome's many parallel module requests get reset and the scene never starts.
+
+## Swahili and French (22 Nov 2026)
+
+Both pilots also explain in **Kenyan Swahili** (`?lang=sw`) and **standard French** (`?lang=fr`), short and long,
+with the German examples and the characters' German lines unchanged (their recordings are reused) and a gloss under
+each character line in the new language. The switch under the film reads **DE | EN | SW | FR**; in a narrow practice
+panel (a phone, or the column beside the picture) only the language in use shows, and tapping it opens the others,
+so the picture keeps its size. Buttons, feedback and practice hints are in the version's language (`UI`, `SW` in
+`stage.js`; `TXT`, `PARTS` in `meinung.js`).
+
+- **Voices.** French: Victoria (ElevenLabs Voice Library, standard Parisian French, verified in French and German),
+  on `eleven_turbo_v2_5` like English, one voice for both languages, each run recorded alone with its language
+  enforced (on `eleven_v4` her short German phrases, *den Ball*, *du kannst*, were heard as English: 2 of 10 takes
+  passed the check, against 8 of 10 on Turbo). Swahili is a
+  **duet**: Mohammed ("Swahili Local", a native Swahili voice in the owner's account; Swahili needs `eleven_v3`)
+  explains, and every German example is spoken by Enniah, the native German narrator of the English version
+  (`eleven_turbo_v2_5`, German enforced), the parts brought to the same loudness with a short pause between the two
+  speakers. Mohammed's own German was tried and came out with an English accent on short phrases. Voices:
+  `narrator-sw`, `narrator-fr` in `.local/scenes/voices.json`; models and the duet in `NARRATOR`
+  (`tools/split-voice.cjs`).
+- **Scripts** (private): `.local/scenes/lang/texts_k05.py` and `texts_k17.py` hold the narration, written for each
+  language (the English comparisons became Swahili and French ones: *ninaweza kucheza* and *je peux danser*,
+  *ni-na-mw-ona* and *je le vois*, Swahili school terms *kiima* and *yambwa*, French *on* for *man*), plus every
+  board, hint and gloss. Then:
+
+```bash
+python3 .local/scenes/lang/texts.py
+```
+
+```bash
+node .local/scenes/lang/make.cjs --missing
+```
+
+  `make.cjs` builds `<scene>-sw[-long]` and `<scene>-fr[-long]` from the English version of the same length (same
+  scenes, staging and practice), copies the characters' recordings, keeps a recording whose line did not change,
+  and lists any text without a translation and any board timing it had to guess.
+- **Recording and checks.** `node tools/scene-audio.cjs record k05-sw` (and the other seven). German parts are
+  checked with faster-whisper as before; Swahili and French parts with ElevenLabs speech-to-text
+  (`node .local/scenes/lang/scribe.cjs <scene>…`), as the local model cannot judge short Swahili. A German example
+  always comes as a phrase of two words or more, and a run of the explaining language between two German phrases has
+  at least two words (*na pia*, *et aussi*), so the duet does not switch speakers every half second.
+- **Packing.** One chapter's narration list holds all eight versions:
+  `node tools/scene-audio.cjs pack k05 k05-en k05-sw k05-fr k05-long k05-en-long k05-sw-long k05-fr-long`.
+- **Feedback.** Stars for every version (`sw`, `fr`, `sw-long`, `fr-long`), stored in the columns of migration 0008.

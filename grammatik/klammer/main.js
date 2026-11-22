@@ -5,19 +5,19 @@
    Then the learner builds sentences (the chapter's own exercise items, from the private lines file).
    Like every lesson scene this file holds no lesson text: lines, strips, signs, cards and practice items come from
    .local/scenes/k05/lines.json (?local) or, embedded, from the lesson page. */
-import { createStage, $, rich, plain, LANG, LONG, T } from '../buehne/stage.js?v=4';
-import { actsToScenes } from '../buehne/regie.js?v=4';
-import { createWerkstatt, SPOTS } from '../buehne/sets/werkstatt.js?v=4';
-import { createStrip, wheel } from '../buehne/satzband.js?v=4';
-import { createPractice } from '../buehne/practice.js?v=4';
-import { createBlase } from '../buehne/blase.js?v=4';
-import { createTafel } from '../buehne/tafel.js?v=4';
-import { createLicht } from '../buehne/licht.js?v=4';
-import { sfx, play, unlockSfx } from '../buehne/sfx.js?v=4';
+import { createStage, $, rich, plain, LANG, LANGS, LONG, T } from '../buehne/stage.js?v=5';
+import { actsToScenes } from '../buehne/regie.js?v=5';
+import { createWerkstatt, SPOTS } from '../buehne/sets/werkstatt.js?v=5';
+import { createStrip, wheel } from '../buehne/satzband.js?v=5';
+import { createPractice } from '../buehne/practice.js?v=5';
+import { createBlase } from '../buehne/blase.js?v=5';
+import { createTafel } from '../buehne/tafel.js?v=5';
+import { createLicht } from '../buehne/licht.js?v=5';
+import { sfx, play, unlockSfx } from '../buehne/sfx.js?v=5';
 
 const set = createWerkstatt($('bg'), $('fg'));
 // four versions: k05 (German), k05-en (English with German examples), and their long versions k05-long, k05-en-long
-const TAG = 'k05' + (LANG === 'en' ? '-en' : '') + (LONG ? '-long' : '');
+const TAG = 'k05' + (LANG === 'de' ? '' : '-' + LANG) + (LONG ? '-long' : '');
 const B = createStage({ set, priv: `../../.local/scenes/${TAG}/`, tag: TAG, keys: ['anton', 'liv', 'lena'], onCast, minW: 4.3 });
 const { A, S, place, walkTo, turn, trig, face, cam, say, wait, need } = B;
 const strip = createStrip($('strip'));
@@ -188,7 +188,7 @@ async function practise() {
 
 /* ---------- start ---------- */
 $('sound').addEventListener('click', () => { sfx.muted = S.muted; });
-B.start({ scenes: LONG ? (lines) => actsToScenes(B, lines.acts, VERBS, SPOTS) : SCENES, practise, langs: ['de', 'en'], long: true, feedback: 'k05', end: () => { B.caption('elisa', T('turn')); $('try').focus(); } }).then((ok) => {
+B.start({ scenes: LONG ? (lines) => actsToScenes(B, lines.acts, VERBS, SPOTS) : SCENES, practise, langs: LANGS, long: true, feedback: 'k05', end: () => { B.caption('elisa', T('turn')); $('try').focus(); } }).then((ok) => {
   if (!ok) return;
   for (const id of ['goWatch', 'goTry']) $(id).addEventListener('click', unlockSfx, { capture: true });
   set.V.sign = B.data('signs').rauchen || ''; set.V.signPic = 'rauchen';

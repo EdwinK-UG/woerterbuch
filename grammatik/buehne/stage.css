@@ -280,6 +280,8 @@ html.max #full, html:fullscreen #full { background: rgba(255,252,246,.95); }
 #meta .meta-l { font-size: 12px; color: var(--mut); font-weight: 600; }
 #meta #fbBtn { margin-left: auto; min-height: 36px; border-radius: 999px; }
 #meta #langsw button, #meta #formsw button { min-height: 34px; }
+/* four explaining languages (DE EN SW FR): on a phone the feedback button keeps only its star, so the row fits */
+@media (max-width: 440px) { #meta { gap: 6px; } #meta #fbBtn .t { display: none; } #meta #langsw button, #meta #formsw button { padding: 0 9px; } }
 /* capture mode (?shot): pictures for emails, without the corner buttons */
 html.shot #corner { display: none; }
 /* board cards (tafel.js { cards }): a picture or a large icon with a caption, appearing when said */
@@ -326,6 +328,16 @@ html.shot #corner { display: none; }
 #panel.pr #meta #langsw button, #panel.pr #meta #formsw button { min-height: 32px; padding: 0 9px; font-size: 12px; }
 #panel.pr #meta #fbBtn { min-height: 32px; padding: 0 10px; }
 #panel.pr #fbBtn .t, #panel.pr #meta .meta-l { display: none; }
+/* four explaining languages (DE EN SW FR) need more room than the film button leaves in a narrow practice panel (a
+   phone, or the column beside the picture): there only the language in use shows, and tapping it opens the others
+   on a line of their own, so the picture keeps its size */
+#panel { container-type: inline-size; }
+@container (max-width: 470px) {
+  #panel.pr #langsw:not(.open) button:not(.on) { display: none; }
+  #panel.pr #langsw:not(.open) button.on::after { content: ' ▾'; font-size: 10px; }
+  #panel.pr > #meta:has(#langsw.open) { grid-column: 1 / -1; justify-content: flex-start; }
+  #panel.pr > #meta:has(#langsw.open) #fbBtn { margin-left: auto; }
+}
 /* wide (a laptop window, a tablet on its side, full screen): the exercise in a column beside the picture */
 @media (min-aspect-ratio: 3/2) {
   #app:has(#panel.pr) { flex-direction: row; }
