@@ -304,6 +304,8 @@ nav.tabs a .lic{font-size:1rem;opacity:.85}
 .dx li{position:relative;padding-left:1rem;font-style:italic;color:var(--fg);opacity:.92}
 .dx li::before{content:"";position:absolute;left:.15rem;top:.62em;width:.38rem;height:.38rem;border-radius:50%;background:color-mix(in srgb,var(--die) 55%,transparent)}
 .dx li i.g{color:inherit;font-size:1em}
+.exsay{display:inline-flex;vertical-align:middle;margin-left:.35rem;padding:.15rem;border:0;background:none;color:var(--mut);cursor:pointer;border-radius:.4rem;font-style:normal}.exsay:hover,.exsay:focus-visible{color:var(--ac)}.exsay .lic{width:1em;height:1em}
+.wimg img.own{aspect-ratio:1/1;object-fit:contain}
 .english-toolbar{display:flex;align-items:center;flex-wrap:wrap;gap:.35rem .8rem;margin:.9rem 0 .3rem;font-family:Inter,system-ui,sans-serif}
 .english-toggle,.english-retry{border:0;background:none;color:var(--mut);padding:.35rem 0;font:inherit;font-size:.76rem;cursor:pointer;text-underline-offset:3px}
 .english-toggle[aria-pressed="true"]{color:var(--ac)}.english-toggle[aria-pressed="true"]::before{content:'✓ ';font-weight:700}.english-toggle:hover,.english-retry:hover{text-decoration:underline}
@@ -820,6 +822,7 @@ function viewWord(w){
   const e=E[i];
   V().innerHTML=`<div class="row" style="margin-bottom:.8rem"><a class="btn sm" href="#/">← Suche</a></div>`+entryHTML(e);
   DictionaryEnglish.mount(e).catch(()=>{});
+  exampleAudio(e);
   loadImg(e);
   try{const r=(LS.get('gd_recent',[])||[]).filter(x=>x!==e.w);r.unshift(e.w);LS.set('gd_recent',r.slice(0,12))}catch(err){}
 }
@@ -872,14 +875,31 @@ function sndGet(w){
 }
 function preSay(i){const w=E[i]&&plainW(E[i].w); if(w&&!/\s/.test(w))sndGet(w)}
 let sayTok=0;
+/* ---------- OWN MEDIA on media.deutschklinik.com: German audio (Azure, voice Seraphina) and Gemini pictures.
+   A clip's name is sha256(VOICE + "\n" + text), as in tools/dictionary-audio.cjs, so no index is needed. ---------- */
+const MEDIA='https://media.deutschklinik.com', VOICE='de-DE-SeraphinaMultilingualNeural';
+async function clipURL(text){
+  const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(VOICE+'\n'+text));
+  return MEDIA+'/audio/v1/'+[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('').slice(0,32)+'.mp3';
+}
+let clipAudio=null;
+async function playClip(text){
+  const url=await clipURL(text);
+  if(curAudio){curAudio.pause();curAudio=null}
+  if('speechSynthesis' in window)speechSynthesis.cancel();
+  const a=clipAudio||(clipAudio=new Audio()); a.pause(); a.src=url; curAudio=a;
+  await a.play();
+}
+const sayClip=w=>playClip(w).catch(()=>speak(w));
 function say(i,btn){
   const w=plainW(E[i].w); sayTok++;
   if(curAudio){curAudio.pause();curAudio=null}
   if('speechSynthesis' in window)speechSynthesis.cancel();
-  if(/\s/.test(w)){speak(w);return}
-  const c=sndGet(w); if(c.ok===false){speak(w);return}
+  // Human recordings from Wikimedia Commons first; our recorded voice fills the gaps; the browser voice is last.
+  if(/\s/.test(w)){sayClip(w);return}
+  const c=sndGet(w); if(c.ok===false){sayClip(w);return}
   const a=c.a, my=++sayTok; curAudio=a; let done=false;
-  const fall=err=>{if(done)return;done=true;if(err===true)c.ok=false;if(my!==sayTok)return;a.pause();curAudio=null;speak(w)};
+  const fall=err=>{if(done)return;done=true;if(err===true)c.ok=false;if(my!==sayTok)return;a.pause();curAudio=null;sayClip(w)};
   a.addEventListener('error',()=>fall(true),{once:true});
   const t=setTimeout(()=>{if(!done&&a.readyState<3)fall()},2500);
   try{a.currentTime=0}catch(_){}
@@ -1016,8 +1036,37 @@ function showImg(e,box,list,k){
   box.querySelector('img').onerror=()=>{list.splice(k,1);showImg(e,box,list,k)};
   box.querySelector('.imgnext').onclick=()=>{const n=k+1; LSI.set(plainW(e.w),list[n%list.length]); showImg(e,box,list,n)};
 }
+// A speaker button after each German example sentence plays its recording (browser voice if missing).
+function exampleAudio(e){
+  const root=document.querySelector('.entry'); if(!root||!window.DictionaryEnglish||!e.df)return;
+  const items=DictionaryEnglish.source(e.w,e.df);
+  root.querySelectorAll('.def .ds').forEach(sense=>{
+    const n=Number(sense.dataset.sense);
+    sense.querySelectorAll('.dx>li').forEach((li,k)=>{
+      const item=items.find(x=>x.key==='e'+n+':'+k); if(!item||li.querySelector('.exsay'))return;
+      const b=document.createElement('button'); b.type='button'; b.className='exsay';
+      b.title=ui('Listen','Anhören'); b.setAttribute('aria-label',ui('Listen to the example','Beispiel anhören')); b.innerHTML=ic('volume-2');
+      b.onclick=()=>{playClip(item.text).catch(()=>speak(item.text))};
+      li.insertBefore(b,li.querySelector('.english-example'));
+    });
+  });
+  drawIcons();
+}
+// Our own pictures (pics/index.json maps headwords to files); cached for the page's lifetime.
+let ownPics=null;
+function ownPicture(w){
+  if(!ownPics)ownPics=fetch(MEDIA+'/pics/index.json',{signal:AbortSignal.timeout(5000)}).then(r=>r.ok?r.json():{}).then(j=>j.pictures||{}).catch(()=>{ownPics=null;return {}});
+  return ownPics.then(p=>p[w]?MEDIA+'/'+p[w]:'');
+}
+function ownShow(e,box,src){
+  box.innerHTML=`<figure><img class="own" src="${esc(src)}" alt="${esc(plainW(e.w))}" loading="lazy"><figcaption><span class="capb"><button class="imgnext" title="Anderes Bild">↻ anderes Bild</button></span></figcaption></figure>`;
+  box.classList.add('on');
+  const other=()=>{box.dataset.own='off';loadImg(e)};
+  box.querySelector('img').onerror=other; box.querySelector('.imgnext').onclick=other;
+}
 async function loadImg(e){
   const box=document.getElementById('wimg'); if(!box||NOIMG.has(e.ps)||!e.ps)return;
+  if(box.dataset.own!=='off'){const own=await ownPicture(e.w); if(own&&document.body.contains(box)){ownShow(e,box,own);return}}
   if(plainW(e.w)==='erwerben'){showImg(e,box,await findImgs(e),0);return}
   if(!box.dataset.photo&&AI.free()){freeShow(e,box);return}
   const w=plainW(e.w), saved=LSI.get(w);

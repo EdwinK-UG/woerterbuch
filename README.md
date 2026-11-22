@@ -71,6 +71,15 @@ Follow `worker/README.md` for D1 migration, quotas, Auth verification, editorial
 
 Run `npm run check`, review the site at phone and tablet widths, apply validated database upgrades, and then publish the site and Worker through their normal release processes. Reopen older tabs after a release so they load the same asset versions. Hosted-service checks remain a separate release step.
 
+## Dictionary English, audio and pictures
+
+- **English:** every dictionary meaning and example has English in `content/english/00.json` … `ff.json`, keyed by the entry's source fingerprint. They are made with `tools/dictionary-english-build.cjs`, which runs on Azure, and the page reads them before asking the Worker.
+- **Media hosting:** audio and pictures live in the public R2 bucket `deutschklinik-media`, served at `https://media.deutschklinik.com`.
+- **German audio:** `tools/dictionary-audio.cjs` records it with Azure Speech, voice Seraphina, for every headword and example sentence. Each clip is named after `sha256(voice + "\n" + text)`, so the page finds a clip from its text alone. Single words try the Wikimedia Commons recording first, then our clip, then the browser's voice.
+- **Pictures:** `tools/gemini-images.cjs` makes them through the Gemini web app, at up to 90 a day from a LaunchAgent on the authoring Mac. `pics/index.json` maps headwords to pictures; the page caches it for an hour, so new pictures appear without a release.
+- **Uploading:** `tools/upload-media.cjs --audio` / `--pictures` uploads with wrangler's login. It remembers what it has sent in `.local/media-uploaded.txt`.
+- **Not on GitHub:** recordings, originals and API keys stay in ignored `.local/` and `.env.azure*` files.
+
 ## Content and recovery
 
 Generate vocabulary from private reviewed inputs using `tools/vocabulary/README.md`. The authoring backup delivered with this review preserves the selected inputs and example corpus. A restored copy rebuilt all 52 vocabulary topics byte for byte after three existing English sentence choices were pinned in the family topic.
