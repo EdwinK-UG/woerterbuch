@@ -49,7 +49,25 @@ function person(c, x, y, s, col, t = 0, pose = 'stand') {   // a tiny figure: he
 }
 
 export const BILDER = {
-  // cooking soup
+  // a key that is looked for: it wobbles under a magnifying glass (ich suche den Schlüssel)
+  schluessel(c, t) {
+    const w = Math.sin(t * 3) * 0.12; c.save(); c.translate(70, 58); c.rotate(-0.5 + w);
+    c.strokeStyle = '#d9a521'; c.lineWidth = 7; c.beginPath(); c.arc(-24, 0, 12, 0, TAU); c.stroke();
+    c.fillStyle = '#d9a521'; c.fillRect(-12, -3.5, 46, 7); c.fillRect(22, 3, 5, 9); c.fillRect(30, 3, 4, 7); c.restore();
+    const gx = 108 + Math.cos(t * 1.6) * 8, gy = 40 + Math.sin(t * 1.6) * 5;
+    c.strokeStyle = '#3d4f6b'; c.lineWidth = 5; c.beginPath(); c.arc(gx, gy, 15, 0, TAU); c.stroke();
+    c.fillStyle = 'rgba(143,195,234,.35)'; c.beginPath(); c.arc(gx, gy, 13, 0, TAU); c.fill();
+    c.beginPath(); c.moveTo(gx + 11, gy + 11); c.lineTo(gx + 26, gy + 26); c.stroke();
+  },
+  // a cup of coffee on a saucer, steaming, with a little heart in the foam (ich möchte einen Kaffee)
+  kaffee(c, t) {
+    c.fillStyle = '#c9d2da'; c.beginPath(); c.ellipse(80, 84, 44, 8, 0, 0, TAU); c.fill();
+    c.fillStyle = '#2f7fd1'; c.beginPath(); c.moveTo(52, 44); c.lineTo(108, 44); c.quadraticCurveTo(106, 82, 80, 82); c.quadraticCurveTo(54, 82, 52, 44); c.fill();
+    c.strokeStyle = '#2f7fd1'; c.lineWidth = 6; c.beginPath(); c.arc(110, 58, 9, -1.2, 1.3); c.stroke();
+    c.fillStyle = '#8a5a3b'; c.beginPath(); c.ellipse(80, 45, 26, 5, 0, 0, TAU); c.fill();
+    c.fillStyle = '#f1dfc6'; c.beginPath(); c.moveTo(80, 49); c.bezierCurveTo(70, 44, 74, 39, 80, 43); c.bezierCurveTo(86, 39, 90, 44, 80, 49); c.fill();
+    steam(c, 80, 36, t);
+  },
   suppe(c, t) { pot(c, 80, 58, t); },
   // cooking together: two ladles in one pot
   zusammen(c, t) { pot(c, 80, 58, t, 2); circle(c, 128, 30, 6, '#e0465a'); circle(c, 136, 30, 6, '#e0465a'); c.fillStyle = '#e0465a'; c.beginPath(); c.moveTo(122, 32); c.lineTo(132, 44); c.lineTo(142, 32); c.fill(); },

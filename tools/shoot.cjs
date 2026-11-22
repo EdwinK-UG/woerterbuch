@@ -20,12 +20,13 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     const page = list.find((t) => t.type === "page"), ws = new WebSocket(page.webSocketDebuggerUrl);
     await new Promise((r, j) => { ws.onopen = r; ws.onerror = j; });
     let id = 0; const wait = new Map();
-    ws.onmessage = (e) => { const m = JSON.parse(e.data); if (m.id && wait.has(m.id)) { wait.get(m.id)(m); wait.delete(m.id); } else if (m.method === "Runtime.exceptionThrown" && argv.includes("--errors")) console.error("page error:", JSON.stringify(m.params.exceptionDetails).slice(0, 400)); };
+    ws.onmessage = (e) => { const m = JSON.parse(e.data); if (m.id && wait.has(m.id)) { wait.get(m.id)(m); wait.delete(m.id); } else if (m.method === "Runtime.exceptionThrown" && argv.includes("--errors")) console.error("page error:", JSON.stringify(m.params.exceptionDetails).slice(0, 400));
+      else if (m.method === "Log.entryAdded" && argv.includes("--errors")) console.error("log:", m.params.entry.level, m.params.entry.text.slice(0, 200), m.params.entry.url || ""); };
     const cmd = (method, params = {}) => new Promise((r) => { const i = ++id; wait.set(i, r); ws.send(JSON.stringify({ id: i, method, params })); });
     const evaluate = async (expr) => (await cmd("Runtime.evaluate", { expression: expr, returnByValue: true, awaitPromise: true })).result?.result?.value;
     await cmd("Emulation.setDeviceMetricsOverride", { width: W, height: H, deviceScaleFactor: scale, mobile: W < 600 });
     if (argv.includes("--transparent")) await cmd("Emulation.setDefaultBackgroundColorOverride", { color: { r: 0, g: 0, b: 0, a: 0 } });
-    await cmd("Page.enable"); await cmd("Runtime.enable"); await cmd("Page.navigate", { url });
+    await cmd("Page.enable"); await cmd("Runtime.enable"); if (argv.includes("--errors")) await cmd("Log.enable"); await cmd("Page.navigate", { url });
     const t0 = Date.now(); let polls = 0;
     for (;;) {
       await sleep(250);

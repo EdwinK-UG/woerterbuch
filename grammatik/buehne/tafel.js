@@ -9,7 +9,9 @@
      { rows: [{ c: ['ich', 'k{e:a}nn'], at, cls }] }                            a small table; rows appear when said
      { chips: [{ t, at, c: 'n' | 'a' | 'd' | 'g' }] }                           cards in a row, appearing when said
      { wheels: [['k','ö','a','nn','nnen'], …], at: [word, …] }                  vowel wheels that turn when said
-     { pic: 'leute', icon: 'kann' }                                             a picture from bilder.js */
+     { pic: 'leute', icon: 'kann' }                                             a picture from bilder.js
+     { cards: [{ pic, icon, t, at }] }        small picture cards with a caption, appearing when said (an icon alone
+                                              is drawn large: the meanings of the modal verbs) */
 import { $, rich, plain, REDUCED, isNarrator } from './stage.js';
 import { createStrip, wheel } from './satzband.js';
 import { BILDER, ICONS } from './bilder.js';
@@ -51,6 +53,14 @@ export function createTafel(B, { cases = false, bubble = null } = {}) {
         it.wheels.forEach((w, i) => { const span = document.createElement('span'); span.className = 'tf-wheel'; row.append(span); const wh = wheel(span, w.slice(0, 4), { fromPost: w[4] }); steps.push({ k: when((it.at || [])[i]), go: () => wh.turn() }); });
       } else if (it.pic) {
         const cv = document.createElement('canvas'); cv.className = 'tf-pic'; row.append(cv); pics.push({ cv, pic: it.pic, icon: it.icon, t0: B.S.t });
+      } else if (it.cards) {
+        row.classList.add('tf-cards');
+        for (const cd of it.cards) {
+          const f = document.createElement('figure'); f.className = 'tf-card' + (cd.pic ? '' : ' ic'); const cv = document.createElement('canvas');
+          f.append(cv); if (cd.t) { const cap = document.createElement('figcaption'); cap.innerHTML = rich(cd.t); f.append(cap); } row.append(f);
+          pics.push({ cv, pic: cd.pic, icon: cd.icon, t0: B.S.t, small: true });
+          if (cd.at != null) { f.classList.add('wait'); steps.push({ k: when(cd.at), go: () => { f.classList.remove('wait'); play.pop(1.2); } }); }
+        }
       }
     }
     steps.sort((a, b) => a.k - b.k);
@@ -74,8 +84,12 @@ export function createTafel(B, { cases = false, bubble = null } = {}) {
     while (steps.length && steps[0].k <= k) steps.shift().go();
     const small = B.set.V.W < 520, pw = small ? 128 : 208, ph = pw * 0.625, dpr = Math.min(2, devicePixelRatio || 1);
     for (const p of pics) {
-      if (p.cv.width !== Math.round(pw * dpr)) { p.cv.width = Math.round(pw * dpr); p.cv.height = Math.round(ph * dpr); p.cv.style.width = pw + 'px'; p.cv.style.height = ph + 'px'; }
-      const c = p.cv.getContext('2d'); c.setTransform(dpr * pw / 160, 0, 0, dpr * ph / 100, 0, 0); c.clearRect(0, 0, 160, 100);
+      // a card is smaller: four fit side by side on a phone
+      const cw = p.small ? (p.pic ? (small ? 74 : 112) : (small ? 28 : 36)) : pw, ch = p.small && !p.pic ? cw : cw * 0.625;
+      if (p.cv.width !== Math.round(cw * dpr)) { p.cv.width = Math.round(cw * dpr); p.cv.height = Math.round(ch * dpr); p.cv.style.width = cw + 'px'; p.cv.style.height = ch + 'px'; }
+      const c = p.cv.getContext('2d');
+      if (!p.pic) { c.setTransform(dpr * cw / 28, 0, 0, dpr * ch / 28, 0, 0); c.clearRect(0, 0, 28, 28); if (ICONS[p.icon]) ICONS[p.icon](c); continue; }
+      c.setTransform(dpr * cw / 160, 0, 0, dpr * ch / 100, 0, 0); c.clearRect(0, 0, 160, 100);
       if (BILDER[p.pic]) BILDER[p.pic](c, REDUCED ? 1.5 : t - p.t0);
       if (p.icon && ICONS[p.icon]) { c.save(); c.translate(128, 2); ICONS[p.icon](c); c.restore(); }
     }

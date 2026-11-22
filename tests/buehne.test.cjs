@@ -39,3 +39,15 @@ test('every scene line names a known speaker and every practice item can be grad
     }
   }
 });
+
+// a syntax error in one stage module stops every scene without a visible error (the module graph never runs)
+test('every stage and scene module parses as a JavaScript module', () => {
+  const os = require('node:os'), { spawnSync } = require('node:child_process'), tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'buehne-'));
+  try {
+    for (const f of PUBLIC.flatMap(files).filter((f) => f.endsWith('.js'))) {
+      const copy = path.join(tmp, 'm.mjs'); fs.copyFileSync(f, copy);
+      const r = spawnSync(process.execPath, ['--check', copy], { encoding: 'utf8' });
+      assert.equal(r.status, 0, path.relative(ROOT, f) + ' does not parse:\n' + r.stderr.split('\n').slice(0, 4).join('\n'));
+    }
+  } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
+});

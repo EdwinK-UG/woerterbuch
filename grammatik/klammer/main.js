@@ -5,17 +5,20 @@
    Then the learner builds sentences (the chapter's own exercise items, from the private lines file).
    Like every lesson scene this file holds no lesson text: lines, strips, signs, cards and practice items come from
    .local/scenes/k05/lines.json (?local) or, embedded, from the lesson page. */
-import { createStage, $, rich, plain, LANG, T } from '../buehne/stage.js?v=1';
-import { createWerkstatt, SPOTS } from '../buehne/sets/werkstatt.js?v=1';
-import { createStrip, wheel } from '../buehne/satzband.js?v=1';
-import { createPractice } from '../buehne/practice.js?v=1';
-import { createBlase } from '../buehne/blase.js?v=1';
-import { createTafel } from '../buehne/tafel.js?v=1';
-import { createLicht } from '../buehne/licht.js?v=1';
-import { sfx, play, unlockSfx } from '../buehne/sfx.js?v=1';
+import { createStage, $, rich, plain, LANG, LONG, T } from '../buehne/stage.js?v=2';
+import { actsToScenes } from '../buehne/regie.js?v=2';
+import { createWerkstatt, SPOTS } from '../buehne/sets/werkstatt.js?v=2';
+import { createStrip, wheel } from '../buehne/satzband.js?v=2';
+import { createPractice } from '../buehne/practice.js?v=2';
+import { createBlase } from '../buehne/blase.js?v=2';
+import { createTafel } from '../buehne/tafel.js?v=2';
+import { createLicht } from '../buehne/licht.js?v=2';
+import { sfx, play, unlockSfx } from '../buehne/sfx.js?v=2';
 
 const set = createWerkstatt($('bg'), $('fg'));
-const B = createStage({ set, priv: `../../.local/scenes/k05${LANG === 'en' ? '-en' : ''}/`, tag: LANG === 'en' ? 'k05-en' : 'k05', keys: ['anton', 'liv', 'lena'], onCast, minW: 4.3 });
+// four versions: k05 (German), k05-en (English with German examples), and their long versions k05-long, k05-en-long
+const TAG = 'k05' + (LANG === 'en' ? '-en' : '') + (LONG ? '-long' : '');
+const B = createStage({ set, priv: `../../.local/scenes/${TAG}/`, tag: TAG, keys: ['anton', 'liv', 'lena'], onCast, minW: 4.3 });
 const { A, S, place, walkTo, turn, trig, face, cam, say, wait, need } = B;
 const strip = createStrip($('strip'));
 const PR = createPractice(B, strip, { miss });
@@ -118,6 +121,20 @@ const SCENES = [
   } },
 ];
 
+/* ---------- the long versions: scenes written as data in their own script (regie.js) ---------- */
+const VERBS = {
+  line: (id, b, o) => line(id, b, o),
+  bubble: (o) => bubble.show({ who: o.who, kind: o.kind, pic: o.pic, icon: o.icon, strip: o.strip ? st(o.strip) : undefined }),
+  hideBubble: () => bubble.hide(),
+  merk: (id) => { merk(id); return wait(0.2); },
+  wheel: (key) => turnWheel(key),
+  sign: ({ key, pic, glow }) => { if (glow) { set.V.signGlow = 1; B.tween(set.V, 'signGlow', 0, 1.4); } set.V.sign = B.data('signs')[key] || ''; set.V.signPic = pic; play.pop(0.8); },
+  window: async () => { play.roll(); await B.tween(set.V, 'win', 1, 1.0); },
+  sweep: async () => { set.V.sweep = -8; play.roll(); await B.tween(set.V, 'sweep', 7, 6, (k) => k); set.V.sweep = 7; },
+  saw: async (n) => { for (let i = 0; i < (n || 2); i++) { trig(A.anton, 'pull'); await wait(1.6); } },
+  bench: () => atBench(),
+};
+
 /* ---------- the practice ---------- */
 function setPractice(on) {
   $('panel').classList.toggle('pr', on); $('ctl').classList.toggle('pr', on); $('try').textContent = on ? T('film') : T('play');
@@ -171,7 +188,7 @@ async function practise() {
 
 /* ---------- start ---------- */
 $('sound').addEventListener('click', () => { sfx.muted = S.muted; });
-B.start({ scenes: SCENES, practise, langs: ['de', 'en'], feedback: 'k05', end: () => { B.caption('elisa', T('turn')); $('try').focus(); } }).then((ok) => {
+B.start({ scenes: LONG ? (lines) => actsToScenes(B, lines.acts, VERBS, SPOTS) : SCENES, practise, langs: ['de', 'en'], long: true, feedback: 'k05', end: () => { B.caption('elisa', T('turn')); $('try').focus(); } }).then((ok) => {
   if (!ok) return;
   for (const id of ['goWatch', 'goTry']) $(id).addEventListener('click', unlockSfx, { capture: true });
   set.V.sign = B.data('signs').rauchen || ''; set.V.signPic = 'rauchen';

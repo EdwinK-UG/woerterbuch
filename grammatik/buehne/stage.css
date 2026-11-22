@@ -238,9 +238,9 @@ html, body { height: 100%; }
 #try { flex: 0 0 auto; padding: 8px 14px; }
 @media (max-width: 460px) { #dots { display: none; } #ctl { justify-content: space-between; } }
 /* the language switch and the feedback button */
-#langsw { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; flex: 0 0 auto; }
-#langsw button { border: 0; border-radius: 0; min-height: 38px; padding: 0 11px; font-size: 13px; font-weight: 700; color: var(--mut); background: var(--paper); }
-#langsw button.on { background: var(--ink); color: var(--bg); }
+#langsw, #formsw { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; flex: 0 0 auto; }
+#langsw button, #formsw button { border: 0; border-radius: 0; min-height: 38px; padding: 0 11px; font-size: 13px; font-weight: 700; color: var(--mut); background: var(--paper); }
+#langsw button.on, #formsw button.on { background: var(--ink); color: var(--bg); }
 #fbBtn { flex: 0 0 auto; padding: 0 12px; font-size: 13px; font-weight: 700; border-color: #f1c64c; background: #fff7dd; color: #7a5a00; }
 
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) #fbBtn { background: #3a3110; color: #f2c94c; } }
@@ -277,6 +277,20 @@ html.max #full, html:fullscreen #full { background: rgba(255,252,246,.95); }
 #meta { display: flex; align-items: center; gap: 8px; }
 #meta .meta-l { font-size: 12px; color: var(--mut); font-weight: 600; }
 #meta #fbBtn { margin-left: auto; min-height: 36px; border-radius: 999px; }
-#meta #langsw button { min-height: 34px; }
+#meta #langsw button, #meta #formsw button { min-height: 34px; }
 /* capture mode (?shot): pictures for emails, without the corner buttons */
 html.shot #corner { display: none; }
+/* board cards (tafel.js { cards }): a picture or a large icon with a caption, appearing when said */
+.tf-cards { gap: 8px; flex-wrap: wrap; align-items: flex-start; }
+.tf-card { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 3px; max-width: 124px; transition: opacity .35s, transform .35s; }
+.tf-card canvas { display: block; background: #fffdf8; border-radius: 9px; }
+.tf-card.ic canvas { background: none; }
+.tf-card figcaption { white-space: pre-line; font-size: clamp(12px, 2.4vw, 16px); font-weight: 600; text-align: center; line-height: 1.2; }
+.tf-card.wait { opacity: 0; transform: translateY(8px) scale(.96); }
+/* icon cards (the meanings of the modal verbs): compact, the icon beside its caption, two or three to a row */
+.tf-cards:has(.tf-card.ic) { display: grid; grid-template-columns: repeat(3, auto); justify-content: center; gap: 4px 14px; }
+.tf-card.ic { flex-direction: row; align-items: center; gap: 7px; max-width: none; }
+.tf-card.ic figcaption { text-align: left; }
+@media (max-width: 520px) { .tf-cards:has(.tf-card.ic) { grid-template-columns: repeat(2, auto); } }
+.tf-cards .tf-card:not(.ic) { width: 124px; }
+@media (max-width: 520px) { .tf-cards .tf-card:not(.ic) { width: 96px; } .tf-card figcaption { font-size: 12px; } }

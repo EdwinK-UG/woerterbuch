@@ -22,10 +22,10 @@ export const DESIGNS = {
       { img: 'assets/mail/pilots-k18.png', w: 1024, h: 576, label: 'A1 · Kapitel 18', title: 'Modalverben – Die Klammer-Werkstatt', text: 'Liv wants to cook, Max must get up early: können, müssen, wollen and friends, and where the second verb goes.', href: '#/g/5', cta: 'Open Kapitel 18' },
       { img: 'assets/mail/pilots-k13.png', w: 1024, h: 576, label: 'A1 · Kapitel 13', title: 'Der Akkusativ – Wer jagt wen?', text: 'Does the dog chase the ball, or the ball the dog? Learn to see who does what – with den, einen and keinen.', href: '#/g/17', cta: 'Open Kapitel 13' },
     ],
-    tip: { title: 'DE | EN – two versions of each lesson', text: 'Watch the explanations in German, or in English with German examples. Switch with DE | EN under the film, try both, and tell us which one helps you more.' },
+    tip: { title: 'Four versions of each lesson', text: 'Explained in German or in English with German examples (DE | EN), and short or long (Short | Long – the long one starts like a real class, with an introduction and more detail). Try them, and tell us which one helps you most.' },
     questions: {
       title: 'What we would love to hear',
-      intro: 'Tap ★ Feedback under the film. The form follows the lesson, part by part – answer what you like, or just write freely.',
+      intro: 'Tap ★ Feedback under the film: give stars and just write – or open “In detail” for these questions. Answer as many as you like.',
       list: [
         ['Understanding', 'Where did you get lost? Which sentence or rule should be explained more simply, more slowly, or with another example?'],
         ['Pictures & animation', 'What should we draw or animate to make a sentence clearer? Wild, creative ideas are very welcome.'],

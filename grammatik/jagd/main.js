@@ -5,18 +5,21 @@
    chases – and the articles swap – Der Ball jagt den Hund: now the ball chases the dog across the meadow.
    Practice: Regie (the learner's sentence is acted out, exactly as it is grammatically), Max packs his backpack
    (den / das / die) and "Doch, ich habe …". All lesson text comes from the private .local/scenes/k17/lines.json. */
-import { createStage, $, rich, LANG, T } from '../buehne/stage.js?v=1';
-import { createVillage } from '../dorf/village.js?v=1';
-import { createStrip } from '../buehne/satzband.js?v=1';
-import { createPractice } from '../buehne/practice.js?v=1';
-import { createFx } from '../buehne/tiere.js?v=1';
-import { createBlase } from '../buehne/blase.js?v=1';
-import { createTafel } from '../buehne/tafel.js?v=1';
-import { createLicht } from '../buehne/licht.js?v=1';
-import { sfx, play, unlockSfx } from '../buehne/sfx.js?v=1';
+import { createStage, $, rich, LANG, LONG, T } from '../buehne/stage.js?v=2';
+import { actsToScenes } from '../buehne/regie.js?v=2';
+import { createVillage } from '../dorf/village.js?v=2';
+import { createStrip } from '../buehne/satzband.js?v=2';
+import { createPractice } from '../buehne/practice.js?v=2';
+import { createFx } from '../buehne/tiere.js?v=2';
+import { createBlase } from '../buehne/blase.js?v=2';
+import { createTafel } from '../buehne/tafel.js?v=2';
+import { createLicht } from '../buehne/licht.js?v=2';
+import { sfx, play, unlockSfx } from '../buehne/sfx.js?v=2';
 
 const set = createVillage($('bg'), $('fg'));
-const B = createStage({ set, priv: `../../.local/scenes/k17${LANG === 'en' ? '-en' : ''}/`, tag: LANG === 'en' ? 'k17-en' : 'k17', keys: ['max'], minW: 4.3 });
+// four versions: k17 (German), k17-en (English with German examples), and their long versions k17-long, k17-en-long
+const TAG = 'k17' + (LANG === 'en' ? '-en' : '') + (LONG ? '-long' : '');
+const B = createStage({ set, priv: `../../.local/scenes/${TAG}/`, tag: TAG, keys: ['max'], minW: 4.3 });
 const { A, S, place, trig, face, cam, say, wait, need } = B;
 const fx = createFx(B);
 const strip = createStrip($('strip'), { cases: true });
@@ -53,6 +56,8 @@ function clearAll() {
   for (const a of Object.values(PETS)) { a.raise = 0; a.mood = 'idle'; }
 }
 B.resetHooks.push(clearAll);
+// the Kurz | Lang switch appears once the long versions are recorded (their lines reach the page from the Worker)
+const LONG_READY = true;
 function home(...keys) {               // the animals in their places on the meadow
   for (const k of ['dog', 'cat', 'ball']) fx.place(PETS[k], HOME[k], { d: k === 'cat' ? -0.2 : 0.12, left: k === 'dog', show: keys.includes(k) });
 }
@@ -123,6 +128,33 @@ const SCENES = [
   } },
 ];
 B.resetHooks.push(() => { carrying = false; });
+
+/* ---------- the long versions: scenes written as data in their own script (regie.js) ---------- */
+const who = (k) => (k === 'max' ? A.max : PETS[k]);
+const VERBS = {
+  line: (id, b, o) => { if (b.strip) showStrip(b.strip, b.at || (B.S.lines.lines[id] || {}).who); return say(id, o); },
+  band: (v) => { const [id, at] = Array.isArray(v) ? v : [v]; showStrip(id, at); },
+  hideBubble: () => bubble.hide(),
+  home: (keys) => home(...keys),
+  pet: (v) => { for (const [k, [x, o]] of Object.entries(v)) fx.place(PETS[k], x === 'home' ? HOME[k] : x, { d: k === 'cat' ? -0.2 : 0.12, show: true, ...(o || {}) }); },
+  move: (v) => Promise.all(Object.entries(v).map(([k, x]) => fx.moveTo(PETS[k], x === 'home' ? HOME[k] : x === 'max' ? HOME.max + 0.55 : x))),
+  dash: (v) => Promise.all(Object.entries(v).map(([k, x]) => fx.moveTo(PETS[k], x === 'home' ? HOME[k] : x === 'max' ? HOME.max + 0.55 : x, { run: true }))),
+  ring: (v) => { for (const [k, c] of Object.entries(v)) fx.ring(who(k), c); },
+  ringsOff: () => fx.ringsOff(),
+  lamps: (on) => lamps(on),
+  lamp: (i) => lamp(i),
+  chase: ([a, b]) => chase(PETS[a], PETS[b]),
+  hop: (k) => { fx.hop(PETS[k]); if (k === 'dog') play.bark(); },
+  mood: (v) => { for (const [k, m] of Object.entries(v)) PETS[k].mood = m; },
+  look: (v) => { for (const [k, left] of Object.entries(v)) PETS[k].left = left; },
+  birds: (on) => fx.birds(on, { x: BASE, y: 2.0 }),
+  bleat: () => set.bleat(),
+  merk: (id) => { merk(id); return wait(0.2); },
+  carry: async (on) => { if (on) { ball.raise = 0.42; carrying = true; } else { carrying = false; ball.raise = 0; ball.x = HOME.max + 0.25; } },
+  backHome: () => backHome(),
+  base: (sec) => cam(BASE, 1.0, sec || 0.8),
+  max: () => place(A.max, HOME.max, { left: false }),
+};
 
 /* ---------- the practice ---------- */
 function setPractice(on) {
@@ -212,7 +244,7 @@ async function practise() {
 
 /* ---------- start ---------- */
 $('sound').addEventListener('click', () => { sfx.muted = S.muted; });
-B.start({ scenes: SCENES, practise, langs: ['de', 'en'], feedback: 'k17', end: () => { B.caption('elisa', T('turn')); $('try').focus(); } }).then((ok) => {
+B.start({ scenes: LONG ? (lines) => actsToScenes(B, lines.acts, VERBS) : SCENES, practise, langs: ['de', 'en'], long: LONG_READY, feedback: 'k17', end: () => { B.caption('elisa', T('turn')); $('try').focus(); } }).then((ok) => {
   if (!ok) return;
   for (const id of ['goWatch', 'goTry']) $(id).addEventListener('click', unlockSfx, { capture: true });
   place(A.max, HOME.max, { left: false }); home('dog'); S.cam.x = BASE;

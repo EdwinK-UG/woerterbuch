@@ -291,18 +291,28 @@ export function createStage({ set, priv, tag, keys, onCast = () => {}, z0 = 2.75
   // scenes: [{ name, run }]; practise: the practice (async); welcome: the line shown when the film ends
   // langs: ['de', 'en'] shows the switch (reloads the scene in the other language, kept in the address);
   // feedback: the scene's key, shows the feedback button (meinung.js)
-  function start({ scenes, practise, end, langs, versions, feedback }) {
+  // long: the scene also has the long versions (?form=long): a second switch, short | long
+  function start({ scenes, practise, end, langs, long, feedback }) {
     // a slim row under the controls: the language switch (left) and the feedback button (right)
-    if ((langs && langs.length > 1) || feedback) { const m = document.createElement('div'); m.id = 'meta'; $('ctl').after(m); }
+    if ((langs && langs.length > 1) || long || feedback) { const m = document.createElement('div'); m.id = 'meta'; $('ctl').after(m); }
     if (langs && langs.length > 1) {
       const sw = document.createElement('div'); sw.id = 'langsw'; sw.setAttribute('role', 'group'); sw.setAttribute('aria-label', LANG === 'en' ? 'Explanations in' : 'Erklärungen auf');
       sw.innerHTML = langs.map((l) => `<button type="button" data-l="${l}" class="${l === LANG ? 'on' : ''}" aria-pressed="${l === LANG}" title="${l === 'en' ? 'Explanations in English, examples in German' : 'Alles auf Deutsch'}">${l.toUpperCase()}</button>`).join('');
       sw.onclick = (e) => { const b = e.target.closest('button'); if (!b || b.dataset.l === LANG) return; stopAudio(); const u = new URL(location.href); if (b.dataset.l === 'de') u.searchParams.delete('lang'); else u.searchParams.set('lang', b.dataset.l); location.replace(u); };
       const lab = document.createElement('span'); lab.className = 'meta-l'; lab.textContent = LANG === 'en' ? 'Explanations:' : 'Erklärung:';
+      if (long) lab.hidden = true;                    // two switches: no room for the label on a phone
       $('meta').append(lab, sw);
     }
-    if (feedback) import('./meinung.js?v=3').then((m) => m.createMeinung(B, { scene: feedback, versions: versions || langs || [LANG] }));
-    S.scenes = scenes; S.onEnd = end;
+    if (long) {
+      const fw = document.createElement('div'); fw.id = 'formsw'; fw.className = 'seg'; fw.setAttribute('role', 'group'); fw.setAttribute('aria-label', LANG === 'en' ? 'Length' : 'Länge');
+      const names = LANG === 'en' ? { short: 'Short', long: 'Long' } : { short: 'Kurz', long: 'Lang' }, now = LONG ? 'long' : 'short';
+      fw.innerHTML = ['short', 'long'].map((f) => `<button type="button" data-f="${f}" class="${f === now ? 'on' : ''}" aria-pressed="${f === now}" title="${f === 'long' ? (LANG === 'en' ? 'Longer, with an introduction and more detail' : 'Länger, mit Einführung und mehr Details') : (LANG === 'en' ? 'The short version' : 'Die kurze Version')}">${names[f]}</button>`).join('');
+      fw.onclick = (e) => { const b = e.target.closest('button'); if (!b || b.dataset.f === now) return; stopAudio(); const u = new URL(location.href); if (b.dataset.f === 'short') u.searchParams.delete('form'); else u.searchParams.set('form', 'long'); location.replace(u); };
+      $('meta').append(fw);
+    }
+    if (feedback) import('./meinung.js?v=3').then((m) => m.createMeinung(B, { scene: feedback, versions: (langs || [LANG]).flatMap((l) => (long ? [l, l + '-long'] : [l])) }));
+    // scenes: a list, or a function that makes it from the loaded lines (scenes written as data, regie.js)
+    S.scenes = typeof scenes === 'function' ? [] : scenes; S.onEnd = end;
     fitStage(); new ResizeObserver(fitStage).observe($('stage'));
     document.addEventListener('visibilitychange', () => { visible = !document.hidden; });
     set.setCam(S.cam.x, S.Z0 * S.cam.k);
@@ -337,6 +347,7 @@ export function createStage({ set, priv, tag, keys, onCast = () => {}, z0 = 2.75
       let lines = null; try { lines = await loadLines(); } catch (e) { lines = null; }
       if (!lines) { $('load').textContent = EMBED ? T('signin') : T('none'); return false; }
       S.lines = lines; preloadAudio(Object.keys(lines.lines));
+      if (typeof scenes === 'function') { S.scenes = scenes(lines); dots(); }
       if (lines.start) { const h = document.querySelector('#start h2'), p = document.querySelector('#start p'); if (h && lines.start.title) h.textContent = lines.start.title; if (p && lines.start.text) p.textContent = lines.start.text; }
       await A[keys[0]].ready;
       $('goWatch').disabled = false; $('goTry').disabled = false; $('load').textContent = '';
@@ -355,5 +366,6 @@ export function createStage({ set, priv, tag, keys, onCast = () => {}, z0 = 2.75
 
   const B = { S, A, set, CAST, $, need, place, walkTo, cast, turn, faceTo, sit, trig, face, setB, cam, closeUp, wide, say, caption, text, data,
     wait, until, tween, abortAll, Abort, live, watch, setPaused, stopAudio, bodyRect, occupied, occupiers, start, onFrame, seen, tag, resetHooks, sayHooks, progress, isClean, players: PLAYERS };
+  if (qs.has('debug')) window.__stage = B;            // for checking the figures from the console
   return B;
 }

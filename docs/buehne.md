@@ -138,3 +138,31 @@ read or to hand to an agent: stars per version, preferences, devices, then every
 Calls to test and new-feature emails are designs in `worker/src/announce.js`, picked in the founder's email composer
 (Konto → Email users → Design) and previewed there as the real email before sending. The pilots' design is
 `pilots`; the draft and how to send it: `.local/feedback/email-draft.md`. Artwork: `tools/mail/README.md`.
+
+## Long versions
+
+Each pilot can come in four versions: short or long (`?form=long`), each explained in German or in English with
+German examples (`?lang=en`). The long version opens like a class: today's topic, why it matters in daily life, a
+question that gets the learner thinking, then the rule in more detail and a recap that comes back to the opening.
+The German and the English long scripts are written apart, not translated, and are staged differently (the German
+one starts from a story, Liv planning her day; the English one from what English speakers already know: "I can
+dance" against "Ich kann gut tanzen").
+
+- Scripts: `.local/scenes/<scene>-long/script.mjs` and `.local/scenes/<scene>-en-long/script.mjs` (private) write
+  that version's `lines.json`; run them after a change, then `node tools/scene-audio.cjs record <scene>-long`.
+  Lines shared with the short film reuse its recordings.
+- Staging as data: a long script carries `acts` (scenes) made of `beats`, played by `grammatik/buehne/regie.js`; a
+  scene file passes its own verbs (Kap 18: merk, wheel, sign, window, sweep, saw; Kap 13: home, pet, move, dash,
+  ring, ringsOff, lamps, lamp, chase, hop, mood, look, birds, bleat, band, carry, backHome).
+- Openers so far: Kap 18 German – Liv plans her day (will schwimmen, muss putzen, kann tanzen); Kap 18 English – "I
+  can dance" against "Ich kann richtig gut tanzen"; Kap 13 German – a coffee, a lost key, a dog (someone does
+  something, something receives it); Kap 13 English – "I see him", never "I see he", and word order against articles.
+- Boards (`tafel.js`) also take `{ cards: [{ pic, icon, t, at }] }`: picture cards with a caption, or the modal
+  verbs' icons with their meaning, appearing word by word.
+- The switch under the film: DE | EN and Kurz | Lang (`start({ long: true })`); the feedback form rates every
+  version this browser has watched (`de`, `en`, `de-long`, `en-long`).
+- One chapter's narration list holds all its versions: `node tools/scene-audio.cjs pack k05 k05-en k05-long k05-en-long`
+  (Kap 13: `pack k17 k17-en k17-long k17-en-long`), then `FILM_AUDIO_DIR=<abs>/.local/scenes/k05/upload node
+  tools/upload-film-audio.cjs --remote --only 5` (needs wrangler in `worker/node_modules`).
+- Local testing: the dev server in `.claude/launch.json` needs a long connection queue (`request_queue_size`), or
+  Chrome's many parallel module requests get reset and the scene never starts.
