@@ -14,7 +14,7 @@
 "use strict";
 const fs = require("node:fs");
 const path = require("node:path");
-const { spawn } = require("node:child_process");
+const { spawn, spawnSync } = require("node:child_process");
 
 const root = path.resolve(__dirname, "..");
 const BASE = path.join(root, ".local/gemini-images");
@@ -47,13 +47,31 @@ async function open() {
   console.log((await running()) ? "Opened. Sign in to Google in that window if asked." : "Chrome did not open its debugging port.");
 }
 
-async function connect() {
-  if (!(await running())) die("The Gemini window is not open. Run with --open first.");
-  const browser = await playwright().chromium.connectOverCDP(`http://127.0.0.1:${PORT}`);
+async function attach() {
+  const browser = await playwright().chromium.connectOverCDP(`http://127.0.0.1:${PORT}`, { timeout: 120000 });
   const context = browser.contexts()[0];
   let page = context.pages().find(p => p.url().startsWith("https://gemini.google.com"));
-  if (!page) { page = await context.newPage(); await page.goto(GEMINI); }
+  if (!page) { page = await context.newPage(); await page.goto(GEMINI, { timeout: 90000 }); }
   return { browser, context, page };
+}
+
+// Only this script's own Chrome (its separate profile) is ever restarted; the sign-in is kept in the profile.
+async function restartWindow() {
+  spawnSync("pkill", ["-f", "--", `--user-data-dir=${PROFILE}`]);
+  for (let i = 0; i < 20 && (await running()); i++) await sleep(500);
+  if (await running()) spawnSync("pkill", ["-9", "-f", "--", `--user-data-dir=${PROFILE}`]);
+  for (let i = 0; i < 20 && (await running()); i++) await sleep(500);
+  await open(); await sleep(15000);
+}
+
+async function connect() {
+  if (!(await running())) die("The Gemini window is not open. Run with --open first.");
+  try { return await attach(); }
+  catch (error) {
+    console.log(`Could not attach to the Gemini window (${String(error.message).split("\n")[0]}); restarting it.`);
+    await restartWindow();
+    return attach();
+  }
 }
 
 // Things that must stop the run and go to a person.
@@ -79,7 +97,7 @@ async function probe() {
 }
 
 async function generate(page, prompt, file) {
-  await page.goto(GEMINI, { waitUntil: "domcontentloaded" });
+  await page.goto(GEMINI, { waitUntil: "domcontentloaded", timeout: 90000 });
   const box = page.locator('rich-textarea [contenteditable="true"], [contenteditable="true"][role="textbox"]').first();
   await box.waitFor({ timeout: 30000 });
   const before = await page.locator("generated-image img, single-image img").count();
@@ -131,14 +149,21 @@ async function run() {
   if (!(await running())) { await open(); await sleep(15000); }
   const { browser, page } = await connect();
   await page.bringToFront();
-  let made = 0;
+  let made = 0, failures = 0;
   for (const item of todo) {
     item.prompt = item.scene
       ? `Create an image. ${item.scene}. ${manifest.style}`
       : `Create an image that helps a German learner understand the noun "${[item.article, item.word.replace(/[¹²³⁴⁵⁶⁷⁸⁹]/g, "")].filter(Boolean).join(" ")}" in this meaning: "${item.meaning}". ` +
         `German explanation: "${item.definition}".` + (item.example ? ` Example sentence: "${item.example}" (${item.exampleEn}).` : "") +
         ` Show one clear, everyday scene in which this meaning is instantly recognisable. ${manifest.style}`;
-    const result = await generate(page, item.prompt, path.join(dir, item.file));
+    // A slow page or a changed layout must not end the day's batch: retry once, give up after 3 failures in a row.
+    let result;
+    for (let attempt = 0; attempt < 2 && !result?.ok && !result?.stop; attempt++) {
+      try { result = await generate(page, item.prompt, path.join(dir, item.file)); }
+      catch (error) { result = { error: String(error.message || error).split("\n")[0] }; await sleep(20000); }
+    }
+    failures = result.error ? failures + 1 : 0;
+    if (failures >= 3) { console.log(`Stopped after 3 failures in a row (last: ${result.error}).`); break; }
     if (result.stop) { console.log(`Stopped: ${result.stop}. Nothing more is attempted; please look at the window.`); break; }
     if (result.error) { console.log(`${item.word}: ${result.error}`); item.error = result.error; }
     else {
