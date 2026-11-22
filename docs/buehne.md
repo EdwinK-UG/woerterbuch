@@ -215,3 +215,16 @@ node .local/scenes/lang/make.cjs --missing
 - **Packing.** One chapter's narration list holds all eight versions:
   `node tools/scene-audio.cjs pack k05 k05-en k05-sw k05-fr k05-long k05-en-long k05-sw-long k05-fr-long`.
 - **Feedback.** Stars for every version (`sw`, `fr`, `sw-long`, `fr-long`), stored in the columns of migration 0008.
+
+## Redesign of the play-along (22 Nov 2026)
+
+A second agent reviewed the pilots (`.local/redesign/review.md`, with screenshots) and redesigned the look and the
+practice without touching lesson content; merged the same day. The practice is a **play dock**: a fixed-height
+panel under the picture on a phone (320 px; 264 for choices, 304 for typing) and a floating card beside it when the
+frame is wide, so feedback never resizes the picture. Above it, quiet progress dots (`#round`); at the end, a calm
+finish state (`.finished`) with the existing caption and score. Tiles, wagons and buttons are at least 40–44 px;
+the pilots use the brand colours (paper, ink, blue) and SVG corner icons. The sentence strip in the practice keeps
+16 px and wraps rather than shrink far, but first shrinks to at most 80 % to stay on one line, so the clamp can join
+the modal verb and the infinitive over it (`fit()` in `satzband.js`). With four explaining languages a narrow dock
+shows only the language in use; tapping it opens the others in place of the film button. On a chapter page, a short
+landscape screen hides the site's tab bar so the frame fits under the header.

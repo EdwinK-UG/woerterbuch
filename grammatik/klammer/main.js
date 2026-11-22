@@ -5,15 +5,15 @@
    Then the learner builds sentences (the chapter's own exercise items, from the private lines file).
    Like every lesson scene this file holds no lesson text: lines, strips, signs, cards and practice items come from
    .local/scenes/k05/lines.json (?local) or, embedded, from the lesson page. */
-import { createStage, $, rich, plain, LANG, LANGS, LONG, T } from '../buehne/stage.js?v=5';
-import { actsToScenes } from '../buehne/regie.js?v=5';
-import { createWerkstatt, SPOTS } from '../buehne/sets/werkstatt.js?v=5';
-import { createStrip, wheel } from '../buehne/satzband.js?v=5';
-import { createPractice } from '../buehne/practice.js?v=5';
-import { createBlase } from '../buehne/blase.js?v=5';
-import { createTafel } from '../buehne/tafel.js?v=5';
-import { createLicht } from '../buehne/licht.js?v=5';
-import { sfx, play, unlockSfx } from '../buehne/sfx.js?v=5';
+import { createStage, $, rich, plain, LANG, LANGS, LONG, T } from '../buehne/stage.js?v=6';
+import { actsToScenes } from '../buehne/regie.js?v=6';
+import { createWerkstatt, SPOTS } from '../buehne/sets/werkstatt.js?v=6';
+import { createStrip, wheel } from '../buehne/satzband.js?v=6';
+import { createPractice } from '../buehne/practice.js?v=6';
+import { createBlase } from '../buehne/blase.js?v=6';
+import { createTafel } from '../buehne/tafel.js?v=6';
+import { createLicht } from '../buehne/licht.js?v=6';
+import { sfx, play, unlockSfx } from '../buehne/sfx.js?v=6';
 
 const set = createWerkstatt($('bg'), $('fg'));
 // four versions: k05 (German), k05-en (English with German examples), and their long versions k05-long, k05-en-long
@@ -39,7 +39,7 @@ function merk(id) { $('merk').innerHTML = `<small>${rich(cardText('merkTitle'))}
 let wh = null;
 async function turnWheel(key) { const w = B.data('wheels')[key]; if (!w) return; bubble.hide(); wh = wheel($('wheel'), w.slice(0, 4), { fromPost: w[4] }); await wait(0.7); await wh.turn(); await wait(0.5); }
 function clearAll() {
-  $('cards').replaceChildren(); $('merk').classList.remove('on'); $('wheel').classList.remove('on'); strip.clear(); bubble.hide();
+  $('cards').replaceChildren(); $('merk').classList.remove('on'); $('wheel').classList.remove('on'); strip.clear(); bubble.hide(); tafel.hide();
   set.V.win = 0; set.V.sign = B.data('signs').rauchen || ''; set.V.signPic = 'rauchen'; set.V.signGlow = 0; set.V.sweep = null;
 }
 B.resetHooks.push(clearAll);
@@ -138,7 +138,7 @@ const VERBS = {
 /* ---------- the practice ---------- */
 function setPractice(on) {
   $('panel').classList.toggle('pr', on); $('ctl').classList.toggle('pr', on); $('try').textContent = on ? T('film') : T('play');
-  if (!on) { PR.tell('', ''); $('answers').replaceChildren(); $('say').style.display = 'none'; $('panel').classList.remove('busy'); }
+  if (!on) { $('panel').classList.remove('finished'); PR.tell('', ''); $('answers').replaceChildren(); $('say').style.display = 'none'; $('panel').classList.remove('busy'); }
 }
 B.resetHooks.push((why) => { if (why === 'watch') setPractice(false); });
 const pick = (ids) => ids[Math.floor(Math.random() * ids.length)];
@@ -151,11 +151,11 @@ async function practise() {
   B.abortAll(); clearAll(); S.mode = 'practice'; B.setPaused(false); setPractice(true); PR.reset(); PR.busy(true); const gen = S.gen;
   try {
     if (['anton', 'liv', 'lena'].some((k) => !A[k].clean)) B.caption('elisa', T('wait'));
-    await need('anton', 'liv', 'lena');
+    await need('anton', 'liv', 'lena'); B.live(gen);
     B.cast('anton', 'liv', 'lena'); place(A.liv, 0.8, { left: false }); place(A.lena, -0.3, { d: 0.05, left: false }); await cam(1.5, 1.0, 1.0);
     let part = null; const parts = B.data('parts');
     for (const item of B.data('practice') || []) {
-      B.live(gen); strip.clear(); PR.tell('', '');
+      B.live(gen); PR.prepare(item, B.data('practice').length); strip.clear(); PR.tell('', '');
       if (item.part !== part) {
         part = item.part;
         if (part === 'sign') { place(A.anton, -4.2, { left: true }); place(A.liv, -2.9, { left: true }); place(A.lena, -2.2, { d: 0.05, left: true }); set.V.sign = ''; await cam(-4.0, 1.05, 1.2); }
@@ -182,7 +182,7 @@ async function practise() {
     }
     strip.clear(); PR.tell('', ''); PR.prompt('');
     bubble.hide(); trig(A.anton, 'clap'); for (const k of ['anton', 'liv', 'lena']) face(A[k], 'laugh'); await say('p06', { frame: false });
-    B.caption('elisa', T('done', { s: PR.P.score, n: PR.P.asked })); S.mode = 'idle';
+    B.caption('elisa', T('done', { s: PR.P.score, n: PR.P.asked })); S.mode = 'idle'; PR.finish();
   } catch (e) { if (!(e instanceof B.Abort)) console.error(e); }
 }
 

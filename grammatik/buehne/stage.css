@@ -1,12 +1,12 @@
 /* Die Bühne: the shared page of the animated grammar scenes (from grammatik/dorf/index.html).
    The picture keeps its shape (16:9, 4:3 on phones, never taller than about 60 % of the screen); captions, the
    sentence strip, tiles and answers sit below it, never over the people. */
-:root { --ink: #2a2f3a; --mut: #6b7482; --paper: #fffcf6; --line: #e6dccb; --bg: #f4efe4; --acc: #2f7d5b; --gold: #d9a521;
+:root { --ink: #20242b; --mut: #6b7482; --paper: #fff; --line: #e7e2d7; --bg: #f6f4ef; --acc: #1f6feb; --gold: #1f6feb; --soft: #e9f1ff; --on-acc: #fff; --badge-ink: #fff;
         --nom: #b8730a; --nom-s: #fcf0d9; --akk: #0b8579; --akk-s: #dcf3ef; --dat: #7c3aed; --dat-s: #f1eafe; --gen: #4b5d73; --gen-s: #e6ebf1;
         --bad: #c8503d; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --ink: #e9e6df; --mut: #a7adb6; --paper: #23262d; --line: #3a3f48; --bg: #17191e; --acc: #5fc196;
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --ink: #e9e6df; --mut: #a7adb6; --paper: #23262d; --line: #3a3f48; --bg: #17191e; --acc: #9dbfff; --soft: #26354c; --on-acc: #17191e; --badge-ink: #20242b; --gold: #9dbfff;
         --nom: #f2b450; --nom-s: #382a12; --akk: #4fd1c0; --akk-s: #11332f; --dat: #b79bff; --dat-s: #2a1f47; --gen: #9fb2c8; --gen-s: #232c37; --bad: #f08a78; } }
-:root[data-theme="dark"] { --ink: #e9e6df; --mut: #a7adb6; --paper: #23262d; --line: #3a3f48; --bg: #17191e; --acc: #5fc196;
+:root[data-theme="dark"] { --ink: #e9e6df; --mut: #a7adb6; --paper: #23262d; --line: #3a3f48; --bg: #17191e; --acc: #9dbfff; --soft: #26354c; --on-acc: #17191e; --badge-ink: #20242b; --gold: #9dbfff;
         --nom: #f2b450; --nom-s: #382a12; --akk: #4fd1c0; --akk-s: #11332f; --dat: #b79bff; --dat-s: #2a1f47; --gen: #9fb2c8; --gen-s: #232c37; --bad: #f08a78; }
 * { box-sizing: border-box; }
 html, body { margin: 0; background: var(--bg); color: var(--ink); font-family: Inter, system-ui, -apple-system, sans-serif; }
@@ -84,7 +84,7 @@ button.sb-w { cursor: pointer; }
 .sb-seat { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); font-size: 11px; font-weight: 700; color: var(--mut); letter-spacing: .04em; white-space: nowrap; }
 .sb-wh { position: absolute; bottom: -9px; left: 8px; right: 8px; height: 8px; background: radial-gradient(circle at 5px 4px, var(--mut) 3.2px, transparent 3.6px) left / 10px 8px no-repeat, radial-gradient(circle at 5px 4px, var(--mut) 3.2px, transparent 3.6px) right / 10px 8px no-repeat; opacity: .7; }
 .sb-w.r-v { background: var(--ink); color: var(--bg); border-color: var(--ink); }
-.sb-w.r-v .sb-seat { color: var(--bg); background: var(--gold); padding: 1px 7px; border-radius: 8px; color: #2a2f3a; }
+.sb-w.r-v .sb-seat { color: var(--bg); background: var(--gold); padding: 1px 7px; border-radius: 8px; color: var(--on-acc); }
 .sb-w.r-t { border: 2px dashed var(--ink); background: var(--paper); }
 .sb-w.r-c { font-size: .85em; border-style: dotted; }
 .sb-w.empty { border: 2px dashed var(--line); background: transparent; color: var(--mut); min-width: 64px; }
@@ -94,7 +94,7 @@ button.sb-w { cursor: pointer; }
 .sb-w.bad { border-color: var(--bad) !important; box-shadow: 0 0 0 3px color-mix(in srgb, var(--bad) 30%, transparent); }
 .sb-end { position: absolute; right: -10px; bottom: 6px; font-size: 1.1em; color: var(--mut); }
 @keyframes stamp { 0% { transform: scale(1); } 35% { transform: scale(1.25); color: var(--gold); } 100% { transform: scale(1); } }
-.sb-clamp { position: absolute; left: 0; top: 0; pointer-events: none; overflow: visible; opacity: 0; z-index: 2; }
+.sb-clamp { width: 100%; height: 100%; position: absolute; left: 0; top: 0; pointer-events: none; overflow: visible; opacity: 0; z-index: 2; }
 .sb-clamp.on { opacity: 1; }
 .sb-clamp path { fill: none; stroke: var(--gold); stroke-width: 4; stroke-linejoin: round; stroke-linecap: round; }
 .sb-clamp.slip path { stroke: var(--bad); }
@@ -103,7 +103,7 @@ button.sb-w { cursor: pointer; }
 .sb.cases .sb-w.r-a { border-color: var(--akk); background: var(--akk-s); color: var(--akk); }
 .sb.cases .sb-w.r-d { border-color: var(--dat); background: var(--dat-s); color: var(--dat); }
 .sb.cases .sb-w.r-g { border-color: var(--gen); background: var(--gen-s); color: var(--gen); }
-.sb-case { position: absolute; right: -7px; top: -9px; width: 19px; height: 19px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 800; color: #fff; border: 2px solid var(--bg); }
+.sb-case { position: absolute; right: -7px; top: -9px; width: 19px; height: 19px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 800; color: var(--badge-ink); border: 2px solid var(--bg); }
 .r-n .sb-case { background: var(--nom); } .r-a .sb-case { background: var(--akk); } .r-d .sb-case { background: var(--dat); } .r-g .sb-case { background: var(--gen); }
 /* the lights (der · das · die · die): which article changes in a case */
 #lamps { position: absolute; left: 50%; top: 8%; transform: translateX(-50%); z-index: 30; display: none; gap: 8px; }
@@ -299,58 +299,151 @@ html.shot #corner { display: none; }
 .tf-cards .tf-card:not(.ic) { width: 124px; }
 @media (max-width: 520px) { .tf-cards .tf-card:not(.ic) { width: 96px; } .tf-card figcaption { font-size: 12px; } }
 
-/* ---------- the practice: always on one screen with the picture, never squeezed (owner, 22 Nov) ----------
-   The animals and figures act out the learner's sentence, so the picture stays in view while they play: on a wide
-   screen the exercise is a column beside the picture, on a tall one a compact panel under it. Everything is sized so
-   that it fits without a scroll; the check button sits beside the tiles, the film button shares a row with the switches. */
-#panel.pr { display: grid; grid-template-columns: auto 1fr; align-content: start; gap: 6px; padding: 8px 10px; }
-#panel.pr > * { grid-column: 1 / -1; min-height: auto; }
-#panel.pr > #ctl { grid-column: 1; align-self: center; }
-#panel.pr > #meta { grid-column: 2; justify-content: flex-end; gap: 5px; min-width: 0; }
-#panel.pr #cap { padding: 4px 10px 5px; font-size: clamp(14px, 1.9vw, 16px); line-height: 1.3; }
-#panel.pr #cap .gl { margin-top: 0; }
-#panel.pr #practice { gap: 2px; }
+/* ---------- play dock: one calm surface beside or below the scene ----------
+   Copy and answers have reserved space for the current exercise family. Feedback never resizes the picture.
+   Sentence wagons wrap at their natural, readable size; the action stays beside the remaining tiles. */
+#app { max-width: 1240px; }
+button.main { color: var(--on-acc); }
+button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px solid var(--acc); outline-offset: 3px; }
+button { touch-action: manipulation; transition: background .18s, box-shadow .18s, transform .18s; }
+button:hover:not(:disabled) { filter: none; background: var(--soft); }
+button.main:hover:not(:disabled) { background: var(--acc); box-shadow: 0 3px 12px color-mix(in srgb, var(--acc) 24%, transparent); }
+button:active:not(:disabled) { transform: translateY(1px); }
+#app:has(#panel.pr) { --dock: 320px; display: grid; grid-template-rows: minmax(0, 1fr) var(--dock); }
+#app:has(#panel.kind-choice) { --dock: 264px; }
+#app:has(#panel.kind-type) { --dock: 304px; }
+#app:has(#panel.pr) #stage { height: 100%; min-height: 0; border-radius: 20px 20px 0 0; }
+#panel.pr { display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: 8px minmax(64px, max-content) minmax(0, 1fr) 40px;
+  gap: 8px; padding: 10px 12px; height: 100%; min-height: 0; overflow: visible; background: var(--paper);
+  border-radius: 0 0 20px 20px; border: 0; }
+#panel.pr > * { min-width: 0; min-height: 0; }
+.play-copy { min-width: 0; }
+#panel.pr .play-copy { grid-column: 1 / -1; grid-row: 2; display: flex; flex-direction: column; justify-content: center; gap: 4px; position: relative; }
+#panel.pr #practice { display: flex; gap: 4px; }
+#panel.pr #cap { display: none; margin: 0; padding: 0; border: 0; background: none; font-size: 14px; line-height: 1.3; }
+#panel.pr.busy #cap, #panel.pr.finished #cap { display: block; }
+#panel.pr #cap .who { display: none; }
+#panel.pr #cap .gl { margin-top: 2px; }
 #panel.pr #prompt { font-size: 16px; line-height: 1.3; }
-#panel.pr #prompt small { font-size: 12.5px; line-height: 1.3; }
-#panel.pr #verdict { font-size: 14px; line-height: 1.3; }
-/* the verdict takes the place of the instructions (read by then): the panel keeps its height */
+#panel.pr #prompt small { color: var(--mut); font-size: 14px; line-height: 1.3; }
+#panel.pr #prompt:has(b) small { display: none; }
+#panel.pr.busy #prompt, #panel.pr #practice:has(#verdict:not(:empty)) #prompt { display: none; }
+#panel.pr #verdict { min-height: 0; font-size: 14px; line-height: 1.35; }
 #panel.pr #verdict:empty { display: none; }
-#panel.pr #practice:has(#verdict:not(:empty)) #prompt small { display: none; }
-#panel.pr .sb.tiles { flex-flow: row wrap; align-items: center; gap: 6px; }
-#panel.pr .sb.tiles > .sb-rail { flex: 1 0 100%; min-height: 66px; padding-top: 20px; }
-#panel.pr .sb.tiles .sb-row { padding-bottom: 8px; }
-#panel.pr .sb.tiles > .sb-bank { flex: 1 1 auto; gap: 5px; }
-#panel.pr .sb.tiles > .sb-act { flex: 0 0 auto; margin-left: auto; }
-#panel.pr .sb-tile { font-size: clamp(15px, 1.9vw, 17px); padding: 5px 10px; min-height: 36px; }
-#panel.pr .sb-check { min-height: 36px; padding: 5px 14px; }
-#panel.pr #answers button { font-size: 16px; padding: 6px 12px; min-height: 36px; }
-#panel.pr #try { min-height: 34px; padding: 0 12px; font-size: 13px; font-weight: 700; border-radius: 999px; }
-#panel.pr #meta #langsw button, #panel.pr #meta #formsw button { min-height: 32px; padding: 0 9px; font-size: 12px; }
-#panel.pr #meta #fbBtn { min-height: 32px; padding: 0 10px; }
-#panel.pr #fbBtn .t, #panel.pr #meta .meta-l { display: none; }
-/* four explaining languages (DE EN SW FR) need more room than the film button leaves in a narrow practice panel (a
-   phone, or the column beside the picture): there only the language in use shows, and tapping it opens the others
-   on a line of their own, so the picture keeps its size */
+#panel.pr #verdict.ok { color: var(--acc); }
+#panel.pr #verdict.no { color: var(--ink); }
+#panel.pr #strip { grid-column: 1 / -1; grid-row: 3; align-self: stretch; display: flex; flex-direction: column; justify-content: center; gap: 8px; }
+#panel.pr #strip.tiles { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: auto auto; align-content: center; align-items: end; }
+#panel.pr #strip > .sb-rail { grid-column: 1 / -1; min-height: 56px; padding: 8px 4px 4px; overflow: visible; align-items: center; }
+#panel.pr #strip .sb-row { width: 100%; flex-wrap: wrap; gap: 8px calc(6px * var(--sbk, 1)); padding: 0; align-items: center; }
+#panel.pr #strip .sb-rail::after, #panel.pr #strip .sb-wh { display: none; }
+#panel.pr #strip .sb-w { font-size: calc(16px * var(--sbk, 1)); min-width: 40px; min-height: 44px; padding: 4px calc(5px * var(--sbk, 1)); border-radius: 12px; border-width: 1px; box-shadow: none; }
+#panel.pr #strip .sb-seat { position: static; transform: none; height: 11px; font-size: 10px; line-height: 11px; letter-spacing: 0; margin-bottom: 1px; }
+#panel.pr #strip .r-v .sb-seat { background: none; padding: 0; border-radius: 0; color: inherit; }
+#panel.pr #strip .sb-w.empty { min-width: 44px; background: var(--bg); border-color: var(--line); border-style: dashed; }
+#panel.pr #strip .sb-w.pick { border-color: var(--acc); background: var(--soft); box-shadow: 0 0 0 2px var(--soft); }
+#panel.pr #strip .sb-w.fixed { border-color: var(--acc); }
+#panel.pr #strip .sb-w.bad { border-color: var(--acc) !important; box-shadow: 0 0 0 2px var(--soft); }
+#panel.pr #strip .sb-w.r-t { border-style: dashed; }
+#panel.pr #strip .sb-end { right: -5px; bottom: 4px; }
+#panel.pr #strip .sb-bank { grid-column: 1; display: flex; gap: 6px; align-self: center; }
+#panel.pr #strip .sb-bank:empty { display: none; }
+#panel.pr #strip .sb-act { grid-column: 2; margin: 0; }
+#panel.pr #strip .sb-act:empty { display: none; }
+#panel.pr .sb-tile, #panel.pr #answers button { min-height: 40px; min-width: 40px; padding: 7px 10px; font-size: 16px; font-weight: 500;
+  border: 1px solid transparent; background: var(--bg); border-radius: 13px; box-shadow: 0 2px 0 color-mix(in srgb, var(--ink) 8%, transparent); }
+#panel.pr .sb-tile:hover, #panel.pr #answers button:hover { border-color: var(--acc); background: var(--soft); }
+#panel.pr .sb-check { min-height: 40px; padding: 7px 12px; border-radius: 13px; font-size: 14px; }
+#panel.pr #practice2 { grid-column: 1 / -1; grid-row: 3; align-self: center; gap: 12px; }
+#panel.pr.kind-order #practice2, #panel.pr.kind-regie #practice2, #panel.pr.kind-choice #strip, #panel.pr.kind-type #strip { display: none; }
+#panel.pr #answers { gap: 6px; }
+#panel.pr #answers button.out { opacity: .65; box-shadow: none; }
+#panel.pr #say { flex-wrap: wrap; gap: 6px; }
+#panel.pr #say .pre { flex-basis: 100%; font-size: 14px; line-height: 1.25; }
+#panel.pr #inp { height: 44px; min-height: 44px; font-size: 16px; border: 1px solid var(--line); border-radius: 13px; background: var(--bg); padding: 8px 12px; }
+#panel.pr #ok { min-height: 44px; min-width: 48px; padding: 8px 12px; border-radius: 13px; }
+#panel.pr > #ctl { grid-column: 1; grid-row: 4; align-self: center; }
+#panel.pr > #meta { grid-column: 2; grid-row: 4; justify-content: flex-end; gap: 4px; }
+#panel.pr #try { min-height: 40px; padding: 0 8px; font-size: 13px; font-weight: 600; border-radius: 12px; background: var(--soft); color: var(--ink); border-color: transparent; }
+#panel.pr #meta .meta-l, #panel.pr #fbBtn .t, #panel.pr #score { display: none; }
+#panel.pr #meta #langsw button, #panel.pr #meta #formsw button { min-height: 40px; min-width: 40px; padding: 0 7px; font-size: 13px; }
+#panel.pr #meta #langsw, #panel.pr #meta #formsw { border: 0; border-radius: 12px; background: var(--bg); }
+#panel.pr #meta #langsw button, #panel.pr #meta #formsw button { background: transparent; }
+#panel.pr #meta #langsw button.on, #panel.pr #meta #formsw button.on { background: var(--ink); color: var(--paper); border-radius: 11px; }
+#panel.pr #meta #fbBtn { margin-left: 0; width: 40px; min-height: 40px; padding: 0; border: 0; border-radius: 12px; background: var(--bg); color: var(--acc); font-size: 18px; }
+#round { display: none; }
+#panel.pr #round { display: flex; grid-column: 1 / -1; grid-row: 1; gap: 5px; justify-content: center; align-items: center; }
+#round i { width: 6px; height: 6px; border-radius: 3px; background: var(--line); transition: background .2s, width .2s; }
+#round i.done { background: var(--acc); }
+#round i.current { width: 18px; background: var(--acc); }
+#panel.pr.finished .play-copy { grid-row: 2 / 4; align-items: center; text-align: center; }
+#panel.pr.finished #cap { font: 500 clamp(21px, 3vw, 28px)/1.4 Fraunces, Georgia, serif; max-width: 26ch; }
+#panel.pr.finished #practice, #panel.pr.finished #strip, #panel.pr.finished #practice2 { display: none; }
+#panel.pr.finished .play-copy::before { content: ''; width: 34px; height: 34px; margin-bottom: 14px; background: var(--acc);
+  clip-path: polygon(50% 0,61% 35%,100% 50%,61% 63%,50% 100%,38% 63%,0 50%,38% 35%); animation: kind-reward .6s ease-out; }
+#panel.pr:has(#verdict.ok) .play-copy::after { content: ''; position: absolute; right: 4px; top: 3px; width: 13px; height: 13px; background: var(--acc);
+  clip-path: polygon(50% 0,62% 37%,100% 50%,62% 63%,50% 100%,38% 63%,0 50%,38% 37%); animation: kind-reward .6s ease-out; }
+@keyframes kind-reward { from { opacity: 0; transform: translateY(5px) scale(.7); } to { opacity: 1; transform: none; } }
+@media (min-aspect-ratio: 3/2), (min-width: 700px) {
+  #app:has(#panel.pr) { grid-template-columns: minmax(0, 1fr) clamp(360px, 46%, 480px); grid-template-rows: minmax(0, 1fr); gap: 12px; padding: 12px; align-items: center; }
+  #app:has(#panel.pr) #stage { height: min(100%, 580px); border-radius: 24px; }
+  #app:has(#panel.pr) #panel { height: min(100%, var(--dock)); border-radius: 24px; box-shadow: 0 8px 36px color-mix(in srgb, var(--ink) 5%, transparent); }
+}
+@media (min-aspect-ratio: 3/2) and (max-height: 420px) {
+  #app:has(#panel.pr) { grid-template-columns: minmax(0, 1fr) clamp(400px, 55%, 500px); gap: 8px; padding: 8px; }
+  #panel.pr { grid-template-rows: 6px minmax(64px, max-content) minmax(0, 1fr) 40px; padding: 8px; gap: 4px; }
+  #panel.pr #prompt:has(b) small { display: none; }
+  #panel.pr.busy #cap { display: none; }
+  #panel.pr.finished #cap { display: block; }
+  #panel.pr #strip { gap: 6px; }
+}
+/* four explaining languages (DE EN SW FR) need more room than the film button leaves in a narrow play panel (a
+   phone, or the card beside the picture): there only the language in use shows; tapping it opens the others, which
+   take the film button's place until one is chosen or it is tapped again, so the dock keeps its height */
 #panel { container-type: inline-size; }
-@container (max-width: 470px) {
+@container (max-width: 480px) {
   #panel.pr #langsw:not(.open) button:not(.on) { display: none; }
   #panel.pr #langsw:not(.open) button.on::after { content: ' ▾'; font-size: 10px; }
+  #panel.pr:has(#langsw.open) > #ctl { display: none; }
   #panel.pr > #meta:has(#langsw.open) { grid-column: 1 / -1; justify-content: flex-start; }
   #panel.pr > #meta:has(#langsw.open) #fbBtn { margin-left: auto; }
 }
-/* wide (a laptop window, a tablet on its side, full screen): the exercise in a column beside the picture */
-@media (min-aspect-ratio: 3/2) {
-  #app:has(#panel.pr) { flex-direction: row; }
-  #app:has(#panel.pr) #stage { flex: 1 1 auto; min-height: 0; min-width: 0; height: 100%; }
-  #app:has(#panel.pr) #panel { flex: 0 0 clamp(300px, 46%, 470px); height: 100%; border-left: 1px solid var(--line); grid-template-rows: auto auto auto auto 1fr; }
-  #app:has(#panel.pr) #panel > #ctl, #app:has(#panel.pr) #panel > #meta { align-self: end; }
-}
-#panel.pr .sb-w.empty { min-width: 48px; }
-#panel.pr .sb.tiles .sb-row { gap: 4px; }
-#panel.pr .sb.tiles .sb-w { padding-left: .42em; padding-right: .42em; }
-#panel.pr #score { display: none; }
-/* very short (a phone on its side): the spoken caption and the general instruction give way (Max is still heard;
-   the task, the strip, the tiles and the verdict stay) */
-@media (max-height: 360px) {
-  #panel.pr #cap, #panel.pr #prompt small { display: none; }
+/* A gentle shared finish for start, watch controls, bubbles and feedback. */
+#corner button { width: 40px; height: 40px; background: color-mix(in srgb, var(--paper) 94%, transparent); border: 0; color: var(--ink); }
+#corner svg { width: 18px; height: 18px; vertical-align: middle; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+#start { background: color-mix(in srgb, var(--ink) 18%, transparent); }
+#start .box { padding: 22px; border-radius: 24px; box-shadow: 0 12px 40px #20242b18; }
+#start button { min-height: 44px; padding: 10px 16px; border-radius: 14px; }
+#app:has(#start:not([style*="display: none"])) #panel { visibility: hidden; }
+#load:empty { display: none; }
+#cap { border: 0; background: var(--paper); border-radius: 16px; }
+#dots button { width: 40px; height: 40px; min-width: 40px; }
+#meta #langsw button, #meta #formsw button { min-height: 40px; min-width: 40px; }
+#meta #fbBtn { min-height: 40px; border: 0; background: var(--soft); color: var(--ink); }
+.bub { background: var(--paper); color: var(--ink); border: 1px solid var(--line); border-radius: 22px; box-shadow: 0 6px 24px #20242b14; }
+.bub-tail path, .bub-tail circle { fill: var(--paper); stroke: var(--line); stroke-width: 1; }
+/* Result illustrations sit beside their sentence, leaving the actors' heads clear in the compact scene. */
+#app:has(#panel.pr) .bub.on:has(.bub-text:not(:empty)) { display: grid; grid-template-columns: 64px minmax(0, 1fr); align-items: center; gap: 6px; max-width: min(92%, 300px); padding: 8px; }
+#app:has(#panel.pr) .bub.on:has(.bub-text:not(:empty)) .bub-pic > canvas { width: 64px !important; height: 40px !important; }
+#app:has(#panel.pr) .bub.on:has(.bub-text:not(:empty)) .bub-text { font-size: 14px; line-height: 1.3; padding: 0; text-align: left; }
+#app:has(#panel.pr) .bub.on:has(.bub-text:not(:empty)) .bub-sb { display: none; }
+#app:has(#panel.pr) .bub.on:has(.bub-pic[style*="display: none"]) { grid-template-columns: 1fr; }
+
+.tafel { border-width: 3px; border-color: var(--line); border-radius: 18px; box-shadow: 0 6px 24px #20242b14; }
+.tafel .sb-lab { font-size: 12px; }
+.tafel .sb-w:first-child .sb-lab { left: 0; transform: none; }
+.tafel .sb-w:last-child .sb-lab { left: auto; right: 0; transform: none; }
+.fb-card { border-radius: 24px 24px 0 0; padding: 22px 18px 18px; gap: 14px; }
+.fb-card > * { flex-shrink: 0; }
+.fb-card h3 { padding-right: 40px; }
+.fb-x { width: 40px; height: 40px; min-height: 40px; }
+.fb-stars button { width: 40px; height: 40px; min-height: 40px; color: var(--mut); }
+.fb-stars button.on { color: var(--acc); }
+.fb-pick button { min-height: 40px; }
+.fb-more { min-height: 40px; font-size: 13px; text-align: left; }
+.fb-card textarea { border-color: var(--line); background: var(--bg); min-height: 82px; }
+.fb-card textarea::placeholder { color: var(--mut); opacity: 1; }
+@media (min-width: 560px) { .fb-card { border-radius: 24px; } }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; animation: none !important; }
 }

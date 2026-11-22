@@ -52,16 +52,114 @@ test('every stage and scene module parses as a JavaScript module', () => {
   } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
 });
 
-test('the practice stays on one screen with the picture: beside it when wide, compact under it when tall', () => {
-  const css = fs.readFileSync(path.join(__dirname, '..', 'grammatik', 'buehne', 'stage.css'), 'utf8');
-  assert.match(css, /#panel > \* \{ flex-shrink: 0; \}/);                       // nothing squeezed (text ran over the task)
-  assert.match(css, /@media \(min-aspect-ratio: 3\/2\) \{\s*#app:has\(#panel\.pr\) \{ flex-direction: row; \}/);
-  assert.match(css, /#panel\.pr \.sb\.tiles \{ flex-flow: row wrap;/);             // the check button beside the tiles
-  const stage = fs.readFileSync(path.join(__dirname, '..', 'grammatik', 'buehne', 'stage.js'), 'utf8');
-  const page = fs.readFileSync(path.join(__dirname, '..', 'grammatik', 'grammatik.js'), 'utf8');
-  assert.match(stage, /type: 'werkstatt-focus'/);                                    // starting brings the frame into view
+test('the play dock reserves feedback space and keeps readable, wrapping sentence controls', () => {
+  const css = fs.readFileSync(path.join(ROOT, 'grammatik/buehne/stage.css'), 'utf8');
+  assert.match(css, /#panel > \* \{ flex-shrink: 0; \}/);
+  assert.match(css, /grid-template-rows: minmax\(0, 1fr\) var\(--dock\)/);
+  assert.match(css, /#panel\.pr #strip \.sb-row \{[^}]*flex-wrap: wrap/);
+  // 16 px, shrinking to 80 % at most so the clamp's sentence stays on one line; tap targets keep 44 px
+  assert.match(css, /#panel\.pr #strip \.sb-w \{[^}]*font-size: calc\(16px \* var\(--sbk, 1\)\);[^}]*min-height: 44px/);
+  assert.match(fs.readFileSync(path.join(ROOT, 'grammatik/buehne/satzband.js'), 'utf8'), /while \(wrapped\(\) && k > 0\.8\)/);
+  assert.match(css, /#panel\.pr\.finished #cap/);
+  assert.match(css, /prefers-reduced-motion: reduce/);
+  const page = fs.readFileSync(path.join(ROOT, 'grammatik/grammatik.js'), 'utf8');
   assert.match(page, /d\.type === 'werkstatt-focus' && f\.dataset\.hero/);
-  assert.doesNotMatch(page, /werkstatt-need/);                                        // the frame no longer grows past the screen
+  assert.doesNotMatch(page, /werkstatt-need/);
+});
+
+// Run the small DOM-facing modules with inert sound and a local scene clock: no Rive, audio or services.
+const { JSDOM } = require('jsdom'), vm = require('node:vm');
+function uiModule(file, exports, w, extra = {}) {
+  const source = fs.readFileSync(path.join(ROOT, file), 'utf8').replace(/^import .*;$/gm, '').replace(/export /g, '');
+  const context = vm.createContext({ document: w.document, window: w, localStorage: w.localStorage,
+    navigator: w.navigator, screen: { width: 390, height: 844 }, innerWidth: 390, innerHeight: 844,
+    $: id => w.document.getElementById(id), LANG: 'de', VERSION: 'de',
+    rich: s => String(s), plain: s => String(s), esc: s => String(s), T: k => k,
+    play: new Proxy({}, { get: () => () => {} }), ...extra });
+  return vm.runInContext(source + ';({' + exports.join(',') + '})', context);
+}
+function practiceUI() {
+  const dom = new JSDOM('<div id="panel"><div id="round"></div><div id="prompt"></div><div id="verdict"></div><div id="answers"></div><div id="say"><input id="inp"><button id="ok">OK</button></div><div id="score"></div></div>', { url: 'https://local.test' });
+  const { createPractice } = uiModule('grammatik/buehne/practice.js', ['createPractice'], dom.window);
+  const ui = createPractice({ data: () => ({}), wait: async () => {}, Abort: class extends Error {} }, { clear() {} });
+  return { dom, ui, q: s => dom.window.document.querySelector(s) };
+}
+test('round progress counts completed tasks, preserves first-try scoring, and resets the finish', async () => {
+  const { dom, ui, q } = practiceUI();
+  try {
+    const item = { kind: 'choice', q: '___', options: ['a', 'b', 'c'], right: 1 };
+    ui.reset(); ui.prepare(item, 2); ui.setLead('instruction');
+    const first = ui.ask(item); q('#answers button').click(); await Promise.resolve();
+    q('#answers button:nth-child(2)').click(); await first;
+    assert.equal(ui.P.score, 0); assert.equal(ui.P.asked, 1);
+    assert.equal(q('#round').getAttribute('aria-valuenow'), '1');
+    assert.equal(q('#round').querySelectorAll('.done').length, 1);
+    ui.prepare(item, 2); const second = ui.ask(item); q('#answers button:nth-child(2)').click(); await second;
+    assert.equal(ui.P.score, 1); ui.finish();
+    assert.equal(q('#prompt').textContent, ''); assert.ok(q('#panel').classList.contains('finished'));
+    assert.equal(q('#round').querySelectorAll('.done').length, 2);
+    ui.reset(); ui.prepare(item, 2);
+    assert.equal(q('#round').getAttribute('aria-valuenow'), '0');
+    assert.equal(q('#round').querySelectorAll('.current').length, 1);
+    assert.equal(q('#panel').classList.contains('finished'), false);
+  } finally { dom.window.close(); }
+});
+test('editing an answer clears the previous verdict without changing the question', () => {
+  const { dom, ui, q } = practiceUI();
+  try {
+    ui.setLead('instruction'); ui.prompt('<b>task</b>'); ui.tell('no', 'reason');
+    q('#inp').dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+    assert.equal(q('#verdict').textContent, ''); assert.equal(q('#prompt').textContent, 'instructiontask');
+    ui.tell('no', 'reason'); q('#panel').dispatchEvent(new dom.window.Event('practice-edit'));
+    assert.equal(q('#verdict').textContent, '');
+  } finally { dom.window.close(); }
+});
+test('feedback resumes a running scene and preserves a deliberately paused one', () => {
+  const dom = new JSDOM('<div id="meta"></div>', { url: 'https://local.test' });
+  try {
+    const { createMeinung } = uiModule('grammatik/buehne/meinung.js', ['createMeinung'], dom.window);
+    const B = { S: { paused: false }, setPaused(p) { this.S.paused = p; } };
+    createMeinung(B, { scene: 'fixture', versions: ['de'] });
+    const q = s => dom.window.document.querySelector(s);
+    q('#fbBtn').click(); assert.equal(B.S.paused, true);
+    q('[data-x]').click(); assert.equal(B.S.paused, false);
+    B.S.paused = true; q('#fbBtn').click(); q('.fb').dispatchEvent(new dom.window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    assert.equal(B.S.paused, true); assert.equal(dom.window.document.activeElement, q('#fbBtn'));
+  } finally { dom.window.close(); }
+});
+test('reduced motion keeps sentence selection and the clamp usable without animation', async () => {
+  const dom = new JSDOM('<div id="strip"></div>', { url: 'https://local.test' });
+  try {
+    dom.window.Element.prototype.animate = () => { throw Error('animation with reduced motion'); };
+    const { createStrip } = uiModule('grammatik/buehne/satzband.js', ['createStrip'], dom.window,
+      { REDUCED: true, ResizeObserver: class { observe() {} }, Event: dom.window.Event });
+    const root = dom.window.document.querySelector('#strip'), strip = createStrip(root);
+    root.querySelector('path').getTotalLength = () => 100;
+    const result = strip.tiles(['A', 'B'], { roles: ['v', 't'] });
+    [...root.querySelectorAll('.sb-tile')].find(b => b.textContent === 'A').click();
+    root.querySelector('.sb-tile').click(); root.querySelector('.sb-check').click();
+    const order = await result; strip.settle(['A', 'B'], ['v', 't'], order); await strip.setClamp(true);
+    assert.equal(root.querySelectorAll('.sb-w').length, 2); assert.ok(root.querySelector('.sb-clamp.on'));
+    assert.equal(root.querySelector('.sb-row').style.getPropertyValue('--sbk'), '1');
+  } finally { dom.window.close(); }
+});
+test('hero focus accounts for the whole sticky header and ignores removed frames', () => {
+  const dom = new JSDOM('<header style="position:sticky"></header><nav class="tabs" style="position:fixed"></nav><iframe></iframe>', { url: 'https://local.test' });
+  try {
+    const w = dom.window, q = s => w.document.querySelector(s), frames = [], timers = [], scrolls = [];
+    q('header').getBoundingClientRect = () => ({ top: 0, bottom: 113 });
+    q('nav').getBoundingClientRect = () => ({ top: 731 });
+    q('iframe').getBoundingClientRect = () => ({ top: 45 });
+    const source = fs.readFileSync(path.join(ROOT, 'grammatik/grammatik.js'), 'utf8');
+    const funcs = source.slice(source.indexOf('function topBar()'), source.indexOf('function sceneFrameMessages('));
+    const context = vm.createContext({ document: w.document, getComputedStyle: w.getComputedStyle.bind(w), innerHeight: 844, scrollY: 100,
+      requestAnimationFrame: f => frames.push(f), setTimeout: f => timers.push(f), scrollTo: p => scrolls.push(p) });
+    const helpers = vm.runInContext(funcs + ';({topBar,bottomBar,focusHero})', context);
+    assert.equal(helpers.topBar(), 113); assert.equal(helpers.bottomBar(), 113);
+    helpers.focusHero(q('iframe')); while (frames.length) frames.shift()();
+    assert.equal(scrolls[0].top, 26); assert.equal(scrolls[0].behavior, 'instant');
+    q('iframe').remove(); timers.shift()(); assert.equal(scrolls.length, 1);
+  } finally { dom.window.close(); }
 });
 
 test('short character lines are recorded with German enforced ("Super!" was read the English way)', () => {

@@ -15,14 +15,32 @@ const fold = (s) => norm(s).toLowerCase();
 export function createPractice(B, strip, hooks = {}) {
   const miss = async (item, tries) => { if (hooks.miss) { try { await hooks.miss(item, tries); } catch (e) { if (e instanceof B.Abort) throw e; } } };
   const P = { score: 0, asked: 0 };
+  let total = 0;
+  const panel = $('panel');
+  function paintProgress() {
+    const round = $('round'); if (!round) return;
+    round.replaceChildren(...Array.from({ length: total }, (_, i) => {
+      const dot = document.createElement('i'); dot.className = i < P.asked ? 'done' : i === P.asked ? 'current' : ''; return dot;
+    }));
+    round.setAttribute('aria-valuemax', String(total)); round.setAttribute('aria-valuenow', String(P.asked));
+  }
+  function prepare(item, length) {
+    total = length; panel.classList.remove('kind-order', 'kind-regie', 'kind-choice', 'kind-type', 'finished');
+    panel.classList.add('kind-' + item.kind); paintProgress();
+  }
+  function finish() {
+    lead = ''; prompt(''); busy(false); panel.classList.add('finished'); paintProgress();
+  }
   let lead = '';                              // the part's instruction, kept above every item
   const prompt = (html) => { $('prompt').innerHTML = (lead ? `<small>${lead}</small>` : '') + html; };
   const setLead = (html) => { lead = html || ''; };
   const busy = (on) => $('panel').classList.toggle('busy', on);
   const tell = (cls, html) => { $('verdict').className = cls; $('verdict').innerHTML = html; };
   const why = (k) => (B.data('why')[k] || '');
-  function reset() { lead = ''; P.score = 0; P.asked = 0; $('score').textContent = ''; tell('', ''); prompt('&nbsp;'); $('answers').replaceChildren(); $('say').style.display = 'none'; strip.clear(); }
-  function count(firstTry) { P.asked++; if (firstTry) P.score++; $('score').textContent = `${P.score} / ${P.asked}`; }
+  panel.addEventListener('practice-edit', () => tell('', ''));
+  $('inp').addEventListener('input', () => tell('', ''));
+  function reset() { total = 0; panel.classList.remove('finished', 'kind-order', 'kind-regie', 'kind-choice', 'kind-type'); paintProgress(); lead = ''; P.score = 0; P.asked = 0; $('score').textContent = ''; tell('', ''); prompt('&nbsp;'); $('answers').replaceChildren(); $('say').style.display = 'none'; strip.clear(); }
+  function count(firstTry) { P.asked++; paintProgress(); if (firstTry) P.score++; $('score').textContent = `${P.score} / ${P.asked}`; }
 
   /* order: where is the mistake? The strip shows the learner's own order, then the machine reacts */
   function diagnose(item, order) {
@@ -93,14 +111,14 @@ export function createPractice(B, strip, hooks = {}) {
       let pre = $('say').querySelector('.pre'); if (!pre) { pre = document.createElement('span'); pre.className = 'pre'; $('say').prepend(pre); }
       pre.textContent = item.pre || ''; pre.style.display = item.pre ? '' : 'none';
       const whole = (x) => (item.pre ? item.pre + ' ' : '') + x;
-      for (const c of item.chips || []) { const b = document.createElement('button'); b.type = 'button'; b.innerHTML = rich(c); b.onclick = () => { inp.value = (inp.value.trim() + ' ' + plain(c)).trim(); inp.focus(); }; box.appendChild(b); }
+      for (const c of item.chips || []) { const b = document.createElement('button'); b.type = 'button'; b.innerHTML = rich(c); b.onclick = () => { inp.value = (inp.value.trim() + ' ' + plain(c)).trim(); inp.focus({ preventScroll: true }); }; box.appendChild(b); }
       const check = () => {
-        const v = inp.value.trim(); if (!v) { inp.focus(); return; }
+        const v = inp.value.trim(); if (!v) { inp.focus({ preventScroll: true }); return; }
         tries++; const said = norm(v), right = item.ok.some((s) => norm(s) === said);
-        if (right) { play.right(); ok.onclick = null; inp.onkeydown = null; tell('ok', `<b>${T('right')}</b> ${esc(whole(said))}${item.end || '.'}`); count(tries === 1); box.replaceChildren(); $('say').style.display = 'none'; done({ right: true, tries, said }); return; }
+        if (right) { busy(true); play.right(); ok.onclick = null; inp.onkeydown = null; tell('ok', `<b>${T('right')}</b> ${esc(whole(said))}${item.end || '.'}`); count(tries === 1); box.replaceChildren(); $('say').style.display = 'none'; done({ right: true, tries, said }); return; }
         play.wrong();
         const known = Object.entries(item.bad || {}).find(([s]) => fold(s) === fold(v));
-        if (tries >= 3) { ok.onclick = null; inp.onkeydown = null; tell('no', `${T('rightis')} <b>${rich(whole(item.ok[0]))}${item.end || '.'}</b>`); count(false); box.replaceChildren(); $('say').style.display = 'none'; done({ right: false, tries }); return; }
+        if (tries >= 3) { busy(true); ok.onclick = null; inp.onkeydown = null; tell('no', `${T('rightis')} <b>${rich(whole(item.ok[0]))}${item.end || '.'}</b>`); count(false); box.replaceChildren(); $('say').style.display = 'none'; done({ right: false, tries }); return; }
         const close = item.ok.some((s) => fold(s) === fold(v));       // only the capital letters differ
         tell('no', `<b>${T('notyet')}</b> ${rich(close ? why('caps') : known ? known[1] : tries === 2 && item.hint ? item.hint : why('type'))}`);
         inp.select(); miss(item, tries);
@@ -110,5 +128,5 @@ export function createPractice(B, strip, hooks = {}) {
     });
   }
   const ask = (item) => (item.kind === 'order' ? askOrder(item) : item.kind === 'choice' ? askChoice(item) : askType(item));
-  return { P, ask, askOrder, askChoice, askType, reset, prompt, setLead, tell, busy, count };
+  return { P, ask, askOrder, askChoice, askType, reset, prepare, finish, prompt, setLead, tell, busy, count };
 }

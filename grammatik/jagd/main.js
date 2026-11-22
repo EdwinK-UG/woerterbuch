@@ -5,16 +5,16 @@
    chases – and the articles swap – Der Ball jagt den Hund: now the ball chases the dog across the meadow.
    Practice: Regie (the learner's sentence is acted out, exactly as it is grammatically), Max packs his backpack
    (den / das / die) and "Doch, ich habe …". All lesson text comes from the private .local/scenes/k17/lines.json. */
-import { createStage, $, rich, LANG, LANGS, LONG, T } from '../buehne/stage.js?v=5';
-import { actsToScenes } from '../buehne/regie.js?v=5';
-import { createVillage } from '../dorf/village.js?v=5';
-import { createStrip } from '../buehne/satzband.js?v=5';
-import { createPractice } from '../buehne/practice.js?v=5';
-import { createFx } from '../buehne/tiere.js?v=5';
-import { createBlase } from '../buehne/blase.js?v=5';
-import { createTafel } from '../buehne/tafel.js?v=5';
-import { createLicht } from '../buehne/licht.js?v=5';
-import { sfx, play, unlockSfx } from '../buehne/sfx.js?v=5';
+import { createStage, $, rich, LANG, LANGS, LONG, T } from '../buehne/stage.js?v=6';
+import { actsToScenes } from '../buehne/regie.js?v=6';
+import { createVillage } from '../dorf/village.js?v=6';
+import { createStrip } from '../buehne/satzband.js?v=6';
+import { createPractice } from '../buehne/practice.js?v=6';
+import { createFx } from '../buehne/tiere.js?v=6';
+import { createBlase } from '../buehne/blase.js?v=6';
+import { createTafel } from '../buehne/tafel.js?v=6';
+import { createLicht } from '../buehne/licht.js?v=6';
+import { sfx, play, unlockSfx } from '../buehne/sfx.js?v=6';
 
 const set = createVillage($('bg'), $('fg'));
 // four versions: k17 (German), k17-en (English with German examples), and their long versions k17-long, k17-en-long
@@ -53,7 +53,7 @@ async function lamp(i) {                // the article turns to its accusative: 
   else { el.animate([{ transform: 'none' }, { transform: 'translateY(-4px)' }, { transform: 'none' }], { duration: 400 }); play.tick(); }
 }
 function clearAll() {
-  $('cards').replaceChildren(); $('merk').classList.remove('on'); lamps(false); strip.clear(); bubble.hide(); fx.ringsOff(); fx.birds(false); fx.pack(null); fx.F.flyers = [];
+  $('cards').replaceChildren(); $('merk').classList.remove('on'); lamps(false); strip.clear(); bubble.hide(); tafel.hide(); fx.ringsOff(); fx.birds(false); fx.pack(null); fx.F.flyers = [];
   for (const a of Object.values(PETS)) { a.raise = 0; a.mood = 'idle'; }
 }
 B.resetHooks.push(clearAll);
@@ -160,7 +160,7 @@ const VERBS = {
 /* ---------- the practice ---------- */
 function setPractice(on) {
   $('panel').classList.toggle('pr', on); $('ctl').classList.toggle('pr', on); $('try').textContent = on ? T('film') : T('play');
-  if (!on) { PR.tell('', ''); $('answers').replaceChildren(); $('say').style.display = 'none'; $('panel').classList.remove('busy'); }
+  if (!on) { $('panel').classList.remove('finished'); PR.tell('', ''); $('answers').replaceChildren(); $('say').style.display = 'none'; $('panel').classList.remove('busy'); }
 }
 B.resetHooks.push((why) => { if (why === 'watch') setPractice(false); });
 let flyer = null;
@@ -213,11 +213,11 @@ async function regie(item) {
 async function practise() {
   B.abortAll(); clearAll(); S.mode = 'practice'; B.setPaused(false); setPractice(true); PR.reset(); PR.busy(true); const gen = S.gen;
   try {
-    await need('max');
+    await need('max'); B.live(gen);
     B.cast('max'); place(A.max, HOME.max, { left: false }); home('dog', 'ball', 'cat'); await cam(PBASE, 1.0, 0.8);
     let part = null; const parts = B.data('parts');
     for (const item of B.data('practice') || []) {
-      B.live(gen); strip.clear(); PR.tell('', ''); flyer = null;
+      B.live(gen); PR.prepare(item, B.data('practice').length); strip.clear(); PR.tell('', ''); flyer = null;
       if (item.part !== part) {
         part = item.part;
         if (part === 'regie') { await say('p01'); }
@@ -239,7 +239,7 @@ async function practise() {
     }
     strip.clear(); PR.tell('', ''); PR.prompt(''); fx.pack(null);
     face(A.max, 'laugh'); fx.hop(dog); play.bark(); await say('p06');
-    B.caption('elisa', T('done', { s: PR.P.score, n: PR.P.asked })); S.mode = 'idle';
+    B.caption('elisa', T('done', { s: PR.P.score, n: PR.P.asked })); S.mode = 'idle'; PR.finish();
   } catch (e) { if (!(e instanceof B.Abort)) console.error(e); }
 }
 

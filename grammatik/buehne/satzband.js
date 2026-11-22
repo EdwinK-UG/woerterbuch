@@ -34,6 +34,15 @@ export function createStrip(root, { cases = false } = {}) {
   const rect = (el) => el.getBoundingClientRect();
   // a long sentence on a phone: the wagons shrink (down to 60 %) until the strip fits its width
   function fit() {
+    // the practice strip wraps rather than shrink far (comfortable to tap), but a little shrinking first keeps the
+    // sentence on one line, so the clamp can join the modal verb and the infinitive over it
+    if (root.id === 'strip') {
+      const wrapped = () => { const w = [...row.children].filter((c) => c.offsetParent); return w.length > 1 && w[w.length - 1].offsetTop > w[0].offsetTop + 4; };
+      let k = 1; row.style.setProperty('--sbk', '1');
+      while (wrapped() && k > 0.8) { k = Math.max(0.8, k - 0.05); row.style.setProperty('--sbk', k.toFixed(2)); }
+      if (wrapped()) row.style.setProperty('--sbk', '1');      // it does not fit even so: wrap at the full size
+      return;
+    }
     // (gaps and the wagons' least width do not shrink with the font, so a few rounds until it fits)
     let k = 1; row.style.setProperty('--sbk', k); const have = row.parentElement.clientWidth - 6;
     for (let i = 0; i < 4 && row.scrollWidth > have && k > 0.6; i++) { k = Math.max(0.6, k * (have / row.scrollWidth) * 0.97); row.style.setProperty('--sbk', k.toFixed(3)); }
@@ -82,6 +91,10 @@ export function createStrip(root, { cases = false } = {}) {
     const R = rect(row.parentElement), a = rect(v), b = rect(t), y = a.top - R.top - 4, top = 3;
     const x1 = a.left - R.left + a.width / 2, x2 = b.left - R.left + b.width / 2;
     svg.setAttribute('width', R.width); svg.setAttribute('height', R.height); svg.setAttribute('viewBox', `0 0 ${R.width} ${R.height}`);
+    if (Math.abs(a.top - b.top) > 8) {
+      const edge = R.width - 2, endY = b.top - R.top - 3;
+      return `M${x1} ${y} L${x1} ${top} L${edge} ${top} L${edge} ${endY} L${x2} ${endY} L${x2} ${endY + 5}`;
+    }
     return `M${x1} ${y} L${x1} ${top} L${x2} ${top} L${x2} ${y}`;
   }
   async function setClamp(on, quiet) {
@@ -91,7 +104,7 @@ export function createStrip(root, { cases = false } = {}) {
     const len = path.getTotalLength(); path.style.strokeDasharray = len; path.style.strokeDashoffset = REDUCED ? 0 : len;
     svg.classList.add('on'); if (!REDUCED) await path.animate([{ strokeDashoffset: len }, { strokeDashoffset: 0 }], { duration: 600, easing: EASE, fill: 'forwards' }).finished.catch(() => {});
     path.style.strokeDashoffset = 0;
-    if (!quiet) { play.click(); for (const el of [row.querySelector('.r-v'), row.lastElementChild]) el && el.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.08)' }, { transform: 'scale(1)' }], { duration: 260 }); }
+    if (!quiet) { play.click(); if (!REDUCED) for (const el of [row.querySelector('.r-v'), row.lastElementChild]) el && el.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.08)' }, { transform: 'scale(1)' }], { duration: 260 }); }
   }
   new ResizeObserver(() => { if (row.children.length) fit(); if (clampOn) { const d = clampPath(); if (d) path.setAttribute('d', d); } }).observe(root);
 
@@ -128,7 +141,7 @@ export function createStrip(root, { cases = false } = {}) {
       })); fit();
       bank.replaceChildren(...order.filter((t) => !slot.includes(t)).map((t) => {
         const b = document.createElement('button'); b.type = 'button'; b.className = 'sb-tile'; b.innerHTML = rich(list[t]); b.dataset.id = 'tile' + t;
-        b.onclick = () => { const s = pick != null && slot[pick] == null ? pick : slot.indexOf(null); if (s < 0) { play.wrong(); return; } slot[s] = t; pick = null; play.tick(); flip(draw, 360); ok.disabled = slot.includes(null); if (!slot.includes(null)) ok.focus(); };
+        b.onclick = () => { const s = pick != null && slot[pick] == null ? pick : slot.indexOf(null); if (s < 0) { play.wrong(); return; } slot[s] = t; pick = null; root.dispatchEvent(new Event('practice-edit', { bubbles: true })); play.tick(); flip(draw, 360); ok.disabled = slot.includes(null); if (!slot.includes(null)) ok.focus({ preventScroll: true }); };
         return b;
       }));
       ok.disabled = slot.includes(null);

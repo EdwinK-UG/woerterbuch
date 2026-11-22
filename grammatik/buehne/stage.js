@@ -106,7 +106,7 @@ export function createStage({ set, priv, tag, keys, onCast = () => {}, z0 = 2.75
     const corner = px(0, 0), body = px(Math.round(W / 2) - 1, Math.round(H * 0.6));
     return corner[3] === 0 && corner[15] === 0 && body[3] > 0;
   }
-  async function need(...ks) { await Promise.all(ks.map((k) => A[k].ready)); while (ks.some((k) => A[k].r && !A[k].clean)) await new Promise((r) => setTimeout(r, 80)); }
+  async function need(...ks) { const gen = S.gen; await Promise.all(ks.map((k) => A[k].ready)); while (ks.some((k) => A[k].r && !A[k].clean)) await new Promise((r) => setTimeout(r, 80)); live(gen); }
 
   async function loadLines() {
     if (LOCAL) { const r = await fetch(priv + 'lines.json', { cache: 'no-store' }); if (!r.ok) throw Error('no lines'); return r.json(); }
@@ -193,7 +193,7 @@ export function createStage({ set, priv, tag, keys, onCast = () => {}, z0 = 2.75
 
   /* ---------- camera ---------- */
   function fitStage() {
-    const st = $('stage'), W = st.clientWidth, H = st.clientHeight, dpr = Math.min(2, devicePixelRatio || 1);
+    const st = $('stage'), W = Math.max(1, st.clientWidth), H = Math.max(1, st.clientHeight), dpr = Math.min(2, devicePixelRatio || 1);
     set.size(W, H, dpr); S.Z0 = Math.min((H * 0.8) / z0, W / minW);     // a narrow picture still shows minW metres
   }
   // the scene's own (wide) framing; ty lifts the view in metres (cross-sections, high shelves)
@@ -308,6 +308,13 @@ export function createStage({ set, priv, tag, keys, onCast = () => {}, z0 = 2.75
   // feedback: the scene's key, shows the feedback button (meinung.js)
   // long: the scene also has the long versions (?form=long): a second switch, short | long
   function start({ scenes, practise, end, langs, long, feedback }) {
+    const copy = document.createElement('div'); copy.className = 'play-copy';
+    $('panel').prepend(copy); copy.append($('cap'), $('practice'));
+    const round = document.createElement('div'); round.id = 'round'; round.setAttribute('role', 'progressbar'); round.setAttribute('aria-label', T('play')); round.setAttribute('aria-valuemin', '0');
+    $('panel').prepend(round);
+    const soundIcon = () => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4Z"/>' + (S.muted ? '<path d="m16 9 5 6m0-6-5 6"/>' : '<path d="M15 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/>') + '</svg>';
+    $('sound').innerHTML = soundIcon();
+    $('full').innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg>';
     // a slim row under the controls: the language switch (left) and the feedback button (right)
     if ((langs && langs.length > 1) || long || feedback) { const m = document.createElement('div'); m.id = 'meta'; $('ctl').after(m); }
     if (langs && langs.length > 1) {
@@ -326,7 +333,7 @@ export function createStage({ set, priv, tag, keys, onCast = () => {}, z0 = 2.75
       fw.onclick = (e) => { const b = e.target.closest('button'); if (!b || b.dataset.f === now) return; stopAudio(); const u = new URL(location.href); if (b.dataset.f === 'short') u.searchParams.delete('form'); else u.searchParams.set('form', 'long'); location.replace(u); };
       $('meta').append(fw);
     }
-    if (feedback) import('./meinung.js?v=4').then((m) => m.createMeinung(B, { scene: feedback, versions: (langs || [LANG]).flatMap((l) => (long ? [l, l + '-long'] : [l])) }));
+    if (feedback) import('./meinung.js?v=6').then((m) => m.createMeinung(B, { scene: feedback, versions: (langs || [LANG]).flatMap((l) => (long ? [l, l + '-long'] : [l])) }));
     // scenes: a list, or a function that makes it from the loaded lines (scenes written as data, regie.js)
     S.scenes = typeof scenes === 'function' ? [] : scenes; S.onEnd = end;
     fitStage(); new ResizeObserver(fitStage).observe($('stage'));
@@ -342,8 +349,13 @@ export function createStage({ set, priv, tag, keys, onCast = () => {}, z0 = 2.75
       x.onclick = () => { stopAudio(); parent.postMessage({ type: 'werkstatt-close' }, location.origin); }; $('corner').appendChild(x);
     }
     // a scene on a chapter page: starting the film or the practice brings the whole frame into view
-    if (EMBED && qs.has('hero')) document.addEventListener('click', (e) => { if (e.target.closest('#goWatch, #goTry, #try, #play')) parent.postMessage({ type: 'werkstatt-focus' }, location.origin); }, true);
-    $('sound').onclick = () => { S.muted = !S.muted; $('sound').textContent = S.muted ? '🔇' : '🔊'; $('sound').setAttribute('aria-pressed', String(!S.muted)); $('sound').setAttribute('aria-label', S.muted ? 'Ton aus' : 'Ton an'); if (S.muted) stopAudio(); };
+    if (EMBED && qs.has('hero')) {
+      const focus = () => parent.postMessage({ type: 'werkstatt-focus' }, location.origin);
+      document.addEventListener('click', (e) => { if (e.target.closest('#goWatch, #goTry, #try, #play')) focus(); }, true);
+      // Browsers can scroll the parent when a new task focuses its first control, even with preventScroll.
+      document.addEventListener('focusin', (e) => { if (e.target.closest('#panel')) focus(); });
+    }
+    $('sound').onclick = () => { S.muted = !S.muted; $('sound').innerHTML = soundIcon(); $('sound').setAttribute('aria-pressed', String(!S.muted)); $('sound').setAttribute('aria-label', S.muted ? 'Ton aus' : 'Ton an'); if (S.muted) stopAudio(); };
     // full screen: the browser's own where it is allowed; else (iPhone, or a frame without permission) "max": the page
     // fills the window and, in a lesson, asks the lesson page to make the frame cover the whole screen
     const isFull = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
@@ -359,7 +371,7 @@ export function createStage({ set, priv, tag, keys, onCast = () => {}, z0 = 2.75
     $('play').onclick = () => { if (S.mode === 'idle') watch(Math.max(0, Math.min(S.scene, S.scenes.length - 1))); else setPaused(!S.paused); };
     $('prev').onclick = () => watch(Math.max(0, S.scene - 1));
     $('next').onclick = () => watch(Math.min(S.scenes.length - 1, S.scene + 1));
-    $('try').onclick = () => (S.mode === 'practice' ? watch(0) : practise());
+    $('try').onclick = () => ($('panel').classList.contains('pr') ? watch(0) : practise());
     if (LANG !== 'de') { document.documentElement.lang = LANG; $('goWatch').textContent = T('watch'); $('goTry').textContent = T('play'); $('try').textContent = T('play'); $('load').textContent = T('loading'); const inp = $('inp'); if (inp) inp.placeholder = T('write'); }
     return (async () => {
       let lines = null; try { lines = await loadLines(); } catch (e) { lines = null; }

@@ -81,8 +81,9 @@ export function createMeinung(B, { scene, versions }) {
     box.querySelectorAll('.fb-pick button').forEach((b) => { b.classList.toggle('on', state.prefer === b.dataset.p); b.setAttribute('aria-pressed', String(state.prefer === b.dataset.p)); });
   }
   const msg = (t, cls = '') => { const m = box.querySelector('.fb-msg'); m.textContent = t; m.className = 'fb-msg ' + cls; };
-  const open = () => { draw(); box.classList.add('on'); B.setPaused(true); box.querySelector('.fb-stars button').focus(); };
-  const close = () => { box.classList.remove('on'); btn.focus(); };
+  let wasPaused = false;
+  const open = () => { wasPaused = B.S.paused; draw(); box.classList.add('on'); B.setPaused(true); box.querySelector('.fb-stars button').focus(); };
+  const close = () => { box.classList.remove('on'); B.setPaused(wasPaused); btn.focus({ preventScroll: true }); };
   btn.onclick = open;
   box.addEventListener('click', async (e) => {
     const t = e.target;
@@ -103,5 +104,12 @@ export function createMeinung(B, { scene, versions }) {
       } catch (err) { msg(TXT.fail, 'no'); t.disabled = false; }
     }
   });
-  box.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+  box.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') close();
+    if (e.key !== 'Tab') return;
+    const focusable = [...box.querySelectorAll('button, textarea')].filter((x) => !x.disabled && x.getClientRects().length);
+    const first = focusable[0], last = focusable[focusable.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  });
 }
