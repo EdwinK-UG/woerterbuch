@@ -1241,6 +1241,12 @@ const WERKSTATT = {
     btn: ['pilot', 'play', 'Animation ansehen'], card: ['Wer ist gemeint?', 'Liv und Kathi im Buchladen – hör zu und übe die Personalpronomen.', [['pilot', 'Animation starten', 'play'], ['dorf', 'Im Dorf', 'users']]] },
   54: { pilot: ['grammatik/rive-pilots/index.html?v=1#b1', 'Präteritum mit Kathi und Sepp'],
     btn: ['pilot', 'play', 'Animation ansehen'], card: ['Die Bergwinkler Nachrichten', 'Kathi und Sepp erzählen vom Dorffest. Höre ihren Bericht und übe das Präteritum.', [['pilot', 'Animation starten', 'play']]] },
+  // the shared animation stage (grammatik/buehne/, docs/buehne.md): lines, boards and recordings come through the
+  // chapter's private film-audio route, like Im Dorf
+  5: { klammer: ['grammatik/klammer/index.html?v=1', 'Die Klammer-Werkstatt – Modalverben'], inline: true, audio: true,
+    btn: ['klammer', 'hammer', 'Klammer-Werkstatt'], card: ['Die Klammer-Werkstatt', 'Meister Anton zeigt mit Liv und Lena, wie die Satzklammer funktioniert – mit Ton und Bildern. Danach baust du selbst Sätze.', [['klammer', 'Animation starten', 'play']]] },
+  17: { jagd: ['grammatik/jagd/index.html?v=1', 'Wer jagt wen? – Akkusativ'], inline: true, audio: true,
+    btn: ['jagd', 'users', 'Wer jagt wen?'], card: ['Wer jagt wen?', 'Max, ein Hund und ein Ball zeigen den Akkusativ – mit Ton. Danach lässt du die Tiere spielen: Sie machen genau, was dein Satz sagt.', [['jagd', 'Animation starten', 'play']]] },
   57: { liv: ['grammatik/liv/werkstatt/index.html?v=1', 'Trennbar-Werkstatt mit Liv'], '3d': ['grammatik/werkstatt/index.html?v=3', 'Trennbar-Werkstatt 3D'],
     btn: ['liv', 'hammer', 'Werkstatt mit Liv'], card: ['Die Säge zeigt es', 'Trennbare Verben lassen sich zersägen, untrennbare nicht. Sieh Liv zu oder säge selbst – mit Ton.', [['liv', 'Werkstatt mit Liv', 'hammer'], ['3d', '3D-Werkstatt']]] },
   94: { wand: ['grammatik/zauberstab/index.html?v=2', 'Wunschzauber mit Liv'], exercises: true, vrm: true,

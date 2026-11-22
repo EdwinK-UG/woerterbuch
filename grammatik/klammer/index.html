@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Die Klammer-Werkstatt – Modalverben</title>
+<link rel="icon" href="../../favicon.svg?v=3">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@rive-app/canvas@2.49.0/rive.js" as="script" crossorigin>
+<link rel="stylesheet" href="../buehne/stage.css?v=1">
+<link rel="modulepreload" href="main.js?v=1">
+<link rel="modulepreload" href="../buehne/stage.js?v=1">
+</head>
+<body>
+<div id="app">
+  <div id="stage" aria-label="Die Werkstatt von Meister Anton: Holzwände, ein Fenster, eine Werkbank. Anton, Liv und Lena bauen Sätze mit Modalverben.">
+    <canvas id="bg"></canvas>
+    <div id="people"></div>
+    <canvas id="fg"></canvas>
+    <div id="cards" aria-live="polite"></div>
+    <div id="wheel" aria-live="polite"></div>
+    <div id="merk" aria-live="polite"></div>
+    <div id="corner"><button id="sound" aria-pressed="true" title="Ton an/aus" aria-label="Ton an">🔊</button><button id="full" title="Vollbild" aria-label="Vollbild">⛶</button></div>
+    <div id="start"><div class="box">
+      <h2>Die Klammer-Werkstatt</h2>
+      <p>Modalverben: können, müssen, dürfen … Meister Anton zeigt, wie die Satzklammer funktioniert. Danach baust du selbst.</p>
+      <div class="row"><button id="goWatch" class="main" disabled>▶ Zuschauen</button><button id="goTry" disabled>Mitspielen</button></div>
+      <div id="load">Lädt …</div>
+    </div></div>
+  </div>
+  <div id="panel">
+    <div id="cap" aria-live="polite"></div>
+    <div id="practice">
+      <div id="prompt"></div>
+      <div id="verdict" aria-live="polite"></div>
+    </div>
+    <div id="strip" aria-live="polite"></div>
+    <div id="practice2">
+      <div id="answers"></div>
+      <div id="say"><input id="inp" autocomplete="off" autocapitalize="sentences" spellcheck="false" placeholder="Schreib den Satz …" aria-label="Deine Antwort"><button id="ok" class="main">OK</button></div>
+    </div>
+    <div id="ctl">
+      <button id="prev" aria-label="Szene zurück">⏮</button><button id="play" aria-label="Pause">❚❚</button><button id="next" aria-label="Nächste Szene">⏭</button>
+      <div id="dots"></div>
+      <button id="try" class="main">Mitspielen</button><span id="score"></span>
+    </div>
+  </div>
+</div>
+<script type="module" src="main.js?v=1"></script>
+</body>
+</html>
