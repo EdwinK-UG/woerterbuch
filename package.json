@@ -10,7 +10,8 @@
     "check": "npm test && npm --prefix worker test && node tools/build-course-catalog.cjs --check && node tools/build-public-pages.cjs --check && node tools/correct-dictionary.cjs --check && node tools/build-dictionary-fingerprints.cjs --check && node tools/version-assets.cjs --check"
   },
   "devDependencies": {
-    "jsdom": "22.1.0",
-    "@electric-sql/pglite": "0.5.14"
+    "@anthropic-ai/sdk": "1.6.0",
+    "@electric-sql/pglite": "0.5.14",
+    "jsdom": "22.1.0"
   }
 }

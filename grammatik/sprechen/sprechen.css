@@ -1,0 +1,25 @@
+/* the speaking trainer's panel under the picture: Liv's line, what you said, a gentle correction, one big mic button */
+#ctl, #practice, #round { display: none !important; }
+#talk { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+#talk > p { margin: 0; text-align: center; max-width: 34em; }
+#you { color: var(--mut); font-size: 15px; line-height: 1.35; min-height: 0; }
+#you:empty, #note:empty { display: none; }
+#you span { font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; margin-right: 4px; }
+#note { background: var(--akk-s); color: var(--ink); border-radius: 12px; padding: 7px 12px; font-size: 15px; line-height: 1.35; animation: pop .3s ease-out; }
+#note b { color: var(--akk); font-weight: 650; margin-right: 2px; }
+#note small { display: block; color: var(--mut); font-size: 13px; margin-top: 1px; }
+#microw { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+#mic { width: 68px; height: 68px; border-radius: 50%; padding: 0; display: grid; place-items: center; position: relative; }
+#mic svg { width: 30px; height: 30px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+#mic:disabled { opacity: .45; }
+#mic.rec { background: var(--bad); border-color: var(--bad); }
+#mic.rec::after { content: ""; position: absolute; inset: -6px; border-radius: 50%; border: 3px solid var(--bad); animation: ring 1.2s ease-out infinite; }
+@keyframes ring { from { transform: scale(.9); opacity: .9; } to { transform: scale(1.35); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { #mic.rec::after { animation: none; opacity: .5; } }
+#state { font-size: 13px; color: var(--mut); min-height: 1.2em; }
+#say { display: none; gap: 8px; width: 100%; max-width: 30em; }
+#say.on { display: flex; }
+#tools { display: flex; gap: 14px; }
+button.link { background: none; border: 0; padding: 2px 0; min-height: 0; color: var(--mut); font-size: 13px; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+button.link:hover { color: var(--ink); }
+#panel.busy #say { opacity: .45; pointer-events: none; }

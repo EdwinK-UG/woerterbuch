@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mit Liv sprechen</title>
+<link rel="icon" href="../../favicon.svg?v=6">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@rive-app/canvas@2.49.0/rive.js" as="script" crossorigin>
+<script src="../../config.js"></script>
+<link rel="stylesheet" href="../buehne/stage.css?v=6">
+<link rel="stylesheet" href="sprechen.css?v=1">
+<link rel="modulepreload" href="main.js?v=1">
+<link rel="modulepreload" href="../buehne/stage.js?v=7">
+</head>
+<body>
+<div id="app" class="talk">
+  <div id="stage" aria-label="Liv in der Werkstatt. Sie spricht mit dir.">
+    <canvas id="bg"></canvas>
+    <div id="people"></div>
+    <canvas id="fg"></canvas>
+    <div id="corner"><button id="sound" aria-pressed="true" title="Ton an/aus" aria-label="Ton an">🔊</button><button id="full" title="Vollbild" aria-label="Vollbild">⛶</button></div>
+    <div id="start"><div class="box">
+      <h2>Mit Liv sprechen</h2>
+      <p>Liv fragt, du antwortest – laut. So übst du die Modalverben im Gespräch.</p>
+      <div class="row"><button id="goTry" class="main" disabled>Los geht’s</button><button id="goWatch" hidden disabled></button></div>
+      <div id="load">Lädt …</div>
+    </div></div>
+  </div>
+  <div id="panel">
+    <div id="cap" aria-live="polite"></div>
+    <div id="practice"><div id="prompt"></div><div id="verdict" aria-live="polite"></div></div>
+    <div id="talk">
+      <p id="you" aria-live="polite"></p>
+      <p id="note" aria-live="polite"></p>
+      <div id="microw">
+        <button id="mic" class="main" aria-label="Tippen und sprechen" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+        <span id="state" aria-live="polite">Tippen und sprechen</span>
+      </div>
+      <form id="say"><input id="inp" autocomplete="off" autocapitalize="sentences" spellcheck="false" maxlength="300" placeholder="Oder schreib deine Antwort …" aria-label="Deine Antwort"><button id="ok" class="main">OK</button></form>
+      <div id="tools"><button id="typeit" type="button" class="link">Schreiben statt sprechen</button><button id="again" type="button" class="link" hidden>Neues Gespräch</button></div>
+    </div>
+    <div id="ctl" hidden><button id="prev"></button><button id="play"></button><button id="next"></button><div id="dots"></div><button id="try"></button><span id="score"></span></div>
+  </div>
+</div>
+<script type="module" src="main.js?v=1"></script>
+</body>
+</html>

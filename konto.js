@@ -409,6 +409,7 @@ async function openInvite(t, code) {
   if (A() && A().sheet) A().sheet('up');
 }
 async function join(code) {
+  if (/^\s*liv[\s-]?[a-z0-9]/i.test(String(code || ''))) return redeemSpeak(code);   // a speaking-trainer code (LIV-XXXX-XXXX)
   code = String(code || '').trim().toLowerCase().replace(/[^0-9a-f]/g, '');
   if (!code) return;
   if (!me()) return openInvite('join', code);
@@ -864,6 +865,48 @@ function messageSheet(mode,classId=null) {
   });
 }
 
+/* ---------- the grammar speaking trainer: access codes (Worker /speak/*, docs/speak-trainer.md) ----------
+   The founder makes codes (one per person or one for a group), shares the link …/?sprechen=LIV-XXXX-XXXX, and can
+   withdraw a code. Whoever redeems one sees "Mit Liv sprechen" in the chapters that have the trainer. */
+async function workerGet(path) {
+  const r = await fetch(APP_CONFIG.workerUrl + path, { headers: { Authorization: 'Bearer ' + await A().token() }, cache: 'no-store' });
+  const d = await r.json().catch(() => ({})); if (!r.ok) throw Object.assign(new Error(d.error || T('Please try again.', 'Bitte noch einmal versuchen.')), { status: r.status }); return d;
+}
+const speakLink = c => location.origin + location.pathname + '?sprechen=' + c;
+async function redeemSpeak(code) {
+  if (!me()) { LSs('dk_speak_code', String(code).trim()); toastM(T('Sign in to unlock the speaking trainer.', 'Melde dich an, um den Sprechtrainer freizuschalten.')); if (A() && A().sheet) A().sheet('in'); return; }
+  try {
+    await workerPost('/speak/redeem', { code }); LSs('dk_speak_code', null); window.closeSheet && closeSheet();
+    window.dispatchEvent(new Event('speak:access'));
+    toastM(T('Speaking trainer unlocked – find “Talk with Liv” under “Sprechen” in A1 · Kapitel 18.', 'Sprechtrainer freigeschaltet – „Mit Liv sprechen“ findest du in A1 · Kapitel 18 unter „Sprechen“.'));
+  } catch (e) { if (e.status === 400) LSs('dk_speak_code', null); toastM(e.message); }   // kept for later when the account is not confirmed yet
+}
+function pendingSpeak() { const c = LSg('dk_speak_code', null); if (c && me()) redeemSpeak(c); }
+function speakCodes() {
+  if (!isFounder()) return;
+  openSheet(`<h3>${icn('mic')} ${T('Speaking trainer codes', 'Sprechtrainer-Codes')}</h3><p class="ks-tip">${T('Only you and people with a code can talk with Liv. Share the link; you can withdraw a code at any time.', 'Nur Sie und Personen mit Code können mit Liv sprechen. Teilen Sie den Link; einen Code können Sie jederzeit zurückziehen.')}</p>
+    <div class="row" style="gap:.5rem;align-items:flex-end;flex-wrap:wrap"><label class="ks-l" style="flex:1;min-width:10rem">${T('For', 'Für')}<input class="input" id="sp_label" maxlength="80" placeholder="${T('Name or group (optional)', 'Name oder Gruppe (optional)')}"></label><label class="ks-l">${T('People', 'Personen')}<select class="input" id="sp_uses"><option>1</option><option>5</option><option>20</option><option>50</option></select></label><button class="btn primary" id="sp_make" onclick="KONTO.makeSpeakCode()">${T('Create code', 'Code erstellen')}</button></div>
+    <div id="sp_list" style="margin-top:1rem"><p role="status" class="ks-tip">${T('Loading…', 'Wird geladen…')}</p></div>`);
+  icons(); loadSpeakCodes();
+}
+async function loadSpeakCodes() {
+  const el = $('sp_list'); if (!el) return;
+  try {
+    const { codes } = await workerGet('/speak/codes'); if (!el.isConnected) return;
+    el.innerHTML = codes.length ? `<ul class="sp-codes" style="list-style:none;padding:0;margin:0;display:grid;gap:.6rem">${codes.map(c => `<li style="${c.revoked ? 'opacity:.5' : ''}"><div class="row" style="gap:.5rem;align-items:center;flex-wrap:wrap"><code style="font-size:1rem;letter-spacing:.04em">${esc(c.code)}</code><span class="ks-it">${c.label ? esc(c.label) + ' · ' : ''}${c.uses}/${c.max_uses}${c.revoked ? ' · ' + T('withdrawn', 'zurückgezogen') : ''}</span><span class="spacer"></span>${c.revoked ? '' : `<button class="btn sm" onclick="KONTO.copy('${speakLink(c.code)}')">${icn('link')} ${T('Copy link', 'Link kopieren')}</button><button class="btn sm" onclick="KONTO.revokeSpeakCode('${c.code}')">${T('Withdraw', 'Zurückziehen')}</button>`}</div>${c.people.length ? `<div class="ks-it" style="margin-top:.2rem">${c.people.map(p => esc(p.email)).join(', ')}</div>` : ''}</li>`).join('')}</ul>` : `<p class="ks-tip">${T('No codes yet.', 'Noch keine Codes.')}</p>`;
+    icons();
+  } catch (e) { if (el.isConnected) el.textContent = err(e); }
+}
+async function makeSpeakCode() {
+  const btn = $('sp_make'); if (!btn || btn.disabled) return; btn.disabled = true;
+  try { const r = await workerPost('/speak/codes', { label: $('sp_label').value.trim(), uses: Number($('sp_uses').value) }); $('sp_label').value = ''; await loadSpeakCodes(); copy(speakLink(r.code)); }
+  catch (e) { toastM(err(e)); } finally { btn.disabled = false; }
+}
+async function revokeSpeakCode(code) {
+  if (!confirm(T('Withdraw this code? Everyone who used it loses the speaking trainer.', 'Code zurückziehen? Alle, die ihn benutzt haben, verlieren den Sprechtrainer.'))) return;
+  try { await workerPost('/speak/codes/revoke', { code }); loadSpeakCodes(); } catch (e) { toastM(err(e)); }
+}
+
 /* ---------- founder: what is going on ---------- */
 async function viewAdmin() {
   if (!me()) return need();
@@ -876,7 +919,7 @@ async function viewAdmin() {
   const link = c => location.origin + location.pathname + '?invite=' + c;
   page('', `<section class="kd-hero cv-grid"><div><p class="kd-eye">${T('Site owner', 'Betreiber/in')}</p><h1>${T('What is happening on Deutschklinik', 'Was auf Deutschklinik passiert')}</h1>
       <p class="kd-hi">${T(`${s.users || 0} accounts · ${s.new7 || 0} new this week`, `${s.users || 0} Konten · ${s.new7 || 0} neu diese Woche`)}</p>
-      <div class="row"><button class="btn kd-cta" onclick="KONTO.inviteLearner()">${icn('send')} ${T('Invite a learner', 'Lernende einladen')}</button><a class="btn kd-ghost" href="#/klasse">${icn('calendar-plus')} ${T('My teaching terms', 'Meine Kursdurchgänge')}</a><button class="btn kd-ghost" onclick="KONTO.emailUsers()">${icn('mail')} ${T('Email users','Nutzern schreiben')}</button><a class="btn kd-ghost" href="#owner-accounts" onclick="event.preventDefault();document.getElementById('owner-accounts').open=true;document.getElementById('owner-accounts').scrollIntoView({behavior:'smooth'});KONTO.loadOwnerUsers()">${icn('users')} ${T('Manage accounts','Konten verwalten')}</a><button class="btn kd-ghost" onclick="KONTO.inviteSheet()">${icn('send')} ${T('Invite someone', 'Jemanden einladen')}</button></div></div></section>
+      <div class="row"><button class="btn kd-cta" onclick="KONTO.inviteLearner()">${icn('send')} ${T('Invite a learner', 'Lernende einladen')}</button><a class="btn kd-ghost" href="#/klasse">${icn('calendar-plus')} ${T('My teaching terms', 'Meine Kursdurchgänge')}</a><button class="btn kd-ghost" onclick="KONTO.emailUsers()">${icn('mail')} ${T('Email users','Nutzern schreiben')}</button><a class="btn kd-ghost" href="#owner-accounts" onclick="event.preventDefault();document.getElementById('owner-accounts').open=true;document.getElementById('owner-accounts').scrollIntoView({behavior:'smooth'});KONTO.loadOwnerUsers()">${icn('users')} ${T('Manage accounts','Konten verwalten')}</a><button class="btn kd-ghost" onclick="KONTO.inviteSheet()">${icn('send')} ${T('Invite someone', 'Jemanden einladen')}</button><button class="btn kd-ghost" onclick="KONTO.speakCodes()">${icn('mic')} ${T('Speaking trainer codes', 'Sprechtrainer-Codes')}</button></div></div></section>
     ${kpis([['users', s.users || 0, T('accounts', 'Konten'), `${s.confirmed || 0} ${T('confirmed', 'bestätigt')}`], ['user-plus', s.new7 || 0, T('new this week', 'neu diese Woche'), `${s.new30 || 0} ${T('in 30 days', 'in 30 Tagen')}`], ['log-in', s.signin7 || 0, T('signed in this week', 'angemeldet diese Woche')],
       ['activity', a.active7 || 0, T('active learners', 'aktive Lernende'), T('7 days', '7 Tage')], ['dumbbell', a.ex7 || 0, T('exercises this week', 'Übungen diese Woche'), a.avg30 != null ? `Ø ${a.avg30} % (30 ${T('days', 'Tage')})` : ''],
       ['school', orgs.school || 0, T('schools', 'Schulen'), `${orgs.teacher || 0} ${T('teacher pages', 'Lehrkraft-Seiten')}`], ['layers', s.classes || 0, T('classes', 'Klassen'), `${s.in_school || 0} ${T('learners in schools', 'Lernende in Schulen')}`], ['mail', (s.users||0)-(s.confirmed||0), T('awaiting email confirmation', 'warten auf E-Mail-Bestätigung')]])}
@@ -1224,8 +1267,9 @@ document.head.appendChild(st);
 window.KONTO = { emailUsers, emailLearners, level, lang, passMark, canOpen, lvState, unlock, lockSheet, unlocked: unlockedSet, profile: () => P, org: () => ORG, brand, applyBrand, view, routes: ROUTES, fillMe, saveLevel, askLevel,
   signupFields, signupCheck, signupData, request, reqFields, sendRequest, join, decide, inviteSheet, makeSiteInvite, delSiteInvite, codeSheet,
   saveOrg, dropLogo, orgPass, addClass, classPass, invite, delInvite, moveMember, removeMember, addTask, delTask, copy, reload, refresh, liveClassSheet, saveLiveClass, sendClassInvite, sendClassInviteNow, inviteLearner, previewInvite, loadOwnerUsers, deleteAccountSheet, deleteAccount, decideLiveRequest, applyLiveClass,
-  student, unlockFor, saveSettings, setCourse, unenroll, leave, T, can, gate, featureOf, saveSite, lookup, signupAs, checkInvitationMail, previewWelcome: () => { location.hash = '#/start/besucher'; } };
+  student, unlockFor, saveSettings, setCourse, unenroll, leave, T, can, gate, featureOf, saveSite, lookup, signupAs, checkInvitationMail, speakCodes, makeSpeakCode, revokeSpeakCode, previewWelcome: () => { location.hash = '#/start/besucher'; } };
 window.addEventListener('acct:in', e => { reload().then(() => {
+  pendingSpeak();
   if(e.detail&&e.detail.fresh&&/^#?\/?$/.test(location.hash))location.hash='#/start';
   const pending=pendingInvite;pendingInvite=null;
   if(pending&&pending.account===me()?.id&&D.classes.some(c=>c.id===pending.id)){
@@ -1238,6 +1282,8 @@ window.addEventListener('app:theme',applyBrand);
 // invitation links: …/?join=CODE (school or teacher) and …/?invite=CODE (from the site owner)
 const sp = new URLSearchParams(location.search), jc = sp.get('join'), ic = sp.get('invite');
 if (jc || ic) { history.replaceState(null, '', location.pathname + location.hash); setTimeout(() => openInvite(jc ? 'join' : 'invite', jc || ic), 500); }
+// the speaking trainer's link: …/?sprechen=LIV-XXXX-XXXX (redeemed now, or after signing in)
+const sc = sp.get('sprechen'); if (sc) { history.replaceState(null, '', location.pathname + location.hash); LSs('dk_speak_code', sc.slice(0, 20)); setTimeout(() => { if (me()) pendingSpeak(); else redeemSpeak(sc.slice(0, 20)); }, 900); }
 loadSite();
 if (!location.hash) location.replace('#/start');
 if (me()) reload(); else apply();

@@ -307,7 +307,8 @@ export function createStage({ set, priv, tag, keys, onCast = () => {}, z0 = 2.75
   // langs: ['de', 'en'] shows the switch (reloads the scene in the other language, kept in the address);
   // feedback: the scene's key, shows the feedback button (meinung.js)
   // long: the scene also has the long versions (?form=long): a second switch, short | long
-  function start({ scenes, practise, end, langs, long, feedback }) {
+  // lines: given directly (the speaking trainer makes Liv's lines as it goes) instead of loaded from the private file
+  function start({ scenes, practise, end, langs, long, feedback, lines: given }) {
     const copy = document.createElement('div'); copy.className = 'play-copy';
     $('panel').prepend(copy); copy.append($('cap'), $('practice'));
     const round = document.createElement('div'); round.id = 'round'; round.setAttribute('role', 'progressbar'); round.setAttribute('aria-label', T('play')); round.setAttribute('aria-valuemin', '0');
@@ -374,7 +375,7 @@ export function createStage({ set, priv, tag, keys, onCast = () => {}, z0 = 2.75
     $('try').onclick = () => ($('panel').classList.contains('pr') ? watch(0) : practise());
     if (LANG !== 'de') { document.documentElement.lang = LANG; $('goWatch').textContent = T('watch'); $('goTry').textContent = T('play'); $('try').textContent = T('play'); $('load').textContent = T('loading'); const inp = $('inp'); if (inp) inp.placeholder = T('write'); }
     return (async () => {
-      let lines = null; try { lines = await loadLines(); } catch (e) { lines = null; }
+      let lines = given || null; if (!lines) try { lines = await loadLines(); } catch (e) { lines = null; }
       if (!lines) { $('load').textContent = EMBED ? T('signin') : T('none'); return false; }
       S.lines = lines; preloadAudio(Object.keys(lines.lines));
       if (typeof scenes === 'function') { S.scenes = scenes(lines); dots(); }

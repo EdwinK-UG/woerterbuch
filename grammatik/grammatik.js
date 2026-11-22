@@ -1260,6 +1260,43 @@ const WERKSTATT = {
   94: { wand: ['grammatik/zauberstab/index.html?v=2', 'Wunschzauber mit Liv'], exercises: true, vrm: true,
     btn: ['wand', 'wand-sparkles', 'Zauberstab'], card: ['Wünsch dir was!', 'Liv hat einen Zauberstab. Jeder Wunsch braucht den Konjunktiv II – schwing den Stab zum richtigen Wort, mit Ton.', [['wand', 'Zauberstab schwingen', 'wand-sparkles']]] },
 };
+// The grammar speaking trainer (grammatik/sprechen/, docs/speak-trainer.md): Liv talks with the learner about the
+// chapter. Only the founder and people with one of the founder's access codes see it; the Worker decides (/speak/access)
+// and checks every turn again.
+const SPEAK = { 5: 'grammatik/sprechen/index.html?v=1&ch=5' };
+let speakAccess = null;
+const speakReset = () => { speakAccess = null; if (cur) mountSpeak(cur); };
+window.addEventListener('acct:in', speakReset); window.addEventListener('acct:out', speakReset); window.addEventListener('speak:access', speakReset);
+function canSpeak() {
+  if (!acct() || !window.APP_CONFIG?.workerUrl) return Promise.resolve(null);
+  return speakAccess || (speakAccess = (async () => {
+    const r = await fetch(APP_CONFIG.workerUrl + '/speak/access', { headers: { Authorization: 'Bearer ' + await ACCT.token() }, cache: 'no-store' });
+    return r.ok ? r.json() : null;
+  })().catch(() => { speakAccess = null; return null; }));
+}
+async function mountSpeak(c) {
+  const host = document.querySelector(`[data-speak-host="${c.n}"]`); if (!host || !SPEAK[c.n]) return;
+  const a = await canSpeak();
+  if (!host.isConnected) return;
+  if (!a || !a.access || !(a.chapters || []).includes(c.n)) { host.replaceChildren(); return; }
+  if (host.firstChild) return;
+  host.innerHTML = `<div class="gr-cream" style="display:flex;gap:.8rem;align-items:center;flex-wrap:wrap;margin:0 0 1rem"><div style="flex:1;min-width:14rem"><b>Mit Liv sprechen</b> <small style="color:var(--mut);border:1px solid currentColor;border-radius:99px;padding:0 .45em;font-size:.72rem;vertical-align:.1em">Beta</small><br><span style="color:var(--mut)">Liv fragt, du antwortest laut. Sie hilft dir, wenn etwas noch nicht stimmt.</span></div><button class="btn sm primary" data-speak-open>${icn('mic')} Gespräch starten</button></div>`;
+  icons();
+  host.querySelector('[data-speak-open]').onclick = () => {
+    if (host.querySelector('iframe')) return;
+    const f = document.createElement('iframe'); f.title = 'Mit Liv sprechen'; f.src = SPEAK[c.n]; f.allow = 'autoplay; microphone; fullscreen';
+    // as tall as the screen between the site's header and the phone's bottom bar, like the pilots' scenes
+    const room = (window.visualViewport ? visualViewport.height : innerHeight) - topBar() - bottomBar() - 16;
+    f.style.cssText = `display:block;width:100%;height:${Math.round(Math.max(420, Math.min(760, room)))}px;border:0;border-radius:1rem;margin:0 0 1rem;background:#f4efe4`;
+    const onMsg = e => {
+      if (e.source !== f.contentWindow || e.origin !== location.origin) return;
+      if (e.data?.type === 'werkstatt-close') { removeEventListener('message', onMsg); f.remove(); }
+      else if (e.data?.type === 'werkstatt-max') { f.classList.toggle('werk-max', !!e.data.on); document.documentElement.style.overflow = e.data.on ? 'hidden' : ''; }
+    };
+    addEventListener('message', onMsg); host.append(f);
+    scrollTo({ top: scrollY + f.getBoundingClientRect().top - topBar() - 8, behavior: 'smooth' });
+  };
+}
 // Scenes marked vrm open with the 3D Liv first: her model (about 1.5 MB) downloads while the learner reads the lesson, so
 // the scene takes it from the browser's cache. Not on a data-saving or 2G connection.
 let livWarm = false;
@@ -1439,9 +1476,9 @@ function render(c) {
      <div class="gr-play"><span>${icn('gamepad-2')} Übe dieses Kapitel auch im Spiel:</span><button class="btn sm primary" onclick="GRAM.practice('solo')">${icn('user-round')} Allein spielen</button><button class="btn sm" onclick="GRAM.practice('host')">${icn('users')} Live mit Gruppe</button></div>
      ${c.exercisePaging?`<div class="gr-round-nav"><label>Trainingsrunde <select data-round-select aria-label="Trainingsrunde">${c.exercises.map((x,i)=>`<option value="${i}">${H(x.title)}</option>`).join('')}</select></label><button class="btn sm" data-round-step="-1" aria-label="Vorherige Trainingsrunde">←</button><button class="btn sm" data-round-step="1" aria-label="Nächste Trainingsrunde">→</button><span data-round-status aria-live="polite"></span></div>`:''}
      ${c.exercises.map((x, i) => exHTML(x, i + 1)).join('')}</section>
-   ${hasSpeak?`<section class="gr-sec" id="grs-s"><h2><span class="gr-sn">${hasExamples?4:3}</span>Sprechen</h2>${speakHTML(c.speak)}</section>`:''}
+   ${hasSpeak?`<section class="gr-sec" id="grs-s"><h2><span class="gr-sn">${hasExamples?4:3}</span>Sprechen</h2>${SPEAK[c.n]?`<div data-speak-host="${c.n}"></div>`:''}${speakHTML(c.speak)}</section>`:''}
   </article>`;
-  wire(c); icons(); mountHero(c);
+  wire(c); icons(); mountHero(c); mountSpeak(c);
   if(c.film){
     const host=document.querySelector('[data-film-host]');
     filmWithAudio(c.n).then(audio=>{if(host.isConnected&&cur===c)lessonFilm=window.GRAM_FILM.mount(host,c.film,{...filmTheme(),...filmVisual(c),audio,onExercises:()=>jump('grs-u')});})

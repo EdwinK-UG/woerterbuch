@@ -4,6 +4,7 @@ import { sendCourseInvitation, previewCourseInvitation, courseInvitationStatus, 
 import { english } from "./english.js";
 import { filmAudioList, filmAudioClip } from "./film-audio.js";
 import { sceneFeedback } from "./scene-feedback.js";
+import { speakAccess, speakRedeem, speakCodes, speakRevoke, speakTurn } from "./speak.js";
 import { sendMessage, messageDesigns } from "./messages.js";
 import {
   authenticated,
@@ -88,6 +89,13 @@ async function route(req, env, ctx) {
   if (url.pathname === "/correction") {
     if (!ALLOWED.includes(origin)) return json({ error: "Forbidden" }, 403, h);
     return correction(req, url, env, h);
+  }
+  // the grammar speaking trainer (founder and access-code holders only; speak.js)
+  if (url.pathname.startsWith("/speak/")) {
+    if (!ALLOWED.includes(origin)) return json({ error: "Forbidden" }, 403, h);
+    const routes = { "/speak/access": speakAccess, "/speak/redeem": speakRedeem, "/speak/codes": speakCodes, "/speak/codes/revoke": speakRevoke, "/speak/turn": speakTurn };
+    const handler = routes[url.pathname];
+    return handler ? handler(req, env, h) : json({ error: "Not found" }, 404, h);
   }
   if (url.pathname === "/scene-feedback") {
     if (!ALLOWED.includes(origin)) return json({ error: "Forbidden" }, 403, h);

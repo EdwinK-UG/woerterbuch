@@ -11,6 +11,12 @@ GLOBAL_DAILY_JOBS = "25"
 USER_DAILY_JOBS = "3"
 IMAGE_TRANSFORM_ENABLED = "false"
 WELCOME_FROM = ""
+# the grammar speaking trainer (src/speak.js): secrets ANTHROPIC_API_KEY, ELEVENLABS_API_KEY and SPEAK_VOICE_ID (Liv's
+# voice) are set with `npx wrangler secret put`, never here
+SPEAK_ENABLED = "false"
+SPEAK_USER_DAILY = "40"
+SPEAK_FOUNDER_DAILY = "200"
+SPEAK_GLOBAL_DAILY = "600"
 [triggers]
 crons = ["*/5 * * * *"]
 [ai]
