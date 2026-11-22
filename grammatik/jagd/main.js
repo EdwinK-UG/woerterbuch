@@ -5,7 +5,7 @@
    chases – and the articles swap – Der Ball jagt den Hund: now the ball chases the dog across the meadow.
    Practice: Regie (the learner's sentence is acted out, exactly as it is grammatically), Max packs his backpack
    (den / das / die) and "Doch, ich habe …". All lesson text comes from the private .local/scenes/k17/lines.json. */
-import { createStage, $, rich } from '../buehne/stage.js?v=1';
+import { createStage, $, rich, LANG, T } from '../buehne/stage.js?v=1';
 import { createVillage } from '../dorf/village.js?v=1';
 import { createStrip } from '../buehne/satzband.js?v=1';
 import { createPractice } from '../buehne/practice.js?v=1';
@@ -16,7 +16,7 @@ import { createLicht } from '../buehne/licht.js?v=1';
 import { sfx, play, unlockSfx } from '../buehne/sfx.js?v=1';
 
 const set = createVillage($('bg'), $('fg'));
-const B = createStage({ set, priv: '../../.local/scenes/k17/', tag: 'k17', keys: ['max'], minW: 4.3 });
+const B = createStage({ set, priv: `../../.local/scenes/k17${LANG === 'en' ? '-en' : ''}/`, tag: LANG === 'en' ? 'k17-en' : 'k17', keys: ['max'], minW: 4.3 });
 const { A, S, place, trig, face, cam, say, wait, need } = B;
 const fx = createFx(B);
 const strip = createStrip($('strip'), { cases: true });
@@ -126,7 +126,7 @@ B.resetHooks.push(() => { carrying = false; });
 
 /* ---------- the practice ---------- */
 function setPractice(on) {
-  $('panel').classList.toggle('pr', on); $('ctl').classList.toggle('pr', on); $('try').textContent = on ? 'Film ansehen' : 'Mitspielen';
+  $('panel').classList.toggle('pr', on); $('ctl').classList.toggle('pr', on); $('try').textContent = on ? T('film') : T('play');
   if (!on) { PR.tell('', ''); $('answers').replaceChildren(); $('say').style.display = 'none'; $('panel').classList.remove('busy'); }
 }
 B.resetHooks.push((why) => { if (why === 'watch') setPractice(false); });
@@ -157,7 +157,7 @@ async function regie(item) {
     let right = false;
     if (problem) {
       play.wrong(); if (problem === 'v_2') strip.shake(order.findIndex((i) => item.tiles[i].v)); else strip.mark(0, 'bad');
-      PR.tell('no', `<b>Noch nicht.</b> ${rich(why(problem))}`); face(A.max, 'surprised'); await say('r04', { frame: false }); face(A.max, 'happy');
+      PR.tell('no', `<b>${T('notyet')}</b> ${rich(why(problem))}`); face(A.max, 'surprised'); await say('r04', { frame: false }); face(A.max, 'happy');
     } else {
       const subj = nouns[caseOf.get(nouns[0]) === 'n' ? 0 : 1], obj = nouns.find((t) => t !== subj);
       fx.ring(PETS[subj.who], 'n'); fx.ring(PETS[obj.who], 'a');
@@ -166,13 +166,13 @@ async function regie(item) {
       await chase(PETS[subj.who], PETS[obj.who]); await backHome(); bubble.hide();
       const meant = subj.who === item.want[0] && obj.who === item.want[1], firstOk = item.first == null || order[0] === item.first;
       right = meant && firstOk;
-      if (right) { play.right(); PR.tell('ok', `<b>Richtig!</b> ${rich(order.map((i) => shown[i]).join(' '))}.`); PR.count(tries === 1); }
-      else if (meant) { play.wrong(); PR.tell('no', `<b>Fast.</b> ${rich(why('first'))}`); }
-      else { play.wrong(); PR.tell('no', `<b>Hoppla!</b> ${rich(why('folge', { n: cap(names[subj.who].n), a: names[obj.who].a }))}`); face(A.max, 'laugh'); await say('r03', { frame: false }); face(A.max, 'happy'); }
+      if (right) { play.right(); PR.tell('ok', `<b>${T('right')}</b> ${rich(order.map((i) => shown[i]).join(' '))}.`); PR.count(tries === 1); }
+      else if (meant) { play.wrong(); PR.tell('no', `<b>${T('almost')}</b> ${rich(why('first'))}`); }
+      else { play.wrong(); PR.tell('no', `<b>${T('oops')}</b> ${rich(why('folge', { n: cap(names[subj.who].n), a: names[obj.who].a }))}`); face(A.max, 'laugh'); await say('r03', { frame: false }); face(A.max, 'happy'); }
       fx.ringsOff();
     }
     if (right) return { right: true, tries };
-    if (tries >= 3) { PR.tell('no', `Richtig ist: <b>${rich(item.ok[0])}.</b>`); PR.count(false); return { right: false, tries }; }
+    if (tries >= 3) { PR.tell('no', `${T('rightis')} <b>${rich(item.ok[0])}.</b>`); PR.count(false); return { right: false, tries }; }
     await wait(1.4);
   }
 }
@@ -206,13 +206,13 @@ async function practise() {
     }
     strip.clear(); PR.tell('', ''); PR.prompt(''); fx.pack(null);
     face(A.max, 'laugh'); fx.hop(dog); play.bark(); await say('p06');
-    B.caption('elisa', `Fertig! Beim ersten Versuch richtig: ${PR.P.score} von ${PR.P.asked}.`); S.mode = 'idle';
+    B.caption('elisa', T('done', { s: PR.P.score, n: PR.P.asked })); S.mode = 'idle';
   } catch (e) { if (!(e instanceof B.Abort)) console.error(e); }
 }
 
 /* ---------- start ---------- */
 $('sound').addEventListener('click', () => { sfx.muted = S.muted; });
-B.start({ scenes: SCENES, practise, end: () => { B.caption('elisa', 'Jetzt du! Tipp auf „Mitspielen“.'); $('try').focus(); } }).then((ok) => {
+B.start({ scenes: SCENES, practise, langs: ['de', 'en'], feedback: 'k17', end: () => { B.caption('elisa', T('turn')); $('try').focus(); } }).then((ok) => {
   if (!ok) return;
   for (const id of ['goWatch', 'goTry']) $(id).addEventListener('click', unlockSfx, { capture: true });
   place(A.max, HOME.max, { left: false }); home('dog'); S.cam.x = BASE;

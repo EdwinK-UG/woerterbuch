@@ -16,6 +16,9 @@
 "use strict";
 const fs = require("fs"), path = require("path"), crypto = require("crypto"), { execFileSync } = require("child_process");
 const { call, speak, credits } = require("./elevenlabs.cjs");
+const { splitSpeak, SPLIT_MODEL } = require("./split-voice.cjs");
+// the bilingual narrator speaks English with German woven in: each language is recorded natively, then joined
+const SPLIT = new Set(["narrator"]);
 
 const ROOT = path.join(__dirname, "..", ".local", "scenes"), VOICES = path.join(ROOT, "voices.json");
 const MODEL = "eleven_multilingual_v2";
@@ -23,6 +26,7 @@ const SETTINGS = {
   default: { stability: 0.5, similarity_boost: 0.75, style: 0, use_speaker_boost: true, speed: 1 },
   elisa: { stability: 0.55, similarity_boost: 0.75, style: 0, use_speaker_boost: true, speed: 0.95 },
   liv: { stability: 0.4, similarity_boost: 0.75, style: 0.3, use_speaker_boost: true, speed: 1.05 },
+  narrator: { stability: 0.55, similarity_boost: 0.75, style: 0, use_speaker_boost: true, speed: 0.95 },   // Enniah: English explanations, German examples
   anton: { stability: 0.5, similarity_boost: 0.75, style: 0.15, use_speaker_boost: true, speed: 0.95 },  // Christian Plasa, a little slower
   finn: { stability: 0.5, similarity_boost: 0.75, style: 0.2, use_speaker_boost: true, speed: 1.0 },     // the quieter boy
   kid: { stability: 0.38, similarity_boost: 0.75, style: 0.35, use_speaker_boost: true, speed: 1.06 },   // Max, Mia, Finn: lively
@@ -37,7 +41,7 @@ const SCOUT = {
   mia: { gender: "female", ages: ["young"] },                  // Mia, Liv's little friend
 };
 const KIDS = new Set(["max", "mia", "finn"]);
-const spoken = (t) => t.replace(/\{[a-z]:([^}]*)\}/g, "$1").replace(/\s+/g, " ").trim();
+const spoken = (t) => t.replace(/\{[a-z]+:([^}]*)\}/g, "$1").replace(/\s+/g, " ").trim();
 const read = (f, d) => (fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, "utf8")) : d);
 const sceneDir = (s) => { if (!/^[a-z0-9-]+$/.test(s || "")) { console.error("scene name like k05"); process.exit(1); } return path.join(ROOT, s); };
 
@@ -138,7 +142,7 @@ ${page.map((p) => `<h2>${esc(p.role)}</h2><p class="t">${esc(p.note || "")} „$
       const roles = ln.who.split("+");
       if (roles.some((r) => KIDS.has(r) && !cast[r])) { missing.add(roles.filter((r) => KIDS.has(r)).join("+")); continue; }
       if (roles.some((r) => !cast[r])) { roles.filter((r) => !cast[r]).forEach((r) => missing.add(r)); continue; }
-      const text = spoken(ln.text), hash = crypto.createHash("sha256").update(JSON.stringify([text, roles.map((r) => cast[r]), MODEL, roles.map((r) => SETTINGS[r] || SETTINGS.default)])).digest("hex").slice(0, 16);
+      const split = roles.length === 1 && SPLIT.has(roles[0]), text = spoken(ln.text), hash = crypto.createHash("sha256").update(JSON.stringify([split ? ln.text : text, roles.map((r) => cast[r]), split ? SPLIT_MODEL : MODEL, roles.map((r) => SETTINGS[r] || SETTINGS.default)])).digest("hex").slice(0, 16);
       const rel = `audio/${id}.mp3`;
       if (ln.hash === hash && ln.audio === rel && fs.existsSync(path.join(dir, rel))) { kept++; continue; }
       chars += text.length * roles.length; if (dry) { console.log("would record", id, ln.who, text); continue; }
@@ -147,7 +151,8 @@ ${page.map((p) => `<h2>${esc(p.role)}</h2><p class="t">${esc(p.note || "")} „$
         for (const [i, r] of roles.entries()) { const f = path.join(dir, "audio", `${id}.part${i}.mp3`); fs.writeFileSync(f, (await speak(text, cast[r], MODEL, { voice_settings: SETTINGS[r] || SETTINGS.default })).bytes); parts.push(f); }
         execFileSync("ffmpeg", ["-v", "error", "-y", ...parts.flatMap((f) => ["-i", f]), "-filter_complex", `amix=inputs=${parts.length}:normalize=0`, "-ar", "44100", "-b:a", "96k", path.join(dir, rel)]);
         parts.forEach((f) => fs.unlinkSync(f));
-      } else fs.writeFileSync(path.join(dir, rel), (await speak(text, cast[roles[0]], MODEL, { voice_settings: SETTINGS[roles[0]] || (KIDS.has(roles[0]) ? SETTINGS.kid : SETTINGS.default) })).bytes);
+      } else if (split) await splitSpeak(ln.text, cast[roles[0]], SETTINGS[roles[0]], path.join(dir, rel));
+      else fs.writeFileSync(path.join(dir, rel), (await speak(text, cast[roles[0]], MODEL, { voice_settings: SETTINGS[roles[0]] || (KIDS.has(roles[0]) ? SETTINGS.kid : SETTINGS.default) })).bytes);
       ln.audio = rel; ln.hash = hash; made++; console.log("recorded", id, ln.who);
       fs.writeFileSync(LINES, JSON.stringify(data, null, 1));          // after every line, so a stop loses nothing
     }
@@ -158,15 +163,25 @@ ${page.map((p) => `<h2>${esc(p.role)}</h2><p class="t">${esc(p.note || "")} „$
   if (cmd === "pack") {
     // Each line travels as one cue "<scene>|<line>|<who>" (say = its text, plus its clip); everything else the scene
     // needs (strips, signs, cards, practice …) is one cue "<scene>|data|-" with JSON as say and a silent clip.
-    const scene = args[0], dir = sceneDir(scene), data = read(path.join(dir, "lines.json")), out = path.join(dir, "upload", "k" + Number(data.chapter));   // the Worker's folder: k<chapter>
+    // pack k05 k05-en: one chapter's scenes (both languages) into one narration list, as the Worker keeps one per chapter
+    const scenes = args.filter((a) => !a.startsWith("--")), first = read(path.join(sceneDir(scenes[0]), "lines.json"));
+    const scene = scenes[0], dir = sceneDir(scene), data = first, out = path.join(dir, "upload", "k" + Number(data.chapter));   // the Worker's folder: k<chapter>
     fs.rmSync(out, { recursive: true, force: true }); fs.mkdirSync(out, { recursive: true });
     const sha = (f) => crypto.createHash("sha256").update(fs.readFileSync(f)).digest("hex");
     const secs = (f) => +execFileSync("ffprobe", ["-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", f]).toString().trim();
     const silent = path.join(out, "silent.mp3"); execFileSync("ffmpeg", ["-v", "error", "-y", "-f", "lavfi", "-i", "anullsrc=r=44100:cl=mono", "-t", "0.1", "-b:a", "48k", silent]);
-    const cue = (id, say, src) => { const f = path.basename(src); if (src !== path.join(out, f)) fs.copyFileSync(src, path.join(out, f)); return { id, say, seconds: src === silent ? 0 : Math.round(secs(src) * 100) / 100, file: f, audio: sha(src) }; };
-    const cues = Object.entries(data.lines).map(([id, ln]) => cue(`${scene}|${id}|${ln.who}`, ln.text, ln.audio && fs.existsSync(path.join(dir, ln.audio)) ? path.join(dir, ln.audio) : silent));
-    const { lines, chapter, level, title, ...rest } = data; cues.push(cue(`${scene}|data|-`, JSON.stringify(rest), silent));
-    fs.writeFileSync(path.join(out, "manifest.json"), JSON.stringify({ version: 2, chapter, level: data.level, title: data.title, voice: "cast", model: MODEL, cues }, null, 1));
+    // files from several scenes meet in one folder: name each after its cue (k05-en|e01 → k05-en-e01.mp3), so none overwrites another
+    const cue = (id, say, src) => { const f = src === silent ? "silent.mp3" : id.split("|").slice(0, 2).join("-").replace(/[^\w-]/g, "_") + ".mp3"; if (src !== path.join(out, f)) fs.copyFileSync(src, path.join(out, f)); return { id, say, seconds: src === silent ? 0 : Math.round(secs(src) * 100) / 100, file: f, audio: sha(src) }; };
+    const cues = [];
+    for (const sc of scenes) {
+      const sdir = sceneDir(sc), sdata = read(path.join(sdir, "lines.json"));
+      if (Number(sdata.chapter) !== Number(data.chapter)) { console.error(sc, "belongs to another chapter"); process.exit(1); }
+      for (const [id, ln] of Object.entries(sdata.lines)) cues.push(cue(`${sc}|${id}|${ln.who}`, ln.text, ln.audio && fs.existsSync(path.join(sdir, ln.audio)) ? path.join(sdir, ln.audio) : silent));
+      const { lines, chapter, level, title, ...rest } = sdata;
+      const glosses = Object.fromEntries(Object.entries(lines).filter(([, l]) => l.en).map(([k, l]) => [k, l.en]));   // English glosses travel with the data
+      cues.push(cue(`${sc}|data|-`, JSON.stringify(Object.keys(glosses).length ? { ...rest, glosses } : rest), silent));
+    }
+    fs.writeFileSync(path.join(out, "manifest.json"), JSON.stringify({ version: 2, chapter: data.chapter, level: data.level, title: data.title, voice: "cast", model: MODEL, cues }, null, 1));
     console.log(`packed ${cues.length} cues (${cues.filter((c) => c.seconds).length} with sound) into ${path.relative(process.cwd(), out)}`); return;
   }
   console.error("usage: voices | scout [role…] | audition | cast <role> <id> | library <gender> <age> | add <file> <name> <role> | samples <role> <id…> | record <scene> [--dry] | pack <scene>"); process.exit(1);

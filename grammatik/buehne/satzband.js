@@ -8,7 +8,7 @@
      filled wagon to send its tile back. Keyboard: every tile and wagon is a button.
    Parts are { w: text, r: role, id }: r = 'v' engine (conjugated verb), 't' end (infinitive, verb part), 'n' subject,
    'x' anything else, 'c' a connector at seat 0. */
-import { rich, plain, REDUCED } from './stage.js';
+import { rich, plain, REDUCED, T } from './stage.js';
 import { play } from './sfx.js';
 
 const EASE = 'cubic-bezier(.3,.8,.3,1)';
@@ -109,7 +109,7 @@ export function createStrip(root, { cases = false } = {}) {
      tiles(list, { fixed }) shows list.length empty wagons and the tiles in a shuffled bank; resolves with the order the
      learner checks (an array of tile indexes). fixed: { seatIndex: tileIndex } wagons already filled (a hint). */
   // slots: fewer wagons than tiles (the rest are distractors, e.g. der Hund / den Hund)
-  function tiles(list, { fixed = {}, check = 'Prüfen', end = '', roles = [], slots } = {}) {
+  function tiles(list, { fixed = {}, check = T('check'), end = '', roles = [], slots } = {}) {
     setClamp(false, true); root.classList.add('tiles'); parts = [];
     const n = slots || list.length, slot = new Array(n).fill(null);
     for (const [s, t] of Object.entries(fixed)) slot[+s] = t;

@@ -3,6 +3,7 @@ import { handleWelcome, welcomeHook, drainMail } from "./welcome.js";
 import { sendCourseInvitation, previewCourseInvitation, courseInvitationStatus, sendSiteInvitation, requestLiveClass } from "./invitations.js";
 import { english } from "./english.js";
 import { filmAudioList, filmAudioClip } from "./film-audio.js";
+import { sceneFeedback } from "./scene-feedback.js";
 import { sendMessage } from "./messages.js";
 import {
   authenticated,
@@ -87,6 +88,10 @@ async function route(req, env, ctx) {
   if (url.pathname === "/correction") {
     if (!ALLOWED.includes(origin)) return json({ error: "Forbidden" }, 403, h);
     return correction(req, url, env, h);
+  }
+  if (url.pathname === "/scene-feedback") {
+    if (!ALLOWED.includes(origin)) return json({ error: "Forbidden" }, 403, h);
+    return sceneFeedback(req, env, h);
   }
   if (url.pathname === "/film-audio") {
     if (!ALLOWED.includes(origin)) return json({ error: "Forbidden" }, 403, h);

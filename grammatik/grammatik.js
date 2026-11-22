@@ -270,6 +270,11 @@ const CSS = `
 .gr-tagr{position:absolute;top:-.55rem;right:.6rem;background:var(--ac);color:#fff;font-size:.62rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:.12rem .45rem;border-radius:999px}
 .gr-done{color:var(--ok);display:inline-flex}
 /* chapter */
+.gr-scenehead{margin:.1rem 0 .5rem}.gr-scenehead h1{font-family:Fraunces,serif;font-weight:700;font-size:1.7rem;line-height:1.1;letter-spacing:-.02em;margin:.1rem 0 0}
+.gr-scene{margin:0 0 1.2rem}.gr-sceneframe{display:block;width:100%;border:0;border-radius:1rem;background:#f4efe4;box-shadow:0 1px 0 var(--line)}
+iframe.werk-max{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;height:100dvh!important;z-index:2000!important;border-radius:0!important;margin:0!important;max-width:none!important}
+.gr-hero-after{grid-template-columns:1fr!important}
+@media(max-width:600px){.gr-scenehead h1{font-size:1.3rem}.gr-scenehead .gr-eyebrow{font-size:.72rem;margin:0}.gr-scene{margin-left:-.6rem;margin-right:-.6rem}.gr-sceneframe{border-radius:.8rem}}
 .gr-hero{display:grid;grid-template-columns:1fr 1.05fr;gap:1.4rem;align-items:center;margin:.2rem 0 1rem}
 .gr-hero h1{font-family:Fraunces,serif;font-weight:700;font-size:2.25rem;line-height:1.08;letter-spacing:-.02em;margin:.1rem 0 .25rem}
 .gr-kick{font-family:Newsreader,serif;font-style:italic;font-size:1.35rem;color:var(--mut);margin:0 0 .8rem}
@@ -1241,9 +1246,9 @@ const WERKSTATT = {
     btn: ['dorf', 'users', 'Im Dorf'], card: ['Im Dorf: ich, du, Sie …', 'Liv und ihre Nachbarn stellen sich vor – mit Ton. Danach fragt Liv dich.', [['dorf', 'Animation starten', 'play']]] },
   // the shared animation stage (grammatik/buehne/, docs/buehne.md): lines, boards and recordings come through the
   // chapter's private film-audio route, like Im Dorf
-  5: { klammer: ['grammatik/klammer/index.html?v=1', 'Die Klammer-Werkstatt – Modalverben'], inline: true, audio: true,
+  5: { klammer: ['grammatik/klammer/index.html?v=1', 'Die Klammer-Werkstatt – Modalverben'], inline: true, audio: true, hero: true,
     btn: ['klammer', 'hammer', 'Klammer-Werkstatt'], card: ['Die Klammer-Werkstatt', 'Meister Anton zeigt mit Liv und Lena, wie die Satzklammer funktioniert – mit Ton und Bildern. Danach baust du selbst Sätze.', [['klammer', 'Animation starten', 'play']]] },
-  17: { jagd: ['grammatik/jagd/index.html?v=1', 'Wer jagt wen? – Akkusativ'], inline: true, audio: true,
+  17: { jagd: ['grammatik/jagd/index.html?v=1', 'Wer jagt wen? – Akkusativ'], inline: true, audio: true, hero: true,
     btn: ['jagd', 'users', 'Wer jagt wen?'], card: ['Wer jagt wen?', 'Max, ein Hund und ein Ball zeigen den Akkusativ – mit Ton. Danach lässt du die Tiere spielen: Sie machen genau, was dein Satz sagt.', [['jagd', 'Animation starten', 'play']]] },
   57: { liv: ['grammatik/liv/werkstatt/index.html?v=1', 'Trennbar-Werkstatt mit Liv'], '3d': ['grammatik/werkstatt/index.html?v=3', 'Trennbar-Werkstatt 3D'],
     btn: ['liv', 'hammer', 'Werkstatt mit Liv'], card: ['Die Säge zeigt es', 'Trennbare Verben lassen sich zersägen, untrennbare nicht. Sieh Liv zu oder säge selbst – mit Ton.', [['liv', 'Werkstatt mit Liv', 'hammer'], ['3d', '3D-Werkstatt']]] },
@@ -1272,14 +1277,39 @@ function openInline(n, w) {
   if (host.firstChild) { host.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); return true; }
   const f = document.createElement('iframe'); f.title = w[1]; f.src = w[0]; f.allow = 'autoplay; fullscreen; microphone';
   f.style.cssText = 'display:block;width:100%;height:min(80vh,560px);border:0;border-radius:1rem;margin:0 0 1rem;background:#f4efe4';
+  sceneFrameMessages(n, f, () => f.remove()); host.append(f); f.scrollIntoView({ behavior: 'smooth', block: 'start' }); return true;
+}
+// A scene marked hero is the chapter's main picture: it loads at the top of the page, under a slim title, and fills
+// the rest of the screen (no scrolling needed to see it whole on a phone). The rest of the chapter follows below.
+const heroOf = c => !!(WERKSTATT[c.n] && WERKSTATT[c.n].hero && !c.vocab);
+function bottomBar() {      // the height of a bar fixed at the bottom of the screen (the phone's Home/Search/Games)
+  let el = document.elementFromPoint(innerWidth / 2, innerHeight - 4);
+  while (el && el !== document.body) { const st = getComputedStyle(el); if (st.position === 'fixed' || st.position === 'sticky') { const r = el.getBoundingClientRect(); return r.top > innerHeight / 2 ? innerHeight - r.top : 0; } el = el.parentElement; }
+  return 0;
+}
+function sceneFrameMessages(n, f, onClose) {   // the protocol of a scene frame: its lines, full screen, height, close
   const onMsg = async e => {
     if (e.source !== f.contentWindow || e.origin !== location.origin) return;
     const d = e.data || {};
     if (d.type === 'werkstatt-ready') { const audio = await Promise.race([filmAudio(n), new Promise(r => setTimeout(() => r(null), 6000))]); f.contentWindow?.postMessage({ type: 'werkstatt-audio', audio }, location.origin); }
-    else if (d.type === 'werkstatt-height' && d.h > 100) f.style.height = Math.min(4000, Math.ceil(d.h)) + 'px';
-    else if (d.type === 'werkstatt-close') { removeEventListener('message', onMsg); f.remove(); }
+    else if (d.type === 'werkstatt-max') { f.classList.toggle('werk-max', !!d.on); document.documentElement.style.overflow = d.on ? 'hidden' : ''; }
+    else if (d.type === 'werkstatt-height' && d.h > 100 && !f.dataset.hero) f.style.height = Math.min(4000, Math.ceil(d.h)) + 'px';
+    else if (d.type === 'werkstatt-close' && onClose) { removeEventListener('message', onMsg); onClose(); }
   };
-  addEventListener('message', onMsg); host.append(f); f.scrollIntoView({ behavior: 'smooth', block: 'start' }); return true;
+  addEventListener('message', onMsg);
+  return () => removeEventListener('message', onMsg);
+}
+let heroCleanup = null;
+function mountHero(c) {
+  heroCleanup?.(); heroCleanup = null;
+  const host = document.querySelector(`[data-werk-hero="${c.n}"]`); if (!host) return;
+  const W = WERKSTATT[c.n], w = W[W.btn[0]];
+  const f = document.createElement('iframe'); f.title = w[1]; f.src = w[0] + '&hero=1'; f.allow = 'autoplay; fullscreen'; f.dataset.hero = '1'; f.className = 'gr-sceneframe';
+  // as tall as the screen allows below the title (the page opens at the top), between 380 and 920 px
+  const size = () => { if (f.classList.contains('werk-max')) return; const top = Math.max(0, host.getBoundingClientRect().top + scrollY); f.style.height = Math.round(Math.max(380, Math.min(920, innerHeight - top - bottomBar() - 10))) + 'px'; };
+  host.append(f); size(); requestAnimationFrame(size);
+  const off = sceneFrameMessages(c.n, f); addEventListener('resize', size);
+  heroCleanup = () => { off(); removeEventListener('resize', size); };
 }
 function openWerkstatt(n, kind) {
   const W = WERKSTATT[n], c = cur && cur.n === n ? cur : CH[n], w = W && (Array.isArray(W[kind]) ? W[kind] : W[W.btn[0]]); if (!c || !w) return;
@@ -1361,15 +1391,16 @@ function render(c) {
   const hasExamples=!!c.examples?.length,hasSpeak=!!c.speak?.items?.length;
   V().innerHTML = `<div class="row" style="margin-bottom:.6rem"><a class="btn sm" href="#/g">${icn('arrow-left')} Grammatik</a></div>
   <article lang="de" class="gr-ch">
-   <div class="gr-hero"><div>
-     <p class="gr-eyebrow">${isRef(c.n) ? 'Nachschlagen und trainieren' : `Kapitel ${gNo(c.n)} · ${H(c.group)}`} · <span class="gr-lv ${c.level}">${c.level}</span></p>
-     <h1>${H(c.title)}</h1><p class="gr-kick">${H(c.kicker)}</p><p class="gr-intro">${rich(c.intro)}</p>
+   ${heroOf(c) ? `<div class="gr-scenehead"><p class="gr-eyebrow">Kapitel ${gNo(c.n)} · ${H(c.group)} · <span class="gr-lv ${c.level}">${c.level}</span></p><h1>${H(c.title)}</h1></div><div class="gr-scene" data-werk-hero="${c.n}"></div>` : ''}
+   <div class="gr-hero${heroOf(c) ? ' gr-hero-after' : ''}"><div>
+     ${heroOf(c) ? '' : `<p class="gr-eyebrow">${isRef(c.n) ? 'Nachschlagen und trainieren' : `Kapitel ${gNo(c.n)} · ${H(c.group)}`} · <span class="gr-lv ${c.level}">${c.level}</span></p>
+     <h1>${H(c.title)}</h1>`}<p class="gr-kick">${H(c.kicker)}</p><p class="gr-intro">${rich(c.intro)}</p>
      <div class="gr-prog" id="grprog">${progHTML(pr)}</div>
      <div class="row" style="margin-top:.8rem">${watchBtn(c)}${werkBtn(c)}<button class="btn sm" onclick="GRAM.practice('solo')">${icn('gamepad-2')} Im Spiel üben</button></div></div>
-     <figure class="gr-art">${typeof c.art === 'function' ? c.art(K) : c.scene ? window.GRAM_ART.draw(K,c.scene) : ART[c.art] ? ART[c.art]() : ''}<figcaption><span>${fmt(c.hero)}</span>${sayBtn(c.hero)}</figcaption></figure>
+     ${heroOf(c) ? '' : `<figure class="gr-art">${typeof c.art === 'function' ? c.art(K) : c.scene ? window.GRAM_ART.draw(K,c.scene) : ART[c.art] ? ART[c.art]() : ''}<figcaption><span>${fmt(c.hero)}</span>${sayBtn(c.hero)}</figcaption></figure>`}
    </div>
    <nav class="gr-toc"><a href="#grs-v" data-jump>${icn('lightbulb')} Verstehen</a>${hasExamples?`<a href="#grs-b" data-jump>${icn('quote')} Beispiele</a>`:''}<a href="#grs-u" data-jump>${icn('pencil')} Üben</a>${hasSpeak?`<a href="#grs-s" data-jump>${icn('mic')} Sprechen</a>`:''}${secAllBtn()}</nav>
-   <section class="gr-sec" id="grs-v"><h2><span class="gr-sn">1</span>Verstehen</h2>${c.film?'<div class="gf-inline" data-film-host></div>':''}${werkCard(c)}${blocks}</section>
+   <section class="gr-sec" id="grs-v"><h2><span class="gr-sn">1</span>Verstehen</h2>${c.film?'<div class="gf-inline" data-film-host></div>':''}${heroOf(c) ? '' : werkCard(c)}${blocks}</section>
    ${hasExamples?`<section class="gr-sec" id="grs-b"><h2><span class="gr-sn">2</span>Beispiele</h2>
      <div class="gr-legend"><span class="n">Nominativ – wer?</span><span class="d">Dativ – wem?</span><span class="a">Akkusativ – was?</span></div>
      <ul class="gr-exs">${c.examples.map(s => `<li><span class="s">${fmt(s)}</span>${sayBtn(s)}</li>`).join('')}</ul>
@@ -1381,7 +1412,7 @@ function render(c) {
      ${c.exercises.map((x, i) => exHTML(x, i + 1)).join('')}</section>
    ${hasSpeak?`<section class="gr-sec" id="grs-s"><h2><span class="gr-sn">${hasExamples?4:3}</span>Sprechen</h2>${speakHTML(c.speak)}</section>`:''}
   </article>`;
-  wire(c); icons();
+  wire(c); icons(); mountHero(c);
   if(c.film){
     const host=document.querySelector('[data-film-host]');
     filmWithAudio(c.n).then(audio=>{if(host.isConnected&&cur===c)lessonFilm=window.GRAM_FILM.mount(host,c.film,{...filmTheme(),...filmVisual(c),audio,onExercises:()=>jump('grs-u')});})

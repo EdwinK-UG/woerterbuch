@@ -10,7 +10,7 @@
      { chips: [{ t, at, c: 'n' | 'a' | 'd' | 'g' }] }                           cards in a row, appearing when said
      { wheels: [['k','ö','a','nn','nnen'], …], at: [word, …] }                  vowel wheels that turn when said
      { pic: 'leute', icon: 'kann' }                                             a picture from bilder.js */
-import { $, rich, plain, REDUCED } from './stage.js';
+import { $, rich, plain, REDUCED, isNarrator } from './stage.js';
 import { createStrip, wheel } from './satzband.js';
 import { BILDER, ICONS } from './bilder.js';
 import { play } from './sfx.js';
@@ -58,7 +58,7 @@ export function createTafel(B, { cases = false, bubble = null } = {}) {
   }
   B.sayHooks.push((who, id) => {
     const board = (B.data('boards') || {})[id];
-    if (board) show(id, board); else if (who !== 'elisa') hide();
+    if (board) show(id, board); else if (!isNarrator(who)) hide();
   });
   B.resetHooks.push(hide);
   B.onFrame.push((t) => {

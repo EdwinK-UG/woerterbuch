@@ -5,7 +5,7 @@
    kind 'say' has a pointed tail, 'think' (wishes, plans, questions to oneself) a trail of dots.
    It sits above the speaker's head, or beside it when there is no room, and follows them as the camera moves.
    The film leaves headroom for it (stage S.room: close-ups frame the face lower). */
-import { $, rich, REDUCED } from './stage.js';
+import { $, rich, REDUCED, isNarrator } from './stage.js';
 import { createStrip } from './satzband.js';
 import { BILDER, ICONS } from './bilder.js';
 import { play } from './sfx.js';
@@ -47,7 +47,7 @@ export function createBlase(B, { cases = false } = {}) {
     if (o.strip) await strip.show(o.strip, { clamp: o.clamp ?? 'auto' }); else if (o.strip === null) strip.clear();
   }
   // another speaker's line (not the narrator, who talks about the bubble): the bubble goes
-  B.sayHooks.push((who) => { if (S.on && who !== 'elisa' && S.who && who !== S.who) hide(); });
+  B.sayHooks.push((who) => { if (S.on && !isNarrator(who) && S.who && who !== S.who) hide(); });
   function hide() { if (!S.on) return; S.on = false; el.classList.remove('on'); tail.innerHTML = ''; strip.clear(); }
 
   B.onFrame.push((t) => {

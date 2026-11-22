@@ -5,7 +5,7 @@
    Then the learner builds sentences (the chapter's own exercise items, from the private lines file).
    Like every lesson scene this file holds no lesson text: lines, strips, signs, cards and practice items come from
    .local/scenes/k05/lines.json (?local) or, embedded, from the lesson page. */
-import { createStage, $, rich, plain } from '../buehne/stage.js?v=1';
+import { createStage, $, rich, plain, LANG, T } from '../buehne/stage.js?v=1';
 import { createWerkstatt, SPOTS } from '../buehne/sets/werkstatt.js?v=1';
 import { createStrip, wheel } from '../buehne/satzband.js?v=1';
 import { createPractice } from '../buehne/practice.js?v=1';
@@ -15,7 +15,7 @@ import { createLicht } from '../buehne/licht.js?v=1';
 import { sfx, play, unlockSfx } from '../buehne/sfx.js?v=1';
 
 const set = createWerkstatt($('bg'), $('fg'));
-const B = createStage({ set, priv: '../../.local/scenes/k05/', tag: 'k05', keys: ['anton', 'liv', 'lena'], onCast, minW: 4.3 });
+const B = createStage({ set, priv: `../../.local/scenes/k05${LANG === 'en' ? '-en' : ''}/`, tag: LANG === 'en' ? 'k05-en' : 'k05', keys: ['anton', 'liv', 'lena'], onCast, minW: 4.3 });
 const { A, S, place, walkTo, turn, trig, face, cam, say, wait, need } = B;
 const strip = createStrip($('strip'));
 const PR = createPractice(B, strip, { miss });
@@ -120,7 +120,7 @@ const SCENES = [
 
 /* ---------- the practice ---------- */
 function setPractice(on) {
-  $('panel').classList.toggle('pr', on); $('ctl').classList.toggle('pr', on); $('try').textContent = on ? 'Film ansehen' : 'Mitspielen';
+  $('panel').classList.toggle('pr', on); $('ctl').classList.toggle('pr', on); $('try').textContent = on ? T('film') : T('play');
   if (!on) { PR.tell('', ''); $('answers').replaceChildren(); $('say').style.display = 'none'; $('panel').classList.remove('busy'); }
 }
 B.resetHooks.push((why) => { if (why === 'watch') setPractice(false); });
@@ -133,7 +133,7 @@ async function miss(item, tries) {           // a miss: Anton frowns at the clam
 async function practise() {
   B.abortAll(); clearAll(); S.mode = 'practice'; B.setPaused(false); setPractice(true); PR.reset(); PR.busy(true); const gen = S.gen;
   try {
-    if (['anton', 'liv', 'lena'].some((k) => !A[k].clean)) B.caption('elisa', '…');
+    if (['anton', 'liv', 'lena'].some((k) => !A[k].clean)) B.caption('elisa', T('wait'));
     await need('anton', 'liv', 'lena');
     B.cast('anton', 'liv', 'lena'); place(A.liv, 0.8, { left: false }); place(A.lena, -0.3, { d: 0.05, left: false }); await cam(1.5, 1.0, 1.0);
     let part = null; const parts = B.data('parts');
@@ -165,13 +165,13 @@ async function practise() {
     }
     strip.clear(); PR.tell('', ''); PR.prompt('');
     bubble.hide(); trig(A.anton, 'clap'); for (const k of ['anton', 'liv', 'lena']) face(A[k], 'laugh'); await say('p06', { frame: false });
-    B.caption('elisa', `Fertig! Beim ersten Versuch richtig: ${PR.P.score} von ${PR.P.asked}.`); S.mode = 'idle';
+    B.caption('elisa', T('done', { s: PR.P.score, n: PR.P.asked })); S.mode = 'idle';
   } catch (e) { if (!(e instanceof B.Abort)) console.error(e); }
 }
 
 /* ---------- start ---------- */
 $('sound').addEventListener('click', () => { sfx.muted = S.muted; });
-B.start({ scenes: SCENES, practise, end: () => { B.caption('elisa', 'Jetzt du! Tipp auf „Mitspielen“.'); $('try').focus(); } }).then((ok) => {
+B.start({ scenes: SCENES, practise, langs: ['de', 'en'], feedback: 'k05', end: () => { B.caption('elisa', T('turn')); $('try').focus(); } }).then((ok) => {
   if (!ok) return;
   for (const id of ['goWatch', 'goTry']) $(id).addEventListener('click', unlockSfx, { capture: true });
   set.V.sign = B.data('signs').rauchen || ''; set.V.signPic = 'rauchen';

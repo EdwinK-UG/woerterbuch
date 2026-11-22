@@ -6,7 +6,7 @@ const ROOT = path.join(__dirname, '..'), PRIV = path.join(ROOT, '.local', 'scene
 const PUBLIC = [path.join(ROOT, 'grammatik', 'buehne'), path.join(ROOT, 'grammatik', 'klammer'), path.join(ROOT, 'grammatik', 'jagd')];
 const files = (d) => fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? files(path.join(d, e.name)) : [path.join(d, e.name)]));
 const scenes = () => (fs.existsSync(PRIV) ? fs.readdirSync(PRIV).filter((d) => fs.existsSync(path.join(PRIV, d, 'lines.json'))) : []);
-const plain = (s) => s.replace(/\{[a-z]:([^}]*)\}/g, '$1');
+const plain = (s) => s.replace(/\{[a-z]+:([^}]*)\}/g, '$1');
 
 test('public scene code holds none of the private lines, strips or practice sentences', (t) => {
   if (!scenes().length) { t.skip('no private scene files on this machine'); return; }
@@ -21,7 +21,7 @@ test('public scene code holds none of the private lines, strips or practice sent
 test('every scene line names a known speaker and every practice item can be graded', (t) => {
   if (!scenes().length) { t.skip('no private scene files on this machine'); return; }
   const stage = fs.readFileSync(path.join(ROOT, 'grammatik', 'buehne', 'stage.js'), 'utf8');
-  const known = new Set([...stage.matchAll(/^\s{2}(\w+):\s+\{ id: '/gm)].map((m) => m[1]).concat(['elisa', 'you', 'lamb']));
+  const known = new Set([...stage.matchAll(/^\s{2}(\w+):\s+\{ id: '/gm)].map((m) => m[1]).concat(['elisa', 'narrator', 'you', 'lamb']));
   for (const s of scenes()) {
     const d = JSON.parse(fs.readFileSync(path.join(PRIV, s, 'lines.json'), 'utf8'));
     for (const [id, l] of Object.entries(d.lines)) for (const w of l.who.split('+')) assert.ok(known.has(w), `${s}/${id}: unknown speaker ${w}`);

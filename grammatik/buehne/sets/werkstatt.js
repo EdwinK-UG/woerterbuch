@@ -161,12 +161,12 @@ export function createWerkstatt(bg, fg) {
     if (!V.sign) return;
     const words = V.sign.split(' '); let fs = m(0.12); c.textAlign = 'left'; c.textBaseline = 'middle';
     const font = (b) => `${b ? 700 : 500} ${fs}px Inter, system-ui, sans-serif`;
-    const width = (ws) => ws.reduce((s, wd) => { c.font = font(/^\{/.test(wd)); return s + c.measureText(wd.replace(/\{[a-z]:|\}/g, '') + ' ').width; }, 0);
+    const width = (ws) => ws.reduce((s, wd) => { c.font = font(/^\{/.test(wd)); return s + c.measureText(wd.replace(/\{[a-z]+:|\}/g, '') + ' ').width; }, 0);
     let lines = [words]; if (width(words) > tw * 0.88) { let best = 1, bd = 1e9; for (let i = 1; i < words.length; i++) { const d = Math.abs(width(words.slice(0, i)) - width(words.slice(i))); if (d < bd) { bd = d; best = i; } } lines = [words.slice(0, best), words.slice(best)]; }
     while (Math.max(...lines.map(width)) > tw * 0.9 && fs > 6) fs *= 0.92;
     lines.forEach((ln, li) => {
       let tx = tcx - width(ln) / 2; const ty = y + h * (lines.length === 1 ? 0.5 : 0.32 + li * 0.38);
-      for (const wd of ln) { const b = /^\{[vt]:/.test(wd), t = wd.replace(/\{[a-z]:|\}/g, ''); c.font = font(b); c.fillStyle = b ? '#2f7d5b' : '#3a2a1a'; c.fillText(t, tx, ty); tx += c.measureText(t + ' ').width; }
+      for (const wd of ln) { const b = /^\{[vt]:/.test(wd), t = wd.replace(/\{[a-z]+:|\}/g, ''); c.font = font(b); c.fillStyle = b ? '#2f7d5b' : '#3a2a1a'; c.fillText(t, tx, ty); tx += c.measureText(t + ' ').width; }
     });
   }
   function lampAndDust(c, t) {

@@ -12,6 +12,21 @@
 const qs = new URLSearchParams(location.search);
 export const LOCAL = qs.has('local'), EMBED = window.parent !== window, TEST = qs.has('test');
 export const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+/* The scene's language: German throughout (default), or ?lang=en, the bilingual version: the narrator explains in
+   English with the German examples woven in, characters speak German with an English gloss under their line, and the
+   buttons and feedback are English. */
+export const LANG = qs.get('lang') === 'en' ? 'en' : 'de';
+const UI = {
+  de: { narrator: 'Erzählerin', you: 'Du', watch: '▶ Zuschauen', play: 'Mitspielen', film: 'Film ansehen', check: 'Prüfen', right: 'Richtig!', notyet: 'Noch nicht.',
+    nofit: 'Passt nicht.', rightis: 'Richtig ist:', almost: 'Fast.', oops: 'Hoppla!', wait: '…', done: 'Fertig! Beim ersten Versuch richtig: {s} von {n}.', turn: 'Jetzt du! Tipp auf „Mitspielen“.',
+    signin: 'Melde dich mit deinem Zugang an, dann spielt die Szene mit Ton.', none: 'Nicht verfügbar: diese Szene öffnet sich aus der Lektion.', write: 'Schreib …', loading: 'Lädt …' },
+  en: { narrator: 'Narrator', you: 'You', watch: '▶ Watch', play: 'Play along', film: 'Watch the film', check: 'Check', right: 'Correct!', notyet: 'Not yet.',
+    nofit: "That doesn't fit.", rightis: 'The right answer:', almost: 'Almost.', oops: 'Oops!', wait: '…', done: 'Done! Right the first time: {s} of {n}.', turn: 'Your turn! Tap “Play along”.',
+    signin: 'Sign in with your access, then the scene plays with sound.', none: 'Not available: this scene opens from the lesson.', write: 'Write …', loading: 'Loading …' },
+};
+export const T = (k, vars = {}) => (UI[LANG][k] || UI.de[k] || k).replace(/\{(\w+)\}/g, (_, v) => vars[v] ?? '');
+// the narrator: Elisa in the German scenes, the English-speaking narrator in the bilingual ones (she has no figure)
+export const isNarrator = (who) => who === 'elisa' || who === 'narrator';
 const SPEED = Math.max(0.25, Math.min(8, +qs.get('speed') || 1));    // checks only: &speed=3 runs the scene clock three times as fast
 const RIVE_JS = 'https://cdn.jsdelivr.net/npm/@rive-app/canvas@2.49.0/rive.js';
 const RIV_DIR = '../../tools/liv3d/models/cast/2d/';
@@ -31,14 +46,14 @@ export const CAST = {
   berger: { id: 'a05', name: 'Herr Berger', col: '#3d4f6b', m: 2.204, g: 2029.4 },
   adler:  { id: 'a06', name: 'Frau Adler', col: '#3f6fa0', m: 1.9531, g: 2027.0 },
 };
-export const SPEAKER = { elisa: { name: 'Erzählerin', col: '#2f7d5b' }, you: { name: 'Du', col: '#2f7d5b' }, lamb: { name: 'Flocke', col: '#8a8a8a' } };
+export const SPEAKER = { elisa: { name: T('narrator'), col: '#2f7d5b' }, narrator: { name: T('narrator'), col: '#2f7d5b' }, you: { name: T('you'), col: '#2f7d5b' }, lamb: { name: 'Flocke', col: '#8a8a8a' } };
 
 /* Text marks used in lines, captions, cards and tiles (the grammar pages' own marks):
    {v:…} the conjugated verb (Position 2), {t:…} the verb part at the end, {e:…} an important part (ending, vowel),
    {n:…} {a:…} {d:…} {g:…} the cases. */
 export const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-export const plain = (s) => String(s == null ? '' : s).replace(/\{[a-z]:([^}]*)\}/g, '$1');
-export const rich = (s) => esc(s).replace(/\{([a-z]):([^}]*)\}/g, (_, k, t) => `<span class="cs ${k}">${t}</span>`);
+export const plain = (s) => String(s == null ? '' : s).replace(/\{[a-z]+:([^}]*)\}/g, '$1');
+export const rich = (s) => esc(s).replace(/\{([a-z]+):([^}]*)\}/g, (_, k, t) => `<span class="cs ${k}">${t}</span>`);
 
 /* create the stage
    set: the drawn place ({ V, size, setCam, foot, draw })
@@ -189,9 +204,9 @@ export function createStage({ set, priv, tag, keys, onCast = () => {}, z0 = 2.75
   const inBase = (a) => a.show && Math.abs(a.x - S.base.x) < Math.max(set.V.W / (2 * S.Z0 * S.base.k), 3.1 / S.base.k) - 0.15;
 
   /* ---------- words ---------- */
-  function caption(who, text) {
+  function caption(who, text, gloss) {
     const sp = CAST[who] || SPEAKER[who] || { name: who.split('+').map((k) => (CAST[k] || SPEAKER[k] || { name: k }).name).join(' und '), col: (CAST[who.split('+')[0]] || { col: '#999' }).col };
-    $('cap').innerHTML = `<span class="who" style="--c:${sp.col}"><i></i>${esc(sp.name)}</span><span class="tx">${rich(text)}</span>`;
+    $('cap').innerHTML = `<span class="who" style="--c:${sp.col}"><i></i>${esc(sp.name)}</span><span class="tx">${rich(text)}</span>${gloss ? `<span class="gl">${rich(gloss)}</span>` : ''}`;
   }
   const text = (id) => { const l = S.lines.lines[id]; return l ? l.text : ''; };
   const data = (k) => (S.lines && S.lines[k]) || {};
@@ -204,10 +219,10 @@ export function createStage({ set, priv, tag, keys, onCast = () => {}, z0 = 2.75
   async function say(...args) {
     const opt = args.length && typeof args[args.length - 1] === 'object' ? args.pop() : {}, ids = args;
     const gen = S.gen, lns = ids.map((id) => [id, S.lines.lines[id]]).filter(([, l]) => l); if (!lns.length) return;
-    const [id0, l0] = lns[0]; caption(l0.who, l0.text); for (const h of sayHooks) h(l0.who, id0);
+    const [id0, l0] = lns[0]; caption(l0.who, l0.text, l0.en || (S.lines.glosses || {})[id0]); for (const h of sayHooks) h(l0.who, id0);
     const talkers = [...new Set(lns.flatMap(([, l]) => l.who.split('+')))].map((k) => A[k]).filter(Boolean);
     const framed = opt.frame === false ? [] : (opt.frame ? opt.frame.map((k) => A[k]) : talkers).filter(inBase);
-    if (S.zoom === false) { /* the camera stays; the spotlight shows who speaks */ } else if (l0.who === 'elisa') wide(); else if (framed.length && framed.length === (opt.frame || talkers).length) closeUp(framed);
+    if (S.zoom === false) { /* the camera stays; the spotlight shows who speaks */ } else if (isNarrator(l0.who)) wide(); else if (framed.length && framed.length === (opt.frame || talkers).length) closeUp(framed);
     const clips = lns.map(([id]) => S.audio.get(id)).filter(Boolean).slice(0, PLAYERS.length);
     let dur = Math.max(1.2, plain(l0.text).length * 0.068 + 0.5);    // reading time when a line has no recording
     if (clips.length && !S.muted) {
@@ -237,11 +252,13 @@ export function createStage({ set, priv, tag, keys, onCast = () => {}, z0 = 2.75
   }
   function markDot() { [...$('dots').children].forEach((b, i) => { b.classList.toggle('on', i === S.scene); b.classList.toggle('done', i < S.scene); }); }
   const resetHooks = [];
+  // the versions this visitor has watched (or practised) a part of, per scene, in this browser only
+  function seen() { try { const k = 'buehne-seen-' + tag.replace(/-en$/, ''), v = new Set(JSON.parse(localStorage.getItem(k) || '[]')); v.add(LANG); localStorage.setItem(k, JSON.stringify([...v])); } catch (e) { /* private mode */ } }
   async function watch(from = 0) {
     abortAll(); for (const h of resetHooks) h('watch'); S.mode = 'watch'; setPaused(false); const gen = S.gen;
     try {
-      for (let i = from; i < S.scenes.length; i++) { S.scene = i; markDot(); for (const h of resetHooks) h('scene'); await S.scenes[i].run(); if (gen !== S.gen) return; await wait(0.5, gen); }
-      S.scene = S.scenes.length; markDot(); S.mode = 'idle'; if (S.onEnd) S.onEnd();
+      for (let i = from; i < S.scenes.length; i++) { S.scene = i; markDot(); for (const h of resetHooks) h('scene'); await S.scenes[i].run(); if (gen !== S.gen) return; seen(); await wait(0.5, gen); }
+      S.scene = S.scenes.length; markDot(); S.mode = 'idle'; seen(); if (S.onEnd) S.onEnd();
     } catch (e) { if (!(e instanceof Abort)) console.error(e); }
   }
   function setPaused(p) {
@@ -270,7 +287,19 @@ export function createStage({ set, priv, tag, keys, onCast = () => {}, z0 = 2.75
 
   /* ---------- start ---------- */
   // scenes: [{ name, run }]; practise: the practice (async); welcome: the line shown when the film ends
-  function start({ scenes, practise, end }) {
+  // langs: ['de', 'en'] shows the switch (reloads the scene in the other language, kept in the address);
+  // feedback: the scene's key, shows the feedback button (meinung.js)
+  function start({ scenes, practise, end, langs, feedback }) {
+    // a slim row under the controls: the language switch (left) and the feedback button (right)
+    if ((langs && langs.length > 1) || feedback) { const m = document.createElement('div'); m.id = 'meta'; $('ctl').after(m); }
+    if (langs && langs.length > 1) {
+      const sw = document.createElement('div'); sw.id = 'langsw'; sw.setAttribute('role', 'group'); sw.setAttribute('aria-label', LANG === 'en' ? 'Explanations in' : 'Erklärungen auf');
+      sw.innerHTML = langs.map((l) => `<button type="button" data-l="${l}" class="${l === LANG ? 'on' : ''}" aria-pressed="${l === LANG}" title="${l === 'en' ? 'Explanations in English, examples in German' : 'Alles auf Deutsch'}">${l.toUpperCase()}</button>`).join('');
+      sw.onclick = (e) => { const b = e.target.closest('button'); if (!b || b.dataset.l === LANG) return; stopAudio(); const u = new URL(location.href); if (b.dataset.l === 'de') u.searchParams.delete('lang'); else u.searchParams.set('lang', b.dataset.l); location.replace(u); };
+      const lab = document.createElement('span'); lab.className = 'meta-l'; lab.textContent = LANG === 'en' ? 'Explanations:' : 'Erklärung:';
+      $('meta').append(lab, sw);
+    }
+    if (feedback) import('./meinung.js?v=1').then((m) => m.createMeinung(B, { scene: feedback, langs: langs || [LANG] }));
     S.scenes = scenes; S.onEnd = end;
     fitStage(); new ResizeObserver(fitStage).observe($('stage'));
     document.addEventListener('visibilitychange', () => { visible = !document.hidden; });
@@ -278,22 +307,35 @@ export function createStage({ set, priv, tag, keys, onCast = () => {}, z0 = 2.75
     if (TEST) setInterval(() => frame(performance.now()), 33); else requestAnimationFrame(frame);
     dots();
     for (const k of keys) makeActor(k);
-    if (EMBED) {
+    if (EMBED && !qs.has('hero')) {
       const tell = () => parent.postMessage({ type: 'werkstatt-height', h: $('app').getBoundingClientRect().height + 4 }, location.origin);
       new ResizeObserver(tell).observe($('app')); tell();
       const x = document.createElement('button'); x.textContent = '✕'; x.title = 'Schließen'; x.setAttribute('aria-label', 'Schließen');
       x.onclick = () => { stopAudio(); parent.postMessage({ type: 'werkstatt-close' }, location.origin); }; $('corner').appendChild(x);
     }
     $('sound').onclick = () => { S.muted = !S.muted; $('sound').textContent = S.muted ? '🔇' : '🔊'; $('sound').setAttribute('aria-pressed', String(!S.muted)); $('sound').setAttribute('aria-label', S.muted ? 'Ton aus' : 'Ton an'); if (S.muted) stopAudio(); };
-    $('full').onclick = () => { const el = $('app'); if (document.fullscreenElement) document.exitFullscreen(); else (el.requestFullscreen || el.webkitRequestFullscreen || (() => {})).call(el); };
+    // full screen: the browser's own where it is allowed; else (iPhone, or a frame without permission) "max": the page
+    // fills the window and, in a lesson, asks the lesson page to make the frame cover the whole screen
+    const isFull = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
+    const setMax = (on) => { S.max = on; document.documentElement.classList.toggle('max', on); $('full').setAttribute('aria-pressed', String(on)); if (EMBED) parent.postMessage({ type: 'werkstatt-max', on }, location.origin); };
+    $('full').onclick = async () => {
+      if (isFull()) { (document.exitFullscreen || document.webkitExitFullscreen).call(document); return; }
+      if (S.max) { setMax(false); return; }
+      const el = document.documentElement, req = el.requestFullscreen || el.webkitRequestFullscreen;
+      if (req && (document.fullscreenEnabled || document.webkitFullscreenEnabled)) { try { await req.call(el); } catch (e) { /* refused */ } }
+      if (!isFull()) setMax(true);
+    };
+    addEventListener('keydown', (e) => { if (e.key === 'Escape' && S.max) setMax(false); });
     $('play').onclick = () => { if (S.mode === 'idle') watch(Math.max(0, Math.min(S.scene, S.scenes.length - 1))); else setPaused(!S.paused); };
     $('prev').onclick = () => watch(Math.max(0, S.scene - 1));
     $('next').onclick = () => watch(Math.min(S.scenes.length - 1, S.scene + 1));
     $('try').onclick = () => (S.mode === 'practice' ? watch(0) : practise());
+    if (LANG !== 'de') { document.documentElement.lang = LANG; $('goWatch').textContent = T('watch'); $('goTry').textContent = T('play'); $('try').textContent = T('play'); $('load').textContent = T('loading'); const inp = $('inp'); if (inp) inp.placeholder = T('write'); }
     return (async () => {
       let lines = null; try { lines = await loadLines(); } catch (e) { lines = null; }
-      if (!lines) { $('load').textContent = EMBED ? 'Melde dich mit deinem Zugang an, dann spielt die Szene mit Ton.' : 'Nicht verfügbar: diese Szene öffnet sich aus der Lektion.'; return false; }
+      if (!lines) { $('load').textContent = EMBED ? T('signin') : T('none'); return false; }
       S.lines = lines; preloadAudio(Object.keys(lines.lines));
+      if (lines.start) { const h = document.querySelector('#start h2'), p = document.querySelector('#start p'); if (h && lines.start.title) h.textContent = lines.start.title; if (p && lines.start.text) p.textContent = lines.start.text; }
       await A[keys[0]].ready;
       $('goWatch').disabled = false; $('goTry').disabled = false; $('load').textContent = '';
       const go = (fn) => { unlockAudio(); $('start').style.display = 'none'; fn(); };
@@ -303,6 +345,6 @@ export function createStage({ set, priv, tag, keys, onCast = () => {}, z0 = 2.75
   }
 
   const B = { S, A, set, CAST, $, need, place, walkTo, cast, turn, faceTo, sit, trig, face, setB, cam, closeUp, wide, say, caption, text, data,
-    wait, until, tween, abortAll, Abort, live, watch, setPaused, stopAudio, bodyRect, occupied, occupiers, start, onFrame, resetHooks, sayHooks, progress, isClean, players: PLAYERS };
+    wait, until, tween, abortAll, Abort, live, watch, setPaused, stopAudio, bodyRect, occupied, occupiers, start, onFrame, seen, tag, resetHooks, sayHooks, progress, isClean, players: PLAYERS };
   return B;
 }

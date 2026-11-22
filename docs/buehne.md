@@ -64,8 +64,12 @@ node tools/scene-audio.cjs record k05
 
 Both pilots are entries in `WERKSTATT` in `grammatik/grammatik.js` (`inline: true, audio: true`), like Im Dorf:
 a card in the chapter's "1 Verstehen" section with "Animation starten", and a button in the chapter header.
-- **A1 · Kapitel 5**, Modalverben: Formen und Satzklammer → *Die Klammer-Werkstatt* (`grammatik/klammer/`)
-- **A1 · Kapitel 17**, Der Akkusativ → *Wer jagt wen?* (`grammatik/jagd/`)
+- **A1 · Kapitel 18** (shown number; internal id 5, address `#/g/5`), Modalverben: Formen und Satzklammer, section *Können, müssen, dürfen: Modalverben* → *Die Klammer-Werkstatt* (`grammatik/klammer/`)
+- **A1 · Kapitel 13** (shown number; internal id 17, address `#/g/17`), Der Akkusativ: das direkte Objekt, section *Wer, wen, wem? Akkusativ und Dativ* → *Wer jagt wen?* (`grammatik/jagd/`)
+
+The site numbers A1–B1 chapters in learning order (`A1B1_NO` in `grammatik/grammatik.js`); the ids used in code, files (`k05`, `k17`) and the Worker (`k5`, `k17`) are the internal ones.
+
+Both are **hero** scenes (`hero: true`): the chapter page opens with a slim title and the scene under it, sized to the screen (no scrolling on a phone); the rest of the chapter follows below.
 
 Their lines, boards, practice and recordings travel through the Worker's private film-audio route (R2 keys `k5/`,
 `k17/`). To publish a change to a scene's private file or voices:
@@ -88,3 +92,39 @@ manifest. Anton's figure (`a02.riv`) is published with the rest of the 2D cast i
 2. A folder `grammatik/<scene>/` with `index.html` (copy Kap 5's) and `main.js`: `createStage({ set, priv, tag, keys, onCast, minW })`, the scenes, and the practice loop.
 3. `.local/scenes/<tag>/lines.json`: lines, plus whatever the scene shows (strips, cards …) and `practice`.
 4. Run `node --test tests/buehne.test.cjs`, and check desktop and a 375-px phone.
+
+## Two languages (22 Nov 2026)
+
+Each pilot has a German version and a **bilingual** one (`?lang=en`, switch **DE | EN** under the picture): the
+narrator (Enniah, ElevenLabs Voice Library, a native German voice verified in English) explains in English with the
+German woven in; the characters speak German with an English gloss under their line; buttons and feedback are
+English. Private files: `.local/scenes/k05-en/`, `.local/scenes/k17-en/` (same scenes; the characters' recordings
+are reused). Both languages of a chapter travel in one narration list: `node tools/scene-audio.cjs pack k05 k05-en`.
+
+**Pronunciation rules for the bilingual narrator** (the owner's review: no German word in an English accent, no
+English word in a German one):
+1. German is marked in the line (`{de:…}` or the grammar marks) and always comes as a phrase of at least two words
+   (*ich will*, not *will*; *man darf*, not *man*), because single words like *will* or *man* are English words too.
+2. `tools/split-voice.cjs` records each English and each German run on its own, with the language enforced and
+   without the other language as context, keeps the parts (`<clip>.parts/`) and joins them.
+3. Every part is checked by speech recognition for its language (faster-whisper, `detect_language`; German part:
+   German more likely than English and at least 50 %; English part: at least 60 %), and failed parts are recorded
+   again (`node tools/split-voice.cjs redo <scene> <failed.json>`) until all pass.
+
+## Feedback
+
+**★ Feedback** in every pilot opens a form: stars for the German and for the English version (a version not yet
+watched in this browser is marked, with a link to it), which one helps more, *What worked well?*, *What was unclear,
+wrong, broken or missing?*, and the kind of device (phone · iOS · Safari; nothing personal). It is sent to the
+Worker (`POST /scene-feedback`, `worker/src/scene-feedback.js`) and stored in D1 (`scene_feedback`,
+`worker/migrations/0006_scene_feedback.sql`) without names, accounts or IP addresses; one visitor can send 20 a day.
+
+To read it all:
+
+```bash
+node tools/scene-feedback.cjs export
+```
+
+This writes `.local/feedback/scene-feedback-<date>.json` (every entry), `.csv` (spreadsheet) and `.md` (a summary to
+read or to hand to an agent: stars per version, preferences, devices, then every text, problems first). Add
+`--since 2026-11-23` for only the newest.

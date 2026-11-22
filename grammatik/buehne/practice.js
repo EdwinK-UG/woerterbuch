@@ -6,7 +6,7 @@
    The hint ladder: 1st miss = the reason (and the machine's failure animation), 2nd miss = a hint (seats fixed,
    options struck out), 3rd miss = "Richtig ist …" and on to the next round. Only first tries count for the score.
    Feedback is neutral ("passt nicht" + why) unless the chapter stages a Folge (the wrong sentence's real meaning). */
-import { $, rich, plain, esc } from './stage.js';
+import { $, rich, plain, esc, T } from './stage.js';
 import { play } from './sfx.js';
 
 export const norm = (s) => plain(s).replace(/[„“"«»]/g, '').replace(/\s+/g, ' ').replace(/\s*([.!?,])\s*$/, '').trim();
@@ -40,11 +40,11 @@ export function createPractice(B, strip, hooks = {}) {
       const said = order.map((t) => plain(item.tiles[t])).join(' ') + (item.end || '');
       const right = item.ok.some((s) => norm(s) === norm(said));
       strip.settle(item.tiles, item.roles, order);
-      if (right) { await strip.setClamp(true); play.right(); tell('ok', `<b>Richtig!</b> ${rich(said)}`); count(tries === 1); return { right: true, tries, said }; }
+      if (right) { await strip.setClamp(true); play.right(); tell('ok', `<b>${T('right')}</b> ${rich(said)}`); count(tries === 1); return { right: true, tries, said }; }
       const d = diagnose(item, order); play.wrong();
       if (d.anim === 'slip') await strip.slip(); else if (d.anim === 'stall') { strip.shake(d.at); strip.mark(d.at, 'bad'); await B.wait(0.5); } else { strip.mark(d.at, 'bad'); await B.wait(0.4); }
-      if (tries >= 3) { const good = item.ok[0] + (item.end || ''); tell('no', `Richtig ist: <b>${rich(good)}</b>`); count(false); return { right: false, tries, said, good }; }
-      tell('no', `<b>Noch nicht.</b> ${rich(item.why && item.why[d.k] || why(d.k))}`); await miss(item, tries);
+      if (tries >= 3) { const good = item.ok[0] + (item.end || ''); tell('no', `${T('rightis')} <b>${rich(good)}</b>`); count(false); return { right: false, tries, said, good }; }
+      tell('no', `<b>${T('notyet')}</b> ${rich(item.why && item.why[d.k] || why(d.k))}`); await miss(item, tries);
       if (tries === 2) {        // the hint: the verb engine and the last wagon are put in place
         const good = item.ok[0].split(' '); fixed = {};
         item.roles.forEach((r, t) => { if (r === 'v' || r === 't') { const s = locate(item.tiles, good, t); if (s >= 0) fixed[s] = t; } });
@@ -74,10 +74,10 @@ export function createPractice(B, strip, hooks = {}) {
         const b = document.createElement('button'); b.type = 'button'; b.innerHTML = rich(o);
         b.onclick = async () => {
           tries++; busy(true);
-          if (i === item.right) { play.right(); prompt(fill(o)); tell('ok', '<b>Richtig!</b>'); count(tries === 1); box.replaceChildren(); done({ right: true, tries, said: item.q.replace('___', o) }); return; }
+          if (i === item.right) { play.right(); prompt(fill(o)); tell('ok', `<b>${T('right')}</b>`); count(tries === 1); box.replaceChildren(); done({ right: true, tries, said: item.q.replace('___', o) }); return; }
           play.wrong(); b.disabled = true; b.classList.add('out'); prompt(fill(o));
-          if (tries >= 2 && item.options.length <= 3 || tries >= 3) { tell('no', `Richtig ist: <b>${rich(item.q.replace('___', item.options[item.right]))}</b>`); count(false); box.replaceChildren(); done({ right: false, tries }); return; }
-          tell('no', `<b>Passt nicht.</b> ${rich((item.why && item.why[i]) || why('form'))}`); await miss(item, tries); busy(false);
+          if (tries >= 2 && item.options.length <= 3 || tries >= 3) { tell('no', `${T('rightis')} <b>${rich(item.q.replace('___', item.options[item.right]))}</b>`); count(false); box.replaceChildren(); done({ right: false, tries }); return; }
+          tell('no', `<b>${T('nofit')}</b> ${rich((item.why && item.why[i]) || why('form'))}`); await miss(item, tries); busy(false);
         };
         box.appendChild(b);
       });
@@ -97,12 +97,12 @@ export function createPractice(B, strip, hooks = {}) {
       const check = () => {
         const v = inp.value.trim(); if (!v) { inp.focus(); return; }
         tries++; const said = norm(v), right = item.ok.some((s) => norm(s) === said);
-        if (right) { play.right(); ok.onclick = null; inp.onkeydown = null; tell('ok', `<b>Richtig!</b> ${esc(whole(said))}${item.end || '.'}`); count(tries === 1); box.replaceChildren(); $('say').style.display = 'none'; done({ right: true, tries, said }); return; }
+        if (right) { play.right(); ok.onclick = null; inp.onkeydown = null; tell('ok', `<b>${T('right')}</b> ${esc(whole(said))}${item.end || '.'}`); count(tries === 1); box.replaceChildren(); $('say').style.display = 'none'; done({ right: true, tries, said }); return; }
         play.wrong();
         const known = Object.entries(item.bad || {}).find(([s]) => fold(s) === fold(v));
-        if (tries >= 3) { ok.onclick = null; inp.onkeydown = null; tell('no', `Richtig ist: <b>${rich(whole(item.ok[0]))}${item.end || '.'}</b>`); count(false); box.replaceChildren(); $('say').style.display = 'none'; done({ right: false, tries }); return; }
+        if (tries >= 3) { ok.onclick = null; inp.onkeydown = null; tell('no', `${T('rightis')} <b>${rich(whole(item.ok[0]))}${item.end || '.'}</b>`); count(false); box.replaceChildren(); $('say').style.display = 'none'; done({ right: false, tries }); return; }
         const close = item.ok.some((s) => fold(s) === fold(v));       // only the capital letters differ
-        tell('no', `<b>Noch nicht.</b> ${rich(close ? why('caps') : known ? known[1] : tries === 2 && item.hint ? item.hint : why('type'))}`);
+        tell('no', `<b>${T('notyet')}</b> ${rich(close ? why('caps') : known ? known[1] : tries === 2 && item.hint ? item.hint : why('type'))}`);
         inp.select(); miss(item, tries);
       };
       ok.onclick = check; inp.onkeydown = (e) => { if (e.key === 'Enter') check(); };
