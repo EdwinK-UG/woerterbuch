@@ -60,6 +60,11 @@ export ELEVENLABS_API_KEY="$(osascript -e 'text returned of (display dialog "Ele
 node tools/scene-audio.cjs record k05
 ```
 
+Short character lines (three words or fewer: *Super!*, *Genau!*, *Oh nein!*) are recorded with German enforced
+(`eleven_turbo_v2_5` + `language_code: "de"`): on their own, the multilingual model read words both languages share the
+English way (Liv's *Super!* with an English hissing s, Anton's *Klick! Perfekt.* as "Click, perfect"). Check a take by
+its first 100 ms: German *Super* starts with a voiced z (strong energy below 400 Hz), English with a hiss.
+
 ## In the lesson (live since 22 Nov 2026)
 
 Both pilots are entries in `WERKSTATT` in `grammatik/grammatik.js` (`inline: true, audio: true`), like Im Dorf:
@@ -69,7 +74,7 @@ a card in the chapter's "1 Verstehen" section with "Animation starten", and a bu
 
 The site numbers A1–B1 chapters in learning order (`A1B1_NO` in `grammatik/grammatik.js`); the ids used in code, files (`k05`, `k17`) and the Worker (`k5`, `k17`) are the internal ones.
 
-Both are **hero** scenes (`hero: true`): the chapter page opens with a slim title and the scene under it, sized to the screen (no scrolling on a phone); the rest of the chapter follows below.
+Both are **hero** scenes (`hero: true`): the chapter page opens with a slim title and the scene under it, sized to the screen (no scrolling on a phone); the rest of the chapter follows below. When the panel under the picture needs more room than that (the practice: task, strip, tiles, buttons), the scene sends `werkstatt-need` and the frame grows, so the page scrolls a little and the picture keeps a fair size; nothing in the panel is ever squeezed (`#panel > * { flex-shrink: 0 }`), since a squeezed caption ran over the task.
 
 Their lines, boards, practice and recordings travel through the Worker's private film-audio route (R2 keys `k5/`,
 `k17/`). To publish a change to a scene's private file or voices:

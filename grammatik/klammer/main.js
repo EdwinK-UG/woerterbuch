@@ -5,15 +5,15 @@
    Then the learner builds sentences (the chapter's own exercise items, from the private lines file).
    Like every lesson scene this file holds no lesson text: lines, strips, signs, cards and practice items come from
    .local/scenes/k05/lines.json (?local) or, embedded, from the lesson page. */
-import { createStage, $, rich, plain, LANG, LONG, T } from '../buehne/stage.js?v=2';
-import { actsToScenes } from '../buehne/regie.js?v=2';
-import { createWerkstatt, SPOTS } from '../buehne/sets/werkstatt.js?v=2';
-import { createStrip, wheel } from '../buehne/satzband.js?v=2';
-import { createPractice } from '../buehne/practice.js?v=2';
-import { createBlase } from '../buehne/blase.js?v=2';
-import { createTafel } from '../buehne/tafel.js?v=2';
-import { createLicht } from '../buehne/licht.js?v=2';
-import { sfx, play, unlockSfx } from '../buehne/sfx.js?v=2';
+import { createStage, $, rich, plain, LANG, LONG, T } from '../buehne/stage.js?v=3';
+import { actsToScenes } from '../buehne/regie.js?v=3';
+import { createWerkstatt, SPOTS } from '../buehne/sets/werkstatt.js?v=3';
+import { createStrip, wheel } from '../buehne/satzband.js?v=3';
+import { createPractice } from '../buehne/practice.js?v=3';
+import { createBlase } from '../buehne/blase.js?v=3';
+import { createTafel } from '../buehne/tafel.js?v=3';
+import { createLicht } from '../buehne/licht.js?v=3';
+import { sfx, play, unlockSfx } from '../buehne/sfx.js?v=3';
 
 const set = createWerkstatt($('bg'), $('fg'));
 // four versions: k05 (German), k05-en (English with German examples), and their long versions k05-long, k05-en-long

@@ -325,6 +325,19 @@ export function createStage({ set, priv, tag, keys, onCast = () => {}, z0 = 2.75
       const x = document.createElement('button'); x.textContent = '✕'; x.title = 'Schließen'; x.setAttribute('aria-label', 'Schließen');
       x.onclick = () => { stopAudio(); parent.postMessage({ type: 'werkstatt-close' }, location.origin); }; $('corner').appendChild(x);
     }
+    // a hero scene has the height the chapter page gives it; when the panel needs more (the practice: task, strip,
+    // tiles, buttons), it asks for a taller frame, so the picture keeps a fair size and nothing is squeezed
+    if (EMBED && qs.has('hero')) {
+      let last = 0;
+      const need = () => {
+        if (S.max || document.fullscreenElement) return;
+        const p = $('panel'), w = $('app').getBoundingClientRect().width, h = Math.ceil(p.scrollHeight + Math.max(220, Math.min(380, w * 0.42)));
+        if (Math.abs(h - last) > 4) { last = h; parent.postMessage({ type: 'werkstatt-need', h }, location.origin); }
+      };
+      const ro = new ResizeObserver(need); for (const el of $('panel').children) ro.observe(el); ro.observe($('panel'));
+      new MutationObserver(need).observe($('panel'), { attributes: true, attributeFilter: ['class'], childList: true, subtree: true });
+      need();
+    }
     $('sound').onclick = () => { S.muted = !S.muted; $('sound').textContent = S.muted ? '🔇' : '🔊'; $('sound').setAttribute('aria-pressed', String(!S.muted)); $('sound').setAttribute('aria-label', S.muted ? 'Ton aus' : 'Ton an'); if (S.muted) stopAudio(); };
     // full screen: the browser's own where it is allowed; else (iPhone, or a frame without permission) "max": the page
     // fills the window and, in a lesson, asks the lesson page to make the frame cover the whole screen

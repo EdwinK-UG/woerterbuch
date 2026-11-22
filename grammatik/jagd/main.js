@@ -5,16 +5,16 @@
    chases – and the articles swap – Der Ball jagt den Hund: now the ball chases the dog across the meadow.
    Practice: Regie (the learner's sentence is acted out, exactly as it is grammatically), Max packs his backpack
    (den / das / die) and "Doch, ich habe …". All lesson text comes from the private .local/scenes/k17/lines.json. */
-import { createStage, $, rich, LANG, LONG, T } from '../buehne/stage.js?v=2';
-import { actsToScenes } from '../buehne/regie.js?v=2';
-import { createVillage } from '../dorf/village.js?v=2';
-import { createStrip } from '../buehne/satzband.js?v=2';
-import { createPractice } from '../buehne/practice.js?v=2';
-import { createFx } from '../buehne/tiere.js?v=2';
-import { createBlase } from '../buehne/blase.js?v=2';
-import { createTafel } from '../buehne/tafel.js?v=2';
-import { createLicht } from '../buehne/licht.js?v=2';
-import { sfx, play, unlockSfx } from '../buehne/sfx.js?v=2';
+import { createStage, $, rich, LANG, LONG, T } from '../buehne/stage.js?v=3';
+import { actsToScenes } from '../buehne/regie.js?v=3';
+import { createVillage } from '../dorf/village.js?v=3';
+import { createStrip } from '../buehne/satzband.js?v=3';
+import { createPractice } from '../buehne/practice.js?v=3';
+import { createFx } from '../buehne/tiere.js?v=3';
+import { createBlase } from '../buehne/blase.js?v=3';
+import { createTafel } from '../buehne/tafel.js?v=3';
+import { createLicht } from '../buehne/licht.js?v=3';
+import { sfx, play, unlockSfx } from '../buehne/sfx.js?v=3';
 
 const set = createVillage($('bg'), $('fg'));
 // four versions: k17 (German), k17-en (English with German examples), and their long versions k17-long, k17-en-long

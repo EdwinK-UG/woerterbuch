@@ -41,6 +41,13 @@ const SCOUT = {
   mia: { gender: "female", ages: ["young"] },                  // Mia, Liv's little friend
 };
 const KIDS = new Set(["max", "mia", "finn"]);
+// A short character line ("Super!", "Genau!", "Hm?") gives the multilingual model too little to tell the language by,
+// and it reads words both languages share the English way. So these are spoken with German enforced.
+const SHORT_MODEL = "eleven_turbo_v2_5";
+const isShort = (ln) => !ln.who.includes("+") && !SPLIT.has(ln.who) && spoken(ln.text).split(/\s+/).filter((w) => /[A-Za-zÄÖÜäöüß]/.test(w)).length <= 3;
+// what a recording depends on: a line is recorded again when this changes
+const hashOf = (ln, cast) => { const roles = ln.who.split("+"), split = roles.length === 1 && SPLIT.has(roles[0]);
+  return crypto.createHash("sha256").update(JSON.stringify([split ? ln.text : spoken(ln.text), roles.map((r) => cast[r]), split ? SPLIT_MODEL : isShort(ln) ? SHORT_MODEL + ":de" : MODEL, roles.map((r) => SETTINGS[r] || SETTINGS.default)])).digest("hex").slice(0, 16); };
 const spoken = (t) => t.replace(/\{[a-z]+:([^}]*)\}/g, "$1").replace(/\s+/g, " ").trim();
 const read = (f, d) => (fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, "utf8")) : d);
 const sceneDir = (s) => { if (!/^[a-z0-9-]+$/.test(s || "")) { console.error("scene name like k05"); process.exit(1); } return path.join(ROOT, s); };
@@ -142,7 +149,7 @@ ${page.map((p) => `<h2>${esc(p.role)}</h2><p class="t">${esc(p.note || "")} „$
       const roles = ln.who.split("+");
       if (roles.some((r) => KIDS.has(r) && !cast[r])) { missing.add(roles.filter((r) => KIDS.has(r)).join("+")); continue; }
       if (roles.some((r) => !cast[r])) { roles.filter((r) => !cast[r]).forEach((r) => missing.add(r)); continue; }
-      const split = roles.length === 1 && SPLIT.has(roles[0]), text = spoken(ln.text), hash = crypto.createHash("sha256").update(JSON.stringify([split ? ln.text : text, roles.map((r) => cast[r]), split ? SPLIT_MODEL : MODEL, roles.map((r) => SETTINGS[r] || SETTINGS.default)])).digest("hex").slice(0, 16);
+      const split = roles.length === 1 && SPLIT.has(roles[0]), text = spoken(ln.text), hash = hashOf(ln, cast);
       const rel = `audio/${id}.mp3`;
       if (ln.hash === hash && ln.audio === rel && fs.existsSync(path.join(dir, rel))) { kept++; continue; }
       chars += text.length * roles.length; if (dry) { console.log("would record", id, ln.who, text); continue; }
@@ -152,7 +159,7 @@ ${page.map((p) => `<h2>${esc(p.role)}</h2><p class="t">${esc(p.note || "")} „$
         execFileSync("ffmpeg", ["-v", "error", "-y", ...parts.flatMap((f) => ["-i", f]), "-filter_complex", `amix=inputs=${parts.length}:normalize=0`, "-ar", "44100", "-b:a", "96k", path.join(dir, rel)]);
         parts.forEach((f) => fs.unlinkSync(f));
       } else if (split) await splitSpeak(ln.text, cast[roles[0]], SETTINGS[roles[0]], path.join(dir, rel));
-      else fs.writeFileSync(path.join(dir, rel), (await speak(text, cast[roles[0]], MODEL, { voice_settings: SETTINGS[roles[0]] || (KIDS.has(roles[0]) ? SETTINGS.kid : SETTINGS.default) })).bytes);
+      else fs.writeFileSync(path.join(dir, rel), (await speak(text, cast[roles[0]], isShort(ln) ? SHORT_MODEL : MODEL, { voice_settings: SETTINGS[roles[0]] || (KIDS.has(roles[0]) ? SETTINGS.kid : SETTINGS.default), ...(isShort(ln) ? { language_code: "de" } : {}) })).bytes);
       ln.audio = rel; ln.hash = hash; made++; console.log("recorded", id, ln.who);
       fs.writeFileSync(LINES, JSON.stringify(data, null, 1));          // after every line, so a stop loses nothing
     }
@@ -186,4 +193,5 @@ ${page.map((p) => `<h2>${esc(p.role)}</h2><p class="t">${esc(p.note || "")} „$
   }
   console.error("usage: voices | scout [role…] | audition | cast <role> <id> | library <gender> <age> | add <file> <name> <role> | samples <role> <id…> | record <scene> [--dry] | pack <scene>"); process.exit(1);
 }
-main();
+if (require.main === module) main();
+module.exports = { SETTINGS, KIDS, spoken, isShort, hashOf };

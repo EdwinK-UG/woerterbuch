@@ -51,3 +51,21 @@ test('every stage and scene module parses as a JavaScript module', () => {
     }
   } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
 });
+
+test('the panel under the picture never squeezes its parts (they would overlap); a hero frame grows for the practice', () => {
+  const css = fs.readFileSync(path.join(__dirname, '..', 'grammatik', 'buehne', 'stage.css'), 'utf8');
+  assert.match(css, /#panel > \* \{ flex-shrink: 0; \}/);
+  const stage = fs.readFileSync(path.join(__dirname, '..', 'grammatik', 'buehne', 'stage.js'), 'utf8');
+  const page = fs.readFileSync(path.join(__dirname, '..', 'grammatik', 'grammatik.js'), 'utf8');
+  assert.match(stage, /type: 'werkstatt-need'/);
+  assert.match(page, /d\.type === 'werkstatt-need' && f\.dataset\.hero/);
+});
+
+test('short character lines are recorded with German enforced ("Super!" was read the English way)', () => {
+  const A = require('../tools/scene-audio.cjs');
+  assert.equal(A.isShort({ who: 'liv', text: 'Super!' }), true);
+  assert.equal(A.isShort({ who: 'max', text: '… {a:das Lamm} …' }), true);
+  assert.equal(A.isShort({ who: 'liv', text: 'Ich will heute schwimmen gehen.' }), false);
+  assert.equal(A.isShort({ who: 'narrator', text: 'Super!' }), false);
+  assert.equal(A.isShort({ who: 'max+mia', text: 'Super!' }), false);
+});
