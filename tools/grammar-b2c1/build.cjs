@@ -14,6 +14,7 @@ const KINDS = (() => { const s = fs.readFileSync(path.join(root, 'grammatik/illu
   for (const m of s.matchAll(/kinds(?:=|\.push\()\[?([^\]\)]*)/g)) for (const q of m[1].matchAll(/'([^']+)'/g)) k.push(q[1]); return new Set(k); })();
 const norm = s => s.replace(/[.,!?;:„“"'»«]/g, ' ').replace(/\s+/g, ' ').trim();
 const commaNorm = s => s.normalize('NFC').replace(/[.!?;:„“"'»«]/g, ' ').replace(/\s*,\s*/g, ', ').replace(/\s+/g, ' ').trim();
+const keepApos = (s, commas) => { s = s.normalize('NFC').replace(/[’‘ʼ´`]/g, "'").replace(commas ? /[.!?;:„“"»«]/g : /[.,!?;:„“"»«]/g, ' '); return (commas ? s.replace(/\s*,\s*/g, ', ') : s).replace(/\s+/g, ' ').trim(); }; // exercises with apostrophe: true (same rule as the grader)
 const gaps = (s, re) => s.match(re) || [];
 
 function checkScene(sc, at) {
@@ -38,7 +39,7 @@ function checkExercise(x, where) {
       assert.ok(typeof it.q === 'string' && Array.isArray(it.ok) && it.ok.length && it.ok.every(a => typeof a === 'string' && a.trim()), ai + ': q and ok');
       assert.ok(typeof it.pre === 'string' && typeof it.end === 'string', ai + ': pre and end');
       assert.ok(Array.isArray(it.bad) && it.bad.length, ai + ': needs at least one typical wrong answer in bad');
-      const n = x.commas ? commaNorm : norm;
+      const n = x.apostrophe ? (t => keepApos(t, x.commas)) : x.commas ? commaNorm : norm;
       for (const b of it.bad) assert.ok(!it.ok.some(a => n(a) === n(b)) && !(!x.strictCase && it.ok.some(a => n(a).toLowerCase() === n(b).toLowerCase())), ai + ': a bad answer is accepted by the grader: ' + b);
     } else if (x.type === 'fill') {
       assert.ok(typeof it === 'string' && gaps(it, /\[\[[^\]]+\]\]/g).length, ai + ': fill item needs [[gap]]');

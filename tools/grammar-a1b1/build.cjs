@@ -11,6 +11,7 @@ const TYPES = new Set(['choice', 'fill', 'order', 'type', 'select', 'match', 'ca
 const LEVELS = new Set(['A1', 'A2', 'B1']);
 const norm = s => s.replace(/[.,!?;:„“"'»«]/g, ' ').replace(/\s+/g, ' ').trim();
 const commaNorm = s => s.normalize('NFC').replace(/[.!?;:„“"'»«]/g, ' ').replace(/\s*,\s*/g, ', ').replace(/\s+/g, ' ').trim();
+const keepApos = (s, commas) => { s = s.normalize('NFC').replace(/[’‘ʼ´`]/g, "'").replace(commas ? /[.!?;:„“"»«]/g : /[.,!?;:„“"»«]/g, ' '); return (commas ? s.replace(/\s*,\s*/g, ', ') : s).replace(/\s+/g, ' ').trim(); }; // exercises with apostrophe: true (same rule as the grader)
 const gaps = (s, re) => s.match(re) || [];
 
 function checkExercise(x, where) {
@@ -27,7 +28,7 @@ function checkExercise(x, where) {
       assert.ok(typeof it.q === 'string' && Array.isArray(it.ok) && it.ok.length && it.ok.every(a => typeof a === 'string' && a.trim()), ai + ': q and ok');
       assert.ok(typeof it.pre === 'string' && typeof it.end === 'string', ai + ': pre and end');
       assert.ok(Array.isArray(it.bad) && it.bad.length, ai + ': needs at least one typical wrong answer in bad');
-      const n = x.commas ? commaNorm : norm;
+      const n = x.apostrophe ? (t => keepApos(t, x.commas)) : x.commas ? commaNorm : norm;
       for (const b of it.bad) assert.ok(!it.ok.some(a => n(a) === n(b)) && !(!x.strictCase && it.ok.some(a => n(a).toLowerCase() === n(b).toLowerCase())), ai + ': a bad answer is accepted by the grader: ' + b);
     } else if (x.type === 'fill') {
       assert.ok(typeof it === 'string' && gaps(it, /\[\[[^\]]+\]\]/g).length, ai + ': fill item needs [[gap]]');

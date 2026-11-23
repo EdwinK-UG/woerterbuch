@@ -887,7 +887,10 @@ const rich = s => String(s == null ? '' : s).replace(/\{([ndaevt]):([^}]*)\}/g, 
 const sayBtn = s => `<button class="gr-say" data-say="${H(plain(s))}" title="Anhören" aria-label="Anhören">${icn('volume-2')}</button>`;
 function talk(t) { if (typeof speak === 'function') speak(t); }
 const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
-const sentenceNorm = (s, commas = false) => commas ? s.normalize('NFC').replace(/[.!?;:„“\"'»«]/g, ' ').replace(/\s*,\s*/g, ', ').replace(/\s+/g, ' ').trim() : norm(s);
+// apos: an exercise marked `apostrophe: true` (e.g. the genitive Hans' / Max') keeps the apostrophe as part of the answer;
+// every way of typing it (’ ‘ ʼ ´ `) counts as the same mark. Everywhere else apostrophes are ignored as before.
+const keepApos = (s, commas) => { s = s.normalize('NFC').replace(/[’‘ʼ´`]/g, "'").replace(commas ? /[.!?;:„“"»«]/g : /[.,!?;:„“"»«]/g, ' '); return (commas ? s.replace(/\s*,\s*/g, ', ') : s).replace(/\s+/g, ' ').trim(); };
+const sentenceNorm = (s, commas = false, apos = false) => apos ? keepApos(s, commas) : commas ? s.normalize('NFC').replace(/[.!?;:„“\"'»«]/g, ' ').replace(/\s*,\s*/g, ', ').replace(/\s+/g, ' ').trim() : norm(s);
 const norm = s => s.replace(/[.,!?;:„“"'»«]/g, ' ').replace(/\s+/g, ' ').trim();
 
 /* ---------- dictionary look-up for tapped words ---------- */
@@ -1899,7 +1902,7 @@ function answers(x, ue) {
       ins.forEach((inp, k) => { inp.classList.remove('right', 'wrong'); inp.classList.add(res[k].ok || res[k].ci ? 'right' : 'wrong'); });
       return { ok: res.every(r => r.ok || r.ci), points: res.filter(r=>r.ok||r.ci).length, total: res.length, ci: res.some(r => r.ci), given: res.map(r => r.v).join('|'), empty: res.every(r => !r.v) }; }
     if (x.type === 'match') { const v = el.querySelector('select').value, ok = v && x._opts[LET.indexOf(v)] === it.r; return { ok: !!ok, given: v ? x._opts[LET.indexOf(v)] : '', empty: !v }; }
-    if (x.type === 'type') { const raw = el.querySelector('input,textarea').value, v = sentenceNorm(raw, x.commas), ok = it.ok.some(a => sentenceNorm(a, x.commas) === v), ci = !x.strictCase && !ok && it.ok.some(a => sentenceNorm(a, x.commas).toLowerCase() === v.toLowerCase());
+    if (x.type === 'type') { const raw = el.querySelector('input,textarea').value, v = sentenceNorm(raw, x.commas, x.apostrophe), ok = it.ok.some(a => sentenceNorm(a, x.commas, x.apostrophe) === v), ci = !x.strictCase && !ok && it.ok.some(a => sentenceNorm(a, x.commas, x.apostrophe).toLowerCase() === v.toLowerCase());
       return { ok: ok || ci, ci, given: raw.trim(), empty: !v }; }
     return { ok: false, given: '', empty: true };
   });

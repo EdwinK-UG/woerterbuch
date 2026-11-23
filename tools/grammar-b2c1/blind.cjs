@@ -27,9 +27,10 @@ function sheet(x) {
 
 const norm = s => s.replace(/[.,!?;:„“"'»«]/g, ' ').replace(/\s+/g, ' ').trim();
 const commaNorm = s => s.normalize('NFC').replace(/[.!?;:„“"'»«]/g, ' ').replace(/\s*,\s*/g, ', ').replace(/\s+/g, ' ').trim();
+const keepApos = (s, commas) => { s = s.normalize('NFC').replace(/[’‘ʼ´`]/g, "'").replace(commas ? /[.!?;:„“"»«]/g : /[.,!?;:„“"»«]/g, ' '); return (commas ? s.replace(/\s*,\s*/g, ', ') : s).replace(/\s+/g, ' ').trim(); }; // exercises with apostrophe: true (same rule as the grader)
 function accepted(x, it, ans) {
   if (ans == null) return false;
-  if (x.type === 'type') { const f = x.commas ? commaNorm : norm, v = f(String(ans)); return it.ok.some(a => f(a) === v || (!x.strictCase && f(a).toLowerCase() === v.toLowerCase())); }
+  if (x.type === 'type') { const f = x.apostrophe ? (t => keepApos(t, x.commas)) : x.commas ? commaNorm : norm, v = f(String(ans)); return it.ok.some(a => f(a) === v || (!x.strictCase && f(a).toLowerCase() === v.toLowerCase())); }
   if (x.type === 'fill') { const gaps = [...it.matchAll(/\[\[\^?([^\]]*)\]\]/g)].map(m => m[1].split('|')); const a = [].concat(ans); return gaps.every((ok, k) => { const v = String(a[k] ?? '').trim(); return ok.includes(v) || (!x.strictCase && ok.some(o => o.toLowerCase() === v.toLowerCase())); }); }
   if (x.type === 'choice') { const gaps = [...it.matchAll(/\(\(([^)]*)\)\)/g)].map(m => m[1].split('|')[0]); const a = [].concat(ans); return gaps.every((ok, k) => String(a[k] ?? '').trim() === ok); }
   if (x.type === 'order') return it.ok.includes(String(ans).replace(/\s+/g, ' ').replace(/[.!?]$/, '').trim());
