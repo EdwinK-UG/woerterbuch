@@ -49,7 +49,7 @@ for (const c of chapters) {
   if (byPath.has(url)) throw Error(`Two chapters share the address ${url} (${byPath.get(url).n} and ${c.n})`);
   const summary = text.chapters[c.n];
   if (!summary) missing.push(c.n);
-  const page = { ...c, sec, url, summary: summary || `${c.title}: a ${sec === "listen" ? "reference list" : c.level + " " + SECTIONS[sec].name.toLowerCase() + " chapter"} in the Deutschklinik German course.`, count: (exercises[c.n] || []).length, film: sec === "grammatik" && (c.level === "B2" || c.level === "C1") };
+  const page = { ...c, sec, url, summary: summary || `${c.title}: a ${sec === "listen" ? "reference list" : c.level + " " + SECTIONS[sec].name.toLowerCase() + " chapter"} in the Deutschklinik German course.`, count: (exercises[c.n] || []).length };
   pages.push(page);
   byPath.set(url, page);
 }
@@ -147,7 +147,6 @@ for (const c of pages) {
     c.sec === "listen" ? "Reference list" : `Level ${c.level}`,
     c.sec === "listen" ? "" : `${S.unit} ${c.no}`,
     c.count ? `${c.count} exercise${c.count === 1 ? "" : "s"}` : "",
-    c.film ? "Animated explanation" : "",
     c.vocab ? "Pictures and pronunciation" : "",
   ].filter(Boolean);
   const title = c.sec === "listen" ? `${c.title} – ${S.kind} | Deutschklinik` : `${c.title} – ${S.kind} ${c.level} | Deutschklinik`;
@@ -184,7 +183,7 @@ for (const [sec, S] of Object.entries(SECTIONS)) {
     const body = `<p class="eyebrow">${esc(S.kind)} · ${lv}</p>
 <h1>${esc(S.name)} ${lv}</h1>
 <p class="lead">${esc(intro)}</p>
-<ul class="facts"><li>${inLevel.length} ${S.unit.toLowerCase()}s</li>${sec === "grammatik" && (lv === "B2" || lv === "C1") ? "<li>Animated explanations</li>" : ""}</ul>
+<ul class="facts"><li>${inLevel.length} ${S.unit.toLowerCase()}s</li></ul>
 ${groups.map((g) => `${sec === "grammatik" ? `<h2 lang="de">${esc(groupName(g))}</h2>\n` : ""}<ul class="list">${inLevel.filter((p) => p.group === g).map(item).join("")}</ul>`).join("\n")}
 <nav class="pager" aria-label="Levels">${levels.map((l) => (l === lv ? `<b>${l}</b>` : `<a href="${levelPath(sec, l)}">${l}</a>`)).join(" ")}</nav>`;
     put(url, layout({ url, title: `${S.kind} ${lv}: all ${S.unit.toLowerCase()}s | Deutschklinik`, description: intro || `${S.kind} ${lv} in the Deutschklinik course.`, trail: [HOME, HUB, secCrumb(sec), lvCrumb(sec, lv)], body }));

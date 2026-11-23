@@ -2,7 +2,7 @@
   "note": "Original public summaries for the search-indexed course pages in /lernen/. Written for these pages; they do not reproduce lesson text or exercise names. Run npm run assets after editing.",
   "hub": "Deutschklinik is a German course from A1 to C1: grammar chapters with explanations and exercises, vocabulary topics with pictures and pronunciation, reference lists with trainers, a German dictionary, flashcards and games. Pick a level to see every chapter.",
   "sections": {
-    "grammatik": "German grammar from the first verb forms at A1 to nominal style and comma rules at C1. Every chapter explains one topic and practises it with exercises; B2 and C1 chapters also have an animated explanation.",
+    "grammatik": "German grammar from the first verb forms at A1 to nominal style and comma rules at C1. Every chapter explains one topic and practises it with exercises.",
     "wortschatz": "Vocabulary topics for everyday life, work and study. Each topic has a word list with pictures and pronunciation, exercises, and words you can turn into flashcards with one click.",
     "listen": "Reference lists for looking things up and training: irregular verbs, verbs with the dative, verbs with prepositions and more, each with a trainer."
   },
@@ -10,8 +10,8 @@
     "grammatik:A1": "Your first steps in German grammar: present-tense verbs, word order, questions, articles, the accusative and dative, and the perfect tense with haben.",
     "grammatik:A2": "Building on A1: the perfect with sein, two-way prepositions, adjective endings, comparisons and your first subordinate clauses with weil, dass and wenn.",
     "grammatik:B1": "Intermediate grammar: the simple past, the passive, Konjunktiv II, the genitive, relative clauses, infinitive clauses and connectors for longer sentences.",
-    "grammatik:B2": "Upper-intermediate grammar in depth: word order, Konjunktiv II, the passive, prepositions, reported speech, subordinate clauses and fixed word combinations – each chapter with an animated explanation.",
-    "grammatik:C1": "Advanced grammar for precise and formal German: information structure, passive alternatives, the fine meanings of prepositions, nominal style and comma rules – each chapter with an animated explanation.",
+    "grammatik:B2": "Upper-intermediate grammar in depth: word order, Konjunktiv II, the passive, prepositions, reported speech, subordinate clauses and fixed word combinations.",
+    "grammatik:C1": "Advanced grammar for precise and formal German: information structure, passive alternatives, the fine meanings of prepositions, nominal style and comma rules.",
     "wortschatz:A1": "Sixteen everyday topics for beginners: introducing yourself, family, health, shopping, travel, work, home, time, weather and numbers.",
     "wortschatz:A2": "Thirteen topics for everyday conversations: describing people, renting a flat, housework, driving, shopping, politics, work, public offices, free time and travel.",
     "wortschatz:B1": "Ten topics for independent use: feelings and relationships, housing, complaints, school and qualifications, culture, travel, health, the environment, careers and authorities.",

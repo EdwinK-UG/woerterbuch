@@ -15,12 +15,12 @@ The 114 B2–C1 lessons (88 book chapters, split by level into B2 and C1 lessons
 | `chapters/kN.json` | Lesson data (one file per lesson id) |
 | `reports/` | Gap report per chapter, waivers, audit output |
 | `blind/` | Answer-free worksheets, independent solver answers, mismatches and recorded decisions |
-| `out/kN.js` | Compiled complete lesson files (the live film wrapper kept byte for byte) |
+| `out/kN.js` | Compiled complete lesson files |
 
 ## Build and check
 
 ```sh
-node tools/grammar-b2c1/build.cjs        # validate and compile every lesson (keeps each lesson's film unchanged)
+node tools/grammar-b2c1/build.cjs        # validate and compile every lesson
 node tools/grammar-b2c1/verify.cjs       # submit every answer through the real renderer and grader
 node tools/grammar-b2c1/overlap.cjs      # shared 6-word sequences with any page of the book (text hits must be 0)
 node tools/grammar-b2c1/audit.cjs        # coverage against the item-level index and the replaced lessons
@@ -32,4 +32,8 @@ node tools/grammar-b2c1/catalog.cjs      # new lesson titles into the table of c
 
 ## Release
 
-A release assembles a complete, versioned lesson folder from the live bundle with the B2–C1 files replaced, re-attaches each film's visual overlay to its new lesson file (scenes whose example sentences no longer exist fall back to the plain picture; narration, scene ids and cue order are unchanged and checked with `tools/film-integrity.cjs`), builds the bundle with `LESSON_SOURCE_DIR` and `FILM_VISUAL_DIR`, deploys the protected `lessons` function and then publishes the website. Public page addresses are pinned in `content/public-pages.json` (`slugs`), so renamed lessons keep their links.
+A release assembles a complete, versioned lesson folder from the live bundle with the B2–C1 files replaced, builds the bundle with `LESSON_SOURCE_DIR`, deploys the protected `lessons` function and then publishes the website. Public page addresses are pinned in `content/public-pages.json` (`slugs`), so renamed lessons keep their links.
+
+## Films removed
+
+The B2–C1 films ("Animation ansehen": narration, recordings and visual overlays) were taken off the site on 2026-11-23 (lessons v17), because their narration still shared lines with the book. Lessons compile without a film, and the B2–C1 recordings were deleted from the film-audio bucket (the A1 pilot recordings stay). Everything is archived privately in `.local/archive/b2c1-films-2026-11-23/` (narration scripts, overlays, the lesson files with their films, and all recordings).

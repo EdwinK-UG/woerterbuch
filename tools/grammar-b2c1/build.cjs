@@ -1,6 +1,6 @@
 // Compile the private B2–C1 lesson data (.local/grammar-b2c1/chapters/k<n>.json) into complete lesson files.
 // Usage: node tools/grammar-b2c1/build.cjs [n ...]   (default: every authored lesson; n = lesson id, e.g. 105 or 401)
-// Each lesson keeps its live film wrapper byte for byte: only the lesson body inside the wrapper is replaced.
+// The B2–C1 films (animation, narration and recordings) were removed on 2026-11-23, so lessons compile without a film.
 // Output: .local/grammar-b2c1/out/k<n>.js (complete lesson file) and the same file in .local/lessons for local preview.
 // The lesson bodies stay private; this script holds no lesson text.
 const fs = require('node:fs'), path = require('node:path'), assert = require('node:assert/strict'), vm = require('node:vm');
@@ -67,7 +67,6 @@ function strip(x) { // authoring-only fields stay in the private JSON sources
   return y;
 }
 
-const START = '(function(GRAM){\n', END = '\n})(Object.assign(Object.create(GRAM)';
 function compile(n) {
   const file = path.join(dir, 'chapters', 'k' + n + '.json'); assert.ok(fs.existsSync(file), 'missing lesson k' + n);
   const c = read(file), base = read(path.join(dir, 'base', n + '.json')), where = 'k' + n;
@@ -93,14 +92,10 @@ function compile(n) {
   const body = JSON.stringify(lesson, null, 1);
   assert.ok(!/data:image|\.pdf|<script/i.test(body), where + ': forbidden content');
   const inner = '/* Kapitel ' + (base.reference ? 'Liste ' + n : base.sourceChapter) + ' (' + c.level + '). Eigene Texte, Beispiele und Übungen. */\nGRAM.add(' + body + ');';
-  const live = fs.readFileSync(path.join(dir, 'live', 'k' + n + '.file.js'), 'utf8');
-  let js;
-  const a = live.indexOf(START), b = live.indexOf(END);
-  if (a >= 0 && b > a) js = live.slice(0, a + START.length) + inner + live.slice(b);   // keep the film wrapper exactly
-  else { assert.ok(!base.hasFilm, where + ': film wrapper not found'); js = inner + '\n'; }
-  let got; vm.runInNewContext(js, { GRAM: { add: l => { got = l; } } });     // syntax and wrapper check
+  const js = inner + '\n';
+  let got; vm.runInNewContext(js, { GRAM: { add: l => { got = l; } } });     // syntax check
   assert.equal(got?.n, n, where + ': compiled file does not add the lesson');
-  if (base.hasFilm) assert.ok(JSON.stringify(got.film) === fs.readFileSync(path.join(dir, 'live', n + '.film.json'), 'utf8'), where + ': film changed');
+  assert.ok(!('film' in got), where + ': B2–C1 lessons have no film');
   return js;
 }
 
