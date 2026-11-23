@@ -600,11 +600,11 @@ function scriptFile(src){
 }
 function loadGram(){
   if(!gramP)gramP=(async()=>{
-    if(typeof LESSON_EXERCISES==='undefined')await scriptFile('grammatik/catalog.js?v=d003fb0f0054');
+    if(typeof LESSON_EXERCISES==='undefined')await scriptFile('grammatik/catalog.js?v=0576014090dd');
     if(!window.GRAM_ART)await scriptFile('grammatik/illustrations.js?v=990e867b0dec');
     // Illustrations stay static. Authored films opt in per private lesson;
     // the old picture-type motion wrapper is retained only in its review prototype.
-    if(!window.GRAM)await scriptFile('grammatik/grammatik.js?v=ebafdd13e8ac');
+    if(!window.GRAM)await scriptFile('grammatik/grammatik.js?v=99f39a66a6fa');
   })().catch(e=>{gramP=null;throw e});
   return gramP;
 }
