@@ -45,7 +45,7 @@ test('founder announcements use a design from the registry; teachers cannot send
  assert.equal((await call({class_id:null,design:'pilots',subject:'Sneak <peek>',body:'Hi <b>all</b>\n\nTwo lessons.'})).status,200);
  const [, , to, subject, text, html]=sent[0];assert.equal(to,'real3@example.invalid');assert.equal(subject,'Sneak <peek>');
  assert.ok(html.includes('Sneak &lt;peek&gt;')&&html.includes('Hi &lt;b&gt;all&lt;/b&gt;')&&!html.includes('<b>all</b>'));
- assert.ok(html.includes('https://deutschklinik.com/assets/mail/brand-lockup.png')&&html.includes('https://deutschklinik.com/#/g/17')&&html.includes('Hi Learner,')&&!html.includes('&lt;one&gt;'));   // the first name only
+ assert.ok(html.includes('https://deutschklinik.com/assets/mail/brand-lockup-mixed.png')&&html.includes('https://deutschklinik.com/#/g/17')&&html.includes('Hi Learner,')&&!html.includes('&lt;one&gt;'));   // the first name only
  assert.ok(html.includes('https://deutschklinik.com/assets/video/pilots-explainer.mp4')&&text.includes('assets/video/pilots-explainer.mp4'));
  assert.ok(text.includes('https://deutschklinik.com/#/g/5')&&text.includes('Pictures & animation'));
  assert.equal((await call({class_id:null,design:'pilots',subject:'Sneak <peek>',body:'Hi <b>all</b>\n\nTwo lessons.'})).status,200);assert.equal(sent.length,1);

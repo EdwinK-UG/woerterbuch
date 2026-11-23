@@ -1,0 +1,42 @@
+Platform identity (approved, production default since 2026-11-23)
+
+Design: black open-door D and black "Deutsch", blue (#1f6feb) "klinik". Blue stays the accent for primary
+buttons, search controls, highlights and illustration accents; secondary links and labels are black/ink.
+Dark mode uses the supplied white-and-light-blue lockup (#ffffff + #6ea8fe). The alternating-letter
+design and the all-blue / all-black options are not used. No query parameter is needed (the former
+?logo= switch and js/platform-brand.js were removed).
+
+Website
+- assets/brand/brand.css: header lockup (logo-horizontal-mixed.svg, -dark.svg in dark mode), footer D mark
+  (logo-mark.svg, ink colour), ink secondary links on the home page. Outlined SVG lettering, no font.
+- Root icons are the black D: favicon.svg, favicon.ico, icon-32/64/180/192/512.png (copies of
+  assets/brand/*-black.*). Manifest: /site.webmanifest. HTML references use ?v=7.
+- Social preview: assets/brand/social-mixed.png (1200×630, rendered from logo-horizontal-mixed.svg).
+  Organisation logo in structured data: /icon-512.png.
+- Generated course pages (tools/build-public-pages.cjs) use the same CSS, icons, manifest and social image.
+- Offline: release.js precaches brand.css, the two lockups, the mark, favicon, touch icon and manifest; the
+  release hash includes the bytes of all brand artwork, and sw.js serves them cache-first per release.
+
+School priority
+- A school's name, logo, colours and favicon replace the platform header, accent and favicon.
+- School footers show the school first and keep "Powered by Deutschklinik"; the platform mark is not
+  repeated ahead of the school.
+
+Email (worker/src/platform-brand.js)
+- PNG for compatibility: assets/mail/brand-lockup-mixed.png (784×132), alt "Deutschklinik",
+  196×33 with height:auto. assets/mail/brand-lockup.png holds the same artwork for older references.
+- School-branded mail shows the school's name/logo first and a 120×20 platform attribution below it.
+- Calls to action stay blue (#1f6feb) unless a school colour applies.
+- Covered: welcome (learner, teacher, school, school learner), course invitations, teacher/school
+  invitations, verification and reminder, direct messages, announcements. Previewing sends nothing.
+
+Outside this repository
+- Supabase Auth hosted email templates (password recovery requested from index.html via
+  /auth/v1/recover, and any magic-link, sign-up confirmation, email-change or invite templates enabled in
+  the dashboard) are not in this repository and still need the new lockup set in the Supabase dashboard
+  (Authentication → Email Templates), using
+  https://deutschklinik.com/assets/mail/brand-lockup-mixed.png at width 196, height 33, alt "Deutschklinik".
+
+Previews
+- The comparison page (brand-preview.html) and assets/brand/previews/ were removed on 2026-11-23 once the
+  design was approved.

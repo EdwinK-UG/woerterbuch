@@ -1,6 +1,7 @@
 import { authenticated } from "./control.js";
 import { smtpSend } from "./mail-body.js";
 import { invitationContent } from "./invitation-template.js";
+import { platformMailLogo } from "./platform-brand.js";
 
 const email = (value) =>
   typeof value === "string" && /^[^\s@<>]+@[^\s@<>]+$/.test(value.trim());
@@ -129,6 +130,10 @@ export async function requestLiveClass(req, env, headers, send = smtpSend) {
   return json(200, { status: request.status, class_name: request.class_name, level: request.level }, headers);
 }
 
+export function siteInvitationContent(url,invitation){
+ const what=invitation.role==='school'?'your school':'your teaching workspace';
+ return {subject:'Your invitation to teach · Deutschklinik',text:`Hello${invitation.name?' '+invitation.name:''},\n\nYou are invited to set up ${what} on Deutschklinik. Create an account, confirm your email and your personalised dashboard will be ready. Choose your own terms, classes, schedule and branding, then invite your learners.\n\nAccept your invitation: ${url.href}\n\nQuestions? Reply to this email.`,html:`<html><head><meta charset="UTF-8"></head><body style="margin:0;background:#f6f4ef;font-family:Arial,sans-serif;color:#242a34"><main style="max-width:500px;margin:32px auto;padding:30px;background:white;border:1px solid #e8e4dc;border-radius:24px">${platformMailLogo(url.href)}<h1 style="font-family:Georgia,serif;font-size:34px;font-weight:normal;margin:24px 0 16px">Your space to teach.</h1><p style="line-height:1.8">Create ${what}, confirm your email and go straight to your personalised dashboard.</p><p style="line-height:1.8;color:#626a77">Your terms. Your timetable. Your branding.<br>Invite learners and follow their progress.</p><a style="display:inline-block;margin-top:20px;padding:14px 22px;border-radius:999px;background:#1f6feb;color:white;text-decoration:none" href="${url.href.replace(/&/g,'&amp;')}">Accept my invitation ↗</a><p style="font-size:12px;color:#747b87;margin-top:28px">Questions? Reply to this email or contact support@deutschklinik.com.</p></main></body></html>`};
+}
 export async function sendSiteInvitation(req,env,headers,send=smtpSend){
  if(req.method!=='POST')return json(405,{error:'POST only'},headers);
  const user=await authenticated(req,env,headers);if(user instanceof Response)return user;
@@ -140,7 +145,6 @@ export async function sendSiteInvitation(req,env,headers,send=smtpSend){
  if(!invitation||!['teacher','school'].includes(invitation.role)||!email(invitation.email)||invitation.uses_left<1||Date.parse(invitation.expires_at)<=Date.now())return json(400,{error:'Choose a valid, addressed teacher or school invitation.'},headers);
  if(!env.SMTP_USER||!env.SMTP_PASSWORD)return json(503,{error:'Mail is not configured.'},headers);
  const url=new URL(env.SITE_URL);url.searchParams.set('invite',code);
- const what=invitation.role==='school'?'your school':'your teaching workspace';
- const content={subject:'Your invitation to teach · Deutschklinik',text:`Hello${invitation.name?' '+invitation.name:''},\n\nYou are invited to set up ${what} on Deutschklinik. Create an account, confirm your email and your personalised dashboard will be ready. Choose your own terms, classes, schedule and branding, then invite your learners.\n\nAccept your invitation: ${url.href}\n\nQuestions? Reply to this email.`,html:`<html><head><meta charset="UTF-8"></head><body style="margin:0;background:#f6f4ef;font-family:Arial,sans-serif;color:#242a34"><main style="max-width:500px;margin:32px auto;padding:30px;background:white;border:1px solid #e8e4dc;border-radius:24px"><b>Deutsch<span style="color:#1f6feb">klinik</span></b><h1 style="font-family:Georgia,serif;font-size:34px;font-weight:normal">Your space to teach.</h1><p style="line-height:1.8">Create ${what}, confirm your email and go straight to your personalised dashboard.</p><p style="line-height:1.8;color:#626a77">Your terms. Your timetable. Your branding.<br>Invite learners and follow their progress.</p><a style="display:inline-block;margin-top:20px;padding:14px 22px;border-radius:999px;background:#1f6feb;color:white;text-decoration:none" href="${url.href.replace(/&/g,'&amp;')}">Accept my invitation ↗</a><p style="font-size:12px;color:#747b87;margin-top:28px">Questions? Reply to this email or contact support@deutschklinik.com.</p></main></body></html>`};
+ const content=siteInvitationContent(url,invitation);
  return deliverInvitation(env,headers,user,'site-'+code,invitation.email,content,'Deutschklinik',send);
 }

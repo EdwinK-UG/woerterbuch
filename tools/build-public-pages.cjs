@@ -74,7 +74,7 @@ ul.list a:hover{border-color:var(--ac)}ul.list small{display:block;color:var(--m
 .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(14rem,1fr));gap:.7rem;padding:0;list-style:none}
 .cards a{display:block;height:100%;background:var(--card);border:1px solid var(--line);border-radius:1rem;padding:1rem;text-decoration:none;color:var(--fg)}.cards a:hover{border-color:var(--ac)}
 .cards b{font:600 1.15rem Fraunces,serif}.cards span{display:block;color:var(--mut);font-size:.9rem;margin-top:.3rem}
-.pager{display:flex;justify-content:space-between;gap:1rem;margin-top:2rem;font-size:.92rem}
+.pager{display:flex;justify-content:space-between;gap:1rem;margin-top:2rem;font-size:.92rem}.pager a{color:var(--fg)}.pager a:hover{color:var(--ac)}
 footer{border-top:1px solid var(--line);font-size:.85rem;color:var(--mut);padding:1.2rem 0 2rem}footer a{color:var(--mut)}`;
 
 const breadcrumbLd = (trail) =>
@@ -94,15 +94,20 @@ function layout({ url, title, description, trail, body }) {
 <title>${esc(title)}</title>
 <meta name="description" content="${esc(short(description))}">
 <link rel="canonical" href="${SITE + url}">
-<link rel="icon" href="/favicon.svg?v=3" type="image/svg+xml">
-<link rel="apple-touch-icon" href="/icon-180.png?v=2">
+<link rel="stylesheet" href="/assets/brand/brand.css?v=7">
+<link rel="manifest" href="/site.webmanifest?v=7">
+<link rel="icon" href="/favicon.svg?v=7" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/icon-180.png?v=7">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Deutschklinik">
 <meta property="og:title" content="${esc(title)}">
 <meta property="og:description" content="${esc(short(description))}">
 <meta property="og:url" content="${SITE + url}">
-<meta property="og:image" content="${SITE}/icon-192.png">
-<meta name="twitter:card" content="summary">
+<meta property="og:image" content="${SITE}/assets/brand/social-mixed.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Deutschklinik">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;600;700&family=Newsreader:ital@1&display=swap" rel="stylesheet">
@@ -110,13 +115,13 @@ function layout({ url, title, description, trail, body }) {
 <script type="application/ld+json">${breadcrumbLd(trail)}</script>
 </head>
 <body>
-<header><div class="wrap"><a class="brand" href="/"><img src="/icon-64.png?v=2" width="28" height="28" alt=""><span>Deutsch<b>klinik</b></span></a>
+<header><div class="wrap"><a class="brand" href="/"><span class="dk-lockup" role="img" aria-label="Deutschklinik"><span class="dk-sr">Deutschklinik</span></span></a>
 <nav class="top" aria-label="Course"><a href="/${OUT}/grammatik/">Grammar</a><a href="/${OUT}/wortschatz/">Vocabulary</a><a href="/${OUT}/listen/">Lists</a><a href="/#/">Dictionary</a></nav></div></header>
 <main class="wrap">
 <nav class="crumbs" aria-label="Breadcrumb">${crumbs}</nav>
 ${body}
 </main>
-<footer><div class="wrap"><a href="/">Deutschklinik</a> · <a href="/${OUT}/">Course overview</a> · <a href="/#/privacy">Privacy · Datenschutz</a> · <a href="mailto:support@deutschklinik.com">Support</a></div></footer>
+<footer><div class="wrap"><a class="dk-footer-brand" href="/#/start" aria-label="Deutschklinik home"><span class="dk-mark" aria-hidden="true"></span><span>Deutschklinik</span></a> · <a href="/${OUT}/">Course overview</a> · <a href="/#/privacy">Privacy · Datenschutz</a> · <a href="mailto:support@deutschklinik.com">Support</a></div></footer>
 </body>
 </html>
 `;

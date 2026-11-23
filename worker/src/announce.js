@@ -5,7 +5,8 @@
 // the design. Artwork lives in assets/mail/ (made with tools/mail/kit.html, see tools/mail/README.md).
 //
 // Brand (keep in step with the site): paper #f6f4ef, ink #20242b, muted #6b7482, line #e7e2d7, blue #1f6feb,
-// light blue #e9f1ff, the round cat logo with the wordmark Deutsch + klinik (assets/mail/brand-lockup.png).
+// light blue #e9f1ff, the approved open-door D and Deutschklinik wordmark (assets/mail/brand-lockup.png).
+import {platformMailLogo} from './platform-brand.js';
 const esc = (x) => String(x ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const C = { paper: '#f6f4ef', ink: '#20242b', mut: '#6b7482', line: '#e7e2d7', blue: '#1f6feb', salt: '#e9f1ff', sun: '#fdf3d8' };
 
@@ -70,7 +71,7 @@ export function announceContent({ design, subject, body, name, site = 'https://d
 <body style="margin:0;padding:0;background:${C.paper};-webkit-text-size-adjust:100%"><div style="display:none;max-height:0;overflow:hidden;opacity:0;color:${C.paper}">${esc(d.preheader || '')}</div>
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:${C.paper}"><tr><td align="center" style="padding:24px 12px 8px">
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:520px">
-<tr><td style="padding:0 4px 18px"><a href="${esc(at('#/start'))}"><img src="${esc(at('assets/mail/brand-lockup.png'))}" width="196" height="43" alt="Deutschklinik" style="display:block;border:0;height:auto"></a></td></tr>
+<tr><td style="padding:0 4px 18px"><a href="${esc(at('#/start'))}">${platformMailLogo(site)}</a></td></tr>
 <tr><td style="background:#ffffff;border:1px solid ${C.line};border-radius:24px;padding:28px 28px 8px">
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
 ${d.hero ? `<tr><td style="padding:0 0 24px"><img src="${esc(at(d.hero.src))}" width="464" alt="${esc(d.hero.alt)}" style="display:block;width:100%;max-width:464px;height:auto;border:0"></td></tr>` : ''}
