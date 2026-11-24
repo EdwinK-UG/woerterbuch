@@ -20,9 +20,17 @@ for (const n of list) {
   let lesson; vm.runInNewContext(fs.readFileSync(path.join(root, '.local/lessons/k' + n + '.js'), 'utf8'), { GRAM: { add: c => lesson = c } });
   const dom = new JSDOM('<main id="view"></main>', { url: 'https://a1b1.test/', runScripts: 'outside-only', pretendToBeVisual: true }), w = dom.window;
   try {
-    w.V = () => w.document.getElementById('view'); w.matchMedia = () => ({ matches: true }); w.crypto.randomUUID = require('node:crypto').randomUUID; w.ACCT = { user: () => ({ id: 'a1b1-check' }) };
+    w.V = () => w.document.getElementById('view'); w.matchMedia = () => ({ matches: true }); w.crypto.randomUUID = require('node:crypto').randomUUID; w.ACCT = { user: () => ({ id: 'a1b1-check' }) }; w.ResizeObserver = class { observe() {} unobserve() {} disconnect() {} };   // the film chapters' stage frame
     w.eval(art); w.eval(engine);
+    // VERIFY_HELP=en|fr|sw: draw the chapter with its translated explanations (js/lesson-help.js), to prove that
+    // marking is the same in every language. The translations come from .local/lesson-help/<lang>/k<n>.json.
+    if (process.env.VERIFY_HELP) {
+      const l = process.env.VERIFY_HELP, f = path.join(root, '.local/lesson-help', l, 'k' + n + '.json');
+      w.eval(fs.readFileSync(path.join(root, 'js/lesson-help.js'), 'utf8')); w.localStorage.setItem('gd_help', l);
+      w.GRAM._test.help(n, l, fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, 'utf8')).map : {});
+    }
     w.GRAM._test.render(lesson);
+    if (process.env.VERIFY_HELP && fs.existsSync(path.join(root, '.local/lesson-help', process.env.VERIFY_HELP, 'k' + n + '.json')) && !w.document.querySelector('.gr-tr')) failures.push('k' + n + ': translated view was not drawn');
     for (const x of lesson.exercises) {
       const src = byId[x.id]; assert.ok(src, 'k' + n + ' ' + x.id + ' has no authored source');
       const fail = msg => failures.push('k' + n + ' ' + x.id + ': ' + msg);

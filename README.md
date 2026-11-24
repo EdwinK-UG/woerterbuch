@@ -106,6 +106,21 @@ Since 16 November 2026 every course, lesson, film and scene is open to everyone,
 
 Switch the site back last, after the function and Worker, so no page loads lessons without a sign-in once the services refuse them. While open, the site also ignores the feature modes the owner sets in Settings (`KONTO.can`), so switched-off features show too. Progress of signed-out visitors stays in their browser only. A Worker `OPEN_ACCESS` variable (`"true"` or `"false"`) overrides the constant without a code change.
 
+### Explanations in English, French or Swahili (A1–B1)
+
+Learners can read the explanations and exercise instructions of the A1–B1 grammar chapters and the A1–B1 reference units (101–104, 106) in English, French or Kenyan Swahili. They choose with the picker at the top of a chapter, at sign-up or in Settings. The choice is stored in the browser (`gd_help`) and, when signed in, in the account's auth metadata (`help_lang`), so no database change is needed. German examples, exercises, answers and grading never change: `js/lesson-help.js` builds a translated view of the explanation texts only, and `exHTML` draws each exercise from the lesson's own object. Missing translations show German. The chapter films 5 and 17 start in the chosen language.
+
+Translations are private lesson content and live in `.local/lesson-help/<lang>/k<n>.json` (a map from a German text of the lesson to its translation). The bundle builder attaches them to the lessons they belong to and the function returns them with `?chapter=n&help=<lang>` under the same access rules as the lesson.
+
+```sh
+node tools/lesson-help/extract.cjs        # German texts per chapter from the live bundle → .local/lesson-help/source/
+node tools/lesson-help/check.cjs en       # markup, examples and keys of a language (also fr, sw)
+VERIFY_HELP=en node tools/grammar-a1b1/verify.cjs   # every answer graded through the translated page
+node tools/lesson-help/preview.cjs 8799   # local preview with lessons and translations from .local
+```
+
+The translation and review briefs are `.local/lesson-help/TRANSLATING.md` and `REVIEWING.md`. A lesson text changed after translation simply shows in German until it is translated again; the build counts such entries. Release: build the bundle from the live lesson folder with the translations, deploy the `lessons` function, then publish the site.
+
 Public Git history may retain earlier copies of lessons. They cannot be recalled from existing clones or downloads. B2 remains empty until the owner supplies its content.
 
 Public CI validates the catalog, engine and access rules without private content. A release also requires `npm run lessons:bundle` with the restored private sources. Back up private source changes separately before deploying a new lesson bundle.

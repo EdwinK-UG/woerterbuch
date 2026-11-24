@@ -1,5 +1,9 @@
 // Uses the caller's JWT and database policies. No service-role credential is needed.
 // open: true serves every lesson without sign-in or enrolment (the temporary OPEN_ACCESS switch in index.ts).
+// ?chapter=n returns the lesson (JavaScript). ?chapter=n&help=en|fr|sw returns the translations of that lesson's
+// explanations as JSON ({ lang, map: { German text: translation } }, an empty map when there are none), under the same
+// access rules. The lesson itself is never changed by a translation.
+export const HELP_LANGS = ["en", "fr", "sw"];
 export function lessonHandler({ url, key, lessons, fetcher = fetch, open = false }) {
   const headers = {
     "Access-Control-Allow-Origin": "*",
@@ -11,14 +15,22 @@ export function lessonHandler({ url, key, lessons, fetcher = fetch, open = false
   const error = (status, message) => new Response(JSON.stringify({ error: message }), {
     status, headers: { ...headers, "Content-Type": "application/json" },
   });
+  const serve = (lesson, params) => {
+    if (!params.has("help")) return new Response(lesson.source, { headers: { ...headers, "Content-Type": "text/javascript; charset=utf-8" } });
+    const lang = params.get("help");
+    if (!HELP_LANGS.includes(lang)) return error(400, "Unknown language.");
+    const map = lesson.help && Object.hasOwn(lesson.help, lang) ? lesson.help[lang] : {};
+    return new Response(JSON.stringify({ lang, map }), { headers: { ...headers, "Content-Type": "application/json; charset=utf-8" } });
+  };
   return async (request) => {
     if (request.method === "OPTIONS") return new Response(null, { headers });
     if (request.method !== "GET") return error(405, "GET only");
+    const params = new URL(request.url).searchParams;
     if (open) {
-      const number = new URL(request.url).searchParams.get("chapter");
+      const number = params.get("chapter");
       const lesson = /^\d+$/.test(number || "") && Object.hasOwn(lessons, number) ? lessons[number] : null;
       if (!lesson) return error(404, "Lesson unavailable.");
-      return new Response(lesson.source, { headers: { ...headers, "Content-Type": "text/javascript; charset=utf-8" } });
+      return serve(lesson, params);
     }
     const authorization = request.headers.get("Authorization") || "";
     if (!/^Bearer \S+$/i.test(authorization)) return error(401, "Sign in to open a lesson.");
@@ -42,7 +54,7 @@ export function lessonHandler({ url, key, lessons, fetcher = fetch, open = false
       const staff = ["teacher", "school", "founder"].includes(profile.role);
       if (!staff && !(lesson.level === "Liste" ? levels.length : levels.includes(lesson.level)))
         return error(403, "Enrol in this level to open the lesson.");
-      return new Response(lesson.source, { headers: { ...headers, "Content-Type": "text/javascript; charset=utf-8" } });
+      return serve(lesson, params);
     } catch {
       return error(503, "Lesson service temporarily unavailable.");
     }

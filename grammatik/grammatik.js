@@ -200,6 +200,12 @@ const lvOpen = l => !!window.APP_CONFIG?.openAccess || !!(window.KONTO && KONTO.
 const allowed = n => lvOpen(chLevel(n));
 const topicNo = n => n > 260 ? n - 260 : n > 240 ? n - 240 : n > 220 ? n - 220 : n - 200;
 const en = () => !!(window.KONTO && KONTO.lang && KONTO.lang() === 'en');
+/* Explanations in the learner's language (A1–B1 grammar, js/lesson-help.js). The German lesson object is never changed:
+   render() draws a translated view of its explanation texts, and the exercises, answers and grading stay the same. */
+const HL = () => window.LessonHelp;
+const helpLang = () => { const l = window.KONTO?.helpLang ? KONTO.helpLang() : HL()?.stored(); return HL()?.LANGS.includes(l) ? l : 'de'; };
+let uiLang = 'de', curView = null;   // the language and the translated view of the chapter on screen
+const U = (s, ...v) => (HL() ? HL().ui(uiLang, s, ...v) : v.length ? s.replace(/%(\d)/g, (m, i) => v[i - 1]) : s);
 const lockBtn = l => window.KONTO && KONTO.lockSheet ? `<button class="btn sm gr-unl" data-unlock="${l}">${icn(KONTO.lvState(l) === 'pending' ? 'hourglass' : 'lock-open')} ${KONTO.lvState(l) === 'pending' ? (en() ? 'Requested' : 'Angefragt') : KONTO.org && KONTO.org() ? (en() ? 'Ask my teacher' : 'Lehrkraft fragen') : (en() ? 'Enroll' : 'Einschreiben')}</button>` : '';
 const isRef = n => !!chInfo(n)?.g.ref;                       // the four reference lists
 const A1B1_NO = {"1":1,"2":2,"3":3,"4":4,"5":18,"6":19,"7":20,"8":21,"9":23,"10":5,"11":6,"12":7,"13":31,"14":8,"15":10,"16":11,"17":13,"18":14,"19":15,"20":16,"21":17,"22":35,"23":36,"24":37,"25":28,"26":29,"27":39,"28":40,"29":41,"30":42,"31":38,"32":24,"33":25,"34":26,"35":27,"36":43,"37":44,"38":45,"39":46,"40":47,"41":48,"42":49,"43":65,"44":30,"45":32,"46":33,"47":12,"48":22,"49":9,"50":34,"51":50,"52":82,"53":83,"54":51,"55":52,"56":53,"57":54,"58":55,"59":56,"60":59,"61":60,"62":61,"63":62,"64":63,"65":64,"66":57,"67":58,"68":66,"69":67,"70":68,"71":69,"72":72,"73":73,"74":74,"75":75,"76":76,"77":77,"78":78,"79":79,"80":80,"81":81,"82":84,"83":85,"84":70,"85":71};
@@ -334,6 +340,9 @@ iframe.werk-max{position:fixed!important;inset:0!important;width:100vw!important
 .gr-tbl tr.d td .art.chg{color:var(--dat);background:var(--dat-s);border-radius:.3em;padding:0 .2em}
 .plusn{color:var(--dat);text-decoration:underline;text-underline-offset:3px}
 .gr-tblw{overflow-x:auto}
+.row.gr-top{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}.row.gr-top>a{flex:0 0 auto;width:auto}.gr-hl{display:inline-flex;align-items:center;gap:.35rem;margin-left:auto;color:var(--mut);font-size:.85rem}
+.gr-hl select{font:inherit;color:var(--fg);background:var(--card);border:1px solid var(--line);border-radius:.6rem;padding:.3rem .5rem;max-width:11rem}
+.gr-tt{margin:.15rem 0 0;color:var(--mut);font-size:1rem}
 .gr-merk{display:flex;gap:.8rem;align-items:center;background:var(--fg);color:var(--bg);border-radius:1.1rem;padding:1rem 1.15rem;margin:0 0 .9rem}
 .gr-merk .ico{font-size:1.4rem;color:var(--sun)}
 .gr-merk p{margin:0;font-family:Newsreader,serif;font-size:1.25rem}
@@ -871,20 +880,23 @@ ${o.beard ? `<path d="M-19 -158Q-20 -132 0 -130Q20 -132 19 -158Q14 -146 0 -144Q-
 // {n:…} Nominativ, {d:…} Dativ, {a:…} Akkusativ, {e:…} Endung/wichtiger Teil, {v:…} Verb (Position 2), {t:…} Verbteil am Ende
 const plain = s => s.replace(/\{p:[^}]*\}\s*/g, '').replace(/\[\[\^/g, '[[').replace(/\{[ndaevt]:([^}]*)\}/g, '$1').replace(/\(\(([^|)]*)[^)]*\)\)/g, '$1').replace(/\[\[([^\]|]*)[^\]]*\]\]/g, '$1').replace(/\[|\]/g, '');
 const wrapWords = t => H(t).replace(/[A-Za-zÄÖÜäöüß]+/g, w => `<span class="gw">${w}</span>`);
+const wrapWordsDe = wrapWords;
 function fmt(s) {
+  // a translated explanation (js/lesson-help.js marks it) keeps its German examples tappable, but not its own words
+  const wrapWords = window.LessonHelp && LessonHelp.isMarked(s) ? H : wrapWordsDe;
   let out = '', last = 0, m; const re = /\{([ndaevt]):([^}]*)\}/g;
   while ((m = re.exec(s))) {
     const before = s.slice(last, m.index), glued = m[1] === 'e' && /[A-Za-zÄÖÜäöüß]$/.test(before);
     // an ending glued to its stem: keep the whole word tappable as one
     if (glued) { const wm = /[A-Za-zÄÖÜäöüß]+$/.exec(before); out += wrapWords(before.slice(0, wm.index)) + `<span class="gw">${H(wm[0])}<span class="cs e">${H(m[2])}</span></span>`; }
-    else out += wrapWords(before) + `<span class="cs ${m[1]}">${m[1] === 'e' ? H(m[2]) : wrapWords(m[2])}</span>`;
+    else out += wrapWords(before) + `<span class="cs ${m[1]}">${m[1] === 'e' ? H(m[2]) : wrapWordsDe(m[2])}</span>`;
     last = re.lastIndex;
   }
   return out + wrapWords(s.slice(last));
 }
 // highlight markup inside text that may already contain HTML (notes under tables, card texts)
 const rich = s => String(s == null ? '' : s).replace(/\{([ndaevt]):([^}]*)\}/g, (m, k, t) => `<span class="cs ${k}">${t}</span>`);
-const sayBtn = s => `<button class="gr-say" data-say="${H(plain(s))}" title="Anhören" aria-label="Anhören">${icn('volume-2')}</button>`;
+const sayBtn = s => `<button class="gr-say" data-say="${H(plain(s))}" title="${H(U('Anhören'))}" aria-label="${H(U('Anhören'))}">${icn('volume-2')}</button>`;
 function talk(t) { if (typeof speak === 'function') speak(t); }
 const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 // apos: an exercise marked `apostrophe: true` (e.g. the genitive Hans' / Max') keeps the apostrophe as part of the answer;
@@ -1195,10 +1207,38 @@ function clearLessons() {
   filmVisuals.clear();
   lessonLoads.clear();
   for (const n of Object.keys(CH)) delete CH[n];
-  cur = null;
+  helpMaps.clear(); helpLoads.clear();
+  cur = null; curView = null;
 }
 window.addEventListener('acct:in', clearLessons);
 window.addEventListener('acct:out', clearLessons);
+const lessonsUrl = () => window.APP_CONFIG?.lessonsUrl || APP_CONFIG.supabaseUrl + '/functions/v1/lessons';
+// The translations of one chapter's explanations, from the same protected function as the lesson ({ map: {German: text} }).
+// null when there is none or it failed: the page then shows the German explanations.
+const helpMaps = new Map(), helpLoads = new Map();
+async function loadHelp(c, l) {
+  if (!c || l === 'de' || !HL()?.eligible(c)) return null;
+  const k = c.n + ':' + l, epoch = lessonEpoch;
+  if (helpMaps.has(k)) return helpMaps.get(k);
+  if (!helpLoads.has(k)) helpLoads.set(k, (async () => {
+    try {
+      const user = acct(), token = user ? await ACCT.token() : null;
+      const r = await fetch(lessonsUrl() + '?chapter=' + encodeURIComponent(c.n) + '&help=' + encodeURIComponent(l), {
+        headers: { apikey: APP_CONFIG.supabaseKey, ...(token ? { Authorization: 'Bearer ' + token } : {}) }, cache: 'no-store' });
+      const d = r.ok ? await r.json() : null, map = d && d.map && typeof d.map === 'object' ? d.map : null;
+      if (epoch === lessonEpoch && map) helpMaps.set(k, map);
+      return map;
+    } catch (e) { return null; } finally { helpLoads.delete(k); }
+  })());
+  return helpLoads.get(k);
+}
+async function setHelpLang(l) {
+  if (window.KONTO?.setHelpLang) KONTO.setHelpLang(l); else HL()?.store(l);
+  const c = cur; if (!c || !HL()?.eligible(c)) return;
+  if (l !== 'de') await loadHelp(c, l);
+  if (cur !== c) return;
+  const y = window.scrollY; render(c); window.scrollTo(0, y);
+}
 async function loadChapter(n) {
   // While APP_CONFIG.openAccess is on, signed-out visitors load lessons too (the function serves them without sign-in).
   const user = acct(), epoch = lessonEpoch, open = !!window.APP_CONFIG?.openAccess;
@@ -1209,7 +1249,7 @@ async function loadChapter(n) {
   const loading = (async () => {
     const token = user ? await ACCT.token() : null;
     if (!current()) throw new Error('account changed');
-    const response = await fetch(APP_CONFIG.supabaseUrl + '/functions/v1/lessons?chapter=' + encodeURIComponent(n), {
+    const response = await fetch(lessonsUrl() + '?chapter=' + encodeURIComponent(n), {
       headers: { apikey: APP_CONFIG.supabaseKey, ...(token ? { Authorization: 'Bearer ' + token } : {}) }, cache: 'no-store',
     });
     if (!current()) throw new Error('account changed');
@@ -1242,7 +1282,7 @@ async function loadChapter(n) {
 const WATCH_LEVELS = ['A1', 'B2', 'C1'];   // levels that have the video button; widen when more lessons are checked
 // not in the pilot chapters: their animation is the chapter's film (the owner's choice)
 const hasWatch = c => !c.vocab && !isRef(c.n) && WATCH_LEVELS.includes(c.level) && !!c.understand?.length && (c.level === 'A1' || !!c.film) && !(WERKSTATT[c.n] && WERKSTATT[c.n].hero);
-const watchBtn = c => (hasWatch(c) ? `<button class="btn sm" data-watch="${c.n}">${icn('play')} ${c.film ? 'Animation ansehen' : 'Video ansehen'}</button>` : '');
+const watchBtn = c => (hasWatch(c) ? `<button class="btn sm" data-watch="${c.n}">${icn('play')} ${c.film ? U('Animation ansehen') : U('Video ansehen')}</button>` : '');
 /* Kapitel 57: the saw workshop, with Liv in 2D (grammatik/liv/werkstatt/) and in 3D (grammatik/werkstatt/). Neither holds
    lesson text: when a workshop is ready it asks this page, which loaded the chapter with the learner's enrolment, for the
    chapter's own sentences. */
@@ -1309,8 +1349,8 @@ function warmLiv() {
   setTimeout(() => (window.requestIdleCallback ? requestIdleCallback(go, { timeout: 4000 }) : go()), 2500);
 }
 const livVersion = () => (/[?&]v=([a-z0-9]{1,20})/.exec(window.DK_LIV_MODEL || '') || [])[1];
-const werkBtn = c => { const w = WERKSTATT[c.n]; if (w && w.vrm && !c.vocab) warmLiv(); return w && !c.vocab && !w.hero ? `<button class="btn sm" data-werkstatt="${c.n}" data-werk="${w.btn[0]}">${icn(w.btn[1])} ${w.btn[2]}</button>` : ''; };
-const werkCard = c => { const w = WERKSTATT[c.n]; return w && !c.vocab ? `<div class="gr-cream" style="display:flex;gap:.8rem;align-items:center;flex-wrap:wrap;margin:0 0 1rem"><div style="flex:1;min-width:14rem"><b>${w.card[0]}</b><br><span style="color:var(--mut)">${w.card[1]}</span></div>${w.card[2].map(([k, t, i]) => `<button class="btn sm" data-werkstatt="${c.n}" data-werk="${k}">${i ? icn(i) + ' ' : ''}${t}</button>`).join('')}</div>${w.inline ? `<div data-werk-host="${c.n}"></div>` : ''}` : ''; };
+const werkBtn = c => { const w = WERKSTATT[c.n]; if (w && w.vrm && !c.vocab) warmLiv(); return w && !c.vocab && !w.hero ? `<button class="btn sm" data-werkstatt="${c.n}" data-werk="${w.btn[0]}">${icn(w.btn[1])} ${U(w.btn[2])}</button>` : ''; };
+const werkCard = c => { const w = WERKSTATT[c.n]; return w && !c.vocab ? `<div class="gr-cream" style="display:flex;gap:.8rem;align-items:center;flex-wrap:wrap;margin:0 0 1rem"><div style="flex:1;min-width:14rem"><b>${U(w.card[0])}</b><br><span style="color:var(--mut)">${U(w.card[1])}</span></div>${w.card[2].map(([k, t, i]) => `<button class="btn sm" data-werkstatt="${c.n}" data-werk="${k}">${i ? icn(i) + ' ' : ''}${U(t)}</button>`).join('')}</div>${w.inline ? `<div data-werk-host="${c.n}"></div>` : ''}` : ''; };
 function werkTexts(c) {
   const out = [], walk = x => { if (out.length > 4000) return; if (typeof x === 'string') out.push(x); else if (Array.isArray(x)) x.forEach(walk); else if (x && typeof x === 'object') Object.values(x).forEach(walk); };
   walk(c.understand); walk(c.examples); walk(c.speak); if (WERKSTATT[c.n]?.exercises) walk(c.exercises); return out;
@@ -1364,7 +1404,8 @@ function mountHero(c) {
   heroCleanup?.(); heroCleanup = null;
   const host = document.querySelector(`[data-werk-hero="${c.n}"]`); if (!host) return;
   const W = WERKSTATT[c.n], w = W[W.btn[0]];
-  const f = document.createElement('iframe'); f.title = w[1]; f.src = w[0] + '&hero=1'; f.allow = 'autoplay; fullscreen'; f.dataset.hero = '1'; f.className = 'gr-sceneframe';
+  // the film starts in the learner's chosen language when it has that version (the stage's own switch still changes it)
+  const f = document.createElement('iframe'); f.title = w[1]; f.src = w[0] + '&hero=1' + (uiLang !== 'de' ? '&lang=' + uiLang : ''); f.allow = 'autoplay; fullscreen'; f.dataset.hero = '1'; f.className = 'gr-sceneframe';
   // Respect the actual visible room, including short screens and the mobile keyboard.
   let resizeFrame = 0;
   const size = () => {
@@ -1444,6 +1485,7 @@ async function chapter(n, anchor) {
     return;
   }
   if (!onCh(n)) return;
+  if (helpLang() !== 'de' && HL()?.eligible(CH[n])) { await loadHelp(CH[n], helpLang()); if (!onCh(n) || !CH[n]) return; }
   if (cur !== CH[n] || !V().querySelector('.gr-ch')) render(CH[n]);
   jump(anchor);
   pull().then(() => { if (cur === CH[n] && onCh(n)) { refreshBadges(); sync(); } });
@@ -1451,52 +1493,62 @@ async function chapter(n, anchor) {
 function render(c) {
   lessonFilm?.dispose();lessonFilm=null;
   window.C1_VOCAB?.leave();
-  cur = c;
+  cur = c; curView = c;
+  const helpOn = !!HL()?.eligible(c), hl = helpOn ? helpLang() : 'de', hmap = hl === 'de' ? null : helpMaps.get(c.n + ':' + hl);
+  uiLang = hl;
   if (c.vocabularyVersion === 2) { renderVocabularyStudio(c); return; }
   if (c.vocab) { renderVocab(c); return; }
   for (const x of c.exercises) if (x.gen) x.items = x.gen();
   if (c.speak && c.speak.gen) c.speak.items = c.speak.gen(); const info = chInfo(c.n), pr = chapterProgress(c);
-  const blocks = c.understand.map(block).join('');
+  // v: the same chapter with its explanation texts in the chosen language (c itself in German). Exercises are drawn from
+  // c's own exercise objects; v only supplies their titles and instructions.
+  const v = hmap ? HL().view(c, hmap) : c; curView = v;
+  const blocks = v.understand.map(block).join('');
+  const picker = helpOn ? `<label class="gr-hl" title="${H(U('Sprache der Erklärungen'))}">${icn('languages')}<select data-help-lang aria-label="${H(U('Sprache der Erklärungen'))}">${['de', ...HL().LANGS].map(l => `<option value="${l}"${l === hl ? ' selected' : ''}>${l === 'de' ? 'Deutsch' : HL().NAMES[l]}</option>`).join('')}</select></label>` : '';
+  const helpMiss = hl !== 'de' && !hmap ? `<p class="gr-tip">${icn('info')} ${U('Die Übersetzung konnte nicht geladen werden. Die Erklärungen stehen auf Deutsch da.')}</p>` : '';
   const hasExamples=!!c.examples?.length,hasSpeak=!!c.speak?.items?.length;
-  V().innerHTML = `<div class="row" style="margin-bottom:.6rem"><a class="btn sm" href="#/g">${icn('arrow-left')} Grammatik</a></div>
+  const ttl = v.title !== c.title ? `<p class="gr-tt">${H(v.title)}</p>` : '';
+  const html = `<div class="row gr-top" style="margin-bottom:.6rem"><a class="btn sm" href="#/g">${icn('arrow-left')} ${U('Grammatik')}</a>${picker}</div>${helpMiss}
   <article lang="de" class="gr-ch">
-   ${heroOf(c) ? `<div class="gr-scenehead"><p class="gr-eyebrow">Kapitel ${gNo(c.n)} · ${H(c.group)} · <span class="gr-lv ${c.level}">${c.level}</span></p><h1>${H(c.title)}</h1></div><div class="gr-scene" data-werk-hero="${c.n}"></div>` : ''}
+   ${heroOf(c) ? `<div class="gr-scenehead"><p class="gr-eyebrow">${U('Kapitel')} ${gNo(c.n)} · ${H(v.group)} · <span class="gr-lv ${c.level}">${c.level}</span></p><h1>${H(c.title)}</h1>${ttl}</div><div class="gr-scene" data-werk-hero="${c.n}"></div>` : ''}
    <div class="gr-hero${heroOf(c) ? ' gr-hero-after' : ''}"><div>
-     ${heroOf(c) ? '' : `<p class="gr-eyebrow">${isRef(c.n) ? 'Nachschlagen und trainieren' : `Kapitel ${gNo(c.n)} · ${H(c.group)}`} · <span class="gr-lv ${c.level}">${c.level}</span></p>
-     <h1>${H(c.title)}</h1>`}<p class="gr-kick">${H(c.kicker)}</p><p class="gr-intro">${rich(c.intro)}</p>
+     ${heroOf(c) ? '' : `<p class="gr-eyebrow">${isRef(c.n) ? U('Nachschlagen und trainieren') : `${U('Kapitel')} ${gNo(c.n)} · ${H(v.group)}`} · <span class="gr-lv ${c.level}">${c.level}</span></p>
+     <h1>${H(c.title)}</h1>${ttl}`}<p class="gr-kick">${H(c.kicker)}</p><p class="gr-intro">${rich(v.intro)}</p>
      <div class="gr-prog" id="grprog">${progHTML(pr)}</div>
-     <div class="row" style="margin-top:.8rem">${watchBtn(c)}${werkBtn(c)}<button class="btn sm" onclick="GRAM.practice('solo')">${icn('gamepad-2')} Im Spiel üben</button></div></div>
+     <div class="row" style="margin-top:.8rem">${watchBtn(c)}${werkBtn(c)}<button class="btn sm" onclick="GRAM.practice('solo')">${icn('gamepad-2')} ${U('Im Spiel üben')}</button></div></div>
      ${heroOf(c) ? '' : `<figure class="gr-art">${typeof c.art === 'function' ? c.art(K) : c.scene ? window.GRAM_ART.draw(K,c.scene) : ART[c.art] ? ART[c.art]() : ''}<figcaption><span>${fmt(c.hero)}</span>${sayBtn(c.hero)}</figcaption></figure>`}
    </div>
-   <nav class="gr-toc"><a href="#grs-v" data-jump>${icn('lightbulb')} Verstehen</a>${hasExamples?`<a href="#grs-b" data-jump>${icn('quote')} Beispiele</a>`:''}<a href="#grs-u" data-jump>${icn('pencil')} Üben</a>${hasSpeak?`<a href="#grs-s" data-jump>${icn('mic')} Sprechen</a>`:''}${secAllBtn()}</nav>
-   <section class="gr-sec" id="grs-v"><h2><span class="gr-sn">1</span>Verstehen</h2>${c.film?'<div class="gf-inline" data-film-host></div>':''}${heroOf(c) ? '' : werkCard(c)}${blocks}</section>
-   ${hasExamples?`<section class="gr-sec" id="grs-b"><h2><span class="gr-sn">2</span>Beispiele</h2>
-     <div class="gr-legend"><span class="n">Nominativ – wer?</span><span class="d">Dativ – wem?</span><span class="a">Akkusativ – was?</span></div>
+   <nav class="gr-toc"><a href="#grs-v" data-jump>${icn('lightbulb')} ${U('Verstehen')}</a>${hasExamples?`<a href="#grs-b" data-jump>${icn('quote')} ${U('Beispiele')}</a>`:''}<a href="#grs-u" data-jump>${icn('pencil')} ${U('Üben')}</a>${hasSpeak?`<a href="#grs-s" data-jump>${icn('mic')} ${U('Sprechen')}</a>`:''}${secAllBtn()}</nav>
+   <section class="gr-sec" id="grs-v"><h2><span class="gr-sn">1</span>${U('Verstehen')}</h2>${c.film?'<div class="gf-inline" data-film-host></div>':''}${heroOf(c) ? '' : werkCard(c)}${blocks}</section>
+   ${hasExamples?`<section class="gr-sec" id="grs-b"><h2><span class="gr-sn">2</span>${U('Beispiele')}</h2>
+     <div class="gr-legend"><span class="n">${U('Nominativ – wer?')}</span><span class="d">${U('Dativ – wem?')}</span><span class="a">${U('Akkusativ – was?')}</span></div>
      <ul class="gr-exs">${c.examples.map(s => `<li><span class="s">${fmt(s)}</span>${sayBtn(s)}</li>`).join('')}</ul>
-     <p class="gr-tip">${icn('mouse-pointer-click')} Tippe auf ein Wort, um es im Wörterbuch nachzuschlagen.</p></section>`:''}
-   <section class="gr-sec" id="grs-u"><h2><span class="gr-sn">${hasExamples?3:2}</span>Üben</h2>
-     <p class="sub" style="margin:-.3rem 0 1rem">Bestanden ab ${Math.round(PASS * 100)} % richtigen Antworten. Die Lösung kannst du nach dem ersten Prüfen ansehen.</p>
-     <div class="gr-play"><span>${icn('gamepad-2')} Übe dieses Kapitel auch im Spiel:</span><button class="btn sm primary" onclick="GRAM.practice('solo')">${icn('user-round')} Allein spielen</button><button class="btn sm" onclick="GRAM.practice('host')">${icn('users')} Live mit Gruppe</button></div>
-     ${c.exercisePaging?`<div class="gr-round-nav"><label>Trainingsrunde <select data-round-select aria-label="Trainingsrunde">${c.exercises.map((x,i)=>`<option value="${i}">${H(x.title)}</option>`).join('')}</select></label><button class="btn sm" data-round-step="-1" aria-label="Vorherige Trainingsrunde">←</button><button class="btn sm" data-round-step="1" aria-label="Nächste Trainingsrunde">→</button><span data-round-status aria-live="polite"></span></div>`:''}
-     ${c.exercises.map((x, i) => exHTML(x, i + 1)).join('')}</section>
-   ${hasSpeak?`<section class="gr-sec" id="grs-s"><h2><span class="gr-sn">${hasExamples?4:3}</span>Sprechen</h2>${SPEAK[c.n]?`<div data-speak-host="${c.n}"></div>`:''}${speakHTML(c.speak)}</section>`:''}
+     <p class="gr-tip">${icn('mouse-pointer-click')} ${U('Tippe auf ein Wort, um es im Wörterbuch nachzuschlagen.')}</p></section>`:''}
+   <section class="gr-sec" id="grs-u"><h2><span class="gr-sn">${hasExamples?3:2}</span>${U('Üben')}</h2>
+     <p class="sub" style="margin:-.3rem 0 1rem">${U('Bestanden ab %1 % richtigen Antworten. Die Lösung kannst du nach dem ersten Prüfen ansehen.', Math.round(PASS * 100))}</p>
+     <div class="gr-play"><span>${icn('gamepad-2')} ${U('Übe dieses Kapitel auch im Spiel:')}</span><button class="btn sm primary" onclick="GRAM.practice('solo')">${icn('user-round')} ${U('Allein spielen')}</button><button class="btn sm" onclick="GRAM.practice('host')">${icn('users')} ${U('Live mit Gruppe')}</button></div>
+     ${c.exercisePaging?`<div class="gr-round-nav"><label>${U('Trainingsrunde')} <select data-round-select aria-label="${H(U('Trainingsrunde'))}">${v.exercises.map((x,i)=>`<option value="${i}">${H(x.title)}</option>`).join('')}</select></label><button class="btn sm" data-round-step="-1" aria-label="${H(U('Vorherige Trainingsrunde'))}">←</button><button class="btn sm" data-round-step="1" aria-label="${H(U('Nächste Trainingsrunde'))}">→</button><span data-round-status aria-live="polite"></span></div>`:''}
+     ${c.exercises.map((x, i) => exHTML(x, i + 1, v.exercises[i])).join('')}</section>
+   ${hasSpeak?`<section class="gr-sec" id="grs-s"><h2><span class="gr-sn">${hasExamples?4:3}</span>${U('Sprechen')}</h2>${SPEAK[c.n]?`<div data-speak-host="${c.n}"></div>`:''}${speakHTML(c.speak, v.speak)}</section>`:''}
   </article>`;
+  V().innerHTML = HL() ? HL().marks(html, uiLang) : html;
+  const pick = V().querySelector('[data-help-lang]'); if (pick) pick.onchange = () => setHelpLang(pick.value);
   wire(c); icons(); mountHero(c); mountSpeak(c);
   if(c.film){
     const host=document.querySelector('[data-film-host]');
     filmWithAudio(c.n).then(audio=>{if(host.isConnected&&cur===c)lessonFilm=window.GRAM_FILM.mount(host,c.film,{...filmTheme(),...filmVisual(c),audio,onExercises:()=>jump('grs-u')});})
-      .catch(()=>{if(host.isConnected)host.textContent='Die Animation konnte nicht geladen werden. Du kannst die Erklärungen und Übungen darunter weiter nutzen.';});
+      .catch(()=>{if(host.isConnected)host.textContent=U('Die Animation konnte nicht geladen werden. Du kannst die Erklärungen und Übungen darunter weiter nutzen.');});
   }
 }
-const secAllBtn = () => `<button class="gr-secall" data-secall="1" title="Alle Abschnitte zu- oder aufklappen">${icn('chevrons-down-up')}<span>Alles zuklappen</span></button>`;
+const secAllBtn = () => `<button class="gr-secall" data-secall="1" title="${H(U('Alle Abschnitte zu- oder aufklappen'))}">${icn('chevrons-down-up')}<span>${U('Alles zuklappen')}</span></button>`;
 function secToggleAll(btn) {
   const secs = [...document.querySelectorAll('.gr-ch .gr-sec')], close = secs.some(x => !x.classList.contains('closed'));
   secs.forEach(x => x.classList.toggle('closed', close));
-  btn.querySelector('span').textContent = close ? 'Alles aufklappen' : 'Alles zuklappen';
+  btn.querySelector('span').textContent = close ? U('Alles aufklappen') : U('Alles zuklappen');
 }
 function progHTML(pr) {
   const p = pct(pr.passed, pr.total);
-  return `${ring(p)}<span><b>${pr.passed} von ${pr.total}</b> Übungen bestanden<br>${pr.passed === pr.total ? 'Kapitel geschafft! 🎉' : (acct() ? 'Ergebnisse werden in deinem Konto gespeichert.' : '<a href="#/g/fortschritt">Wo werden meine Ergebnisse gespeichert?</a>')}</span>`;
+  return `${ring(p)}<span>${U('<b>%1 von %2</b> Übungen bestanden', pr.passed, pr.total)}<br>${pr.passed === pr.total ? U('Kapitel geschafft! 🎉') : (acct() ? U('Ergebnisse werden in deinem Konto gespeichert.') : `<a href="#/g/fortschritt">${U('Wo werden meine Ergebnisse gespeichert?')}</a>`)}</span>`;
 }
 
 /* ---------- Wortschatz topics: word cards, dictionary sheet (DE/EN), forms, examples ---------- */
@@ -1717,7 +1769,7 @@ function block(b) {
     const slot = s => `<div class="gr-slot ${s[1]}"><span>${wrapWords(s[0])}</span><small>${H(s[2])}</small></div>`;
     const arrow = `<svg viewBox="0 0 120 22"><path d="M110 4Q60 26 10 6" fill="none" stroke="var(--dat)" stroke-width="2" stroke-dasharray="4 4" marker-end="url(#grarr2)"/><defs><marker id="grarr2" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--dat)"/></marker></defs></svg>`;
     const row = r => { const i = r.findIndex(s => s[1] === 'd'); if (i < 0 || r[i + 1]?.[1] !== 'a') return `<div class="gr-slots">${r.map(slot).join('')}</div>`;
-      return `<div class="gr-slots">${r.slice(0, i).map(slot).join('')}<div class="gr-pair"><div class="gr-pairin">${slot(r[i])}${slot(r[i + 1])}</div><div class="gr-give">${arrow}<span>die Person bekommt die Sache</span></div></div>${r.slice(i + 2).map(slot).join('')}</div>`; };
+      return `<div class="gr-slots">${r.slice(0, i).map(slot).join('')}<div class="gr-pair"><div class="gr-pairin">${slot(r[i])}${slot(r[i + 1])}</div><div class="gr-give">${arrow}<span>${U('die Person bekommt die Sache')}</span></div></div>${r.slice(i + 2).map(slot).join('')}</div>`; };
     return `<div class="gr-cream"><h3>${H(b.title)}</h3>${b.rows.map(row).join('')}<p class="gr-foot">${rich(b.note)}</p></div>`;
   }
   if (b.type === 'table') {
@@ -1725,7 +1777,7 @@ function block(b) {
     return `<div class="gr-cream"><h3>${H(b.title)}</h3><div class="gr-tsw" data-tbl="${id}">${keys.map((k, i) => `<button class="gr-chip${i ? '' : ' on'}" data-set="${k}">${k}</button>`).join('')}</div>
       <div class="gr-tblw" id="${id}">${tableHTML(b, keys[0])}</div><p class="gr-foot" style="margin-top:.7rem">${rich(b.foot)}</p></div>`;
   }
-  if (b.type === 'merk') return `<div class="gr-merk"><span class="ico">${icn('lightbulb')}</span><p><small>Merksatz</small>${fmt(b.text)}</p></div>`;
+  if (b.type === 'merk') return `<div class="gr-merk"><span class="ico">${icn('lightbulb')}</span><p><small>${U('Merksatz')}</small>${fmt(b.text)}</p></div>`;
   if (b.type === 'machine') return `<div class="gr-cream gr-mach" data-mach='${H(JSON.stringify(b))}'><h3>${H(b.title)}</h3><p class="gr-foot" style="margin:-.3rem 0 .8rem">${H(b.intro)}</p>
       <div class="gr-msw"><button class="gr-tg d" data-sw="d">${H(b.d[0])} → ${H(b.d[1])}<i class="k"></i></button><button class="gr-tg a" data-sw="a">${H(b.a[0])} → ${H(b.a[1])}<i class="k"></i></button></div>
       <div class="gr-msent"></div><div class="gr-mrule">${icn('info')}<span></span></div></div>`;
@@ -1738,9 +1790,9 @@ function block(b) {
   if (b.type === 'conj') { const ks = Object.keys(b.verbs);
     return `<div class="gr-cream gr-conj" data-conj="${H(JSON.stringify(b))}"><h3>${H(b.title)}</h3>${b.intro ? `<p class="gr-foot" style="margin:-.3rem 0 .7rem">${rich(b.intro)}</p>` : ''}<div class="gr-cv">${ks.map((k, i) => `<button class="gr-chip${i ? '' : ' on'}" data-verb="${H(k)}">${H(k)}</button>`).join('')}</div><div class="gr-conjt"></div><p class="gr-cnote"></p></div>`; }
   if (b.type === 'reflist') { const id = 'grl' + Math.random().toString(36).slice(2, 7);
-    return `<div class="gr-cream gr-ref"><h3>${H(b.title)}</h3>${b.intro ? `<p class="gr-foot" style="margin:-.3rem 0 .7rem">${rich(b.intro)}</p>` : ''}<input class="gr-refq" data-list="${id}" placeholder="Suchen …" autocomplete="off">
+    return `<div class="gr-cream gr-ref"><h3>${H(b.title)}</h3>${b.intro ? `<p class="gr-foot" style="margin:-.3rem 0 .7rem">${rich(b.intro)}</p>` : ''}<input class="gr-refq" data-list="${id}" placeholder="${H(U('Suchen …'))}" autocomplete="off">
       <div class="gr-tblw gr-refw"><table class="gr-tbl gr-grid" id="${id}"><thead><tr>${b.head.map(h => `<th>${H(h)}</th>`).join('')}</tr></thead><tbody>${b.rows.map(r =>
-      `<tr data-s="${H(r.map(plain).join(' ').toLowerCase())}">${r.map((c, i) => `<td${i === 0 ? ' class="gr-ref0"' : ''}>${i === 0 ? `<span class="gw">${H(plain(c))}</span>` : fmt(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div><p class="gr-foot gr-refn" style="margin-top:.5rem">${b.rows.length} Einträge</p></div>`; }
+      `<tr data-s="${H(r.map(plain).join(' ').toLowerCase())}">${r.map((c, i) => `<td${i === 0 ? ' class="gr-ref0"' : ''}>${i === 0 ? `<span class="gw">${H(plain(c))}</span>` : fmt(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div><p class="gr-foot gr-refn" style="margin-top:.5rem">${U('%1 Einträge', b.rows.length)}</p></div>`; }
   if (b.type === 'html') return `<div class="gr-cream">${b.title ? `<h3>${H(b.title)}</h3>` : ''}${typeof b.html === 'function' ? b.html(K) : b.html}${b.foot ? `<p class="gr-foot">${rich(b.foot)}</p>` : ''}</div>`;
   if (b.type === 'dialog') return `<div class="gr-cream"><h3>${H(b.title)}</h3><div class="vk-dlg">${b.lines.map((l, k) => `<div class="vk-ln ${k % 2 ? 'r' : ''}"><span class="vk-who">${H(l[0])}</span><span class="vk-bub">${fmt(l[1])}</span>${sayBtn(l[1])}</div>`).join('')}</div>${b.foot ? `<p class="gr-foot">${rich(b.foot)}</p>` : ''}</div>`;
   if (b.type === 'note') return `<div class="gr-note">${icn('triangle-alert')}<p><b class="t">${H(b.title)}</b>${fmt(b.text)}</p></div>`;
@@ -1794,25 +1846,25 @@ const LET = 'abcdefghijklmnop';
 function matchOpts(x) { x._opts = shuffle(x.items.map(it => it.r)); return `<div class="gr-mopts">${x._opts.map((r, k) => `<span><b>${LET[k]})</b> ${H(r)}</span>`).join('')}</div>`; }
 const itemBody = (x,it,i) => `${it.scene ? `<figure class="gr-scene">${window.GRAM_ART.draw(K,it.scene)}</figure>` : ''}${itemHTML(x,it,i)}<div class="gr-sol" hidden></div>`;
 const itemsHTML = x => (x.type === 'match' ? matchOpts(x) : '') + x.items.map((it, i) => `<div class="gr-it" data-i="${i}"><span class="gr-in">${i + 1}</span><div class="gr-ib">${itemBody(x,it,i)}</div></div>`).join('');
-function exHTML(x, n) {
+function exHTML(x, n, t = x) {
   const legend = x.type === 'cases' ? `<div class="gr-legend"><span class="n">1× Nominativ</span><span class="d">2× Dativ</span><span class="a">3× Akkusativ</span></div>` : '';
   const lay = [x.grid ? 'grid' : '', x.cols ? 'cols' : '', x.flow ? 'flow' : ''].filter(Boolean).join(' ');
   const bank = x.bank ? `<div class="gr-bank">${x.bank.map((w, k) => `<span class="${k === 0 && x.bankDone ? 'done' : ''}">${H(w)}</span>`).join('')}</div>` : '';
-  const label = cur && cur.vocab ? exLabel(cur, x) : 'Übung ' + n;
+  const label = cur && cur.vocab ? exLabel(cur, x) : U('Übung') + ' ' + n;
   let body = `<div class="gr-items ${lay}">${itemsHTML(x)}</div>`;
   if (x.frame) body = `<div class="gr-frame ${x.frame}">${x.frame === 'form' ? `<div class="gr-fh">${icn('clipboard-list')}<span>${H(x.subject || 'Formular')}</span></div>` : ''}${x.frame === 'mail' ? `<div class="gr-fh">${icn('mail')}<span>${H(x.subject || 'Neue Nachricht')}</span></div>` : ''}${body}</div>`;
-  return `<div class="gr-ue${cur && cur.vocab ? ' vk-ue' : ''}" id="ue-${x.id}" data-ex="${x.id}" data-type="${x.type}"><div class="gr-ueh"><span class="gr-uen">${label}</span><h3>${H(x.title)}</h3><span id="ueb-${x.id}">${badgeHTML(x)}</span></div>
-    <p class="gr-uei">${rich(H(x.instr))}</p>${legend}${bank}${x.before ? block(x.before) : ''}${body}
-    <div class="gr-uef"><button class="btn primary gr-btn" data-act="check">${icn('check')} Prüfen</button>
-    ${x.type === 'free' ? '' : `<button class="btn gr-btn" data-act="show" disabled title="Erst nach dem ersten Prüfen">${icn('eye')} Lösung zeigen</button>`}
-    <button class="btn gr-btn" data-act="reset">${icn('rotate-ccw')} Neu</button><span class="gr-res"></span></div></div>
+  return `<div class="gr-ue${cur && cur.vocab ? ' vk-ue' : ''}" id="ue-${x.id}" data-ex="${x.id}" data-type="${x.type}"><div class="gr-ueh"><span class="gr-uen">${label}</span><h3>${H(t.title)}</h3><span id="ueb-${x.id}">${badgeHTML(x)}</span></div>
+    <p class="gr-uei">${rich(H(t.instr))}</p>${legend}${bank}${t.before ? block(t.before) : ''}${body}
+    <div class="gr-uef"><button class="btn primary gr-btn" data-act="check">${icn('check')} ${U('Prüfen')}</button>
+    ${x.type === 'free' ? '' : `<button class="btn gr-btn" data-act="show" disabled title="${H(U('Erst nach dem ersten Prüfen'))}">${icn('eye')} ${U('Lösung zeigen')}</button>`}
+    <button class="btn gr-btn" data-act="reset">${icn('rotate-ccw')} ${U('Neu')}</button><span class="gr-res"></span></div></div>
     ${x.moreTip ? `<div class="vk-more"><span>Mehr üben?</span><p>${H(x.moreTip).replace(/\{e:([^}]*)\}/g, '<b>$1</b>')}</p></div>` : ''}`;
 }
 function badgeHTML(x) {
-  if (x.graded === false) return `<span class="gr-ueb free">ohne Note</span>`;
+  if (x.graded === false) return `<span class="gr-ueb free">${U('ohne Note')}</span>`;
   const b = cur && best(cur.n, x.id); if (!b) return '';
   const p = pct(b.score, b.total);
-  return b.score / b.total >= PASS ? `<span class="gr-ueb pass">${icn('circle-check')} bestanden · ${p} %</span>` : `<span class="gr-ueb fail">bestes Ergebnis ${p} %</span>`;
+  return b.score / b.total >= PASS ? `<span class="gr-ueb pass">${icn('circle-check')} ${U('bestanden · %1 %', p)}</span>` : `<span class="gr-ueb fail">${U('bestes Ergebnis %1 %', p)}</span>`;
 }
 function itemHTML(x, it, i) {
   if (x.type === 'select') return `<fieldset class="gr-select"><legend>${H(it.q)}</legend>${it.options.map((option,k)=>`<label><input type="checkbox" value="${k}" aria-label="${H(option)}"><span>${H(option)}</span></label>`).join('')}</fieldset>`;
@@ -1825,7 +1877,7 @@ function itemHTML(x, it, i) {
   if (x.type === 'order') { let t = shuffle(it.tiles); for (let k = 0; k < 5 && t.join(' ') === it.tiles.join(' '); k++) t = shuffle(it.tiles);
     return `<div class="gr-line"></div><div class="gr-pool">${t.map(v => `<button class="gr-tile">${H(v)}</button>`).join('')}</div><span class="gr-end" hidden>${H(it.end)}</span>`; }
   if (x.type === 'type') return `<div class="gr-q">${H(it.q).replace(/\[([^\]]*)\]/g, '<mark>$1</mark>')}</div>
-    <div class="gr-tl"><span>${H(it.pre)}</span>${it.long ? `<textarea rows="${it.rows || 6}" autocomplete="off" spellcheck="false" aria-label="Antwort ${i + 1}">${H(it.start || '')}</textarea>` : `<input autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Antwort ${i + 1}" value="${H(it.start || '')}">`}<span>${H(it.end)}</span></div>`;
+    <div class="gr-tl"><span>${H(it.pre)}</span>${it.long ? `<textarea rows="${it.rows || 6}" autocomplete="off" spellcheck="false" aria-label="${H(U('Antwort %1', i + 1))}">${H(it.start || '')}</textarea>` : `<input autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="${H(U('Antwort %1', i + 1))}" value="${H(it.start || '')}">`}<span>${H(it.end)}</span></div>`;
   if (x.type === 'fill') { let gap = 0; return it.replace(/^\(([^)]*)\)\s*/, (m, h) => `<span class="gr-hint">${H(h)}</span>`).replace(/\[\[([^\]]*)\]\]|([^[]+|\[)/g, (m, a, p) => {
     if (p != null) return p.startsWith('<span class="gr-hint">') ? p : H(p).replace(/\n/g, '<br>');
     let hint = ''; if (a[0] === '^') { a = a.slice(1); hint = a[0]; }
@@ -1838,14 +1890,14 @@ function itemHTML(x, it, i) {
 const exState = {};       // exercise id -> {shown:bool}
 function wire(c) {
   const root = V().querySelector('.gr-ch');
-  const round=root.querySelector('[data-round-select]');if(round){const update=()=>{const index=Number(round.value);root.querySelectorAll('.gr-ue').forEach((el,i)=>el.hidden=i!==index);root.querySelector('[data-round-status]').textContent=`Runde ${index+1} von ${c.exercises.length}`;root.querySelector('[data-round-step="-1"]').disabled=index===0;root.querySelector('[data-round-step="1"]').disabled=index===c.exercises.length-1;};round.onchange=update;root.querySelectorAll('[data-round-step]').forEach(button=>button.onclick=()=>{round.value=String(Math.max(0,Math.min(c.exercises.length-1,Number(round.value)+Number(button.dataset.roundStep))));update()});update();}
+  const round=root.querySelector('[data-round-select]');if(round){const update=()=>{const index=Number(round.value);root.querySelectorAll('.gr-ue').forEach((el,i)=>el.hidden=i!==index);root.querySelector('[data-round-status]').textContent=U('Runde %1 von %2',index+1,c.exercises.length);root.querySelector('[data-round-step="-1"]').disabled=index===0;root.querySelector('[data-round-step="1"]').disabled=index===c.exercises.length-1;};round.onchange=update;root.querySelectorAll('[data-round-step]').forEach(button=>button.onclick=()=>{round.value=String(Math.max(0,Math.min(c.exercises.length-1,Number(round.value)+Number(button.dataset.roundStep))));update()});update();}
   root.querySelectorAll('.gr-mach').forEach(machine);
   root.querySelectorAll('.gr-conj').forEach(conj);
   root.querySelectorAll('.gr-refq').forEach(q => q.oninput = () => { const t = q.value.trim().toLowerCase(), tb = $(q.dataset.list); let n = 0;
-    tb.querySelectorAll('tbody tr').forEach(tr => { const show = !t || tr.dataset.s.includes(t); tr.hidden = !show; if (show) n++; }); q.closest('.gr-ref').querySelector('.gr-refn').textContent = n + ' Einträge'; });
+    tb.querySelectorAll('tbody tr').forEach(tr => { const show = !t || tr.dataset.s.includes(t); tr.hidden = !show; if (show) n++; }); q.closest('.gr-ref').querySelector('.gr-refn').textContent = U('%1 Einträge', n); });
   root.querySelectorAll('.gr-tsw').forEach(sw => sw.querySelectorAll('[data-set]').forEach(b => b.onclick = () => {
     sw.querySelectorAll('[data-set]').forEach(x => x.classList.toggle('on', x === b));
-    const blk = c.understand.find(x => x.type === 'table'); $(sw.dataset.tbl).innerHTML = tableHTML(blk, b.dataset.set); }));
+    const blk = (curView || c).understand.find(x => x.type === 'table'); const h = tableHTML(blk, b.dataset.set); $(sw.dataset.tbl).innerHTML = HL() ? HL().marks(h, uiLang) : h; }));
   c.exercises.forEach(x => exState[x.id] = { shown: false, checked: false });
 }
 function onClick(ev) {
@@ -1908,28 +1960,28 @@ function answers(x, ue) {
   });
 }
 function solText(x, it) {
-  if (x.type === 'select') return 'Richtig: ' + it.ok.join(' · ');
-  if (x.type === 'cases') return 'Richtig: ' + [...it.matchAll(/\{([nda]):([^}]*)\}/g)].map(m => `${m[2]} = ${CASE[m[1]]}`).join(' · ');
-  if (x.type === 'choice') return 'Richtig: ' + plain(it);
-  if (x.type === 'match') return 'Richtig: ' + LET[x._opts.indexOf(it.r)] + ') ' + it.r;
-  if (x.type === 'order') return 'Richtig: ' + it.ok[0] + it.end;
-  if (x.type === 'fill') return 'Richtig: ' + plain(it.replace(/^\([^)]*\)\s*/, ''));
-  if (x.type === 'type') return 'Richtig: ' + it.pre + ' ' + it.ok[0] + it.end;
+  if (x.type === 'select') return U('Richtig: ') + it.ok.join(' · ');
+  if (x.type === 'cases') return U('Richtig: ') + [...it.matchAll(/\{([nda]):([^}]*)\}/g)].map(m => `${m[2]} = ${CASE[m[1]]}`).join(' · ');
+  if (x.type === 'choice') return U('Richtig: ') + plain(it);
+  if (x.type === 'match') return U('Richtig: ') + LET[x._opts.indexOf(it.r)] + ') ' + it.r;
+  if (x.type === 'order') return U('Richtig: ') + it.ok[0] + it.end;
+  if (x.type === 'fill') return U('Richtig: ') + plain(it.replace(/^\([^)]*\)\s*/, ''));
+  if (x.type === 'type') return U('Richtig: ') + it.pre + ' ' + it.ok[0] + it.end;
   return '';
 }
 function check(x, ue) {
   if (x.type === 'free') { freeCheck(x, ue); return; }
   const S = exState[x.id], res = answers(x, ue);
-  if (res.every(r => r.empty)) { if (typeof toast === 'function') toast('Bearbeite zuerst die Aufgaben.'); return; }
+  if (res.every(r => r.empty)) { if (typeof toast === 'function') toast(U('Bearbeite zuerst die Aufgaben.')); return; }
   const score = res.reduce((sum,r)=>sum+(x.perGap&&Number.isFinite(r.points)?r.points:Number(r.ok)),0), total = res.reduce((sum,r)=>sum+(x.perGap&&r.total?r.total:1),0), passed = score / total >= PASS;
   ue.querySelectorAll('.gr-it').forEach((el, i) => { const r = res[i]; el.classList.remove('ok', 'no'); void el.offsetWidth; el.classList.add(r.ok ? 'ok' : 'no');
-    const s = el.querySelector('.gr-sol'); s.hidden = !(r.ok && r.ci); if (r.ok && r.ci) { s.className = 'gr-sol'; s.textContent = 'Richtig – aber achte auf Groß- und Kleinschreibung: ' + solText(x, x.items[i]).replace(/^Richtig: /, ''); } });
+    const s = el.querySelector('.gr-sol'); s.hidden = !(r.ok && r.ci); if (r.ok && r.ci) { s.className = 'gr-sol'; s.textContent = U('Richtig – aber achte auf Groß- und Kleinschreibung: ') + solText(x, x.items[i]).slice(U('Richtig: ').length); } });
   const out = ue.querySelector('.gr-res');
-  if (S.shown) { out.className = 'gr-res'; out.textContent = `${score} von ${total} richtig – zählt nicht, weil die Lösung angezeigt wurde.`; return; }
+  if (S.shown) { out.className = 'gr-res'; out.textContent = U('%1 von %2 richtig – zählt nicht, weil die Lösung angezeigt wurde.', score, total); return; }
   record({ ch: cur.n, ex: x.id, score, total, passed, at: Date.now(), ans: res.map(r => r.given) });
   S.checked = true; ue.querySelector('[data-act="show"]').disabled = false;
   out.className = 'gr-res ' + (passed ? 'pass' : 'fail');
-  out.textContent = `${score} von ${total} richtig (${pct(score, total)} %) – ${passed ? 'bestanden!' : `noch nicht bestanden (ab ${Math.round(PASS * 100)} %)`}`;
+  out.textContent = passed ? U('%1 von %2 richtig (%3 %) – bestanden!', score, total, pct(score, total)) : U('%1 von %2 richtig (%3 %) – noch nicht bestanden (ab %4 %)', score, total, pct(score, total), Math.round(PASS * 100));
   if (passed) burst(ue.querySelector('[data-act="check"]'), score === total);
   refreshBadges();
 }
@@ -1945,7 +1997,7 @@ function show(x, ue) {
     if (x.type === 'fill') el.querySelectorAll('.gr-fill').forEach(i => { const ok = JSON.parse(i.dataset.ok); if (!ok.some(o => o.toLowerCase() === i.value.trim().toLowerCase())) { i.value = ok[0]; i.classList.remove('wrong'); i.classList.add('right'); } i.readOnly = true; });
     if (!wasOk) { s.hidden = false; s.className = 'gr-sol'; s.textContent = solText(x, it); }
   });
-  const out = ue.querySelector('.gr-res'); out.className = 'gr-res'; out.textContent = 'Lösung angezeigt. Mit „Neu“ kannst du es noch einmal versuchen.';
+  const out = ue.querySelector('.gr-res'); out.className = 'gr-res'; out.textContent = U('Lösung angezeigt. Mit „Neu“ kannst du es noch einmal versuchen.');
 }
 function reset(x, ue) {
   exState[x.id] = { shown: false, checked: false };
@@ -1976,16 +2028,16 @@ async function freeCheck(x, ue) {
   if(!confirm(en()?'Send the sentences in this exercise to LanguageTool for a grammar check? Avoid personal information.':'Die Sätze dieser Übung zur Grammatikprüfung an LanguageTool senden? Bitte keine persönlichen Angaben verwenden.'))return;
   const out = ue.querySelector('.gr-res'), btn = ue.querySelector('[data-act="check"]');
   const items = [...ue.querySelectorAll('.gr-it')], texts = items.map(el => el.querySelector('textarea').value.trim());
-  if (texts.every(t => !t)) { if (typeof toast === 'function') toast('Schreib zuerst einen Satz.'); return; }
-  btn.disabled = true; out.className = 'gr-res'; out.textContent = 'Wird geprüft …';
+  if (texts.every(t => !t)) { if (typeof toast === 'function') toast(U('Schreib zuerst einen Satz.')); return; }
+  btn.disabled = true; out.className = 'gr-res'; out.textContent = U('Wird geprüft …');
   let good = 0, done = 0;
   await Promise.all(items.map(async (el, i) => {
     const t = texts[i], fb = el.querySelector('.gr-fb'); el.classList.remove('ok', 'no');
     if (!t) { fb.innerHTML = ''; return; }
     done++;
     const notes = [], low = t.toLowerCase();
-    if (!/[.!?]$/.test(t)) notes.push(['h', 'Am Satzende fehlt ein Punkt.']);
-    if (x.verbs && !x.verbs.some(v => new RegExp('\\b(?:\\w+)?' + v, 'i').test(low))) notes.push(['h', x.needMsg || 'Benutze ein passendes Verb aus diesem Kapitel.']);
+    if (!/[.!?]$/.test(t)) notes.push(['h', U('Am Satzende fehlt ein Punkt.')]);
+    if (x.verbs && !x.verbs.some(v => new RegExp('\\b(?:\\w+)?' + v, 'i').test(low))) notes.push(['h', x.needMsg || U('Benutze ein passendes Verb aus diesem Kapitel.')]);
     for (const fn of x.checks || []) { const r = fn(t); if (r) notes.push(r); }
     if (!x.noLT) try {
       const r = await fetch('https://api.languagetool.org/v2/check', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -1993,19 +2045,19 @@ async function freeCheck(x, ue) {
       const j = await r.json();
       for (const m of j.matches || []) { const bad = t.substr(m.offset, m.length), rep = (m.replacements || []).slice(0, 2).map(r => '„' + r.value + '“').join(' oder ');
         notes.push([m.rule && /TYPOS|CASING/.test(m.rule.category && m.rule.category.id || '') ? 'h' : 'e', `„${bad}“: ${m.shortMessage || m.message}${rep ? ' Besser: ' + rep + '.' : ''}`]); }
-    } catch (e) { notes.push(['h', 'Die automatische Rechtschreibprüfung ist gerade nicht erreichbar.']); }
+    } catch (e) { notes.push(['h', U('Die automatische Rechtschreibprüfung ist gerade nicht erreichbar.')]); }
     const errs = notes.filter(n => n[0] === 'e').length;
-    if (!notes.length) { good++; el.classList.add('ok'); fb.innerHTML = `<span class="k">Keine Fehler gefunden. Gut gemacht! (Die Prüfung findet nicht jeden Fehler.)</span>`; }
+    if (!notes.length) { good++; el.classList.add('ok'); fb.innerHTML = `<span class="k">${U('Keine Fehler gefunden. Gut gemacht! (Die Prüfung findet nicht jeden Fehler.)')}</span>`; }
     else { if (errs) el.classList.add('no'); else good++; fb.innerHTML = notes.map(n => `<span class="${n[0]}">${H(n[1])}</span>`).join(''); }
   }));
-  btn.disabled = false; out.textContent = `${good} von ${done} Sätzen ohne erkannte Fehler.`;
+  btn.disabled = false; out.textContent = U('%1 von %2 Sätzen ohne erkannte Fehler.', good, done);
 }
 
-function speakHTML(s) {
-  return `<p class="sub" style="margin:-.3rem 0 1rem">${H(s.intro)}</p><div class="gr-spk">${s.items.map((it, i) => `<div class="gr-sc" data-i="${i}">
+function speakHTML(s, t = s) {
+  return `<p class="sub" style="margin:-.3rem 0 1rem">${H(t.intro)}</p><div class="gr-spk">${s.items.map((it, i) => `<div class="gr-sc" data-i="${i}">
     <div class="gr-scp">${(it.cue || [['n', 'user-round', it.who], ['arr'], ['d', 'hand-heart', it.whom], ['a', it.icon, it.what]]).map(c => c[0] === 'arr' ? `<span class="arr">${icn('arrow-right')}</span>` : `<span class="${c[0]}">${c[1] ? icn(c[1]) : ''}${H(c[2])}</span>`).join('')}</div>
-    <div class="gr-scs hid">Erst laut sagen – dann aufdecken.</div>
-    <div class="row"><button class="btn sm" data-spk="say">${icn('eye')} Lösung</button>${it.pron || it.alt ? `<button class="btn sm" data-spk="pron">${icn(it.altIcon || 'replace')} ${H(it.altLabel || s.altLabel || 'Mit Pronomen')}</button>` : ''}</div></div>`).join('')}</div>`;
+    <div class="gr-scs hid">${U('Erst laut sagen – dann aufdecken.')}</div>
+    <div class="row"><button class="btn sm" data-spk="say">${icn('eye')} ${U('Lösung')}</button>${it.pron || it.alt ? `<button class="btn sm" data-spk="pron">${icn(it.altIcon || 'replace')} ${H(it.altLabel || s.altLabel || U('Mit Pronomen'))}</button>` : ''}</div></div>`).join('')}</div>`;
 }
 
 /* ---------- entry point ---------- */
@@ -2128,7 +2180,7 @@ window.GRAM = { kit: VKIT, view, leave, base, quiz, list: chapterList, practice,
   requiredExercises: n => (LESSON_EXERCISES[n] || []).filter(row => !(row[2] & 2)).map(row => row[0]),
   async results() { await pull(); return attempts(); },
   setPass(p) { PASS = p > 1 ? p / 100 : p; if (cur) render(cur); }, pass: () => PASS, refresh() { if (window.KONTO && KONTO.can && !KONTO.can(mode === 'v' ? 'vocab' : 'grammar')) return; if (mode && location.hash.match(/^#\/[gv](\/|$)/)) view(decodeURIComponent(location.hash.split('/').slice(2).join('/')), mode); },
-  voc: { open: (n, w) => CH[n] && vocabSheet(CH[n], w), play: (n, w, b) => { const x = CH[n] && CH[n].words.find(v => v.w === w); if (x) vplay(x, b); }, say: t => talk(t) }, _test: { findWord, norm, sentenceNorm, render, answers, attempts, best, store, PASS, CH,
+  voc: { open: (n, w) => CH[n] && vocabSheet(CH[n], w), play: (n, w, b) => { const x = CH[n] && CH[n].words.find(v => v.w === w); if (x) vplay(x, b); }, say: t => talk(t) }, _test: { findWord, norm, sentenceNorm, render, answers, attempts, best, help: (n, l, map) => helpMaps.set(n + ':' + l, map), store, PASS, CH,
   // answers every exercise with its own key; used to check new chapters ("ok" = all 100 %)
   async check(list) {
     const sl = ms => new Promise(r => setTimeout(r, ms)), report = {};

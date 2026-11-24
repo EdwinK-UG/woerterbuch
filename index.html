@@ -426,6 +426,7 @@ kbd{font:600 .66rem Inter,system-ui,sans-serif;padding:.1rem .35rem;border-radiu
 <script src="js/render-safety.js?v=cbceea56a80a"></script>
 <script src="js/dictionary-english.js?v=2cd9abb8ed63" data-curated="content/dictionary-english.json?v=422a7563148c" data-shards="content/english/{xx}.json?v=1497a4840e8b"></script>
 <script src="js/site-design.js?v=3b981b6c88ad"></script>
+<script src="js/lesson-help.js?v=9d4a2536900a"></script>
 <script id="data" type="application/octet-stream" data-src="core.bin?v=2a6842e1378a" data-defs="defs.bin?v=e5dfed095d11"></script>
 <script>
 "use strict";
@@ -604,7 +605,7 @@ function loadGram(){
     if(!window.GRAM_ART)await scriptFile('grammatik/illustrations.js?v=990e867b0dec');
     // Illustrations stay static. Authored films opt in per private lesson;
     // the old picture-type motion wrapper is retained only in its review prototype.
-    if(!window.GRAM)await scriptFile('grammatik/grammatik.js?v=c09a49e026ab');
+    if(!window.GRAM)await scriptFile('grammatik/grammatik.js?v=2a2f5bac9f6e');
   })().catch(e=>{gramP=null;throw e});
   return gramP;
 }
@@ -1710,8 +1711,11 @@ function keep(s,user){
   session={access_token:s.access_token,refresh_token:s.refresh_token,
     expires_at:+s.expires_at||Math.floor(Date.now()/1000)+(+s.expires_in||3600),
     user:{id:u.id,email:u.email}};
+  // the language of the grammar explanations (js/lesson-help.js) is the only profile detail kept from the auth user
+  const hl=u.user_metadata&&u.user_metadata.help_lang;if(typeof hl==='string')session.user.user_metadata={help_lang:hl};
   LS.set(SKEY,session);
 }
+function keepMeta(meta){if(!session)return;session.user.user_metadata=Object.assign({},session.user.user_metadata,meta);LS.set(SKEY,session)}
 let refreshing=null;
 async function token(){
   if(!session)throw new Error('Nicht angemeldet');
@@ -1976,7 +1980,7 @@ async function submit(mode){
 const th=$('theme');
 if(th&&!$('acct')){const b=document.createElement('button');b.className='iconbtn';b.id='acct';th.after(b)}
 $('acct').onclick=()=>session?sheet('me'):sheet('in');
-window.ACCT={user:()=>session&&session.user,token,api,open:()=>sheet('in')};   // used by the grammar section to save results
+window.ACCT={user:()=>session&&session.user,token,api,keepMeta,open:()=>sheet('in')};   // used by the grammar section to save results
 setBtn();
 
 /* links from confirmation / password-reset e-mails arrive as #access_token=… */
@@ -3271,5 +3275,5 @@ if(tabs&&!tabs.querySelector('[data-t="play"]')){const a=document.createElement(
 </script>
 <!-- ===== /Spiele ===== -->
 <script src="js/course-mail.js"></script>
-<script src="konto.js?v=b32938169ddc"></script>
+<script src="konto.js?v=47a2e7f6aba2"></script>
 </body></html>

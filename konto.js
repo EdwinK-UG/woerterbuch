@@ -37,6 +37,26 @@ function lang() {
   return LSg('gd_lang', null) || 'en';
 }
 const T = (en, de) => (lang() === 'en' ? en : de);
+/* ---------- language of the A1–B1 grammar explanations (js/lesson-help.js): German, English, French or Swahili ----------
+   Kept on the device and, when signed in, in the account (auth user metadata help_lang), so it follows the learner. */
+const HELPL = () => ['de'].concat(window.LessonHelp ? LessonHelp.LANGS : []);
+function helpLang() {
+  const m = me()?.user_metadata?.help_lang;
+  if (HELPL().includes(m)) return m;
+  return (window.LessonHelp && LessonHelp.stored()) || 'de';
+}
+// true when saved (on this device, and in the account when signed in)
+async function setHelpLang(l) {
+  if (!HELPL().includes(l)) return false;
+  window.LessonHelp?.store(l);
+  const u = me(); if (!u || u.user_metadata?.help_lang === l) return true;
+  try {
+    await A().api('/auth/v1/user', { method: 'PUT', token: await A().token(), body: { data: { help_lang: l } } });
+    A().keepMeta ? A().keepMeta({ help_lang: l }) : (u.user_metadata = Object.assign({}, u.user_metadata, { help_lang: l }));
+    return true;
+  } catch (e) { return false; }   // kept on this device; the account keeps its earlier choice
+}
+const helpOpts = sel => HELPL().map(l => `<option value="${l}"${l === sel ? ' selected' : ''}>${l === 'de' ? T('German (no translation)', 'Deutsch (ohne Übersetzung)') : LessonHelp.NAMES[l]}</option>`).join('');
 const ROLE = r => ({ learner: T('Learner', 'Lernende/r'), teacher: T('Teacher', 'Lehrkraft'), school: T('School', 'Sprachschule'), founder: T('Founder', 'Gründer/in') }[r] || r);
 const LVN = { A1: ['Beginner', 'Einstieg'], A2: ['Elementary', 'Grundlagen'], B1: ['Intermediate', 'Mittelstufe'], B2: ['Upper intermediate', 'Gute Mittelstufe'], C1: ['Advanced', 'Fortgeschritten'] };
 const lvName = l => (LVN[l] ? T(LVN[l][0], LVN[l][1]) : l);
@@ -371,7 +391,9 @@ function suMore() {
   let h = `<label class="ks-l">${r === 'school' ? T('Your name (contact person)', 'Ihr Name (Ansprechperson)') : T('Your name', 'Dein Name')}${r === 'learner' ? '' : ' *'}<input class="input" id="su_pname" maxlength="60" autocomplete="name" placeholder="${T('First and last name', 'Vor- und Nachname')}" value="${esc(name)}"></label>`;
   if (r === 'learner') {
     if (pv.type === 'org' && pv.level && pv.class) h += `<p class="ks-n">${icn('lock-open')} ${T(`Your class is at level ${esc(pv.level)}. Confirm your email to join.`, `Deine Klasse ist auf Niveau ${esc(pv.level)}. Bestätige deine E-Mail, um beizutreten.`)}</p>`;
-    else h += `<label class="ks-l">${T('My level', 'Mein Niveau')}<select class="input" id="su_level">${lvOpts(pv.level || '', T('Not sure yet', 'Noch nicht sicher'))}</select></label>
+    else h += `<label class="ks-l">${T('My level', 'Mein Niveau')}<select class="input" id="su_level">${lvOpts(pv.level || '', T('Not sure yet', 'Noch nicht sicher'))}</select></label>`;
+    if (window.LessonHelp) h += `<label class="ks-l">${T('Grammar explanations in (A1–B1, optional)', 'Grammatik-Erklärungen auf (A1–B1, freiwillig)')}<select class="input" id="su_help">${helpOpts(keep('su_help') || helpLang())}</select></label>`;
+    if (!(pv.type === 'org' && pv.level && pv.class)) h += `
       ${pv.type === 'org' ? `<p class="ks-n">${icn('info')} ${T('Your teacher unlocks your level for you.', 'Deine Lehrkraft schaltet dein Niveau für dich frei.')}</p>` : ''}`;
   } else {
     h += `<div class="ks-dt">${detailFields(r, pv.type === 'site' && r === 'school' ? { name: pv.name } : {}, 'su')}</div>`;
@@ -390,7 +412,8 @@ function signupCheck() {
 function signupData(email) {
   const r = SU.role, I = INV(), d = { role: r, lang: lang() };
   const n = (($('su_pname') || {}).value || '').trim(); if (n) d.name = n.slice(0, 60);
-  if (r === 'learner') { const l = ($('su_level') || {}).value; if (LV.includes(l)) d.level = l; }
+  if (r === 'learner') { const l = ($('su_level') || {}).value; if (LV.includes(l)) d.level = l;
+    const hl = ($('su_help') || {}).value; if (HELPL().includes(hl)) { d.help_lang = hl; window.LessonHelp?.store(hl); } }
   else { d.info = readDetails(r, 'su'); }
   if (I && I.code) d[I.t === 'join' ? 'join' : 'invite'] = I.code;
   if (SU.logo && SU.logo.data && SU.logo.data.length < 400000) LSs('gd_logo', { email, data: SU.logo.data });
@@ -1026,7 +1049,8 @@ async function viewSettings() {
     ${sec('user-round', T('Profile', 'Profil'), `<div class="ks-form"><label>${T('E-mail', 'E-Mail')}<input class="input" value="${esc(me().email || '')}" disabled></label>
       <label>${T('Name', 'Name')}<input class="input" id="ks_name" maxlength="60" value="${esc(P.display_name || '')}" placeholder="${T('How teachers and classmates see you', 'So sehen dich Lehrkräfte')}"></label>
       <label>${T('Language of menus and account pages', 'Sprache der Menüs und Kontoseiten')}<select class="input" id="ks_lang"><option value="auto"${P.ui_lang === 'auto' ? ' selected' : ''}>${T('Automatic (English)', 'Automatisch (Englisch)')}</option><option value="en"${P.ui_lang === 'en' ? ' selected' : ''}>English</option><option value="de"${P.ui_lang === 'de' ? ' selected' : ''}>Deutsch</option></select></label>
-      <p class="ks-tip">${icn('info')} ${T('The courses themselves (topics, exercises) are always in German.', 'Die Kurse selbst (Themen, Übungen) sind immer auf Deutsch.')}</p>
+      <label>${T('Grammar explanations (A1–B1)', 'Grammatik-Erklärungen (A1–B1)')}<select class="input" id="ks_help">${helpOpts(helpLang())}</select></label>
+      <p class="ks-tip">${icn('info')} ${T('Explanations and exercise instructions of the A1–B1 grammar chapters can be shown in English, French or Swahili. The German examples, the exercises and the answers stay German.', 'Erklärungen und Arbeitsanweisungen der Grammatik-Kapitel A1–B1 können auf Englisch, Französisch oder Swahili erscheinen. Die deutschen Beispiele, die Übungen und die Lösungen bleiben auf Deutsch.')}</p>
       <div class="row"><span class="spacer"></span><button class="btn primary" onclick="KONTO.saveSettings()">${T('Save', 'Speichern')}</button></div></div>`)}
     ${learner ? sec('graduation-cap', T('My levels', 'Meine Niveaus'), `<div class="kd-lvset">${LV.map(l => { const st = lvState(l); return `<div class="${st}"><span class="gr-lv ${l}">${l}</span><span class="t">${esc(lvName(l))}<small>${st === 'open' ? T('enrolled', 'eingeschrieben') : st === 'pending' ? T('asked – waiting for your teacher', 'angefragt – wartet auf Lehrkraft') : T('locked', 'gesperrt')}</small></span>
         ${st === 'open' ? (l === level() ? `<span class="tag">${T('my course', 'mein Kurs')}</span>` : `<button class="btn sm" onclick="KONTO.setCourse('${l}')">${T('Make my course', 'Als Kurs wählen')}</button>`) + `<button class="btn sm" onclick="KONTO.unenroll('${l}')">${icn('log-out')} ${T('Unenroll', 'Abmelden')}</button>` : st === 'locked' ? `<button class="btn sm" onclick="KONTO.lockSheet('${l}')">${icn(P.org_id ? 'hand' : 'lock-open')} ${P.org_id ? T('Ask', 'Anfragen') : T('Enroll', 'Einschreiben')}</button>` : ''}</div>`; }).join('')}</div>
@@ -1045,6 +1069,7 @@ async function viewSettings() {
 }
 async function saveSettings() {
   const body = { display_name: ($('ks_name').value || '').trim() || null, ui_lang: $('ks_lang').value };
+  const hl = $('ks_help'); if (hl && !(await setHelpLang(hl.value))) toastM(T('The explanation language could not be saved in your account. It is kept on this device.', 'Die Sprache der Erklärungen konnte nicht im Konto gespeichert werden. Sie bleibt auf diesem Gerät.'));
   if (await saveProfile(body, T('Saved', 'Gespeichert'))) { applyNav(); refreshView(); }
 }
 async function unenroll(l) {
@@ -1264,7 +1289,7 @@ header .brand{flex-shrink:0}@media(min-width:1100px){header .wrap{max-width:1220
 document.head.appendChild(st);
 
 /* ---------- start ---------- */
-window.KONTO = { emailUsers, emailLearners, level, lang, passMark, canOpen, lvState, unlock, lockSheet, unlocked: unlockedSet, profile: () => P, org: () => ORG, brand, applyBrand, view, routes: ROUTES, fillMe, saveLevel, askLevel,
+window.KONTO = { emailUsers, emailLearners, level, lang, helpLang, setHelpLang, passMark, canOpen, lvState, unlock, lockSheet, unlocked: unlockedSet, profile: () => P, org: () => ORG, brand, applyBrand, view, routes: ROUTES, fillMe, saveLevel, askLevel,
   signupFields, signupCheck, signupData, request, reqFields, sendRequest, join, decide, inviteSheet, makeSiteInvite, delSiteInvite, codeSheet,
   saveOrg, dropLogo, orgPass, addClass, classPass, invite, delInvite, moveMember, removeMember, addTask, delTask, copy, reload, refresh, liveClassSheet, saveLiveClass, sendClassInvite, sendClassInviteNow, inviteLearner, previewInvite, loadOwnerUsers, deleteAccountSheet, deleteAccount, decideLiveRequest, applyLiveClass,
   student, unlockFor, saveSettings, setCourse, unenroll, leave, T, can, gate, featureOf, saveSite, lookup, signupAs, checkInvitationMail, speakCodes, makeSpeakCode, revokeSpeakCode, previewWelcome: () => { location.hash = '#/start/besucher'; } };

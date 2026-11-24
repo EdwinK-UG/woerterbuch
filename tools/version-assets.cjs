@@ -15,6 +15,7 @@ const files = [
   "js/game-i18n.js",
   "js/render-safety.js",
   "js/dictionary-english.js",
+  "js/lesson-help.js",
   "js/site-design.js",
   "content/dictionary-english.json",
   "js/pages.js",
