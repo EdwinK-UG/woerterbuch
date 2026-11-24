@@ -47,7 +47,9 @@ test("the account panel redeems LIV codes through the Worker and the founder man
 
 test("the Worker keeps the trainer behind the site's origins and its secrets out of the repository", () => {
   const w = read("worker/src/index.js");
-  assert.match(w, /if \(url\.pathname\.startsWith\("\/speak\/"\)\) \{\n    if \(!ALLOWED\.includes\(origin\)\) return json/);
+  assert.match(w, /if \(url\.pathname\.startsWith\("\/speak\/"\)\) \{\n    if \(!permitted\) return json/);
+  // permitted = the site's origins, or the native apps' own header (no browser Origin)
+  assert.match(w, /const permitted = ALLOWED\.includes\(origin\) \|\| nativeApp\(req\);/);
   for (const f of ["worker/wrangler.toml", "worker/wrangler.example.toml"].filter((f) => fs.existsSync(path.join(root, f))))
     assert.doesNotMatch(read(f), /ANTHROPIC_API_KEY\s*=|ELEVENLABS_API_KEY\s*=|sk-ant-/, f);
   const m = read("worker/migrations/0009_speak_trainer.sql");

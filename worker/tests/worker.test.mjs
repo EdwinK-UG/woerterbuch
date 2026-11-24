@@ -546,3 +546,13 @@ test('film narration follows the lesson rule and plays only through signed, shor
     assert.equal((await clip(url.replace(/s=[^&]+/, 's=' + 'A'.repeat(43)))).status, 403);
   } finally { globalThis.fetch = old; }
 });
+test('native apps reach the site routes with their client header, foreign pages still cannot', async () => {
+  const env = { ALLOWED_ORIGINS: 'https://deutschklinik.com' };
+  const call = (headers) => worker.fetch(new Request('https://worker.example.invalid/photos?q=Haus', { headers }), env, {});
+  assert.equal((await call({ Origin: 'https://deutschklinik.com' })).status, 200);
+  assert.equal((await call({ 'X-Deutschklinik-Client': 'ios/1.0' })).status, 200);
+  assert.equal((await call({ 'X-Deutschklinik-Client': 'android/1.0.3' })).status, 200);
+  assert.equal((await call({})).status, 403);                                                          // plain <img>/<script> or curl
+  assert.equal((await call({ 'X-Deutschklinik-Client': 'web/1.0' })).status, 403);
+  assert.equal((await call({ 'X-Deutschklinik-Client': 'ios/1.0', Origin: 'https://evil.example' })).status, 403); // a foreign page
+});

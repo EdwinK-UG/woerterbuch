@@ -61,6 +61,10 @@ export default {
     }
   },
 };
+// iOS/Android requests: no browser Origin, and `X-Deutschklinik-Client: ios/1.0` (or android/…).
+export const nativeApp = (req) =>
+  !req.headers.get("Origin") &&
+  /^(ios|android)\/[0-9A-Za-z.\-]{1,20}$/.test(req.headers.get("X-Deutschklinik-Client") || "");
 const origins = (env) =>
   String(env.ALLOWED_ORIGINS || "")
     .split(",")
@@ -71,8 +75,12 @@ async function route(req, env, ctx) {
   const url = new URL(req.url);
   const origin = req.headers.get("Origin") || "";
   const h = cors(origin, ALLOWED);
+  // The site's own pages (by Origin) and the native apps. The apps send no Origin but their own client header;
+  // a page on another site can't send that header without a CORS preflight, which this Worker refuses for
+  // unknown origins, so this lets in nothing a foreign browser page couldn't already reach.
+  const permitted = ALLOWED.includes(origin) || nativeApp(req);
   if(url.pathname==="/hooks/email-verification")return verificationHook(req,env,h);
-  if(url.pathname==="/email-verification/send"){if(!ALLOWED.includes(origin))return json({error:"Forbidden"},403,h);return verificationWake(req,env,h);}
+  if(url.pathname==="/email-verification/send"){if(!permitted)return json({error:"Forbidden"},403,h);return verificationWake(req,env,h);}
   if (url.pathname === "/hooks/welcome") return welcomeHook(req, env, h);
   // audio elements send no Origin; the signature in the link is the permission
   if (url.pathname === "/film-audio/clip") return filmAudioClip(req, env, h);
@@ -87,70 +95,70 @@ async function route(req, env, ctx) {
     });
   }
   if (url.pathname === "/correction") {
-    if (!ALLOWED.includes(origin)) return json({ error: "Forbidden" }, 403, h);
+    if (!permitted) return json({ error: "Forbidden" }, 403, h);
     return correction(req, url, env, h);
   }
   // the grammar speaking trainer (founder and access-code holders only; speak.js)
   if (url.pathname.startsWith("/speak/")) {
-    if (!ALLOWED.includes(origin)) return json({ error: "Forbidden" }, 403, h);
+    if (!permitted) return json({ error: "Forbidden" }, 403, h);
     const routes = { "/speak/access": speakAccess, "/speak/redeem": speakRedeem, "/speak/codes": speakCodes, "/speak/codes/revoke": speakRevoke, "/speak/turn": speakTurn };
     const handler = routes[url.pathname];
     return handler ? handler(req, env, h) : json({ error: "Not found" }, 404, h);
   }
   if (url.pathname === "/scene-feedback") {
-    if (!ALLOWED.includes(origin)) return json({ error: "Forbidden" }, 403, h);
+    if (!permitted) return json({ error: "Forbidden" }, 403, h);
     return sceneFeedback(req, env, h);
   }
   if (url.pathname === "/film-audio") {
-    if (!ALLOWED.includes(origin)) return json({ error: "Forbidden" }, 403, h);
+    if (!permitted) return json({ error: "Forbidden" }, 403, h);
     return filmAudioList(req, env, h);
   }
   if (url.pathname === "/english") {
-    if (!ALLOWED.includes(origin)) return json({error:'Forbidden'},403,h);
+    if (!permitted) return json({error:'Forbidden'},403,h);
     return english(req,url,env,h);
   }
   if (url.pathname === "/photos") {
     if (req.method !== "GET") return json({ error: "GET only" }, 405, h);
-    if (!ALLOWED.includes(origin))
+    if (!permitted)
       return json({ error: "only for the Wörterbuch site" }, 403, h);
     return stockPhotos(url, env, h);
   }
   if (url.pathname === "/entries" || url.pathname === "/entry") {
-    if (!ALLOWED.includes(origin))
+    if (!permitted)
       return json({ error: "only for the Wörterbuch site" }, 403, h);
     return handleEntries(req, url, env, ctx, h);
   }
   if (url.pathname === "/welcome") {
-    if (!ALLOWED.includes(origin))
+    if (!permitted)
       return json({ error: "only for the Wörterbuch site" }, 403, h);
     return handleWelcome(req, env, h);
   }
   if(url.pathname==="/site-invitation"){
-    if(!ALLOWED.includes(origin))return json({error:"Forbidden"},403,h);
+    if(!permitted)return json({error:"Forbidden"},403,h);
     return sendSiteInvitation(req,env,h);
   }
   if(url.pathname==='/messages/designs'){
-    if(!ALLOWED.includes(origin))return json({error:'Forbidden'},403,h);
+    if(!permitted)return json({error:'Forbidden'},403,h);
     return messageDesigns(req,env,h);
   }
   if(url.pathname==='/messages/send'){
-    if(!ALLOWED.includes(origin))return json({error:'Forbidden'},403,h);
+    if(!permitted)return json({error:'Forbidden'},403,h);
     return sendMessage(req,env,h);
   }
   if (url.pathname === "/course-invitation/preview") {
-    if (!ALLOWED.includes(origin)) return json({error:"Forbidden"},403,h);
+    if (!permitted) return json({error:"Forbidden"},403,h);
     return previewCourseInvitation(req,env,h);
   }
   if (url.pathname === "/course-invitation/status") {
-    if (!ALLOWED.includes(origin)) return json({error:"Forbidden"},403,h);
+    if (!permitted) return json({error:"Forbidden"},403,h);
     return courseInvitationStatus(req,env,h);
   }
   if (url.pathname === "/course-invitation") {
-    if (!ALLOWED.includes(origin)) return json({ error: "only for the Deutschklinik site" }, 403, h);
+    if (!permitted) return json({ error: "only for the Deutschklinik site" }, 403, h);
     return sendCourseInvitation(req, env, h);
   }
   if (url.pathname === "/live-class-request") {
-    if (!ALLOWED.includes(origin)) return json({ error: "only for the Deutschklinik site" }, 403, h);
+    if (!permitted) return json({ error: "only for the Deutschklinik site" }, 403, h);
     return requestLiveClass(req, env, h);
   }
   if (url.pathname === "/pic")
@@ -163,7 +171,7 @@ async function route(req, env, ctx) {
       headers: h,
     });
   if (req.method !== "GET") return json({ error: "GET only" }, 405, h);
-  if (!ALLOWED.includes(origin))
+  if (!permitted)
     return json({ error: "only for the Wörterbuch site" }, 403, h); // CORS controls browser access; authentication and D1 enforce capacity.
 
   const q = (k, n) => (url.searchParams.get(k) || "").slice(0, n).trim();

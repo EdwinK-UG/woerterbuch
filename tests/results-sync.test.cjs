@@ -25,6 +25,7 @@ function fixture() {
       setItem: (k, v) => memory.set(k, v),
     },
     V: () => ({ querySelector: () => null }),
+    notePlace() {},   // the shared Continue place has its own test (learner-place.test.cjs)
     window: { addEventListener: (name, callback) => (events[name] = callback) },
     ACCT: {
       user: () => user,

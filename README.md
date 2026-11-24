@@ -71,6 +71,10 @@ Follow `worker/README.md` for D1 migration, quotas, Auth verification, editorial
 
 Run `npm run check`, review the site at phone and tablet widths, apply validated database upgrades, and then publish the site and Worker through their normal release processes. Reopen older tabs after a release so they load the same asset versions. Hosted-service checks remain a separate release step.
 
+### Native apps
+
+The iPhone app (and later Android) uses the same Supabase project and Worker. Browsers prove they are the site by `Origin`; the apps send no `Origin` but `X-Deutschklinik-Client: ios/<version>` (or `android/…`). The Worker, `owner-accounts` and `delete-account` accept either. A page on another site can't send that header without a CORS preflight, which they refuse for unknown origins. `delete-account` lets a signed-in user delete their own account after typing its email (founders can't, nor school owners whose school still has members). `learner_places` holds where each learner stopped (chapter and exercise or section); the grammar pages and the apps both write it and show a "Weitermachen" card, and the newest place wins.
+
 ## Dictionary English, audio and pictures
 
 - **English:** every dictionary meaning and example has English in `content/english/00.json` … `ff.json`, keyed by the entry's source fingerprint. They are made with `tools/dictionary-english-build.cjs`, which runs on Azure, and the page reads them before asking the Worker.

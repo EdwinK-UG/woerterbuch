@@ -7,7 +7,9 @@ export function ownerAccountHandler({url,key,serviceKey,fetcher=fetch}){
     const headers={'Content-Type':'application/json','Cache-Control':'no-store','Access-Control-Allow-Origin':allowed.includes(origin)?origin:'null','Vary':'Origin','Access-Control-Allow-Headers':'authorization,apikey,content-type,x-client-info','Access-Control-Allow-Methods':'POST,OPTIONS'};
     const answer=(status,data)=>new Response(JSON.stringify(data),{status,headers});
     if(request.method==='OPTIONS')return answer(200,{});
-    if(!allowed.includes(origin))return answer(403,{error:'Forbidden origin.'});
+    // the site's pages by Origin; the native apps send no Origin but their own header (a foreign page can't).
+    const nativeApp=!origin&&/^(ios|android)\/[0-9A-Za-z.\-]{1,20}$/.test(request.headers.get('X-Deutschklinik-Client')||'');
+    if(!allowed.includes(origin)&&!nativeApp)return answer(403,{error:'Forbidden origin.'});
     if(request.method!=='POST')return answer(405,{error:'POST only.'});
     const authorization=request.headers.get('Authorization')||'';
     if(!/^Bearer \S+$/i.test(authorization))return answer(401,{error:'Sign in again.'});

@@ -996,6 +996,7 @@ function record(attempt) {
   const completed = state.att.filter(a => a.sent).slice(-2000);
   state.att = completed.concat(state.att.filter(a => !a.sent));
   save(state); sync(); paintSyncStatus();
+  notePlace(attempt.ch, 'ue-' + attempt.ex);
 }
 let syncing = null, retrySync = null;
 function syncStatus() {
@@ -1073,6 +1074,73 @@ function ring(p, size = 46) {
   <text x="50%" y="54%" text-anchor="middle" dominant-baseline="middle" font-size="${size / 4}" font-weight="700" fill="var(--fg)" font-family="Inter,sans-serif">${p}%</text></svg>`;
 }
 
+/* ---------- where the learner stopped: shared with the apps (Supabase learner_places) ----------
+   place = {ch, part, at, uid}: ch = chapter number, part = null | 'ue-<exercise>' | 'grs-<section>'. The newest
+   `at` wins between this browser and the account; the database also refuses an older place arriving late. */
+const PKEY = 'gd_place';
+let placeRemote = null, placeRemoteUser = null, placeTimer = null, placeDirty = false;
+const placeOk = p => !!p && Number.isInteger(p.ch) && Number.isFinite(p.at) && (p.part == null || /^(ue-[\w-]{1,40}|grs-[a-z])$/.test(p.part));
+function placeLocal() { try { const p = JSON.parse(localStorage.getItem(PKEY) || 'null'); return placeOk(p) ? p : null; } catch { return null; } }
+function placeSave(p) { try { localStorage.setItem(PKEY, JSON.stringify(p)); } catch {} }
+function place() {
+  const user = acct(), local = placeLocal();
+  const mine = local && (local.uid || null) === (user?.id || null) ? local : null;
+  const remote = user && placeRemoteUser === user.id && placeOk(placeRemote) ? placeRemote : null;
+  return [mine, remote].filter(Boolean).sort((a, b) => b.at - a.at)[0] || null;
+}
+function notePlace(ch, part = null) {
+  if (!Number.isInteger(ch) || !READY[ch] || isRef(ch)) return;
+  const user = acct(), now = Date.now(), prev = place();
+  if (part == null && prev && prev.ch === ch) part = prev.part ?? null;          // reopening the chapter keeps the exercise
+  if (prev && prev.ch === ch && (prev.part ?? null) === part && now - prev.at < 60000) return;
+  placeSave({ ch, part, at: now, uid: user?.id || null });
+  if (user) { placeDirty = true; clearTimeout(placeTimer); placeTimer = setTimeout(pushPlace, 2000); }
+}
+async function pushPlace() {
+  const user = acct(), p = placeLocal();
+  if (!user || !ACCT.api || !p || p.uid !== user.id || !placeDirty) return;
+  placeDirty = false;
+  try {
+    const token = await ACCT.token(); if (acct()?.id !== user.id) return;
+    await ACCT.api('/rest/v1/learner_places?on_conflict=user_id', { method: 'POST', token, headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
+      body: { user_id: user.id, place: { ch: p.ch, part: p.part ?? null }, at: new Date(p.at).toISOString() } });
+  } catch { if (acct()?.id === user.id) { placeDirty = true; clearTimeout(placeTimer); placeTimer = setTimeout(pushPlace, 30000); } }
+}
+async function pullPlace() {
+  const user = acct(); if (!user || !ACCT.api) return;
+  try {
+    const token = await ACCT.token();
+    const r = (await ACCT.api('/rest/v1/learner_places?select=place,at&user_id=eq.' + user.id, { token }))?.[0];
+    if (acct()?.id !== user.id) return;
+    placeRemote = r ? { ch: r.place?.ch, part: r.place?.part ?? null, at: Date.parse(r.at), uid: user.id } : null; placeRemoteUser = user.id;
+    const local = placeLocal();   // a place from before signing in on this device, newer than the account's, becomes the account's
+    if (local && !local.uid && (!placeOk(placeRemote) || local.at > placeRemote.at)) { placeSave({ ...local, uid: user.id }); placeDirty = true; pushPlace(); }
+  } catch {}
+}
+const PLACE_SECTIONS = { 'grs-v': 'Verstehen', 'grs-b': 'Beispiele', 'grs-u': 'Üben', 'grs-s': 'Sprechen', 'grs-l': 'Wortliste', 'grs-t': 'Tipps', 'grs-m': 'Mehr üben' };
+function placeCard(m) {
+  const p = place(), info = p && chInfo(p.ch);
+  if (!info || !READY[p.ch] || isRef(p.ch) || isV(p.ch) !== (m === 'v')) return '';
+  const c = chapterSummary(p.ch), x = c && p.part && c.exercises.find(e => 'ue-' + e.id === p.part);
+  const where = x ? exLabel(c, x) + ' · ' + x.title : PLACE_SECTIONS[p.part] || info.c[2] || '';
+  const head = (m === 'v' ? 'Thema ' + topicNo(p.ch) : 'Kapitel ' + gNo(p.ch)) + ': ' + info.c[1];
+  return `<a class="gr-feat" data-place href="${hashOf(p.ch)}${p.part ? '/' + p.part : ''}"><span class="th" id="${m === 'v' ? 'vkfeat' : 'grfeat'}"></span><span><span class="gr-lv ${info.c[3]}">${info.c[3]}</span> <span class="gr-eyebrow" style="display:inline">Weitermachen</span><b>${H(head)}</b><p>${H(where)}</p></span></a>`;
+}
+function featIcon(m) { const t = $(m === 'v' ? 'vkfeat' : 'grfeat'); if (t) t.innerHTML = icn(m === 'v' ? 'book-a' : 'book-open-text'); icons(); }
+function refreshPlaceCard(m) {
+  if (location.hash !== '#/' + m && location.hash !== '#/' + m + '/') return;
+  const card = placeCard(m), el = V().querySelector('.gr-feat');
+  if (!card || !el || el.outerHTML === card) return;
+  el.outerHTML = card; featIcon(m);
+}
+window.addEventListener('acct:in', () => { placeRemote = null; placeRemoteUser = null; pullPlace().then(() => mode && refreshPlaceCard(mode)); });
+window.addEventListener('acct:out', () => { placeRemote = null; placeRemoteUser = null; placeDirty = false; clearTimeout(placeTimer); });
+window.addEventListener('online', () => pushPlace());
+// back from the app or another tab: show where the learner is now
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && /^#\/[gv]\/?$/.test(location.hash)) pullPlace().then(() => refreshPlaceCard(location.hash[2])); });
+// working in an exercise moves the place there (tap, click or keyboard)
+for (const type of ['pointerdown', 'focusin']) document.addEventListener(type, e => { const ue = e.target.closest?.('.gr-ue'); if (ue && cur && ue.dataset.ex) notePlace(cur.n, 'ue-' + ue.dataset.ex); }, true);
+
 /* ---------- overview: Grammatik (#/g) and Wortschatz (#/v) are separate sections ---------- */
 let mode = 'g';                                         // 'g' Grammatik, 'v' Wortschatz
 const isV = n => !!chInfo(n)?.g.vocab;
@@ -1101,8 +1169,8 @@ function overview(m) {
   <section class="gr-top"><div><p class="gr-eyebrow">${T.eye}</p><h1>${T.h}</h1><p>${T.p}</p>
     <div class="gr-stats"><span class="gr-stat"><b>${all}</b>${T.unit}</span><span class="gr-stat"><b>${ready}</b>schon fertig</span><a class="gr-stat" href="#/${m}/fortschritt" style="text-decoration:none"><b>${passedEx}</b>Übungen bestanden →</a></div></div>
     <div class="gr-topart">${T.art}</div></section>
-  ${m === 'v' ? `<a class="gr-feat" href="#/v/201"><span class="th" id="vkfeat"></span><span><span class="gr-lv A1">A1</span> <span class="gr-eyebrow" style="display:inline">Hier anfangen</span><b>Thema 1: Person</b><p>Themen für A1, A2, B1 und C1 – mit Wortliste, Bildern, Aussprache und Übungen. Wählen Sie Wörter aus und machen Sie daraus mit einem Klick Lernkarten.</p></span></a>`
-    : `<a class="gr-feat" href="#/g/1"><span class="th" id="grfeat"></span><span><span class="gr-lv A1">A1</span> <span class="gr-eyebrow" style="display:inline">Hier anfangen</span><b>Kapitel 1: Personalpronomen</b><p>Kapitel von A1 bis C1 – mit Erklärungen, Beispielen, Übungen, Sprechtraining und Spiel. Dazu Verblisten mit Trainer.</p></span></a>`}
+  ${placeCard(m) || (m === 'v' ? `<a class="gr-feat" href="#/v/201"><span class="th" id="vkfeat"></span><span><span class="gr-lv A1">A1</span> <span class="gr-eyebrow" style="display:inline">Hier anfangen</span><b>Thema 1: Person</b><p>Themen für A1, A2, B1 und C1 – mit Wortliste, Bildern, Aussprache und Übungen. Wählen Sie Wörter aus und machen Sie daraus mit einem Klick Lernkarten.</p></span></a>`
+    : `<a class="gr-feat" href="#/g/1"><span class="th" id="grfeat"></span><span><span class="gr-lv A1">A1</span> <span class="gr-eyebrow" style="display:inline">Hier anfangen</span><b>Kapitel 1: Personalpronomen</b><p>Kapitel von A1 bis C1 – mit Erklärungen, Beispielen, Übungen, Sprechtraining und Spiel. Dazu Verblisten mit Trainer.</p></span></a>`)}
   <div class="gr-filter">${['', ...lv].map(l => `<button class="gr-chip${F.lv === l ? ' on' : ''}" data-lv="${l}">${l && !lvOpen(l) ? icn('lock') : ''}${l || 'Alle'}</button>`).join('')}
     <input id="grq" placeholder="${m === 'v' ? 'Thema suchen, z. B. Familie' : 'Thema suchen, z. B. Perfekt'}" value="${H(F.q)}" autocomplete="off"></div>
   <div class="gr-tocbar"><b>Inhalt</b><span class="spacer"></span><button class="btn sm" data-toc="open">${icn('chevrons-up-down')} Alles aufklappen</button><button class="btn sm" data-toc="close">${icn('chevrons-down-up')} Alles zuklappen</button></div>
@@ -1468,6 +1536,9 @@ async function openWatch(n) {
 }
 function jump(anchor) {
   const el = anchor && $(anchor); if (!el) return;
+  // chapters that show one training round at a time: switch to the round that holds this exercise first
+  const root = el.closest('.gr-ch'), round = el.hidden && root?.querySelector('[data-round-select]');
+  if (round) { const i = [...root.querySelectorAll('.gr-ue')].indexOf(el); if (i >= 0) { round.value = String(i); round.onchange?.(); } }
   const sec = el.closest('.gr-sec'); if (sec) sec.classList.remove('closed');
   const go = () => { const y = el.getBoundingClientRect().top + window.scrollY - 118; window.scrollTo(0, Math.max(0, y)); };
   setTimeout(go, 60); setTimeout(go, 500);
@@ -1488,6 +1559,7 @@ async function chapter(n, anchor) {
   if (helpLang() !== 'de' && HL()?.eligible(CH[n])) { await loadHelp(CH[n], helpLang()); if (!onCh(n) || !CH[n]) return; }
   if (cur !== CH[n] || !V().querySelector('.gr-ch')) render(CH[n]);
   jump(anchor);
+  notePlace(n, /^(ue-[\w-]+|grs-[a-z])$/.test(anchor || '') ? anchor : null);
   pull().then(() => { if (cur === CH[n] && onCh(n)) { refreshBadges(); sync(); } });
 }
 function render(c) {
@@ -2065,9 +2137,9 @@ function view(arg, m) {
   css(); closePop(); m = m === 'v' ? 'v' : 'g'; mode = m;
   const [a0, anchor] = String(arg || '').split('/');
   if (!a0) { cur = null; overview(m);
-    const feat = m === 'v' ? [201, 'vkfeat'] : [1, 'grfeat'];
-    const preview = $(feat[1]); if (preview) preview.innerHTML = icn(m === 'v' ? 'book-a' : 'book-open-text');
-    pull().then(() => { if (location.hash === '#/' + m || location.hash === '#/' + m + '/') list(); }); return; }
+    featIcon(m);
+    pull().then(() => { if (location.hash === '#/' + m || location.hash === '#/' + m + '/') list(); });
+    pullPlace().then(() => refreshPlaceCard(m)); return; }
   if (a0 === 'fortschritt') { cur = null; progressView(m); return; }
   const n = parseInt(a0, 10);
   if (isV(n) !== (m === 'v')) { location.replace(hashOf(n) + (anchor ? '/' + anchor : '')); return; }
