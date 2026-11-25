@@ -174,7 +174,7 @@ test('short character lines are recorded with German enforced ("Super!" was read
 test('Swahili and French versions: every text in every language, German examples marked, the Swahili duet', (t) => {
   const stage = fs.readFileSync(path.join(ROOT, 'grammatik', 'buehne', 'stage.js'), 'utf8'), meinung = fs.readFileSync(path.join(ROOT, 'grammatik', 'buehne', 'meinung.js'), 'utf8');
   assert.match(stage, /export const LANGS = \['de', 'en', 'sw', 'fr'\]/);
-  for (const l of ['sw', 'fr']) { assert.match(stage, new RegExp(`\\n  ${l}: \\{ narrator:`)); assert.match(stage, new RegExp(`\\n  ${l}: \\{ group:`)); assert.match(meinung, new RegExp(`\\n  ${l}: \\{ btn:`)); assert.match(meinung, new RegExp(`\\n  ${l}: \\[\\['understand'`)); }
+  for (const l of ['sw', 'fr']) { assert.match(stage, new RegExp(`\\n  ${l}: \\{ narrator:`)); assert.match(stage, new RegExp(`\\n  ${l}: \\{ on:`)); assert.match(meinung, new RegExp(`\\n  ${l}: \\{ btn:`)); assert.match(meinung, new RegExp(`\\n  ${l}: \\[\\['understand'`)); }
   const keys = (src, l) => (src.match(new RegExp(`\\n  ${l}: \\{ ([^]*?)\\},\\n`)) || [, ''])[1].match(/(?:^|, |\n +)(\w+): ['"]/g).map((k) => k.replace(/[^\w]/g, '')).sort().join();
   assert.equal(keys(stage, 'sw'), keys(stage, 'en')); assert.equal(keys(stage, 'fr'), keys(stage, 'en'));
   const { NARRATOR } = require('../tools/split-voice.cjs');
@@ -190,4 +190,21 @@ test('Swahili and French versions: every text in every language, German examples
       else assert.ok(!l.en, `${s} ${id}: gloss in the version's language, not English`);
     }
   }
+});
+test('subtitles come a sentence or clause at a time, never cutting a mark; long versions only', async () => {
+  const src = fs.readFileSync(path.join(ROOT, 'grammatik', 'buehne', 'stage.js'), 'utf8');
+  const body = src.slice(src.indexOf('export const esc'), src.indexOf('export function subtitleParts')) + src.slice(src.indexOf('export function subtitleParts')).split('\n}\n')[0] + '\n}';
+  const { subtitleParts, plain } = new Function(body.replace(/export /g, '') + '\nreturn { subtitleParts, plain };')();
+  const line = 'In English, can and dance sit right next to each other: I can dance really well. In German they split up. {v:Ich kann} stays near the front, and the dancing, {t:gut tanzen}, moves to the very end of the sentence.';
+  const parts = subtitleParts(line);
+  assert.ok(parts.length >= 3, parts.join(' | '));
+  assert.ok(parts.every((p) => plain(p).length <= 84), parts.join(' | '));
+  assert.equal(parts.join(' '), line, 'nothing is lost or reordered');
+  assert.ok(parts.every((p) => (p.match(/\{/g) || []).length === (p.match(/\}/g) || []).length), 'a mark is never cut');
+  assert.deepEqual(subtitleParts('Das ist z. B. ein Haus.'), ['Das ist z. B. ein Haus.'], 'an abbreviation does not end a sentence');
+  assert.deepEqual(subtitleParts('Ja. Gut.'), ['Ja. Gut.'], 'short sentences share a part');
+  assert.match(src, /export const LONG = true, VERSION = LANG \+ '-long'/);
+  assert.ok(!/formsw|SW\[LANG\]\.length/.test(src), 'no Kurz | Lang switch');
+  assert.match(src, /cc\.id = 'cc'/); assert.match(src, /localStorage\.setItem\('buehne-cc'/);
+  assert.match(src, /!qs\.get\('hero'\)/, 'no language buttons inside a chapter');
 });

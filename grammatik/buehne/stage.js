@@ -18,8 +18,9 @@ export const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
    ?lang=sw and ?lang=fr are built the same way, explained in Kenyan Swahili and in standard French. */
 export const LANGS = ['de', 'en', 'sw', 'fr'];
 export const LANG = LANGS.includes(qs.get('lang')) ? qs.get('lang') : 'de';
-// short (default) or long: the detailed version with an introduction; VERSION is what the feedback form rates
-export const LONG = qs.get('form') === 'long', VERSION = LANG + (LONG ? '-long' : '');
+// Only the long versions are offered (the short ones are archived: tag archive/short-pilots-k5-k17).
+// VERSION is what the feedback form rates; it keeps '-long' so its ratings stay apart from the old short ones.
+export const LONG = true, VERSION = LANG + '-long';
 const UI = {
   de: { narrator: 'Erzählerin', you: 'Du', watch: '▶ Zuschauen', play: 'Mitspielen', film: 'Film ansehen', check: 'Prüfen', right: 'Richtig!', notyet: 'Noch nicht.',
     nofit: 'Passt nicht.', rightis: 'Richtig ist:', almost: 'Fast.', oops: 'Hoppla!', wait: '…', done: 'Fertig! Beim ersten Versuch richtig: {s} von {n}.', turn: 'Jetzt du! Tipp auf „Mitspielen“.',
@@ -34,12 +35,12 @@ const UI = {
     nofit: 'Ça ne va pas.', rightis: 'La bonne réponse\u202f:', almost: 'Presque.', oops: 'Oups\u202f!', wait: '…', done: 'Terminé\u202f! Juste du premier coup\u202f: {s} sur {n}.', turn: 'À toi\u202f! Appuie sur «\u202fJouer\u202f».',
     signin: 'Connecte-toi avec ton accès, et la scène se joue avec le son.', none: 'Non disponible\u202f: cette scène s’ouvre depuis la leçon.', write: 'Écris …', loading: 'Chargement …' },
 };
-// the switches under the film, in the language of the version being watched (button titles in the button's own language)
-const SW = {
-  de: { group: 'Erklärungen auf', label: 'Erklärung:', length: 'Länge', short: 'Kurz', long: 'Lang', tShort: 'Die kurze Version', tLong: 'Länger, mit Einführung und mehr Details', title: 'Alles auf Deutsch' },
-  en: { group: 'Explanations in', label: 'Explanations:', length: 'Length', short: 'Short', long: 'Long', tShort: 'The short version', tLong: 'Longer, with an introduction and more detail', title: 'Explanations in English, examples in German' },
-  sw: { group: 'Maelezo kwa', label: 'Maelezo:', length: 'Urefu', short: 'Fupi', long: 'Ndefu', tShort: 'Toleo fupi', tLong: 'Ndefu zaidi, na utangulizi na maelezo zaidi', title: 'Maelezo kwa Kiswahili, mifano kwa Kijerumani' },
-  fr: { group: 'Explications en', label: 'Explications\u202f:', length: 'Durée', short: 'Court', long: 'Long', tShort: 'La version courte', tLong: 'Plus long, avec une introduction et plus de détails', title: 'Explications en français, exemples en allemand' },
+// the CC button's label (what a tap does) and the language dropdown's label
+const SUBS = {
+  de: { on: 'Untertitel einblenden', off: 'Untertitel ausblenden', lang: 'Sprache der Erklärungen' },
+  en: { on: 'Show subtitles', off: 'Hide subtitles', lang: 'Language of the explanations' },
+  sw: { on: 'Onyesha manukuu', off: 'Ficha manukuu', lang: 'Lugha ya maelezo' },
+  fr: { on: 'Afficher les sous-titres', off: 'Masquer les sous-titres', lang: 'Langue des explications' },
 };
 export const T = (k, vars = {}) => (UI[LANG][k] || UI.de[k] || k).replace(/\{(\w+)\}/g, (_, v) => vars[v] ?? '');
 // the narrator: Elisa in the German scenes, the English-speaking narrator in the bilingual ones (she has no figure)
@@ -71,6 +72,31 @@ export const SPEAKER = { elisa: { name: T('narrator'), col: '#2f7d5b' }, narrato
 export const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 export const plain = (s) => String(s == null ? '' : s).replace(/\{[a-z]+:([^}]*)\}/g, '$1');
 export const rich = (s) => esc(s).replace(/\{([a-z]+):([^}]*)\}/g, (_, k, t) => `<span class="cs ${k}">${t}</span>`);
+// Subtitles: a long line is shown a sentence (or, for a long sentence, a clause) at a time, never cutting a {mark:…},
+// each part about `max` characters at most, like a film's subtitles. Short neighbours share one part.
+export function subtitleParts(text, max = 84) {
+  const len = (t) => plain(t).length;
+  const pieces = (str, cut) => {
+    const out = []; let depth = 0, from = 0;
+    for (let i = 0; i < str.length; i++) {
+      const ch = str[i];
+      if (ch === '{') depth++; else if (ch === '}') depth = Math.max(0, depth - 1);
+      else if (!depth && str[i + 1] === ' ' && cut(ch, str.slice(from, i))) { out.push(str.slice(from, i + 1).trim()); from = i + 2; }
+    }
+    out.push(str.slice(from).trim()); return out.filter(Boolean);
+  };
+  const fit = (list) => { const out = []; for (const t of list) { const k = out.length - 1; if (k >= 0 && len(out[k]) + 1 + len(t) <= max) out[k] += ' ' + t; else out.push(t); } return out; };
+  // a sentence ends at . ! ? … but not after an abbreviation such as "z. B." or "usw."
+  const sentences = pieces(String(text == null ? '' : text), (ch, before) => /[!?…]/.test(ch) || (ch === '.' && !/(^|[\s(„"])(\p{L}{1,2}|usw|bzw|etc|vgl|Nr|ca)$/u.test(before)));
+  const parts = [];
+  for (const sentence of sentences) {
+    if (len(sentence) <= max) { parts.push(sentence); continue; }
+    for (const clause of fit(pieces(sentence, (ch) => /[,;:–—]/.test(ch)))) {
+      if (len(clause) <= max) parts.push(clause); else parts.push(...fit(pieces(clause, () => true)));
+    }
+  }
+  return fit(parts);
+}
 
 /* create the stage
    set: the drawn place ({ V, size, setCam, foot, draw })
@@ -221,9 +247,27 @@ export function createStage({ set, priv, tag, keys, onCast = () => {}, z0 = 2.75
   const inBase = (a) => a.show && Math.abs(a.x - S.base.x) < Math.max(set.V.W / (2 * S.Z0 * S.base.k), 3.1 / S.base.k) - 0.15;
 
   /* ---------- words ---------- */
-  function caption(who, text, gloss) {
+  // #cap shows the subtitles. A line runs through its parts (subtitleParts) in step with its recording or reading
+  // time; the CC button hides lines (remembered on this device). Messages that aren't lines (hints) always show.
+  S.cc = (() => { try { return localStorage.getItem('buehne-cc') !== 'off'; } catch (e) { return true; } })();
+  let cap = null;
+  function drawCap() {
+    const c = $('cap'); if (!c) return;
+    if (!cap) { c.innerHTML = ''; return; }
+    c.hidden = !S.cc && !!cap.line;
+    c.innerHTML = `<span class="who" style="--c:${cap.sp.col}"><i></i>${esc(cap.sp.name)}</span><span class="tx">${rich(cap.parts[cap.i] || '')}</span>${cap.gloss ? `<span class="gl">${rich(cap.gloss)}</span>` : ''}`;
+  }
+  function caption(who, text, gloss, line = null) {
     const sp = CAST[who] || SPEAKER[who] || { name: who.split('+').map((k) => (CAST[k] || SPEAKER[k] || { name: k }).name).join(' und '), col: (CAST[who.split('+')[0]] || { col: '#999' }).col };
-    $('cap').innerHTML = `<span class="who" style="--c:${sp.col}"><i></i>${esc(sp.name)}</span><span class="tx">${rich(text)}</span>${gloss ? `<span class="gl">${rich(gloss)}</span>` : ''}`;
+    const parts = subtitleParts(text), total = parts.reduce((n, p) => n + plain(p).length, 0) || 1;
+    let run = 0; const ends = parts.map((p) => (run += plain(p).length) / total);
+    cap = { sp, parts, ends, gloss, line, i: 0 }; drawCap();
+  }
+  // called every frame: the part of the current line that is being said now
+  function stepCap() {
+    if (!cap || !cap.line || cap.parts.length < 2 || !S.line || S.line.id !== cap.line) return;
+    const p = progress(); let i = cap.ends.findIndex((e) => p < e - 0.02); if (i < 0) i = cap.parts.length - 1;
+    if (i > cap.i) { cap.i = i; drawCap(); }
   }
   const text = (id) => { const l = S.lines.lines[id]; return l ? l.text : ''; };
   const data = (k) => (S.lines && S.lines[k]) || {};
@@ -236,7 +280,7 @@ export function createStage({ set, priv, tag, keys, onCast = () => {}, z0 = 2.75
   async function say(...args) {
     const opt = args.length && typeof args[args.length - 1] === 'object' ? args.pop() : {}, ids = args;
     const gen = S.gen, lns = ids.map((id) => [id, S.lines.lines[id]]).filter(([, l]) => l); if (!lns.length) return;
-    const [id0, l0] = lns[0]; caption(l0.who, l0.text, l0.gloss || l0.en || (S.lines.glosses || {})[id0]); for (const h of sayHooks) h(l0.who, id0);
+    const [id0, l0] = lns[0]; caption(l0.who, l0.text, l0.gloss || l0.en || (S.lines.glosses || {})[id0], id0); for (const h of sayHooks) h(l0.who, id0);
     const talkers = [...new Set(lns.flatMap(([, l]) => l.who.split('+')))].map((k) => A[k]).filter(Boolean);
     const framed = opt.frame === false ? [] : (opt.frame ? opt.frame.map((k) => A[k]) : talkers).filter(inBase);
     if (S.zoom === false) { /* the camera stays; the spotlight shows who speaks */ } else if (isNarrator(l0.who)) wide(); else if (framed.length && framed.length === (opt.frame || talkers).length) closeUp(framed);
@@ -298,17 +342,17 @@ export function createStage({ set, priv, tag, keys, onCast = () => {}, z0 = 2.75
       S.waits = S.waits.filter((w) => !due.includes(w)); due.forEach((w) => (w.gen !== S.gen ? w.no(new Abort()) : w.ok()));
     }
     set.setCam(S.cam.x, S.Z0 * S.cam.k, S.cam.ty);
+    stepCap();
     if (visible) { set.draw(S.t, S.paused ? 0 : dt); drawActors(); for (const f of onFrame) f(S.t, dt); }
     if (!TEST) requestAnimationFrame(frame);
   }
 
   /* ---------- start ---------- */
   // scenes: [{ name, run }]; practise: the practice (async); welcome: the line shown when the film ends
-  // langs: ['de', 'en'] shows the switch (reloads the scene in the other language, kept in the address);
+  // langs: the scene's languages (the feedback rates each; a dropdown when the scene is opened on its own);
   // feedback: the scene's key, shows the feedback button (meinung.js)
-  // long: the scene also has the long versions (?form=long): a second switch, short | long
   // lines: given directly (the speaking trainer makes Liv's lines as it goes) instead of loaded from the private file
-  function start({ scenes, practise, end, langs, long, feedback, lines: given }) {
+  function start({ scenes, practise, end, langs, feedback, lines: given }) {
     const copy = document.createElement('div'); copy.className = 'play-copy';
     $('panel').prepend(copy); copy.append($('cap'), $('practice'));
     const round = document.createElement('div'); round.id = 'round'; round.setAttribute('role', 'progressbar'); round.setAttribute('aria-label', T('play')); round.setAttribute('aria-valuemin', '0');
@@ -316,25 +360,22 @@ export function createStage({ set, priv, tag, keys, onCast = () => {}, z0 = 2.75
     const soundIcon = () => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4Z"/>' + (S.muted ? '<path d="m16 9 5 6m0-6-5 6"/>' : '<path d="M15 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/>') + '</svg>';
     $('sound').innerHTML = soundIcon();
     $('full').innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg>';
-    // a slim row under the controls: the language switch (left) and the feedback button (right)
-    if ((langs && langs.length > 1) || long || feedback) { const m = document.createElement('div'); m.id = 'meta'; $('ctl').after(m); }
-    if (langs && langs.length > 1) {
-      const sw = document.createElement('div'); sw.id = 'langsw'; sw.setAttribute('role', 'group'); sw.setAttribute('aria-label', SW[LANG].group);
-      sw.innerHTML = langs.map((l) => `<button type="button" data-l="${l}" class="${l === LANG ? 'on' : ''}" aria-pressed="${l === LANG}" title="${SW[l].title}">${l.toUpperCase()}</button>`).join('');
-      sw.onclick = (e) => { const b = e.target.closest('button'); if (!b) return; if (b.dataset.l === LANG) { sw.classList.toggle('open'); return; }   // .open: a narrow practice panel shows the other languages only on request
-      stopAudio(); const u = new URL(location.href); if (b.dataset.l === 'de') u.searchParams.delete('lang'); else u.searchParams.set('lang', b.dataset.l); location.replace(u); };
-      const lab = document.createElement('span'); lab.className = 'meta-l'; lab.textContent = SW[LANG].label;
-      if (long) lab.hidden = true;                    // two switches: no room for the label on a phone
-      $('meta').append(lab, sw);
+    // CC (subtitles on/off), small and next to the sound button, like a video player's
+    const cc = document.createElement('button'); cc.type = 'button'; cc.id = 'cc'; cc.textContent = 'CC';
+    const ccShow = () => { cc.classList.toggle('on', S.cc); cc.setAttribute('aria-pressed', String(S.cc)); cc.title = SUBS[LANG][S.cc ? 'off' : 'on']; cc.setAttribute('aria-label', cc.title); };
+    cc.onclick = () => { S.cc = !S.cc; try { localStorage.setItem('buehne-cc', S.cc ? 'on' : 'off'); } catch (e) { /* private mode */ } ccShow(); drawCap(); };
+    ccShow(); $('corner').prepend(cc);
+    // a slim row under the controls: the language (only when the scene is opened on its own: in a chapter the page's
+    // own language choice sets it) and the feedback button (right)
+    const ownLang = langs && langs.length > 1 && !qs.get('hero');
+    if (ownLang || feedback) { const m = document.createElement('div'); m.id = 'meta'; $('ctl').after(m); }
+    if (ownLang) {
+      const sel = document.createElement('select'); sel.id = 'langsel'; sel.setAttribute('aria-label', SUBS[LANG].lang);
+      sel.innerHTML = langs.map((l) => `<option value="${l}"${l === LANG ? ' selected' : ''}>${l.toUpperCase()}</option>`).join('');
+      sel.onchange = () => { stopAudio(); const u = new URL(location.href); if (sel.value === 'de') u.searchParams.delete('lang'); else u.searchParams.set('lang', sel.value); location.replace(u); };
+      $('meta').append(sel);
     }
-    if (long) {
-      const fw = document.createElement('div'); fw.id = 'formsw'; fw.className = 'seg'; fw.setAttribute('role', 'group'); fw.setAttribute('aria-label', SW[LANG].length);
-      const names = SW[LANG], now = LONG ? 'long' : 'short';
-      fw.innerHTML = ['short', 'long'].map((f) => `<button type="button" data-f="${f}" class="${f === now ? 'on' : ''}" aria-pressed="${f === now}" title="${f === 'long' ? SW[LANG].tLong : SW[LANG].tShort}">${names[f]}</button>`).join('');
-      fw.onclick = (e) => { const b = e.target.closest('button'); if (!b || b.dataset.f === now) return; stopAudio(); const u = new URL(location.href); if (b.dataset.f === 'short') u.searchParams.delete('form'); else u.searchParams.set('form', 'long'); location.replace(u); };
-      $('meta').append(fw);
-    }
-    if (feedback) import('./meinung.js?v=6').then((m) => m.createMeinung(B, { scene: feedback, versions: (langs || [LANG]).flatMap((l) => (long ? [l, l + '-long'] : [l])) }));
+    if (feedback) import('./meinung.js?v=6').then((m) => m.createMeinung(B, { scene: feedback, versions: (langs || [LANG]).map((l) => l + '-long') }));
     // scenes: a list, or a function that makes it from the loaded lines (scenes written as data, regie.js)
     S.scenes = typeof scenes === 'function' ? [] : scenes; S.onEnd = end;
     fitStage(); new ResizeObserver(fitStage).observe($('stage'));

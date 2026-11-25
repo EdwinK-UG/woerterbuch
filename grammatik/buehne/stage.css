@@ -447,3 +447,10 @@ button:active:not(:disabled) { transform: translateY(1px); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; animation: none !important; }
 }
+/* CC: subtitles on/off, small, next to the sound button (stage.js) */
+#corner #cc { width: auto; min-width: 40px; padding: 0 9px; border-radius: 999px; font: 800 12px/1 Inter, system-ui, sans-serif; letter-spacing: .05em; position: relative; }
+#corner #cc.on::after { content: ''; position: absolute; left: 11px; right: 11px; bottom: 8px; height: 2px; border-radius: 2px; background: var(--acc); }
+#corner #cc:not(.on) { color: var(--mut); }
+#cap[hidden] { display: none; }
+/* the language dropdown when the scene is opened on its own */
+#langsel { min-height: 36px; border: 1px solid var(--line); border-radius: 999px; padding: 0 10px; background: var(--paper); color: var(--ink); font: 700 13px Inter, system-ui, sans-serif; }
