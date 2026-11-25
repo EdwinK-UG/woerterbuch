@@ -495,6 +495,15 @@ function need() {
     <p class="row"><button class="btn primary" onclick="ACCT.sheet('up')">${T('Create account', 'Konto erstellen')}</button><button class="btn" onclick="ACCT.sheet('in')">${T('Sign in', 'Anmelden')}</button></p>`);
 }
 const chHash = n => (CHS().find(c => c.n === Number(n))?.vocab ? '#/v/' : '#/g/') + n;
+// "Weitermachen": where the learner stopped (grammatik.js, shared with the apps), right under the home page's hero.
+// A guest gets it only once they have worked in a lesson in this browser (no grammar code is loaded otherwise).
+function showPlace(after, guest) {
+  if (guest) { try { if (!localStorage.getItem('gd_place')) return; } catch (e) { return; } }
+  ensureGram().then(() => {
+    const h = document.querySelector(after); if (!h || !window.GRAM?.homePlace || document.getElementById('kd-place')) return;
+    const d = document.createElement('div'); d.id = 'kd-place'; h.after(d); GRAM.homePlace(d);
+  });
+}
 async function ensureGram() { if (!window.GRAM && window.loadGram) { try { await loadGram(); } catch (e) {} } }
 const CHS = () => (window.GRAM && GRAM.chapters ? GRAM.chapters() : []);
 const chTitle = n => { const c = CHS().find(x => x.n === Number(n)); return c ? c.title : T('Chapter ', 'Kapitel ') + n; };
@@ -585,6 +594,7 @@ async function viewLearner() {
     <h2 class="kd-h">${icn('sparkles')} ${T('Tools', 'Werkzeuge')}</h2>
     <div class="kd-tools"><a href="#/">${icn('search')}<b>${T('Dictionary', 'Wörterbuch')}</b><small>${T('look up any word', 'jedes Wort nachschlagen')}</small></a><a href="#/decks">${icn('layers')}<b>${T('Flashcards', 'Lernkarten')}</b><small>${T('review your words', 'Wörter wiederholen')}</small></a>
       <a href="#/play">${icn('gamepad-2')}<b>${T('Games', 'Spiele')}</b><small>${T('quiz for your level', 'Quiz für dein Niveau')}</small></a><a href="#/settings">${icn('settings')}<b>${T('Settings', 'Einstellungen')}</b><small>${T('name, language, levels', 'Name, Sprache, Niveaus')}</small></a></div>`, 'kd');
+  showPlace('.kd-hero');
 }
 /* one level: all its topics and chapters */
 async function viewCourse(arg) {
@@ -1114,6 +1124,7 @@ function viewWelcome() {
     <div class="kd-home-more"><details><summary>${T('Find your level', 'Finde dein Niveau')} ${icn('plus')}</summary><div class="kd-home-levels">${LV.map(l => { const c = COURSE_COUNTS[l]; return `<div><span class="gr-lv ${l}">${l}</span><div><b>${esc(lvName(l))}</b><p>${c ? esc(T(LVDESC[l][0], LVDESC[l][1])) : T('Coming soon', 'Kommt bald')}</p>${c ? `<small>${[c.v ? c.v + ' ' + T('vocabulary topics', 'Wortschatz-Themen') : '', c.g ? c.g + ' ' + T('grammar chapters', 'Grammatik-Kapitel') : ''].filter(Boolean).join(' · ')}</small>` : ''}</div></div>`; }).join('')}</div></details>
     <details><summary>${T('For teachers & schools', 'Für Lehrkräfte & Schulen')} ${icn('plus')}</summary><div class="kd-home-teachers"><p>${T('Start a term, invite your learners and follow their progress.', 'Starte einen Kursdurchgang, lade Lernende ein und begleite ihren Fortschritt.')}</p><div class="row"><button class="btn" onclick="KONTO.signupAs('teacher')">${T('I am a teacher', 'Ich bin Lehrkraft')}</button><button class="btn" onclick="KONTO.signupAs('school')">${T('Register a school', 'Schule registrieren')}</button></div></div></details></div>`, 'kd kd-home');
 if($('home-word')&&window.bindHomeSearch)bindHomeSearch($('home-word'),$('home-suggestions'));
+  showPlace('.kd-home-hero', true);
 }
 // Small inline vector scenes stay sharp on phones and need no image downloads.
 function welcomeArt(scene) {

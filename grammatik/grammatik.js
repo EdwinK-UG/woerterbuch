@@ -1126,6 +1126,14 @@ function placeCard(m) {
   const head = (m === 'v' ? 'Thema ' + topicNo(p.ch) : 'Kapitel ' + gNo(p.ch)) + ': ' + info.c[1];
   return `<a class="gr-feat" data-place href="${hashOf(p.ch)}${p.part ? '/' + p.part : ''}"><span class="th" id="${m === 'v' ? 'vkfeat' : 'grfeat'}"></span><span><span class="gr-lv ${info.c[3]}">${info.c[3]}</span> <span class="gr-eyebrow" style="display:inline">Weitermachen</span><b>${H(head)}</b><p>${H(where)}</p></span></a>`;
 }
+// the Continue card on the home pages (konto.js): whichever course the place is in, newest from this browser or the account
+async function homePlace(el) {
+  if (!el) return;
+  if (acct()) await pullPlace();
+  const p = place(); if (!p || !el.isConnected) return;
+  const m = isV(p.ch) ? 'v' : 'g', card = placeCard(m); if (!card) return;
+  css(); el.innerHTML = card; featIcon(m);
+}
 function featIcon(m) { const t = $(m === 'v' ? 'vkfeat' : 'grfeat'); if (t) t.innerHTML = icn(m === 'v' ? 'book-a' : 'book-open-text'); icons(); }
 function refreshPlaceCard(m) {
   if (location.hash !== '#/' + m && location.hash !== '#/' + m + '/') return;
@@ -2246,7 +2254,7 @@ const VKIT = {
     return out;
   }
 };
-window.GRAM = { kit: VKIT, view, leave, base, quiz, list: chapterList, practice, lessonEpoch: () => lessonEpoch, add(c) { CH[c.n] = c; }, filmVisual(n, v) { if (Number.isInteger(n) && v && typeof v === 'object') filmVisuals.set(n, v); }, allowed, chLevel,
+window.GRAM = { kit: VKIT, view, leave, base, quiz, list: chapterList, practice, homePlace, lessonEpoch: () => lessonEpoch, add(c) { CH[c.n] = c; }, filmVisual(n, v) { if (Number.isInteger(n) && v && typeof v === 'object') filmVisuals.set(n, v); }, allowed, chLevel,
   chapters: () => GROUPS.flatMap(g => g.ch.filter(c => READY[c[0]]).map(c => ({ n: c[0], title: c[1], kick: c[2], level: c[3], vocab: !!g.vocab, ref: !!g.ref, group: g.t, no: g.vocab ? topicNo(c[0]) : gNo(c[0]) })))
     .sort((a, b) => (a.vocab === b.vocab ? 0 : a.vocab ? -1 : 1) || (a.vocab ? a.n - b.n : 0)),   // grammar keeps the table-of-contents (learning) order
   requiredExercises: n => (LESSON_EXERCISES[n] || []).filter(row => !(row[2] & 2)).map(row => row[0]),
