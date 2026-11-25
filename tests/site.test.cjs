@@ -166,31 +166,27 @@ test("the homepage live-class link opens the class catalogue without loading the
     await s.close();
   }
 });
-test('English meanings follow their senses, examples show by default and both choices persist', async () => {
+test('English meanings and example translations always show, without on/off buttons', async () => {
   const s = await site('#/w/lernen');
   try {
+    // An "off" choice stored before the buttons were removed no longer hides anything.
+    s.window.localStorage.setItem('gd_english','off');
+    s.window.localStorage.setItem('gd_english_examples','off');
+    s.window.route();
     await until(()=>s.document.querySelector('.english-gloss')?.textContent);
     const meanings = [...s.document.querySelectorAll('.english-gloss')];
     assert.equal(meanings[0].textContent,'to learn');
+    assert.equal(meanings[0].hidden,false);
     assert.ok([...s.document.querySelectorAll('.dictionary-extra summary')].every(summary=>!summary.closest('i')));
     assert.ok(Object.keys(s.window.localStorage).some(key=>key.startsWith('gd_en_')));
     assert.ok(meanings.some(line=>line.textContent==='to study; to revise (for an exam or for school)'));
     const examples = [...s.document.querySelectorAll('.english-example')];
     await until(()=>examples[0].dataset.ready);
     assert.equal(examples[0].hidden,false);
-    s.document.querySelector('.english-examples-toggle').click();
-    assert.ok(examples.every(line=>line.hidden));
-    assert.equal(s.window.localStorage.getItem('gd_english_examples'),'off');
-    s.document.querySelector('.english-examples-toggle').click();
-    assert.equal(examples[0].hidden,false);
     assert.equal(examples[0].textContent,"I've been learning German at the adult education centre for two years.");
     assert.ok(examples[0].parentElement.textContent.includes('Ich lerne seit zwei Jahren Deutsch'));
-    s.document.querySelector('.english-toggle').click();
-    assert.ok([...meanings,...examples].every(line=>line.hidden));
-    assert.equal(s.window.localStorage.getItem('gd_english'),'off');
-    s.window.route();
-    await until(()=>s.document.querySelector('.english-toggle'));
-    assert.equal(s.document.querySelector('.english-toggle').getAttribute('aria-pressed'),'false');
+    assert.equal(s.document.querySelector('.english-toggle'),null);
+    assert.ok(!/English translations|Example translations|Englische Übersetzungen|Beispiele übersetzen/.test(s.document.querySelector('.entry').textContent));
     assert.deepEqual(s.errors,[]);
   } finally {await s.close();}
 });

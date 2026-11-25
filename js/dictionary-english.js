@@ -57,9 +57,8 @@
   let seeds;
   const tr = (en, de) => globalThis.KONTO?.T(en, de) || en;
   const BATCH = 10;
-  const preference = () => { try { return localStorage.getItem('gd_english') !== 'off'; } catch { return true; } };
-  // Example sentences are translated too, so show them unless the learner turned them off.
-  const examplePreference = () => { try { return localStorage.getItem('gd_english_examples') !== 'off'; } catch { return true; } };
+  // English meanings and example translations always show (the on/off buttons were removed on 25 Nov 2026;
+  // an older "off" choice stored on a device is no longer read).
   const stored = key => { try { return JSON.parse(localStorage.getItem('gd_en_'+key) || 'null'); } catch { return null; } };
   function save(key, value) {
     try {
@@ -91,7 +90,6 @@
     jobs.set(jobKey, job); return job;
   }
   api.preview = async function(entry, container) {
-    if (!preference()) return;
     const current = () => container.isConnected && container.dataset.previewWord === entry.w;
     const status = container.querySelector('.wm-en-status');
     if (status) status.textContent = tr('English …', 'Englisch …');
@@ -122,12 +120,8 @@
     const items = source(entry.w, entry.df);
     if (!items.length) return;
     const toolbar = document.createElement('div'); toolbar.className = 'english-toolbar'; toolbar.lang = document.documentElement.lang;
-    const toggle = document.createElement('button'); toggle.type = 'button'; toggle.className = 'english-toggle';
-    toggle.textContent = tr('English translations', 'Englische Übersetzungen'); toggle.setAttribute('aria-pressed', String(preference()));
-    const exampleToggle = document.createElement('button'); exampleToggle.type = 'button'; exampleToggle.className = 'english-toggle english-examples-toggle'; exampleToggle.setAttribute('aria-pressed',String(examplePreference()));
-    exampleToggle.textContent = tr('Example translations', 'Beispiele übersetzen');
     const note = document.createElement('span'); note.className = 'english-status'; note.setAttribute('role','status');
-    toolbar.append(toggle, exampleToggle, note); root.querySelector('.def').before(toolbar);
+    toolbar.append(note); root.querySelector('.def').before(toolbar);
     const targets = new Map();
     root.querySelectorAll('.def .ds').forEach(sense => {
       const index = Number(sense.dataset.sense);
@@ -140,8 +134,8 @@
         example.append(text); targets.set(key,text);
       });
     });
-    let hash, enabled = preference(), showExamples = examplePreference(), observer;
-    exampleToggle.hidden = !items.some(x => x.kind === 'example');
+    let hash, observer;
+    const enabled = true, showExamples = true;
     const apply = result => {
       for (const item of result.items) {
         const target = targets.get(item.key);
@@ -165,21 +159,6 @@
         retry.onclick = () => { retry.remove(); if (target) target.textContent=''; load(batch, true, target); }; note.append(' ', retry);
       }
     }
-    toggle.onclick = () => {
-      enabled = !enabled; toggle.setAttribute('aria-pressed', String(enabled)); root.classList.toggle('english-off', !enabled);
-      try { localStorage.setItem('gd_english', enabled ? 'on' : 'off'); } catch {}
-      root.querySelectorAll('.english-gloss').forEach(line => line.hidden = !enabled || !line.dataset.ready);
-      root.querySelectorAll('.english-example').forEach(line => line.hidden = !enabled || !showExamples || !line.dataset.ready);
-      if (enabled) load(0, false);
-      observe();
-    };
-    exampleToggle.onclick = () => {
-      showExamples = !showExamples; exampleToggle.setAttribute('aria-pressed', String(showExamples));
-      try { localStorage.setItem('gd_english_examples', showExamples ? 'on' : 'off'); } catch {}
-      root.querySelectorAll('.english-example').forEach(line => line.hidden = !enabled || !showExamples || !line.dataset.ready);
-      observe();
-    };
-    root.classList.toggle('english-off', !enabled);
     hash = await fingerprint(entry.w,entry.df);
     if (!root.isConnected) return;
     // Fetch the first visible group only. Further groups load when a meaning or
