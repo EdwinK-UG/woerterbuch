@@ -1,0 +1,240 @@
+{
+ "name": "see",
+ "version": 1,
+ "pxPerMetre": 391.5636,
+ "refHeight": 673,
+ "top": 4,
+ "scale": 2,
+ "width": 9398,
+ "height": 1835,
+ "groundY": 1566,
+ "camX": 1,
+ "world": [
+  -11,
+  13
+ ],
+ "depth": {
+  "front": 0.55,
+  "back": 1.05,
+  "backDepth": 2.6,
+  "kBack": 0.06,
+  "note": "feet at depth d: y = ground + d·front·z (d ≥ 0) or ground + back·z·max(-1, d / backDepth) (d < 0); size factor k = 1 + kBack·d for d < 0"
+ },
+ "spots": {
+  "bridge": -7.2,
+  "boathouse": -3.8,
+  "door": -3.55,
+  "clock": -4.65,
+  "shore": 0.6,
+  "jetty": 2.6,
+  "jettyEnd": 4.9,
+  "lake": 7.2,
+  "beach": 10.2,
+  "pavilion": 11.4
+ },
+ "bridge": {
+  "x": -7.2,
+  "half": 0.85,
+  "rise": 0.14,
+  "note": "on the footbridge (while bridge > 0.5, |x - bridge.x| < half, |d| < 0.3) the feet rise by rise·sin(π·(x - bridge.x + half) / (2·half)) metres"
+ },
+ "items": {
+  "sky": {
+   "type": "image",
+   "parallax": 0.04,
+   "extend": "up",
+   "file": "sets/see/sky.webp",
+   "x": 0,
+   "y": 489.2,
+   "w": 9398,
+   "h": 671
+  },
+  "skySun": {
+   "type": "image",
+   "parallax": 0.04,
+   "extend": "up",
+   "file": "sets/see/skySun.webp",
+   "x": 0,
+   "y": 489.2,
+   "w": 9398,
+   "h": 671,
+   "fade": "sun"
+  },
+  "mountains": {
+   "type": "image",
+   "parallax": 0.12,
+   "file": "sets/see/mountains.webp",
+   "x": 0,
+   "y": 733,
+   "w": 9398,
+   "h": 431
+  },
+  "hills": {
+   "type": "image",
+   "parallax": 0.3,
+   "file": "sets/see/hills.webp",
+   "x": 0,
+   "y": 943,
+   "w": 9398,
+   "h": 235
+  },
+  "lake": {
+   "type": "image",
+   "parallax": 1,
+   "extend": "down",
+   "file": "sets/see/lake.webp",
+   "x": 0,
+   "y": 1165,
+   "w": 9398,
+   "h": 670
+  },
+  "lakeSun": {
+   "type": "image",
+   "parallax": 1,
+   "extend": "down",
+   "fade": "sun",
+   "file": "sets/see/lakeSun.webp",
+   "x": 0,
+   "y": 1165,
+   "w": 9398,
+   "h": 670
+  },
+  "island": {
+   "type": "image",
+   "parallax": 1,
+   "extend": "down",
+   "file": "sets/see/island.webp",
+   "x": 7878,
+   "y": 554,
+   "w": 1520,
+   "h": 1281
+  },
+  "shore": {
+   "type": "image",
+   "parallax": 1,
+   "extend": "down",
+   "file": "sets/see/shore.webp",
+   "x": 0,
+   "y": 455,
+   "w": 6228,
+   "h": 1380
+  },
+  "bridge": {
+   "type": "states",
+   "parallax": 1,
+   "state": "bridge",
+   "values": [
+    0,
+    0.1,
+    0.2,
+    0.3,
+    0.4,
+    0.5,
+    0.6,
+    0.7,
+    0.8,
+    0.9,
+    1
+   ],
+   "note": "the footbridge: 1 there … 0 rubbed out (from its right end)",
+   "file": "sets/see/bridge.webp",
+   "x": 1084,
+   "y": 1208,
+   "frame": [
+    797,
+    433
+   ],
+   "frames": 11,
+   "cols": 11,
+   "rows": 1
+  },
+  "door": {
+   "type": "states",
+   "parallax": 1,
+   "state": "door",
+   "values": [
+    0,
+    0.1,
+    0.2,
+    0.3,
+    0.4,
+    0.5,
+    0.6,
+    0.7,
+    0.8,
+    0.9,
+    1
+   ],
+   "note": "the boathouse door: 0 shut … 1 open",
+   "file": "sets/see/door.webp",
+   "x": 2682,
+   "y": 842,
+   "frame": [
+    470,
+    570
+   ],
+   "frames": 11,
+   "cols": 11,
+   "rows": 1
+  },
+  "clock": {
+   "type": "clock",
+   "parallax": 1,
+   "state": "clock",
+   "centre": [
+    2486.665,
+    861.761
+   ],
+   "r": 0.1868,
+   "color": "#2a2f3a",
+   "hands": {
+    "hour": {
+     "len": 0.5,
+     "width": 0.028,
+     "minWidth": 1.5
+    },
+    "minute": {
+     "len": 0.78,
+     "width": 0.016,
+     "minWidth": 1
+    }
+   },
+   "pin": {
+    "radius": 0.02,
+    "minRadius": 1.5
+   },
+   "note": "state clock = minutes after midnight (870 = 14:30): the hour hand at ((v/60) mod 12)/12 of a turn, the minute hand at (v mod 60)/60, from 12 o'clock; len × r metres long, width metres (at least minWidth CSS px)"
+  },
+  "front": {
+   "type": "image",
+   "parallax": 1,
+   "file": "sets/see/front.webp",
+   "x": 4354,
+   "y": 1558,
+   "w": 3766,
+   "h": 264
+  }
+ },
+ "back": [
+  "sky",
+  "skySun",
+  "mountains",
+  "hills",
+  "lake",
+  "lakeSun",
+  "island",
+  "shore",
+  "bridge",
+  "door",
+  "clock"
+ ],
+ "front": [
+  "front"
+ ],
+ "state": {
+  "sun": 0,
+  "clock": 870,
+  "door": 0,
+  "bridge": 1
+ }
+}

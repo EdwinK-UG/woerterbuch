@@ -1,0 +1,1161 @@
+{
+ "version": 1,
+ "box": [
+  160,
+  100
+ ],
+ "scale": 2,
+ "frame": [
+  320,
+  200
+ ],
+ "reducedMotionT": 1.5,
+ "pictures": {
+  "schluessel": {
+   "file": "bilder/schluessel.webp",
+   "frames": 32,
+   "cols": 32,
+   "rows": 1,
+   "loop": 3.92699082,
+   "fps": 8.149,
+   "stillFrame": 12
+  },
+  "kaffee": {
+   "file": "bilder/kaffee.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 1.66666667,
+   "fps": 9.6,
+   "stillFrame": 14
+  },
+  "suppe": {
+   "file": "bilder/suppe.webp",
+   "frames": 32,
+   "cols": 32,
+   "rows": 1,
+   "loop": 2.0943951,
+   "fps": 15.279,
+   "stillFrame": 22
+  },
+  "zusammen": {
+   "file": "bilder/zusammen.webp",
+   "frames": 32,
+   "cols": 32,
+   "rows": 1,
+   "loop": 2.0943951,
+   "fps": 15.279,
+   "stillFrame": 22
+  },
+  "reparieren": {
+   "file": "bilder/reparieren.webp",
+   "frames": 32,
+   "cols": 32,
+   "rows": 1,
+   "loop": 2.4,
+   "fps": 13.333,
+   "stillFrame": 20
+  },
+  "aufstehen": {
+   "file": "bilder/aufstehen.webp",
+   "frames": 32,
+   "cols": 32,
+   "rows": 1,
+   "loop": 4,
+   "fps": 8,
+   "stillFrame": 12
+  },
+  "saegen": {
+   "file": "bilder/saegen.webp",
+   "frames": 32,
+   "cols": 32,
+   "rows": 1,
+   "loop": 3.5903916,
+   "fps": 8.913,
+   "stillFrame": 13
+  },
+  "malen": {
+   "file": "bilder/malen.webp",
+   "frames": 32,
+   "cols": 32,
+   "rows": 1,
+   "loop": 4,
+   "fps": 8,
+   "stillFrame": 12
+  },
+  "rauchen": {
+   "file": "bilder/rauchen.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 1.66666667,
+   "fps": 9.6,
+   "stillFrame": 14
+  },
+  "aufraeumen": {
+   "file": "bilder/aufraeumen.webp",
+   "frames": 32,
+   "cols": 32,
+   "rows": 1,
+   "loop": 3,
+   "fps": 10.667,
+   "stillFrame": 16
+  },
+  "fenster": {
+   "file": "bilder/fenster.webp",
+   "frames": 32,
+   "cols": 32,
+   "rows": 1,
+   "loop": 3.5,
+   "fps": 9.143,
+   "stillFrame": 13
+  },
+  "essen": {
+   "file": "bilder/essen.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 1.5,
+   "fps": 10.667,
+   "stillFrame": 0
+  },
+  "leute": {
+   "file": "bilder/leute.webp",
+   "frames": 1,
+   "cols": 1,
+   "rows": 1,
+   "still": true
+  },
+  "parken": {
+   "file": "bilder/parken.webp",
+   "frames": 1,
+   "cols": 1,
+   "rows": 1,
+   "still": true
+  },
+  "telefonieren": {
+   "file": "bilder/telefonieren.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 0.31415927,
+   "fps": 50.93,
+   "stillFrame": 12
+  },
+  "tanzen": {
+   "file": "bilder/tanzen.webp",
+   "frames": 32,
+   "cols": 32,
+   "rows": 1,
+   "loop": 2.0943951,
+   "fps": 15.279,
+   "stillFrame": 22
+  },
+  "helfen": {
+   "file": "bilder/helfen.webp",
+   "frames": 32,
+   "cols": 32,
+   "rows": 1,
+   "loop": 2.0943951,
+   "fps": 15.279,
+   "stillFrame": 22
+  },
+  "schwimmen": {
+   "file": "bilder/schwimmen.webp",
+   "frames": 48,
+   "cols": 48,
+   "rows": 1,
+   "loop": 6.28318531,
+   "fps": 7.639,
+   "stillFrame": 11
+  },
+  "pfannkuchen": {
+   "file": "bilder/pfannkuchen.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12
+  },
+  "putzen": {
+   "file": "bilder/putzen.webp",
+   "frames": 48,
+   "cols": 48,
+   "rows": 1,
+   "loop": 6.28318531,
+   "fps": 7.639,
+   "stillFrame": 11
+  },
+  "fit": {
+   "file": "bilder/fit.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 1.25663706,
+   "fps": 12.732,
+   "stillFrame": 3
+  },
+  "zeitung": {
+   "file": "bilder/zeitung.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "paket": {
+   "file": "bilder/paket.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "wer": {
+   "file": "bilder/wer.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "gestohlen": {
+   "file": "bilder/gestohlen.webp",
+   "frames": 32,
+   "cols": 32,
+   "rows": 1,
+   "loop": 4,
+   "fps": 8,
+   "stillFrame": 12
+  },
+  "post": {
+   "file": "bilder/post.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "kuchen": {
+   "file": "bilder/kuchen.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 1.66666667,
+   "fps": 9.6,
+   "stillFrame": 14
+  },
+  "dach": {
+   "file": "bilder/dach.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "muell": {
+   "file": "bilder/muell.webp",
+   "frames": 32,
+   "cols": 32,
+   "rows": 1,
+   "loop": 4,
+   "fps": 8,
+   "stillFrame": 12
+  },
+  "ferienlager": {
+   "file": "bilder/ferienlager.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "bohren": {
+   "file": "bilder/bohren.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "stromausfall": {
+   "file": "bilder/stromausfall.webp",
+   "frames": 32,
+   "cols": 32,
+   "rows": 1,
+   "loop": 4,
+   "fps": 8,
+   "stillFrame": 12
+  },
+  "kurier": {
+   "file": "bilder/kurier.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "aushang": {
+   "file": "bilder/aushang.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "vertrag": {
+   "file": "bilder/vertrag.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "aerztin": {
+   "file": "bilder/aerztin.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "angerufen": {
+   "file": "bilder/angerufen.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "anrufen": {
+   "file": "bilder/anrufen.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "gitarre": {
+   "file": "bilder/gitarre.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "kerzen": {
+   "file": "bilder/kerzen.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "scheibe": {
+   "file": "bilder/scheibe.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "frueher": {
+   "file": "bilder/frueher.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "sonnig": {
+   "file": "bilder/sonnig.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "sonne": {
+   "file": "bilder/sonne.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "rudern": {
+   "file": "bilder/rudern.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "tee": {
+   "file": "bilder/tee.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "fahrplan": {
+   "file": "bilder/fahrplan.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "nickerchen": {
+   "file": "bilder/nickerchen.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "lesen": {
+   "file": "bilder/lesen.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "haengematte": {
+   "file": "bilder/haengematte.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "klavier": {
+   "file": "bilder/klavier.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "feier": {
+   "file": "bilder/feier.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "jung": {
+   "file": "bilder/jung.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "umkehren": {
+   "file": "bilder/umkehren.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "sofa": {
+   "file": "bilder/sofa.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "baecker": {
+   "file": "bilder/baecker.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "interview": {
+   "file": "bilder/interview.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "streit": {
+   "file": "bilder/streit.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "motorboot": {
+   "file": "bilder/motorboot.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "cappuccino": {
+   "file": "bilder/cappuccino.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "email": {
+   "file": "bilder/email.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "fluegel": {
+   "file": "bilder/fluegel.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "regenschirm": {
+   "file": "bilder/regenschirm.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "gruppenfoto": {
+   "file": "bilder/gruppenfoto.webp",
+   "frames": 1,
+   "cols": 1,
+   "rows": 1,
+   "still": true
+  },
+  "boot": {
+   "file": "bilder/boot.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "bruecke": {
+   "file": "bilder/bruecke.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "wunsch": {
+   "file": "bilder/wunsch.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "wasware": {
+   "file": "bilder/wasware.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "bus": {
+   "file": "bilder/bus.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "fertig": {
+   "file": "bilder/fertig.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "regennacht": {
+   "file": "bilder/regennacht.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 1.83333333,
+   "fps": 8.727,
+   "stillFrame": 13
+  },
+  "vergessen": {
+   "file": "bilder/vergessen.webp",
+   "frames": 32,
+   "cols": 32,
+   "rows": 1,
+   "loop": 2.5,
+   "fps": 12.8,
+   "stillFrame": 19
+  },
+  "heimweg": {
+   "file": "bilder/heimweg.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "sofachips": {
+   "file": "bilder/sofachips.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "meeresspiegel": {
+   "file": "bilder/meeresspiegel.webp",
+   "frames": 32,
+   "cols": 32,
+   "rows": 1,
+   "loop": 3,
+   "fps": 10.667,
+   "stillFrame": 16
+  },
+  "abgabe": {
+   "file": "bilder/abgabe.webp",
+   "frames": 32,
+   "cols": 32,
+   "rows": 1,
+   "loop": 2.5,
+   "fps": 12.8,
+   "stillFrame": 19
+  },
+  "drehkreuz": {
+   "file": "bilder/drehkreuz.webp",
+   "frames": 32,
+   "cols": 32,
+   "rows": 1,
+   "loop": 3,
+   "fps": 10.667,
+   "stillFrame": 16
+  },
+  "bericht": {
+   "file": "bilder/bericht.webp",
+   "frames": 32,
+   "cols": 32,
+   "rows": 1,
+   "loop": 2.5,
+   "fps": 12.8,
+   "stillFrame": 19
+  },
+  "treffen": {
+   "file": "bilder/treffen.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "rede": {
+   "file": "bilder/rede.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "studium": {
+   "file": "bilder/studium.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "lupe": {
+   "file": "bilder/lupe.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "zielfahne": {
+   "file": "bilder/zielfahne.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "plan": {
+   "file": "bilder/plan.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "ankommen": {
+   "file": "bilder/ankommen.webp",
+   "frames": 1,
+   "cols": 1,
+   "rows": 1,
+   "still": true
+  },
+  "auto": {
+   "file": "bilder/auto.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "regal": {
+   "file": "bilder/regal.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "lampen": {
+   "file": "bilder/lampen.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "nachbarin": {
+   "file": "bilder/nachbarin.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "festgeklebt": {
+   "file": "bilder/festgeklebt.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "sanierung": {
+   "file": "bilder/sanierung.webp",
+   "frames": 32,
+   "cols": 32,
+   "rows": 1,
+   "loop": 3,
+   "fps": 10.667,
+   "stillFrame": 16
+  },
+  "vulkan": {
+   "file": "bilder/vulkan.webp",
+   "frames": 32,
+   "cols": 32,
+   "rows": 1,
+   "loop": 3,
+   "fps": 10.667,
+   "stillFrame": 16
+  },
+  "erholung": {
+   "file": "bilder/erholung.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "analyse": {
+   "file": "bilder/analyse.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "impfstoff": {
+   "file": "bilder/impfstoff.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "wohnungsbau": {
+   "file": "bilder/wohnungsbau.webp",
+   "frames": 32,
+   "cols": 32,
+   "rows": 1,
+   "loop": 3,
+   "fps": 10.667,
+   "stillFrame": 16
+  },
+  "kritik": {
+   "file": "bilder/kritik.webp",
+   "frames": 1,
+   "cols": 1,
+   "rows": 1,
+   "still": true
+  },
+  "warten": {
+   "file": "bilder/warten.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "malerin": {
+   "file": "bilder/malerin.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "portraet": {
+   "file": "bilder/portraet.webp",
+   "frames": 1,
+   "cols": 1,
+   "rows": 1,
+   "still": true
+  },
+  "abstimmung": {
+   "file": "bilder/abstimmung.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "vorhang": {
+   "file": "bilder/vorhang.webp",
+   "frames": 32,
+   "cols": 32,
+   "rows": 1,
+   "loop": 3,
+   "fps": 10.667,
+   "stillFrame": 16
+  },
+  "zugausfall": {
+   "file": "bilder/zugausfall.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "angelverbot": {
+   "file": "bilder/angelverbot.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "grillen": {
+   "file": "bilder/grillen.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "grillverbot": {
+   "file": "bilder/grillverbot.webp",
+   "frames": 1,
+   "cols": 1,
+   "rows": 1,
+   "still": true
+  },
+  "grillmenge": {
+   "file": "bilder/grillmenge.webp",
+   "frames": 32,
+   "cols": 32,
+   "rows": 1,
+   "loop": 2.5,
+   "fps": 12.8,
+   "stillFrame": 19
+  },
+  "katzerettung": {
+   "file": "bilder/katzerettung.webp",
+   "frames": 32,
+   "cols": 32,
+   "rows": 1,
+   "loop": 2.5,
+   "fps": 12.8,
+   "stillFrame": 19
+  },
+  "katzeheld": {
+   "file": "bilder/katzeheld.webp",
+   "frames": 32,
+   "cols": 32,
+   "rows": 1,
+   "loop": 2.5,
+   "fps": 12.8,
+   "stillFrame": 19
+  },
+  "schiff": {
+   "file": "bilder/schiff.webp",
+   "frames": 32,
+   "cols": 32,
+   "rows": 1,
+   "loop": 3,
+   "fps": 10.667,
+   "stillFrame": 16
+  },
+  "sturm": {
+   "file": "bilder/sturm.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "fachbuch": {
+   "file": "bilder/fachbuch.webp",
+   "frames": 1,
+   "cols": 1,
+   "rows": 1,
+   "still": true
+  },
+  "amtsbrief": {
+   "file": "bilder/amtsbrief.webp",
+   "frames": 1,
+   "cols": 1,
+   "rows": 1,
+   "still": true
+  },
+  "streik": {
+   "file": "bilder/streik.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "park": {
+   "file": "bilder/park.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "entschuldigung": {
+   "file": "bilder/entschuldigung.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "gaehnen": {
+   "file": "bilder/gaehnen.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "begeistert": {
+   "file": "bilder/begeistert.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  },
+  "radweg": {
+   "file": "bilder/radweg.webp",
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "loop": 2,
+   "fps": 8,
+   "stillFrame": 12,
+   "defaultLoop": true
+  }
+ },
+ "icons": {
+  "box": [
+   28,
+   28
+  ],
+  "size": [
+   56,
+   56
+  ],
+  "files": {
+   "kann": "icons/kann.webp",
+   "muss": "icons/muss.webp",
+   "darf": "icons/darf.webp",
+   "nicht": "icons/nicht.webp",
+   "will": "icons/will.webp",
+   "soll": "icons/soll.webp",
+   "moechte": "icons/moechte.webp",
+   "frage": "icons/frage.webp"
+  }
+ }
+}

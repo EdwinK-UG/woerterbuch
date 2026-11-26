@@ -33,7 +33,7 @@ test("scene feedback takes the Swahili and French versions", async () => {
 });
 test("scene feedback refuses unknown scenes, bad ratings, empty sends and floods", async () => {
   const DB = fakeDB(2), env = { DB };
-  assert.equal((await sceneFeedback(req({ scene: "k99", prefer: "de" }), env, {})).status, 400);
+  assert.equal((await sceneFeedback(req({ scene: "k98", prefer: "de" }), env, {})).status, 400);
   assert.equal((await sceneFeedback(req({ scene: "k05", ratings: { de: 6 } }), env, {})).status, 400);
   assert.equal((await sceneFeedback(req({ scene: "k05", prefer: "maybe" }), env, {})).status, 400);
   assert.equal((await sceneFeedback(req({ scene: "k05" }), env, {})).status, 400);
@@ -63,4 +63,13 @@ test("scene feedback rates the long versions and remembers which version was wat
   assert.equal((await sceneFeedback(req({ scene: "k05", prefer: "it-long" }), env, {})).status, 400);
   assert.equal((await sceneFeedback(req({ scene: "k05", version: "x", prefer: "de" }), env, {})).status, 202);
   assert.equal(DB.rows[1].prefer, "de"); assert.equal(DB.rows[1].preference, "de");
+  // since the pages show only the long versions, the long ones they have watched are kept too
+  assert.equal((await sceneFeedback(req({ scene: "k05", version: "de-long", ratings: { "de-long": 4 }, watched: ["de-long", "en-long", "it-long"] }), env, {})).status, 202);
+  assert.equal(DB.rows[2].watched, "de-long,en-long");
+});
+test("scene feedback takes the four B2–C1 films and still refuses unknown scenes", async () => {
+  const DB = fakeDB(), env = { DB };
+  for (const scene of ["k99", "k97", "k439", "k482"]) assert.equal((await sceneFeedback(req({ scene, version: "de-long", ratings: { "de-long": 5 } }), env, {})).status, 202);
+  assert.deepEqual(DB.rows.map((r) => r.scene), ["k99", "k97", "k439", "k482"]);
+  assert.equal((await sceneFeedback(req({ scene: "k98", ratings: { "de-long": 5 } }), env, {})).status, 400);
 });

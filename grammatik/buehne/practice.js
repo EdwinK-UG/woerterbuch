@@ -1,10 +1,15 @@
 /* Feedback (F) and the practice format (P) for every scene (plan §1.5).
    One round = one item from the chapter's private lines file. Three kinds:
-     order   { kind:'order', tiles:[…], roles:[…], ok:[sentence…], end:'.', q? }       tiles onto the sentence strip
+     order   { kind:'order', tiles:[…], roles:[…], ok:[sentence…], end:'.', q?, slots?, bad? }   tiles onto the sentence strip
+             (since k439: slots < tiles leaves spare tiles, e.g. geworden beside worden; bad: { sentence: why })
+             (seats?: a label over each wagon; with spare tiles and no seats the wagons have none, else 1, 2 … Ende)
      choice  { kind:'choice', q:'… ___ …', options:[…], right:i, why:{ i: text } }     tap the right form
      type    { kind:'type', q, ok:[…], bad:{ sentence: why }, chips:[…], end:'.' }     write (or tap chips into) a sentence
+             (since k482: end "" for a phrase with no end mark, e.g. a noun phrase)
    The hint ladder: 1st miss = the reason (and the machine's failure animation), 2nd miss = a hint (seats fixed,
    options struck out), 3rd miss = "Richtig ist …" and on to the next round. Only first tries count for the score.
+   Every wrong answer, the last one too, has its reason and reaction played out before the learner can go on (a choice of
+   three ends after the 2nd miss: that pick is staged too, then "Richtig ist …"); a typed answer waits for it like a tap.
    Feedback is neutral ("passt nicht" + why) unless the chapter stages a Folge (the wrong sentence's real meaning). */
 import { $, rich, plain, esc, T } from './stage.js';
 import { play } from './sfx.js';
@@ -13,7 +18,7 @@ export const norm = (s) => plain(s).replace(/[„“"«»]/g, '').replace(/\s+/g
 const fold = (s) => norm(s).toLowerCase();
 
 export function createPractice(B, strip, hooks = {}) {
-  const miss = async (item, tries) => { if (hooks.miss) { try { await hooks.miss(item, tries); } catch (e) { if (e instanceof B.Abort) throw e; } } };
+  const miss = async (item, tries, info) => { if (hooks.miss) { try { await hooks.miss(item, tries, info); } catch (e) { if (e instanceof B.Abort) throw e; } } };
   const P = { score: 0, asked: 0 };
   let total = 0;
   const panel = $('panel');
@@ -51,18 +56,24 @@ export function createPractice(B, strip, hooks = {}) {
     if (item.first != null && order[0] !== item.first && vWant === 1) return { k: 'first', anim: 'mark', at: 0 };
     return { k: 'mid', anim: 'mark', at: Math.max(0, Math.min(n - 2, 2)) };
   }
+  // the labels over the empty wagons: the item's own `seats`; with spare tiles none (a wagon is not a position in the
+  // sentence when a phrase is split over tiles: k482 "Wegen | des Streiks | …"); else 1, 2 … Ende
+  const seatsOf = (item) => item.seats || (item.slots && item.slots < item.tiles.length ? [] : undefined);
   async function askOrder(item) {
     let tries = 0, fixed = {};
     while (true) {
-      busy(false); const order = await strip.tiles(item.tiles, { fixed, end: item.end || '', roles: item.roles }); busy(true); tries++;
+      busy(false); const order = (await strip.tiles(item.tiles, { fixed, end: item.end || '', roles: item.roles, slots: item.slots, seats: seatsOf(item) })).filter((t) => t != null); busy(true); tries++;
       const said = order.map((t) => plain(item.tiles[t])).join(' ') + (item.end || '');
-      const right = item.ok.some((s) => norm(s) === norm(said));
+      // compared without capitals (the tiles keep theirs: "Ich" may also stand in the middle); the verdict shows the
+      // accepted sentence as it is written
+      const hit = item.ok.find((s) => fold(s) === fold(said)), right = hit != null;
       strip.settle(item.tiles, item.roles, order);
-      if (right) { await strip.setClamp(true); play.right(); tell('ok', `<b>${T('right')}</b> ${rich(said)}`); count(tries === 1); return { right: true, tries, said }; }
+      if (right) { const good = hit + (item.end || ''); await strip.setClamp(true); play.right(); tell('ok', `<b>${T('right')}</b> ${rich(good)}`); count(tries === 1); return { right: true, tries, said: good }; }
       const d = diagnose(item, order); play.wrong();
       if (d.anim === 'slip') await strip.slip(); else if (d.anim === 'stall') { strip.shake(d.at); strip.mark(d.at, 'bad'); await B.wait(0.5); } else { strip.mark(d.at, 'bad'); await B.wait(0.4); }
       if (tries >= 3) { const good = item.ok[0] + (item.end || ''); tell('no', `${T('rightis')} <b>${rich(good)}</b>`); count(false); return { right: false, tries, said, good }; }
-      tell('no', `<b>${T('notyet')}</b> ${rich(item.why && item.why[d.k] || why(d.k))}`); await miss(item, tries);
+      const known = Object.entries(item.bad || {}).find(([s]) => fold(s) === fold(said));       // a known wrong sentence has its own reason
+      tell('no', `<b>${T('notyet')}</b> ${rich(known ? known[1] : item.why && item.why[d.k] || why(d.k))}`); await miss(item, tries);
       if (tries === 2) {        // the hint: the verb engine and the last wagon are put in place
         const good = item.ok[0].split(' '); fixed = {};
         item.roles.forEach((r, t) => { if (r === 'v' || r === 't') { const s = locate(item.tiles, good, t); if (s >= 0) fixed[s] = t; } });
@@ -80,22 +91,27 @@ export function createPractice(B, strip, hooks = {}) {
     return order.indexOf(t);
   }
 
-  /* choice: tap the right form; the gap in the sentence shows each try */
+  /* choice: tap the right form; the gap in the sentence shows each try. A sentence may have two gaps (___ … ___):
+     each option then fills both, its two parts split by " … " ("werde … würden") */
+  const gapsOf = (q, w) => { const ws = String(w).split(' … '), parts = q.split('___'); return parts.length > 2 && ws.length > 1 ? ws : [w]; };
+  const filled = (q, w) => { const ws = gapsOf(q, w); let i = 0; return q.replace(/___/g, () => ws[Math.min(i++, ws.length - 1)]); };
   function askChoice(item) {
     return new Promise((done) => {
       let tries = 0; busy(false); $('say').style.display = 'none';
-      const [pre, post = ''] = item.q.split('___');
-      const fill = (w) => `${rich(pre)}<u>${w ? rich(w) : '&emsp;&emsp;'}</u>${rich(post)}`;
+      const segs = item.q.split('___');
+      const fill = (w) => { const ws = w ? gapsOf(item.q, w) : []; return segs.map((s, i) => rich(s) + (i < segs.length - 1 ? `<u>${ws[Math.min(i, ws.length - 1)] ? rich(ws[Math.min(i, ws.length - 1)]) : '&emsp;&emsp;'}</u>` : '')).join(''); };
       prompt(fill(''));
       const box = $('answers'); box.replaceChildren();
       item.options.forEach((o, i) => {
         const b = document.createElement('button'); b.type = 'button'; b.innerHTML = rich(o);
         b.onclick = async () => {
           tries++; busy(true);
-          if (i === item.right) { play.right(); prompt(fill(o)); tell('ok', `<b>${T('right')}</b>`); count(tries === 1); box.replaceChildren(); done({ right: true, tries, said: item.q.replace('___', o) }); return; }
+          if (i === item.right) { play.right(); prompt(fill(o)); tell('ok', `<b>${T('right')}</b>`); count(tries === 1); box.replaceChildren(); done({ right: true, tries, said: filled(item.q, o), pick: o }); return; }
           play.wrong(); b.disabled = true; b.classList.add('out'); prompt(fill(o));
-          if (tries >= 2 && item.options.length <= 3 || tries >= 3) { tell('no', `${T('rightis')} <b>${rich(item.q.replace('___', item.options[item.right]))}</b>`); count(false); box.replaceChildren(); done({ right: false, tries }); return; }
-          tell('no', `<b>${T('nofit')}</b> ${rich((item.why && item.why[i]) || why('form'))}`); await miss(item, tries); busy(false);
+          tell('no', `<b>${T('nofit')}</b> ${rich((item.why && item.why[i]) || why('form'))}`); await miss(item, tries, { pick: i });
+          // the last wrong pick (the 2nd of three options, the 3rd of more) is staged and answered like the first, then the solution
+          if (tries >= 2 && item.options.length <= 3 || tries >= 3) { tell('no', `${T('rightis')} <b>${rich(filled(item.q, item.options[item.right]))}</b>`); count(false); box.replaceChildren(); done({ right: false, tries }); return; }
+          busy(false);
         };
         box.appendChild(b);
       });
@@ -112,16 +128,21 @@ export function createPractice(B, strip, hooks = {}) {
       pre.textContent = item.pre || ''; pre.style.display = item.pre ? '' : 'none';
       const whole = (x) => (item.pre ? item.pre + ' ' : '') + x;
       for (const c of item.chips || []) { const b = document.createElement('button'); b.type = 'button'; b.innerHTML = rich(c); b.onclick = () => { inp.value = (inp.value.trim() + ' ' + plain(c)).trim(); inp.focus({ preventScroll: true }); }; box.appendChild(b); }
-      const check = () => {
+      let reacting = false;                 // a wrong answer's reaction (character line, then the narrator) is played out first
+      const check = async () => {
+        if (reacting) return;
         const v = inp.value.trim(); if (!v) { inp.focus({ preventScroll: true }); return; }
         tries++; const said = norm(v), right = item.ok.some((s) => norm(s) === said);
-        if (right) { busy(true); play.right(); ok.onclick = null; inp.onkeydown = null; tell('ok', `<b>${T('right')}</b> ${esc(whole(said))}${item.end || '.'}`); count(tries === 1); box.replaceChildren(); $('say').style.display = 'none'; done({ right: true, tries, said }); return; }
+        if (right) { busy(true); play.right(); ok.onclick = null; inp.onkeydown = null; tell('ok', `<b>${T('right')}</b> ${esc(whole(said))}${item.end ?? '.'}`); count(tries === 1); box.replaceChildren(); $('say').style.display = 'none'; done({ right: true, tries, said }); return; }
         play.wrong();
         const known = Object.entries(item.bad || {}).find(([s]) => fold(s) === fold(v));
-        if (tries >= 3) { busy(true); ok.onclick = null; inp.onkeydown = null; tell('no', `${T('rightis')} <b>${rich(whole(item.ok[0]))}${item.end || '.'}</b>`); count(false); box.replaceChildren(); $('say').style.display = 'none'; done({ right: false, tries }); return; }
+        if (tries >= 3) { busy(true); ok.onclick = null; inp.onkeydown = null; tell('no', `${T('rightis')} <b>${rich(whole(item.ok[0]))}${item.end ?? '.'}</b>`); count(false); box.replaceChildren(); $('say').style.display = 'none'; done({ right: false, tries }); return; }
         const close = item.ok.some((s) => fold(s) === fold(v));       // only the capital letters differ
         tell('no', `<b>${T('notyet')}</b> ${rich(close ? why('caps') : known ? known[1] : tries === 2 && item.hint ? item.hint : why('type'))}`);
-        inp.select(); miss(item, tries);
+        reacting = true; busy(true); inp.readOnly = true;
+        try { await miss(item, tries); } catch (e) { return; }           // aborted: the practice is over
+        finally { reacting = false; inp.readOnly = false; }
+        busy(false); inp.focus({ preventScroll: true }); inp.select();
       };
       ok.onclick = check; inp.onkeydown = (e) => { if (e.key === 'Enter') check(); };
       inp.focus({ preventScroll: true });

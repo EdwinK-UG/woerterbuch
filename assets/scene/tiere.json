@@ -1,0 +1,901 @@
+{
+ "version": 1,
+ "pxPerMetre": 391.5636,
+ "faces": "right",
+ "note": "feet at foot; scale = (z × k) / pxPerMetre; mirror for left; animals draw in front of the people",
+ "kinds": {
+  "dog": {
+   "height": 0.62,
+   "speed": 1.6,
+   "runSpeed": 3.6,
+   "ring": 0.42,
+   "frame": [
+    411,
+    358
+   ],
+   "foot": [
+    203,
+    355
+   ],
+   "shadow": {
+    "rx": 0.3844,
+    "ry": 0.04,
+    "color": "rgba(40,60,30,.18)"
+   },
+   "hop": {
+    "lift": 0.18,
+    "decay": 2.4,
+    "duration": 0.4167
+   },
+   "states": {
+    "idle": {
+     "file": "tiere/dog-idle.webp",
+     "frames": 32,
+     "cols": 32,
+     "rows": 1,
+     "loop": 2.6927937,
+     "fps": 11.884,
+     "note": "three tail wags at 7 rad/s; breathing (2.2 rad/s) and the ear (2.4 rad/s) nearly loop with them"
+    },
+    "happy": {
+     "file": "tiere/dog-happy.webp",
+     "frames": 32,
+     "cols": 32,
+     "rows": 1,
+     "loop": 2.74889357,
+     "fps": 11.641,
+     "note": "seven fast wags at 16 rad/s, tongue out"
+    },
+    "run": {
+     "file": "tiere/dog-run.webp",
+     "frames": 24,
+     "cols": 24,
+     "rows": 1,
+     "loop": 1.44996584,
+     "fps": 16.552,
+     "note": "three strides at 13 rad/s; the ear flap (14.3 rad/s) is a little off at the seam"
+    },
+    "hop": {
+     "file": "tiere/dog-hop.webp",
+     "frames": 10,
+     "cols": 10,
+     "rows": 1,
+     "once": true,
+     "duration": 0.4167,
+     "fps": 24,
+     "note": "the lift is in the frames; afterwards back to idle"
+    },
+    "walk": {
+     "same": "idle",
+     "note": "tiere.js has no walk cycle: a walking animal is drawn in its idle pose while it moves"
+    },
+    "scared": {
+     "same": "idle",
+     "running": "run",
+     "note": "jagd sets mood \"scared\" but tiere.js draws only \"happy\" differently: scared looks like idle (run while running)"
+    }
+   }
+  },
+  "cat": {
+   "height": 0.4,
+   "speed": 1,
+   "runSpeed": 3.2,
+   "ring": 0.3,
+   "frame": [
+    332,
+    302
+   ],
+   "foot": [
+    187,
+    296
+   ],
+   "shadow": {
+    "rx": 0.248,
+    "ry": 0.04,
+    "color": "rgba(40,60,30,.18)"
+   },
+   "hop": {
+    "lift": 0.18,
+    "decay": 2.4,
+    "duration": 0.4167
+   },
+   "states": {
+    "idle": {
+     "file": "tiere/cat-idle.webp",
+     "frames": 32,
+     "cols": 32,
+     "rows": 1,
+     "loop": 3.7,
+     "fps": 8.649,
+     "note": "one blink every 3.7 s (at the loop start); the tail sway (1.6 rad/s) is 0.94 of it"
+    },
+    "run": {
+     "file": "tiere/cat-run.webp",
+     "frames": 16,
+     "cols": 16,
+     "rows": 1,
+     "loop": 0.8975979,
+     "fps": 17.825,
+     "note": "two strides at 14 rad/s, eyes open"
+    },
+    "hop": {
+     "file": "tiere/cat-hop.webp",
+     "frames": 10,
+     "cols": 10,
+     "rows": 1,
+     "once": true,
+     "duration": 0.4167,
+     "fps": 24,
+     "note": "the lift is in the frames; afterwards back to idle"
+    },
+    "walk": {
+     "same": "idle",
+     "note": "no walk cycle in tiere.js (glides in its idle pose)"
+    }
+   }
+  },
+  "ball": {
+   "height": 0.24,
+   "speed": 1.4,
+   "runSpeed": 3.4,
+   "ring": 0.2,
+   "frame": [
+    104,
+    202
+   ],
+   "foot": [
+    52,
+    197
+   ],
+   "shadow": {
+    "rx": 0.108,
+    "ry": 0.04,
+    "color": "rgba(40,60,30,.18)"
+   },
+   "hop": {
+    "lift": 0.25,
+    "decay": 2.4,
+    "duration": 0.4167
+   },
+   "states": {
+    "idle": {
+     "file": "tiere/ball-idle.webp",
+     "frames": 1,
+     "cols": 1,
+     "rows": 1
+    },
+    "walk": {
+     "file": "tiere/ball-walk.webp",
+     "frames": 16,
+     "cols": 16,
+     "rows": 1,
+     "advance": "distance",
+     "metresPerLoop": 0.754,
+     "note": "one full turn; advance by distance: frame = (spin / 2π mod 1) × frames, spin = distance / 0.12 m"
+    },
+    "run": {
+     "file": "tiere/ball-run.webp",
+     "frames": 16,
+     "cols": 16,
+     "rows": 1,
+     "loop": 0.44879895,
+     "fps": 35.651,
+     "note": "bounce |sin(7 t)| × 0.14 m with the spin of the default run speed (2.02 turns per loop)"
+    },
+    "hop": {
+     "file": "tiere/ball-hop.webp",
+     "frames": 10,
+     "cols": 10,
+     "rows": 1,
+     "once": true,
+     "duration": 0.4167,
+     "fps": 24,
+     "note": "the lift is in the frames; afterwards back to idle"
+    }
+   }
+  }
+ },
+ "birds": {
+  "file": "tiere/bird-fly.webp",
+  "frames": 16,
+  "cols": 16,
+  "rows": 1,
+  "loop": 0.6981317,
+  "fps": 22.918,
+  "frame": [
+   82,
+   39
+  ],
+  "anchor": [
+   41,
+   21.218
+  ],
+  "flock": {
+   "count": 5,
+   "start": -3,
+   "speed": 0.9,
+   "gap": 0.45,
+   "jitter": [
+    3.1,
+    0.2
+   ],
+   "rows": [
+    1.7,
+    0.25
+   ],
+   "bob": [
+    1.4,
+    0.05
+   ],
+   "phase": 1.3,
+   "flapRate": 9,
+   "note": "bird i at wx = x0 + start + speed·dt + gap·i + jitter[1]·sin(jitter[0]·i), height wy = y + rows[1]·sin(rows[0]·i) + bob[1]·sin(bob[0]·dt + i) metres above the line d = -1, flap frame at time dt + i·phase/flapRate"
+  }
+ },
+ "pack": {
+  "file": "tiere/pack.webp",
+  "frames": 5,
+  "cols": 5,
+  "rows": 1,
+  "frame": [
+   208,
+   346
+  ],
+  "foot": [
+   104,
+   328
+  ],
+  "state": "fill",
+  "values": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
+  "shake": {
+   "amp": 0.03,
+   "w": 40,
+   "drop": 0.03,
+   "note": "rotate by amp·shake·sin(w·t) about the foot; shake starts at 1 and drops by 0.03 per drawn frame"
+  }
+ },
+ "things": {
+  "schlafsack": {
+   "file": "tiere/thing-schlafsack.webp",
+   "size": [
+    173,
+    84
+   ],
+   "centre": [
+    81,
+    42
+   ]
+  },
+  "zelt": {
+   "file": "tiere/thing-zelt.webp",
+   "size": [
+    176,
+    138
+   ],
+   "centre": [
+    88,
+    89
+   ]
+  },
+  "taschenlampe": {
+   "file": "tiere/thing-taschenlampe.webp",
+   "size": [
+    201,
+    122
+   ],
+   "centre": [
+    73,
+    61
+   ]
+  },
+  "schuhe": {
+   "file": "tiere/thing-schuhe.webp",
+   "size": [
+    150,
+    95
+   ],
+   "centre": [
+    73,
+    49
+   ]
+  },
+  "hut": {
+   "file": "tiere/thing-hut.webp",
+   "size": [
+    176,
+    94
+   ],
+   "centre": [
+    88,
+    49
+   ]
+  },
+  "kompass": {
+   "file": "tiere/thing-kompass.webp",
+   "size": [
+    106,
+    106
+   ],
+   "centre": [
+    53,
+    53
+   ]
+  },
+  "handschuh": {
+   "file": "tiere/thing-handschuh.webp",
+   "size": [
+    86,
+    102
+   ],
+   "centre": [
+    33,
+    59
+   ]
+  },
+  "fahrrad": {
+   "file": "tiere/thing-fahrrad.webp",
+   "size": [
+    688,
+    399
+   ],
+   "centre": [
+    344,
+    392
+   ]
+  },
+  "reifen": {
+   "file": "tiere/thing-reifen.webp",
+   "size": [
+    288,
+    269
+   ],
+   "centre": [
+    144,
+    127
+   ]
+  },
+  "flicken": {
+   "file": "tiere/thing-flicken.webp",
+   "size": [
+    44,
+    44
+   ],
+   "centre": [
+    22,
+    22
+   ]
+  },
+  "oelkanne": {
+   "file": "tiere/thing-oelkanne.webp",
+   "size": [
+    130,
+    84
+   ],
+   "centre": [
+    54,
+    58
+   ]
+  },
+  "tasse": {
+   "file": "tiere/thing-tasse.webp",
+   "size": [
+    61,
+    50
+   ],
+   "centre": [
+    22,
+    26
+   ]
+  },
+  "hobel": {
+   "file": "tiere/thing-hobel.webp",
+   "size": [
+    130,
+    71
+   ],
+   "centre": [
+    65,
+    49
+   ]
+  },
+  "span": {
+   "file": "tiere/thing-span.webp",
+   "size": [
+    58,
+    52
+   ],
+   "centre": [
+    33,
+    28
+   ]
+  },
+  "dach": {
+   "file": "tiere/thing-dach.webp",
+   "size": [
+    522,
+    397
+   ],
+   "centre": [
+    261,
+    394
+   ]
+  },
+  "wolke": {
+   "file": "tiere/thing-wolke.webp",
+   "size": [
+    248,
+    165
+   ],
+   "centre": [
+    112,
+    81
+   ]
+  },
+  "brief": {
+   "file": "tiere/thing-brief.webp",
+   "size": [
+    86,
+    60
+   ],
+   "centre": [
+    43,
+    30
+   ]
+  },
+  "kuchen": {
+   "file": "tiere/thing-kuchen.webp",
+   "size": [
+    162,
+    81
+   ],
+   "centre": [
+    81,
+    38
+   ]
+  },
+  "pult": {
+   "file": "tiere/thing-pult.webp",
+   "size": [
+    216,
+    462
+   ],
+   "centre": [
+    108,
+    460
+   ]
+  },
+  "blitz": {
+   "file": "tiere/thing-blitz.webp",
+   "size": [
+    128,
+    128
+   ],
+   "centre": [
+    64,
+    64
+   ]
+  },
+  "papierflieger": {
+   "file": "tiere/thing-papierflieger.webp",
+   "size": [
+    156,
+    86
+   ],
+   "centre": [
+    74,
+    51
+   ]
+  },
+  "handy": {
+   "file": "tiere/thing-handy.webp",
+   "size": [
+    36,
+    64
+   ],
+   "centre": [
+    18,
+    32
+   ]
+  },
+  "bohrer": {
+   "file": "tiere/thing-bohrer.webp",
+   "size": [
+    139,
+    99
+   ],
+   "centre": [
+    50,
+    22
+   ]
+  },
+  "brett": {
+   "file": "tiere/thing-brett.webp",
+   "size": [
+    318,
+    36
+   ],
+   "centre": [
+    159,
+    18
+   ]
+  },
+  "zeitung": {
+   "file": "tiere/thing-zeitung.webp",
+   "size": [
+    180,
+    124
+   ],
+   "centre": [
+    90,
+    62
+   ]
+  },
+  "fussball": {
+   "file": "tiere/thing-fussball.webp",
+   "size": [
+    94,
+    94
+   ],
+   "centre": [
+    47,
+    47
+   ]
+  },
+  "teller": {
+   "file": "tiere/thing-teller.webp",
+   "size": [
+    82,
+    39
+   ],
+   "centre": [
+    41,
+    20
+   ]
+  },
+  "faehre": {
+   "file": "tiere/thing-faehre.webp",
+   "size": [
+    1400,
+    492
+   ],
+   "centre": [
+    700,
+    460
+   ]
+  },
+  "ruderboot": {
+   "file": "tiere/thing-ruderboot.webp",
+   "size": [
+    1061,
+    353
+   ],
+   "centre": [
+    511,
+    260
+   ]
+  },
+  "geschenk": {
+   "file": "tiere/thing-geschenk.webp",
+   "size": [
+    122,
+    128
+   ],
+   "centre": [
+    61,
+    79
+   ]
+  },
+  "radierer": {
+   "file": "tiere/thing-radierer.webp",
+   "size": [
+    248,
+    164
+   ],
+   "centre": [
+    124,
+    82
+   ]
+  },
+  "schloss": {
+   "file": "tiere/thing-schloss.webp",
+   "size": [
+    72,
+    101
+   ],
+   "centre": [
+    36,
+    52
+   ]
+  },
+  "schere": {
+   "file": "tiere/thing-schere.webp",
+   "size": [
+    151,
+    88
+   ],
+   "centre": [
+    78,
+    44
+   ]
+  },
+  "kalender": {
+   "file": "tiere/thing-kalender.webp",
+   "size": [
+    132,
+    153
+   ],
+   "centre": [
+    66,
+    79
+   ]
+  },
+  "kiste": {
+   "file": "tiere/thing-kiste.webp",
+   "size": [
+    272,
+    210
+   ],
+   "centre": [
+    121,
+    206
+   ]
+  },
+  "kisteauf": {
+   "file": "tiere/thing-kisteauf.webp",
+   "size": [
+    411,
+    273
+   ],
+   "centre": [
+    190,
+    269
+   ]
+  },
+  "kartons": {
+   "file": "tiere/thing-kartons.webp",
+   "size": [
+    207,
+    378
+   ],
+   "centre": [
+    157,
+    374
+   ]
+  },
+  "pflanze": {
+   "file": "tiere/thing-pflanze.webp",
+   "size": [
+    219,
+    301
+   ],
+   "centre": [
+    101,
+    299
+   ]
+  },
+  "wanduhr": {
+   "file": "tiere/thing-wanduhr.webp",
+   "size": [
+    200,
+    200
+   ],
+   "centre": [
+    100,
+    100
+   ]
+  },
+  "lupe": {
+   "file": "tiere/thing-lupe.webp",
+   "size": [
+    279,
+    279
+   ],
+   "centre": [
+    98,
+    98
+   ]
+  },
+  "paket": {
+   "file": "tiere/thing-paket.webp",
+   "size": [
+    180,
+    124
+   ],
+   "centre": [
+    90,
+    62
+   ]
+  },
+  "murmel": {
+   "file": "tiere/thing-murmel.webp",
+   "size": [
+    62,
+    62
+   ],
+   "centre": [
+    31,
+    31
+   ]
+  },
+  "regal": {
+   "file": "tiere/thing-regal.webp",
+   "size": [
+    436,
+    463
+   ],
+   "centre": [
+    218,
+    460
+   ]
+  },
+  "regalhalb": {
+   "file": "tiere/thing-regalhalb.webp",
+   "size": [
+    569,
+    464
+   ],
+   "centre": [
+    218,
+    460
+   ]
+  },
+  "sofa": {
+   "file": "tiere/thing-sofa.webp",
+   "size": [
+    882,
+    240
+   ],
+   "centre": [
+    441,
+    237
+   ]
+  },
+  "stehlampe": {
+   "file": "tiere/thing-stehlampe.webp",
+   "size": [
+    146,
+    470
+   ],
+   "centre": [
+    73,
+    460
+   ]
+  },
+  "thermos": {
+   "file": "tiere/thing-thermos.webp",
+   "size": [
+    56,
+    138
+   ],
+   "centre": [
+    28,
+    81
+   ]
+  },
+  "anleitung": {
+   "file": "tiere/thing-anleitung.webp",
+   "size": [
+    124,
+    164
+   ],
+   "centre": [
+    62,
+    82
+   ]
+  },
+  "tropfen": {
+   "file": "tiere/thing-tropfen.webp",
+   "size": [
+    28,
+    44
+   ],
+   "centre": [
+    14,
+    22
+   ]
+  },
+  "spritzer": {
+   "file": "tiere/thing-spritzer.webp",
+   "size": [
+    256,
+    174
+   ],
+   "centre": [
+    148,
+    148
+   ]
+  },
+  "rotstift": {
+   "file": "tiere/thing-rotstift.webp",
+   "size": [
+    58,
+    43
+   ],
+   "centre": [
+    28,
+    22
+   ]
+  },
+  "meldungen": {
+   "file": "tiere/thing-meldungen.webp",
+   "size": [
+    122,
+    46
+   ],
+   "centre": [
+    61,
+    39
+   ]
+  },
+  "amtsbrief": {
+   "file": "tiere/thing-amtsbrief.webp",
+   "size": [
+    126,
+    172
+   ],
+   "centre": [
+    63,
+    86
+   ]
+  }
+ },
+ "rings": {
+  "cases": {
+   "n": {
+    "col": "#d48a12",
+    "soft": "rgba(252,240,217,.55)",
+    "l": "N"
+   },
+   "a": {
+    "col": "#0b8579",
+    "soft": "rgba(220,243,239,.55)",
+    "l": "A"
+   },
+   "d": {
+    "col": "#7c3aed",
+    "soft": "rgba(241,234,254,.55)",
+    "l": "D"
+   },
+   "g": {
+    "col": "#4b5d73",
+    "soft": "rgba(230,235,241,.55)",
+    "l": "G"
+   }
+  },
+  "radius": "kinds[kind].ring for an animal, the figure height C.m × 0.2 for a person (metres)",
+  "ry": 0.3,
+  "pulse": {
+   "amp": 0.25,
+   "w": 12,
+   "decay": 1.5
+  },
+  "lineWidth": {
+   "min": 2.5,
+   "perMetre": 0.035
+  },
+  "glow": {
+   "blur": 8,
+   "pulse": 10
+  },
+  "fade": 5,
+  "badge": {
+   "at": [
+    0.78,
+    0.75
+   ],
+   "radius": {
+    "min": 9,
+    "perMetre": 0.085
+   },
+   "border": 0.16,
+   "font": "800, 1.15 × radius, Inter"
+  },
+  "note": "ellipse at the feet, rx = radius·z·k·(1 + amp·pulse·sin(w·t)), ry = rx × 0.3; back half (π…2π) filled with soft and stroked behind the people, front half stroked in front; a letter badge at the front right"
+ }
+}

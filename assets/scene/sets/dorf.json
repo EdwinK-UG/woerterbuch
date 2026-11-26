@@ -1,0 +1,240 @@
+{
+ "name": "dorf",
+ "version": 1,
+ "pxPerMetre": 391.5636,
+ "refHeight": 673,
+ "top": 4,
+ "scale": 2,
+ "width": 8614,
+ "height": 1835,
+ "groundY": 1566,
+ "camX": 1,
+ "world": [
+  -10,
+  12
+ ],
+ "depth": {
+  "front": 0.55,
+  "back": 1.05,
+  "backDepth": 2.6,
+  "kBack": 0.06,
+  "note": "feet at depth d: y = ground + d·front·z (d ≥ 0) or ground + back·z·max(-1, d / backDepth) (d < 0); size factor k = 1 + kBack·d for d < 0"
+ },
+ "spots": {
+  "house": -5.4,
+  "bench": -3.4,
+  "pen": -7.4,
+  "bridge": 1.55,
+  "bakery": 7.2,
+  "school": 11
+ },
+ "bridge": {
+  "x": 1.55,
+  "half": 0.95,
+  "rise": 0.16,
+  "note": "on the bridge (|x - bridge.x| < half, |d| < 0.25) the feet rise by rise·sin(π·(x - x + half) / (2·half)) metres"
+ },
+ "items": {
+  "sky": {
+   "type": "image",
+   "parallax": 0.04,
+   "extend": "up",
+   "file": "sets/dorf/sky.webp",
+   "x": 0,
+   "y": 489.2,
+   "w": 8614,
+   "h": 671
+  },
+  "mountains": {
+   "type": "image",
+   "parallax": 0.12,
+   "file": "sets/dorf/mountains.webp",
+   "x": 0,
+   "y": 587,
+   "w": 8614,
+   "h": 589
+  },
+  "hills": {
+   "type": "image",
+   "parallax": 0.32,
+   "file": "sets/dorf/hills.webp",
+   "x": 0,
+   "y": 672,
+   "w": 8614,
+   "h": 1163
+  },
+  "village": {
+   "type": "image",
+   "parallax": 0.62,
+   "file": "sets/dorf/village.webp",
+   "x": 0,
+   "y": 738,
+   "w": 8614,
+   "h": 1097
+  },
+  "meadow": {
+   "type": "image",
+   "parallax": 1,
+   "extend": "down",
+   "file": "sets/dorf/meadow.webp",
+   "x": 0,
+   "y": 1271,
+   "w": 8614,
+   "h": 564
+  },
+  "clouds": {
+   "type": "sprites",
+   "parallax": 0.06,
+   "file": "sets/dorf/cloud.webp",
+   "x": 4154,
+   "y": 689,
+   "w": 267,
+   "h": 175,
+   "anchor": [
+    4283.506,
+    782.873
+   ],
+   "bakedScale": 1.2773,
+   "wrap": 60,
+   "rise": 0.75,
+   "items": [
+    [
+     -18.394,
+     0.8406,
+     0.9111,
+     0.0662
+    ],
+    [
+     -12.4466,
+     0.5568,
+     0.798,
+     0.0987
+    ],
+    [
+     -4.2728,
+     0.7466,
+     0.7163,
+     0.0641
+    ],
+    [
+     1.1478,
+     0.8851,
+     1.1758,
+     0.0883
+    ],
+    [
+     8.9209,
+     0.6602,
+     1.2773,
+     0.0621
+    ],
+    [
+     16.9549,
+     0.6117,
+     1.1674,
+     0.0738
+    ],
+    [
+     23.7237,
+     0.6819,
+     0.8439,
+     0.0643
+    ]
+   ],
+   "note": "cloud [x, y, s, v]: wx = ((x + t·v + wrap/2) mod wrap) - wrap/2 metres from the anchor, y·rise metres higher, scaled s / bakedScale about the anchor"
+  },
+  "waterfall": {
+   "type": "loop",
+   "parallax": 0.32,
+   "loop": 2.30769231,
+   "fps": 13.867,
+   "file": "sets/dorf/waterfall.webp",
+   "x": 5380,
+   "y": 711,
+   "frame": [
+    109,
+    458
+   ],
+   "frames": 32,
+   "cols": 32,
+   "rows": 1
+  },
+  "stream": {
+   "type": "loop",
+   "parallax": 1,
+   "loop": 4,
+   "fps": 8,
+   "crossfade": 1,
+   "file": "sets/dorf/stream.webp",
+   "x": 4274,
+   "y": 1320,
+   "frame": [
+    488,
+    430
+   ],
+   "frames": 32,
+   "cols": 32,
+   "rows": 1,
+   "note": "banks, water, ripples and sparkles; the first second of the loop is crossfaded with the second after it"
+  },
+  "ground": {
+   "type": "image",
+   "parallax": 1,
+   "file": "sets/dorf/ground.webp",
+   "x": 0,
+   "y": 327,
+   "w": 8614,
+   "h": 1287
+  },
+  "lamb": {
+   "type": "loop",
+   "parallax": 1,
+   "loop": 2.61799388,
+   "fps": 6.112,
+   "hop": {
+    "state": "lambHop",
+    "lift": 0.08,
+    "decay": 2.2,
+    "note": "bleat: lambHop = 1, falls by decay per second; lift sin(π·min(1, lambHop))·lift metres"
+   },
+   "file": "sets/dorf/lamb.webp",
+   "x": 968,
+   "y": 1346,
+   "frame": [
+    193,
+    166
+   ],
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "note": "breathing at 2.4 rad/s"
+  },
+  "front": {
+   "type": "image",
+   "parallax": 1,
+   "file": "sets/dorf/front.webp",
+   "x": 42,
+   "y": 1098,
+   "w": 8572,
+   "h": 737
+  }
+ },
+ "back": [
+  "sky",
+  "mountains",
+  "hills",
+  "village",
+  "meadow",
+  "clouds",
+  "waterfall",
+  "stream",
+  "ground",
+  "lamb"
+ ],
+ "front": [
+  "front"
+ ],
+ "state": {
+  "lambHop": 0
+ }
+}

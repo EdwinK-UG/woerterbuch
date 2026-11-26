@@ -29,4 +29,7 @@ export const play = {
   wrong() { tone(300, 240, 0.25, 'triangle', 0.25); },
   bark() { for (const at of [0, 0.22]) { tone(520, 260, 0.13, 'sawtooth', 0.16, at); noise(0.1, 0.22, 900, at); } },
   tick() { tone(1200, 0, 0.03, 'square', 0.12); },
+  plopp() { tone(900, 260, 0.11, 'sine', 0.45); noise(0.08, 0.12, 2400); },          // a bubble bursts
+  splash() { noise(0.5, 0.3, 700); noise(0.3, 0.2, 2200, 0.08); },                   // water
+  creak() { tone(140, 220, 0.5, 'sawtooth', 0.07); tone(180, 120, 0.45, 'sawtooth', 0.06, 0.35); },   // an old door
 };

@@ -1371,10 +1371,20 @@ const WERKSTATT = {
     btn: ['dorf', 'users', 'Im Dorf'], card: ['Im Dorf: ich, du, Sie …', 'Liv und ihre Nachbarn stellen sich vor – mit Ton. Danach fragt Liv dich.', [['dorf', 'Animation starten', 'play']]] },
   // the shared animation stage (grammatik/buehne/, docs/buehne.md): lines, boards and recordings come through the
   // chapter's private film-audio route, like Im Dorf
-  5: { klammer: ['grammatik/klammer/index.html?v=6', 'Die Klammer-Werkstatt – Modalverben'], inline: true, audio: true, hero: true,
+  5: { klammer: ['grammatik/klammer/index.html?v=7', 'Die Klammer-Werkstatt – Modalverben'], inline: true, audio: true, hero: true,
     btn: ['klammer', 'hammer', 'Klammer-Werkstatt'], card: ['Die Klammer-Werkstatt', 'Meister Anton zeigt mit Liv und Lena, wie die Satzklammer funktioniert – mit Ton und Bildern. Danach baust du selbst Sätze.', [['klammer', 'Animation starten', 'play']]] },
-  17: { jagd: ['grammatik/jagd/index.html?v=6', 'Wer jagt wen? – Akkusativ'], inline: true, audio: true, hero: true,
+  17: { jagd: ['grammatik/jagd/index.html?v=7', 'Wer jagt wen? – Akkusativ'], inline: true, audio: true, hero: true,
     btn: ['jagd', 'users', 'Wer jagt wen?'], card: ['Wer jagt wen?', 'Max, ein Hund und ein Ball zeigen den Akkusativ – mit Ton. Danach lässt du die Tiere spielen: Sie machen genau, was dein Satz sagt.', [['jagd', 'Animation starten', 'play']]] },
+  // the B2–C1 films (scene format v1, docs/scene-format.md), German and English only (langs): the frame opens in the
+  // page's language when the film has it, else in German
+  97: { konjunktiv: ['grammatik/konjunktiv/index.html?v=7', 'Wunschblasen am See – Konjunktiv II'], inline: true, audio: true, hero: true, langs: ['de', 'en'],
+    btn: ['konjunktiv', 'users', 'Wunschblasen am See'], card: ['Wunschblasen am See', 'Die Fähre ist weg: Lena und Opa Sepp wünschen, bedauern und stellen sich vor – im Konjunktiv II, mit Ton. Danach übst du selbst.', [['konjunktiv', 'Animation starten', 'play']]] },
+  99: { passiv: ['grammatik/passiv/index.html?v=7', 'Die Werkstatt der unsichtbaren Hände – Passiv'], inline: true, audio: true, hero: true, langs: ['de', 'en'],
+    btn: ['passiv', 'hammer', 'Werkstatt der unsichtbaren Hände'], card: ['Die Werkstatt der unsichtbaren Hände', 'In Meister Antons Werkstatt arbeiten unsichtbare Hände: So funktioniert das Passiv – mit Ton. Danach übst du selbst.', [['passiv', 'Animation starten', 'play']]] },
+  439: { futur2: ['grammatik/futur2/index.html?v=7', 'Lenas Umzug auf dem Zeitband – Futur II'], inline: true, audio: true, hero: true, langs: ['de', 'en'],
+    btn: ['futur2', 'users', 'Lenas Umzug'], card: ['Lenas Umzug auf dem Zeitband', 'Lena zieht um: Vermutungen über Vergangenes und was bis Freitag fertig sein wird – im Futur II, mit Ton. Danach übst du selbst.', [['futur2', 'Animation starten', 'play']]] },
+  482: { nominalstil: ['grammatik/nominalstil/index.html?v=7', 'Die Spalte ist zu schmal – Nominalstil'], inline: true, audio: true, hero: true, langs: ['de', 'en'],
+    btn: ['nominalstil', 'users', 'Die Spalte ist zu schmal'], card: ['Die Spalte ist zu schmal', 'In der Redaktion faltet Frau Adlers Rotstift Verben zu Nomen, bis die Meldungen in die Spalte passen – mit Ton. Danach übst du selbst.', [['nominalstil', 'Animation starten', 'play']]] },
   57: { liv: ['grammatik/liv/werkstatt/index.html?v=1', 'Trennbar-Werkstatt mit Liv'], '3d': ['grammatik/werkstatt/index.html?v=3', 'Trennbar-Werkstatt 3D'],
     btn: ['liv', 'hammer', 'Werkstatt mit Liv'], card: ['Die Säge zeigt es', 'Trennbare Verben lassen sich zersägen, untrennbare nicht. Sieh Liv zu oder säge selbst – mit Ton.', [['liv', 'Werkstatt mit Liv', 'hammer'], ['3d', '3D-Werkstatt']]] },
   94: { wand: ['grammatik/zauberstab/index.html?v=2', 'Wunschzauber mit Liv'], exercises: true, vrm: true,
@@ -1482,7 +1492,8 @@ function mountHero(c) {
   const host = document.querySelector(`[data-werk-hero="${c.n}"]`); if (!host) return;
   const W = WERKSTATT[c.n], w = W[W.btn[0]];
   // the film starts in the learner's chosen language when it has that version (the stage's own switch still changes it)
-  const f = document.createElement('iframe'); f.title = w[1]; f.src = w[0] + '&hero=1' + (uiLang !== 'de' ? '&lang=' + uiLang : ''); f.allow = 'autoplay; fullscreen'; f.dataset.hero = '1'; f.className = 'gr-sceneframe';
+  const f = document.createElement('iframe'); f.title = w[1]; const lang = !W.langs || W.langs.includes(uiLang) ? uiLang : 'de';
+  f.src = w[0] + '&hero=1' + (lang !== 'de' ? '&lang=' + lang : ''); f.allow = 'autoplay; fullscreen'; f.dataset.hero = '1'; f.className = 'gr-sceneframe';
   // Respect the actual visible room, including short screens and the mobile keyboard.
   let resizeFrame = 0;
   const size = () => {

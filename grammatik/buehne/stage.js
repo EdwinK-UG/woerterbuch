@@ -18,22 +18,31 @@ export const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
    ?lang=sw and ?lang=fr are built the same way, explained in Kenyan Swahili and in standard French. */
 export const LANGS = ['de', 'en', 'sw', 'fr'];
 export const LANG = LANGS.includes(qs.get('lang')) ? qs.get('lang') : 'de';
-// Only the long versions are offered (the short ones are archived: tag archive/short-pilots-k5-k17).
-// VERSION is what the feedback form rates; it keeps '-long' so its ratings stay apart from the old short ones.
+// Only the detailed (long) versions exist since 24 Nov 2026; the short ones are archived (git tag
+// archive/short-pilots-k5-k17). VERSION is what the feedback form rates; it keeps '-long' so its ratings stay apart
+// from those of the archived short films.
 export const LONG = true, VERSION = LANG + '-long';
-const UI = {
-  de: { narrator: 'Erzählerin', you: 'Du', watch: '▶ Zuschauen', play: 'Mitspielen', film: 'Film ansehen', check: 'Prüfen', right: 'Richtig!', notyet: 'Noch nicht.',
+export const UI = {
+  de: { narrator: 'Erzähler', you: 'Du', watch: '▶ Zuschauen', play: 'Mitspielen', film: 'Film ansehen', check: 'Prüfen', right: 'Richtig!', notyet: 'Noch nicht.',
     nofit: 'Passt nicht.', rightis: 'Richtig ist:', almost: 'Fast.', oops: 'Hoppla!', wait: '…', done: 'Fertig! Beim ersten Versuch richtig: {s} von {n}.', turn: 'Jetzt du! Tipp auf „Mitspielen“.',
-    signin: 'Melde dich mit deinem Zugang an, dann spielt die Szene mit Ton.', none: 'Nicht verfügbar: diese Szene öffnet sich aus der Lektion.', write: 'Schreib …', loading: 'Lädt …' },
+    signin: 'Melde dich mit deinem Zugang an, dann spielt die Szene mit Ton.', none: 'Nicht verfügbar: diese Szene öffnet sich aus der Lektion.', write: 'Schreib …', loading: 'Lädt …',
+    soundOn: 'Ton an', soundOff: 'Ton aus', sound: 'Ton an/aus', full: 'Vollbild', prev: 'Szene zurück', next: 'Nächste Szene', pause: 'Pause', resume: 'Weiter',
+    close: 'Schließen', scene: 'Szene', answer: 'Deine Antwort', and: 'und', seat: 'Platz', empty: 'leer', putBack: 'Zurücklegen', end: 'Ende' },
   en: { narrator: 'Narrator', you: 'You', watch: '▶ Watch', play: 'Play along', film: 'Watch the film', check: 'Check', right: 'Correct!', notyet: 'Not yet.',
     nofit: "That doesn't fit.", rightis: 'The right answer:', almost: 'Almost.', oops: 'Oops!', wait: '…', done: 'Done! Right the first time: {s} of {n}.', turn: 'Your turn! Tap “Play along”.',
-    signin: 'Sign in with your access, then the scene plays with sound.', none: 'Not available: this scene opens from the lesson.', write: 'Write …', loading: 'Loading …' },
+    signin: 'Sign in with your access, then the scene plays with sound.', none: 'Not available: this scene opens from the lesson.', write: 'Write …', loading: 'Loading …',
+    soundOn: 'Sound on', soundOff: 'Sound off', sound: 'Sound on/off', full: 'Full screen', prev: 'Previous scene', next: 'Next scene', pause: 'Pause', resume: 'Resume',
+    close: 'Close', scene: 'Scene', answer: 'Your answer', and: 'and', seat: 'Place', empty: 'empty', putBack: 'Put back', end: 'End' },
   sw: { narrator: 'Msimulizi', you: 'Wewe', watch: '▶ Tazama', play: 'Cheza pamoja', film: 'Tazama filamu', check: 'Kagua', right: 'Sahihi!', notyet: 'Bado.',
     nofit: 'Haifai.', rightis: 'Jibu sahihi:', almost: 'Karibu.', oops: 'Lo!', wait: '…', done: 'Umemaliza! Sahihi mara ya kwanza: {s} kati ya {n}.', turn: 'Sasa ni zamu yako! Bonyeza “Cheza pamoja”.',
-    signin: 'Ingia kwa akaunti yako, kisha onyesho litacheza na sauti.', none: 'Haipatikani: onyesho hili linafunguliwa kutoka kwenye somo.', write: 'Andika …', loading: 'Inapakia …' },
-  fr: { narrator: 'Narratrice', you: 'Toi', watch: '▶ Regarder', play: 'Jouer', film: 'Voir le film', check: 'Vérifier', right: 'Correct\u202f!', notyet: 'Pas encore.',
+    signin: 'Ingia kwa akaunti yako, kisha onyesho litacheza na sauti.', none: 'Haipatikani: onyesho hili linafunguliwa kutoka kwenye somo.', write: 'Andika …', loading: 'Inapakia …',
+    soundOn: 'Sauti imewashwa', soundOff: 'Sauti imezimwa', sound: 'Washa/zima sauti', full: 'Skrini nzima', prev: 'Onyesho lililopita', next: 'Onyesho linalofuata', pause: 'Sitisha', resume: 'Endelea',
+    close: 'Funga', scene: 'Onyesho', answer: 'Jibu lako', and: 'na', seat: 'Nafasi', empty: 'tupu', putBack: 'Rudisha', end: 'Mwisho' },
+  fr: { narrator: 'Narrateur', you: 'Toi', watch: '▶ Regarder', play: 'Jouer', film: 'Voir le film', check: 'Vérifier', right: 'Correct\u202f!', notyet: 'Pas encore.',
     nofit: 'Ça ne va pas.', rightis: 'La bonne réponse\u202f:', almost: 'Presque.', oops: 'Oups\u202f!', wait: '…', done: 'Terminé\u202f! Juste du premier coup\u202f: {s} sur {n}.', turn: 'À toi\u202f! Appuie sur «\u202fJouer\u202f».',
-    signin: 'Connecte-toi avec ton accès, et la scène se joue avec le son.', none: 'Non disponible\u202f: cette scène s’ouvre depuis la leçon.', write: 'Écris …', loading: 'Chargement …' },
+    signin: 'Connecte-toi avec ton accès, et la scène se joue avec le son.', none: 'Non disponible\u202f: cette scène s’ouvre depuis la leçon.', write: 'Écris …', loading: 'Chargement …',
+    soundOn: 'Son activé', soundOff: 'Son coupé', sound: 'Activer/couper le son', full: 'Plein écran', prev: 'Scène précédente', next: 'Scène suivante', pause: 'Pause', resume: 'Reprendre',
+    close: 'Fermer', scene: 'Scène', answer: 'Ta réponse', and: 'et', seat: 'Place', empty: 'vide', putBack: 'Remettre', end: 'Fin' },
 };
 // the CC button's label (what a tap does) and the language dropdown's label
 const SUBS = {
@@ -258,7 +267,7 @@ export function createStage({ set, priv, tag, keys, onCast = () => {}, z0 = 2.75
     c.innerHTML = `<span class="who" style="--c:${cap.sp.col}"><i></i>${esc(cap.sp.name)}</span><span class="tx">${rich(cap.parts[cap.i] || '')}</span>${cap.gloss ? `<span class="gl">${rich(cap.gloss)}</span>` : ''}`;
   }
   function caption(who, text, gloss, line = null) {
-    const sp = CAST[who] || SPEAKER[who] || { name: who.split('+').map((k) => (CAST[k] || SPEAKER[k] || { name: k }).name).join(' und '), col: (CAST[who.split('+')[0]] || { col: '#999' }).col };
+    const sp = CAST[who] || SPEAKER[who] || { name: who.split('+').map((k) => (CAST[k] || SPEAKER[k] || { name: k }).name).join(' ' + T('and') + ' '), col: (CAST[who.split('+')[0]] || { col: '#999' }).col };
     const parts = subtitleParts(text), total = parts.reduce((n, p) => n + plain(p).length, 0) || 1;
     let run = 0; const ends = parts.map((p) => (run += plain(p).length) / total);
     cap = { sp, parts, ends, gloss, line, i: 0 }; drawCap();
@@ -303,12 +312,12 @@ export function createStage({ set, priv, tag, keys, onCast = () => {}, z0 = 2.75
   // how far the current line is (0 … 1): from its recording, or from its reading time; at(word) is when a word is said
   function progress() {
     const L = S.line; if (!L) return 0;
-    if (L.au && L.au.duration > 0) return Math.min(1, L.au.currentTime / L.au.duration);
+    if (L.au) return L.au.duration > 0 ? Math.min(1, L.au.currentTime / L.au.duration) : L.au.error ? 1 : 0;   // not yet known: not "done" (a failed recording: done, so its board still shows every step)
     return Math.min(1, (S.t - L.t0) / L.dur);
   }
   /* ---------- scenes ---------- */
   function dots() {
-    $('dots').innerHTML = S.scenes.map((s, i) => `<button title="${esc(s.name)}" aria-label="Szene ${i + 1}: ${esc(s.name)}" data-i="${i}">${i + 1}</button>`).join('');
+    $('dots').innerHTML = S.scenes.map((s, i) => `<button title="${esc(s.name)}" aria-label="${esc(T('scene'))} ${i + 1}: ${esc(s.name)}" data-i="${i}">${i + 1}</button>`).join('');
     $('dots').onclick = (e) => { const b = e.target.closest('button'); if (b) watch(+b.dataset.i); };
   }
   function markDot() { [...$('dots').children].forEach((b, i) => { b.classList.toggle('on', i === S.scene); b.classList.toggle('done', i < S.scene); }); }
@@ -323,7 +332,7 @@ export function createStage({ set, priv, tag, keys, onCast = () => {}, z0 = 2.75
     } catch (e) { if (!(e instanceof Abort)) console.error(e); }
   }
   function setPaused(p) {
-    S.paused = p; $('play').textContent = p ? '▶' : '❚❚'; $('play').setAttribute('aria-label', p ? 'Weiter' : 'Pause');
+    S.paused = p; $('play').textContent = p ? '▶' : '❚❚'; $('play').setAttribute('aria-label', T(p ? 'resume' : 'pause'));
     for (const au of playing) p ? au.pause() : au.play().catch(() => {});
     for (const a of Object.values(A)) if (a.r) p ? a.r.pause() : a.r.play();
   }
@@ -375,7 +384,7 @@ export function createStage({ set, priv, tag, keys, onCast = () => {}, z0 = 2.75
       sel.onchange = () => { stopAudio(); const u = new URL(location.href); if (sel.value === 'de') u.searchParams.delete('lang'); else u.searchParams.set('lang', sel.value); location.replace(u); };
       $('meta').append(sel);
     }
-    if (feedback) import('./meinung.js?v=6').then((m) => m.createMeinung(B, { scene: feedback, versions: (langs || [LANG]).map((l) => l + '-long') }));
+    if (feedback) import('./meinung.js?v=7').then((m) => m.createMeinung(B, { scene: feedback, versions: (langs || [LANG]).map((l) => l + '-long') }));
     // scenes: a list, or a function that makes it from the loaded lines (scenes written as data, regie.js)
     S.scenes = typeof scenes === 'function' ? [] : scenes; S.onEnd = end;
     fitStage(); new ResizeObserver(fitStage).observe($('stage'));
@@ -387,7 +396,7 @@ export function createStage({ set, priv, tag, keys, onCast = () => {}, z0 = 2.75
     if (EMBED && !qs.has('hero')) {
       const tell = () => parent.postMessage({ type: 'werkstatt-height', h: $('app').getBoundingClientRect().height + 4 }, location.origin);
       new ResizeObserver(tell).observe($('app')); tell();
-      const x = document.createElement('button'); x.textContent = '✕'; x.title = 'Schließen'; x.setAttribute('aria-label', 'Schließen');
+      const x = document.createElement('button'); x.textContent = '✕'; x.title = T('close'); x.setAttribute('aria-label', T('close'));
       x.onclick = () => { stopAudio(); parent.postMessage({ type: 'werkstatt-close' }, location.origin); }; $('corner').appendChild(x);
     }
     // a scene on a chapter page: starting the film or the practice brings the whole frame into view
@@ -397,7 +406,7 @@ export function createStage({ set, priv, tag, keys, onCast = () => {}, z0 = 2.75
       // Browsers can scroll the parent when a new task focuses its first control, even with preventScroll.
       document.addEventListener('focusin', (e) => { if (e.target.closest('#panel')) focus(); });
     }
-    $('sound').onclick = () => { S.muted = !S.muted; $('sound').innerHTML = soundIcon(); $('sound').setAttribute('aria-pressed', String(!S.muted)); $('sound').setAttribute('aria-label', S.muted ? 'Ton aus' : 'Ton an'); if (S.muted) stopAudio(); };
+    $('sound').onclick = () => { S.muted = !S.muted; $('sound').innerHTML = soundIcon(); $('sound').setAttribute('aria-pressed', String(!S.muted)); $('sound').setAttribute('aria-label', T(S.muted ? 'soundOff' : 'soundOn')); if (S.muted) stopAudio(); };
     // full screen: the browser's own where it is allowed; else (iPhone, or a frame without permission) "max": the page
     // fills the window and, in a lesson, asks the lesson page to make the frame cover the whole screen
     const isFull = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
@@ -414,12 +423,17 @@ export function createStage({ set, priv, tag, keys, onCast = () => {}, z0 = 2.75
     $('prev').onclick = () => watch(Math.max(0, S.scene - 1));
     $('next').onclick = () => watch(Math.min(S.scenes.length - 1, S.scene + 1));
     $('try').onclick = () => ($('panel').classList.contains('pr') ? watch(0) : practise());
+    // the player's own labels in the scene's language (a page writes them in German)
+    $('sound').title = T('sound'); $('sound').setAttribute('aria-label', T('soundOn')); $('full').title = T('full'); $('full').setAttribute('aria-label', T('full'));
+    $('prev').setAttribute('aria-label', T('prev')); $('next').setAttribute('aria-label', T('next')); $('play').setAttribute('aria-label', T('pause')); if ($('inp')) $('inp').setAttribute('aria-label', T('answer'));
     if (LANG !== 'de') { document.documentElement.lang = LANG; $('goWatch').textContent = T('watch'); $('goTry').textContent = T('play'); $('try').textContent = T('play'); $('load').textContent = T('loading'); const inp = $('inp'); if (inp) inp.placeholder = T('write'); }
     return (async () => {
       let lines = given || null; if (!lines) try { lines = await loadLines(); } catch (e) { lines = null; }
       if (!lines) { $('load').textContent = EMBED ? T('signin') : T('none'); return false; }
       S.lines = lines; preloadAudio(Object.keys(lines.lines));
       if (typeof scenes === 'function') { S.scenes = scenes(lines); dots(); }
+      // the tab's title: the version's own title; the grammar topic after " – " stays as the page writes it
+      const title = lines.title || (lines.start && lines.start.title); if (title) { const i = document.title.indexOf(' – '); document.title = title + (i >= 0 ? document.title.slice(i) : ''); }
       if (lines.start) { const h = document.querySelector('#start h2'), p = document.querySelector('#start p'); if (h && lines.start.title) h.textContent = lines.start.title; if (p && lines.start.text) p.textContent = lines.start.text; }
       await A[keys[0]].ready;
       $('goWatch').disabled = false; $('goTry').disabled = false; $('load').textContent = '';

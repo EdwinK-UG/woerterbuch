@@ -7,6 +7,7 @@
 "use strict";
 const fs = require("fs"), path = require("path"), os = require("os"), { execFileSync } = require("child_process");
 const { speak } = require("./elevenlabs.cjs");
+const { isAzure, speakAzure } = require("./azure-tts.cjs");
 const SPLIT_MODEL = "eleven_turbo_v2_5";
 
 // base: the language of everything outside the marks (en, or sw / fr for the Swahili and French versions)
@@ -24,6 +25,7 @@ function runs(text, base = "en") {
 }
 // one run, spoken alone with its language enforced: no text of the other language as context (it pulls the accent)
 async function speakRun(r, voice, settings, file, model = SPLIT_MODEL) {
+  if (isAzure(voice)) return speakAzure([r], voice, file, r.lang);      // an Azure voice (azure-tts.cjs): the run in its language
   const { bytes } = await speak(r.t.trim(), voice, model, { voice_settings: settings, language_code: r.lang });
   fs.writeFileSync(file, bytes);
 }
@@ -56,13 +58,13 @@ async function redoPart(file, i, voice, settings, model = SPLIT_MODEL, de = null
 // are spoken by Enniah, the native German voice of the English version. French: one voice verified in both languages,
 // on eleven_turbo_v2_5 like English (on eleven_v4 her short German phrases, "den Ball", "du kannst", came out English).
 const NARRATOR = { en: { role: "narrator", model: SPLIT_MODEL }, sw: { role: "narrator-sw", model: "eleven_v3", de: { role: "narrator", model: SPLIT_MODEL } }, fr: { role: "narrator-fr", model: SPLIT_MODEL } };
-module.exports = { runs, splitSpeak, redoPart, SPLIT_MODEL, NARRATOR };
+module.exports = { runs, splitSpeak, redoPart, join, SPLIT_MODEL, NARRATOR };
 if (require.main === module) {
   // node tools/split-voice.cjs redo <scene> <failed.json>: speak again the parts the language check refused
   const [cmd, scene, list] = process.argv.slice(2);
   if (cmd !== "redo") { console.error("usage: redo <scene> <failed.json>"); process.exit(1); }
   const root = path.join(__dirname, "..", ".local", "scenes"), voices = JSON.parse(fs.readFileSync(path.join(root, "voices.json"), "utf8"));
-  const S = { stability: 0.55, similarity_boost: 0.75, style: 0, use_speaker_boost: true, speed: 0.95 };
+  const S = { stability: 0.55, similarity_boost: 0.75, style: 0, use_speaker_boost: true, speed: 1.0 };   // as SETTINGS.narrator in scene-audio.cjs
   const n = NARRATOR[JSON.parse(fs.readFileSync(path.join(root, scene, "lines.json"), "utf8")).lang || "en"];
   const de = n.de ? { voice: voices[n.de.role], model: n.de.model, settings: S } : null;
   (async () => { for (const f of JSON.parse(fs.readFileSync(list, "utf8"))) { await redoPart(path.join(root, scene, f.clip), f.part, voices[n.role], S, n.model, de); console.log("redone", f.clip, "part", f.part, f.lang); } })();

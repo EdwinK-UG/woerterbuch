@@ -1,14 +1,16 @@
 // POST /scene-feedback: what visitors think of an animated grammar scene (no sign-in needed: the scenes are shared
 // publicly for feedback). Body (JSON, at most 32 KB):
-//   { scene: 'k05' | 'k17', version: 'de' | 'en' | 'sw' | 'fr', each also with '-long' (the one being watched),
+//   { scene: 'k05' | 'k17' | 'k99' | 'k97' | 'k439' | 'k482', version: 'de' | 'en' | 'sw' | 'fr', each also with '-long' (the one being watched),
 //     ratings: { de, en, sw, fr, 'de-long', 'en-long', 'sw-long', 'fr-long': 1–5 | null }, prefer: one of the versions | 'same' | null,
 //     free: '' (written freely), understand: '' (the film: where it was hard to follow), pictures: '' (ideas for
 //     pictures and animation), practice: '' (making the exercises more fun), bugs: '' (anything broken),
 //     good: '' (what they liked), improve: '' (the older single field) – each ≤ 4000 characters,
-//     device: 'phone · iOS · Safari' (≤ 60), watched: ['de', 'en', 'sw', 'fr'], lang: 'de' | 'en' | 'sw' | 'fr' }
+//     device: 'phone · iOS · Safari' (≤ 60), watched: versions this browser has watched (e.g. ['de-long', 'en-long']),
+//     lang: 'de' | 'en' | 'sw' | 'fr' }
+// Since 24 Nov 2026 the pages only show the '-long' versions; the short ones are still accepted from older pages.
 // At least one rating, a preference or some text. Stored in D1 (migrations/0006, 0007 and 0008) without names,
 // accounts or IP addresses; a one-day hash limits each visitor to 20 sends a day.
-export const FEEDBACK_SCENES = ["k05", "k17"];
+export const FEEDBACK_SCENES = ["k05", "k17", "k99", "k97", "k439", "k482"];   // since 27 Nov 2026 also the four B2–C1 films
 export const LANGS = ["de", "en", "sw", "fr"];
 export const VERSIONS = [...LANGS, ...LANGS.map((l) => l + "-long")];
 const reply = (status, data, h) => new Response(JSON.stringify(data), { status, headers: { ...h, "Content-Type": "application/json", "Cache-Control": "no-store" } });
@@ -31,7 +33,7 @@ export async function sceneFeedback(req, env, h) {
   const text = (v) => (typeof v === "string" ? v.replace(/\r\n?/g, "\n").replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n").trim() : v == null ? "" : undefined);
   const FIELDS = ["free", "understand", "pictures", "practice", "bugs", "good", "improve"], t = Object.fromEntries(FIELDS.map((f) => [f, text(b[f])]));
   const device = typeof b.device === "string" ? b.device.replace(/[^\w ·.\-]/g, "").slice(0, 60) : "";
-  const watched = Array.isArray(b.watched) ? b.watched.filter((x) => LANGS.includes(x)).join(",") : "";
+  const watched = Array.isArray(b.watched) ? b.watched.filter((x) => VERSIONS.includes(x)).join(",") : "";
   const lang = LANGS.includes(b.lang) ? b.lang : "de";
   if ([de, en, deL, enL, sw, fr, swL, frL, prefer].includes(undefined) || FIELDS.some((f) => t[f] === undefined || t[f].length > 4000)) return reply(400, { error: "Invalid feedback." }, h);
   if ([de, en, deL, enL, sw, fr, swL, frL, prefer].every((x) => x == null) && FIELDS.every((f) => !t[f])) return reply(400, { error: "Rate a version, choose one or write something." }, h);

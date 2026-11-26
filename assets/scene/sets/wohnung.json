@@ -1,0 +1,200 @@
+{
+ "name": "wohnung",
+ "version": 1,
+ "pxPerMetre": 391.5636,
+ "refHeight": 673,
+ "top": 4,
+ "scale": 2,
+ "width": 8419,
+ "height": 1835,
+ "groundY": 1566,
+ "camX": 1.75,
+ "world": [
+  -9,
+  12.5
+ ],
+ "depth": {
+  "front": 0.55,
+  "back": 1.05,
+  "backDepth": 2.6,
+  "kBack": 0.06,
+  "note": "feet at depth d: y = ground + d·front·z (d ≥ 0) or ground + back·z·max(-1, d / backDepth) (d < 0); size factor k = 1 + kBack·d for d < 0"
+ },
+ "spots": {
+  "door": -5.6,
+  "window": -2.2,
+  "window2": 2.4,
+  "stove": 5.4,
+  "arch": 8.4
+ },
+ "items": {
+  "wall": {
+   "type": "image",
+   "parallax": 0.93,
+   "extend": "up",
+   "file": "sets/wohnung/wall.webp",
+   "x": 0,
+   "y": 0,
+   "w": 8419,
+   "h": 1312
+  },
+  "view": {
+   "type": "image",
+   "parallax": 0.93,
+   "file": "sets/wohnung/view.webp",
+   "x": 2403,
+   "y": 334,
+   "w": 2417,
+   "h": 705
+  },
+  "viewWet": {
+   "type": "image",
+   "parallax": 0.93,
+   "fade": "wet",
+   "file": "sets/wohnung/viewWet.webp",
+   "x": 2403,
+   "y": 334,
+   "w": 2417,
+   "h": 705
+  },
+  "viewEve": {
+   "type": "image",
+   "parallax": 0.93,
+   "fade": "eve",
+   "file": "sets/wohnung/viewEve.webp",
+   "x": 2403,
+   "y": 334,
+   "w": 2417,
+   "h": 705
+  },
+  "frames": {
+   "type": "image",
+   "parallax": 0.93,
+   "file": "sets/wohnung/frames.webp",
+   "x": 1133,
+   "y": 294,
+   "w": 4775,
+   "h": 1022
+  },
+  "window": {
+   "type": "states",
+   "parallax": 0.93,
+   "state": "win",
+   "values": [
+    0,
+    0.1,
+    0.2,
+    0.3,
+    0.4,
+    0.5,
+    0.6,
+    0.7,
+    0.8,
+    0.9,
+    1
+   ],
+   "note": "the big window's casements: 0 shut … 1 open (the second window stays shut)",
+   "file": "sets/wohnung/window.webp",
+   "x": 2393,
+   "y": 516,
+   "frame": [
+    2436,
+    533
+   ],
+   "frames": 11,
+   "cols": 6,
+   "rows": 2
+  },
+  "door": {
+   "type": "states",
+   "parallax": 0.93,
+   "state": "door",
+   "values": [
+    0,
+    0.1,
+    0.2,
+    0.3,
+    0.4,
+    0.5,
+    0.6,
+    0.7,
+    0.8,
+    0.9,
+    1
+   ],
+   "note": "the front door: 0 shut … 1 open (the landing behind it is in the frames image)",
+   "file": "sets/wohnung/door.webp",
+   "x": 1179,
+   "y": 429,
+   "frame": [
+    401,
+    889
+   ],
+   "frames": 11,
+   "cols": 11,
+   "rows": 1
+  },
+  "floor": {
+   "type": "image",
+   "parallax": 1,
+   "extend": "down",
+   "file": "sets/wohnung/floor.webp",
+   "x": 0,
+   "y": 1295,
+   "w": 8419,
+   "h": 540
+  },
+  "doneFloor": {
+   "type": "image",
+   "parallax": 1,
+   "fade": "done",
+   "file": "sets/wohnung/doneFloor.webp",
+   "x": 2740,
+   "y": 1147,
+   "w": 1725,
+   "h": 585
+  },
+  "doneWall": {
+   "type": "image",
+   "parallax": 0.93,
+   "fade": "done",
+   "file": "sets/wohnung/doneWall.webp",
+   "x": 1871,
+   "y": 161,
+   "w": 4616,
+   "h": 914
+  },
+  "doneLight": {
+   "type": "image",
+   "parallax": 0.93,
+   "fade": "done",
+   "file": "sets/wohnung/doneLight.webp",
+   "x": 2555,
+   "y": 347,
+   "w": 1956,
+   "h": 1455,
+   "res": 0.5
+  }
+ },
+ "back": [
+  "wall",
+  "view",
+  "viewWet",
+  "viewEve",
+  "frames",
+  "window",
+  "door",
+  "floor",
+  "doneFloor",
+  "doneWall",
+  "doneLight"
+ ],
+ "front": [],
+ "state": {
+  "win": 0,
+  "wet": 0,
+  "eve": 0,
+  "done": 0,
+  "door": 0
+ }
+}

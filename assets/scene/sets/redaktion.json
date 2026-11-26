@@ -1,0 +1,240 @@
+{
+ "name": "redaktion",
+ "version": 1,
+ "pxPerMetre": 391.5636,
+ "refHeight": 673,
+ "top": 4,
+ "scale": 2,
+ "width": 8223,
+ "height": 1835,
+ "groundY": 1566,
+ "camX": 1.5,
+ "world": [
+  -9,
+  12
+ ],
+ "depth": {
+  "front": 0.55,
+  "back": 1.05,
+  "backDepth": 2.6,
+  "kBack": 0.06,
+  "note": "feet at depth d: y = ground + d·front·z (d ≥ 0) or ground + back·z·max(-1, d / backDepth) (d < 0); size factor k = 1 + kBack·d for d < 0"
+ },
+ "spots": {
+  "door": -5.8,
+  "window": -3.6,
+  "desk": -1.45,
+  "clock": -0.95,
+  "screen": 1.1,
+  "press": 4.7,
+  "shelf": 6.9
+ },
+ "screen": {
+  "x": 1.1,
+  "d": -1.45,
+  "w": 2.3,
+  "y0": 0.42,
+  "h": 1.2,
+  "col": {
+   "x": 1.92,
+   "w": 0.46,
+   "y0": 0.5,
+   "y1": 1.36
+  }
+ },
+ "press": {
+  "x": 4.7,
+  "d": -1.2,
+  "w": 2,
+  "h": 1.5,
+  "in": {
+   "x": 3.85,
+   "y": 1.25
+  },
+  "out": {
+   "x": 5.75,
+   "y": 0.95
+  }
+ },
+ "desk": {
+  "x0": -2.2,
+  "x1": -0.75,
+  "top": 0.74,
+  "d": 0.24,
+  "seat": -1.4
+ },
+ "items": {
+  "wall": {
+   "type": "image",
+   "parallax": 0.93,
+   "extend": "up",
+   "file": "sets/redaktion/wall.webp",
+   "x": 0,
+   "y": 0,
+   "w": 8223,
+   "h": 1399
+  },
+  "door": {
+   "type": "states",
+   "parallax": 0.93,
+   "state": "door",
+   "values": [
+    0,
+    0.1,
+    0.2,
+    0.3,
+    0.4,
+    0.5,
+    0.6,
+    0.7,
+    0.8,
+    0.9,
+    1
+   ],
+   "note": "the glass door: 0 shut … 1 open",
+   "file": "sets/redaktion/door.webp",
+   "x": 1096,
+   "y": 439,
+   "frame": [
+    397,
+    888
+   ],
+   "frames": 11,
+   "cols": 11,
+   "rows": 1
+  },
+  "clock": {
+   "type": "clock",
+   "parallax": 0.93,
+   "state": "clock",
+   "centre": [
+    3193.283,
+    533.471
+   ],
+   "r": 0.17,
+   "color": "#2a2f3a",
+   "hands": {
+    "hour": {
+     "len": 0.5,
+     "width": 0.024,
+     "minWidth": 1.5
+    },
+    "minute": {
+     "len": 0.78,
+     "width": 0.014,
+     "minWidth": 1
+    }
+   },
+   "pin": {
+    "radius": 0.018,
+    "minRadius": 1.5
+   },
+   "note": "the wall clock (as the lake's): state clock = minutes after midnight (1040 = 17:20)"
+  },
+  "floor": {
+   "type": "image",
+   "parallax": 1,
+   "extend": "down",
+   "file": "sets/redaktion/floor.webp",
+   "x": 0,
+   "y": 970,
+   "w": 8223,
+   "h": 865
+  },
+  "screen": {
+   "type": "image",
+   "parallax": 1,
+   "file": "sets/redaktion/screen.webp",
+   "x": 3485,
+   "y": 738,
+   "w": 864,
+   "h": 625,
+   "note": "the big screen stands on the floor (parallax 1): props at its depth stay on it"
+  },
+  "page": {
+   "type": "states",
+   "parallax": 1,
+   "state": "page",
+   "values": [
+    0,
+    0.1,
+    0.2,
+    0.3,
+    0.4,
+    0.5,
+    0.6,
+    0.7,
+    0.8,
+    0.9,
+    1
+   ],
+   "note": "the screen's narrow column: 0 empty (a glowing dashed frame) … 1 full of print",
+   "file": "sets/redaktion/page.webp",
+   "x": 4182,
+   "y": 847,
+   "frame": [
+    172,
+    315
+   ],
+   "frames": 11,
+   "cols": 11,
+   "rows": 1
+  },
+  "press": {
+   "type": "image",
+   "parallax": 1,
+   "file": "sets/redaktion/press.webp",
+   "x": 4854,
+   "y": 848,
+   "w": 930,
+   "h": 559
+  },
+  "pressRun": {
+   "type": "loop",
+   "parallax": 1,
+   "loop": 1,
+   "fps": 16,
+   "fade": "press",
+   "file": "sets/redaktion/pressRun.webp",
+   "x": 4854,
+   "y": 848,
+   "frame": [
+    930,
+    559
+   ],
+   "frames": 16,
+   "cols": 16,
+   "rows": 1,
+   "note": "the press running (rattling, rollers turning, a sheet coming out), a 1 s loop drawn over the still image with the state press (0 … 1) as its opacity"
+  },
+  "desk": {
+   "type": "image",
+   "parallax": 1,
+   "file": "sets/redaktion/desk.webp",
+   "x": 2633,
+   "y": 1212,
+   "w": 627,
+   "h": 431,
+   "note": "Lena's desk, in front of the people"
+  }
+ },
+ "back": [
+  "wall",
+  "door",
+  "clock",
+  "floor",
+  "screen",
+  "page",
+  "press",
+  "pressRun"
+ ],
+ "front": [
+  "desk"
+ ],
+ "state": {
+  "clock": 1040,
+  "page": 0,
+  "press": 0,
+  "door": 0
+ }
+}

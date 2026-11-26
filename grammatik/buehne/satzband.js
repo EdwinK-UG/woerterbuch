@@ -8,7 +8,7 @@
      filled wagon to send its tile back. Keyboard: every tile and wagon is a button.
    Parts are { w: text, r: role, id }: r = 'v' engine (conjugated verb), 't' end (infinitive, verb part), 'n' subject,
    'x' anything else, 'c' a connector at seat 0. */
-import { rich, plain, REDUCED, T } from './stage.js';
+import { rich, plain, esc, REDUCED, T } from './stage.js';
 import { play } from './sfx.js';
 
 const EASE = 'cubic-bezier(.3,.8,.3,1)';
@@ -18,7 +18,7 @@ function seatLabel(parts, i) {
   if (p.r === 'c') return '0';
   if (p.r === 'v') return String(i + 1 - (parts[0].r === 'c' ? 1 : 0));
   if (i === (parts[0].r === 'c' ? 1 : 0) && v !== i) return '1';
-  if (p.r === 't' && i === parts.length - 1) return 'Ende';
+  if (p.r === 't' && i === parts.length - 1) return T('end');
   return '';
 }
 
@@ -123,7 +123,8 @@ export function createStrip(root, { cases = false } = {}) {
      tiles(list, { fixed }) shows list.length empty wagons and the tiles in a shuffled bank; resolves with the order the
      learner checks (an array of tile indexes). fixed: { seatIndex: tileIndex } wagons already filled (a hint). */
   // slots: fewer wagons than tiles (the rest are distractors, e.g. der Hund / den Hund)
-  function tiles(list, { fixed = {}, check = T('check'), end = '', roles = [], slots } = {}) {
+  // seats: the small label over each wagon ('' for none); by default 1, 2 … and the last one's "Ende"
+  function tiles(list, { fixed = {}, check = T('check'), end = '', roles = [], slots, seats } = {}) {
     setClamp(false, true); root.classList.add('tiles'); parts = [];
     const n = slots || list.length, slot = new Array(n).fill(null);
     for (const [s, t] of Object.entries(fixed)) slot[+s] = t;
@@ -134,8 +135,8 @@ export function createStrip(root, { cases = false } = {}) {
       row.replaceChildren(...slot.map((t, s) => {
         const b = document.createElement('button'); b.type = 'button'; b.className = 'sb-w ' + (t == null ? 'empty' : fixed[s] != null ? 'r-' + (roles[t] || 'x') : 'r-x') + (pick === s ? ' pick' : '') + (fixed[s] != null ? ' fixed' : '');
         b.dataset.id = t == null ? 'slot' + s : 'tile' + t;
-        b.innerHTML = `<small class="sb-seat">${s === 0 ? '1' : s === 1 ? '2' : s === n - 1 ? 'Ende' : ''}</small><span class="sb-word">${t == null ? '&nbsp;' : rich(list[t])}</span><i class="sb-wh"></i>${s === n - 1 && end ? `<b class="sb-end">${end}</b>` : ''}`;
-        b.setAttribute('aria-label', t == null ? `Platz ${s + 1}, leer` : `Platz ${s + 1}: ${plain(list[t])}. Zurücklegen`);
+        b.innerHTML = `<small class="sb-seat">${seats ? esc(seats[s] || '') : s === 0 ? '1' : s === 1 ? '2' : s === n - 1 ? T('end') : ''}</small><span class="sb-word">${t == null ? '&nbsp;' : rich(list[t])}</span><i class="sb-wh"></i>${s === n - 1 && end ? `<b class="sb-end">${end}</b>` : ''}`;
+        b.setAttribute('aria-label', t == null ? `${T('seat')} ${s + 1}, ${T('empty')}` : `${T('seat')} ${s + 1}: ${plain(list[t])}. ${T('putBack')}`);
         b.onclick = () => { if (fixed[s] != null) return; if (t != null) { slot[s] = null; play.tick(); flip(draw, 320); } else { pick = pick === s ? null : s; draw(); } };
         return b;
       })); fit();

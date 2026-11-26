@@ -18,11 +18,22 @@ file, and reuses the rest.
 | `grammatik/buehne/licht.js` | **The spotlight** on whoever speaks. The camera no longer zooms in and out on speakers (`S.zoom = false`; a new framing inside a scene is a cut, pans stay smooth): the picture dims a little except for a soft pool of light around the speaker, which glides to the next one, and comes back up when the narrator speaks. |
 | `grammatik/buehne/bilder.js` | **The pictures of meaning**, animated in a 160 × 100 box: cooking soup, cooking together, repairing a chair, getting up at six, sawing, painting, no smoking, tidying up, opening the window, waiting for dinner, and for the practice no parking, no phones, dancing, helping, swimming, pancakes, cleaning, getting fit. `ICONS`: the modal verbs' signs (medal = können, ! = müssen, check / red bar = dürfen / nicht, target = wollen, speech = sollen, heart = möchten, ? = a question). |
 | `grammatik/buehne/tiere.js` | **The animal kit and M2, the case rings.** The dog (gallop, wagging tail, flapping ear, tongue), Minka the tabby cat, a bouncing beach ball, a flock of birds, Max's backpack and camping things that fly into it. Animals walk and run on the set's ground like the figures; `raise` carries one (the ball in the dog's mouth). The rings: amber N and teal A ellipses with a letter badge, drawn half behind and half in front of whoever stands in them. |
+| `grammatik/buehne/baked.js` | **The baked assets** (`assets/scene/`, `docs/scene-assets.md`): sets, animals, birds, the backpack, things, pictures of meaning and icons drawn from images and manifests, as the apps draw them. The sets, `tiere.js`, `blase.js` and `tafel.js` use it and fall back to their own Canvas drawing for any frame whose image has not loaded yet. Re-bake after a drawing change: `node tools/bake-scene-assets.cjs`. |
+| `grammatik/buehne/szene.js`, `regie.js` | **The player of scene format v1** (`docs/scene-format.md`, since 24 Nov 2026): a scene is one data file per version (set, cast, animals, acts of beats in a closed vocabulary, practice and its staging); `szene.js` builds the scene and runs the practice, `regie.js` runs the steps. The pilot pages only call `playScene({ base, set, cast })`; the iOS and Android apps play the same files. `tools/scene-compile.mjs` turns an author's script (with shortcuts) into v1; `tests/scene-format.test.cjs` checks every file. |
+| `grammatik/buehne/requisiten.js` | **Props, the tape, dimming and ghosts** (26 Nov 2026, for the B2–C1 films): baked things (and words on planks or cards) placed, carried by a person, moving by themselves, glowing, toned sepia / gray / ghost; a word that is shaved, stamped, flipped or grows into another; a measuring tape as a timeline on the floor; the picture darkening; a person fading to a glowing outline. One canvas above the set's front. Steps `prop`, `move`, `morph`, `tape`, `dim`, `ghost` (`docs/scene-format.md`). Since the Konjunktiv II film (k97) also: pictures of meaning floating in bubbles (`pic`), words on stone, the tone `wish` (lilac, twinkling), props bursting into glitter (`pop`), people riding a prop (`ride`), rain (`rain`, also rising backwards) and a tone for the whole picture (`tint`: sepia, or a lilac "what if"). Since the Nominalstil film (k482): a word that folds into another like a paper fan (`fold`) and a picture bubble that flips to another picture (`morph` on a `pic`). Since the Futur II film (k439): guesses (the tone `guess`, turned into facts by `sure`), words on a finish flag (`flag`) or as an empty glowing slot (`slot`, width `w`), a cork that pops off a word (`cork`), the tint `future`, and the tape as a glowing time band (`look: "band"`, with `now`, flag marks, an arc looking back). |
+| `grammatik/buehne/sets/see.js` | **The lake** (k97): a stream with a footbridge (it can be rubbed out: `bridge`), the boathouse with its canopy, clock (`clock`) and door (`door`), a jetty, open water, the island's beach with a pavilion; grey or sunny (`sun`). Baked like the other sets. |
+| `grammatik/passiv/` | B2 · id 99 (Passiv), *Die Werkstatt der unsichtbaren Hände*: Anton, Lena, Frau Huber in the workshop; 11 acts and 10 practice rounds, four of them acted out. Private source `.local/scenes/k99-long/` (`staging.mjs` shared by every language, `script.mjs` German). Hero film of the chapter page `#/g/99` (B2 · Kapitel 14, `WERKSTATT` in `grammatik/grammatik.js`) since 27 Nov 2026, German and English, feedback key `k99`. |
+| `grammatik/konjunktiv/` | B2 · id 97 (Konjunktiv II: Wünsche und irreale Bedingungen), *Wunschblasen am See*: Lena and Opa Sepp miss the ferry to a party on the island; wishes appear as lilac bubbles and pop when reality returns. 10 acts and 10 practice rounds (wish bubbles that glow or pop; the wings are acted out). Private source `.local/scenes/k97-long/` (`staging.mjs` shared by every language, `script.mjs` German). Hero film of `#/g/97` (B2 · Kapitel 12) since 27 Nov 2026, German and English, feedback key `k97`. |
+| `grammatik/buehne/sets/wohnung.js` | **Lena's flat** (k439): an empty Altbau flat on moving day: two tall windows onto the street (it can be wet after the rain: `wet`, or evening: `eve`), a tiled stove, the front door to the landing (`door`), the big window's casements (`win`), and the finished flat fading in (`done`: curtains, pictures, a rug, a sofa, the lamp). Baked like the other sets. |
+| `grammatik/buehne/sets/redaktion.js` | **The newsroom** (k482): the local paper's office just before the deadline: a window onto the roofs, a glass door (`door`), a wall clock (`clock`, minutes), a big screen on a low stand with tomorrow's front page and its narrow empty column that fills with print (`page`), an old printing press at the back that rattles and prints (`press`), Lena's desk in front. Baked like the other sets. |
+| `grammatik/nominalstil/` | C1 · id 482 (Nominalstil: Verben werden zu Nomen), *Die Spalte ist zu schmal*: Lena's news items are too wide for the column; Frau Adler's red pen folds verbs into nouns (morph fx `fold`), case badges flip, whole sentences shrink into noun phrases that drop into the column; a portrait flips between two meanings (a picture bubble's `morph`); a heavy letter from the town hall hangs with noun weights. 10 acts, 10 practice rounds (each right answer folds a news item into the column). Private source `.local/scenes/k482-long/` (`staging.mjs` shared by every language, `script.mjs` German). Hero film of `#/g/482` (C1 · Kapitel 82) since 27 Nov 2026, German and English, feedback key `k482`. |
+| `grammatik/futur2/` | C1 · id 439 (Futur II: Vermutungen über Vergangenes und Abschlüsse in der Zukunft), *Lenas Umzug auf dem Zeitband*: in Antons Werkstatt and in Lena's new flat (the first film in two places: an act's `set`); a glowing time band on the floor; guesses as see-through bubbles with a "?" that fill in when they come true (`sure`); the camera flies to Friday and looks back. 10 acts, 10 practice rounds (each right answer unpacks a box). Private source `.local/scenes/k439-long/` (`staging.mjs` shared by every language, `script.mjs` German). Hero film of `#/g/439` (C1 · Kapitel 39) since 27 Nov 2026, German and English, feedback key `k439`. |
+| `tools/scene-frames.cjs` | **Contact sheet** of any v1 scene, headless: a frame near the end of every line, plus how much the board and bubble cover the people's faces and which board steps are still waiting. `node tools/scene-frames.cjs "http://localhost:8798/grammatik/passiv/index.html?local" .local/scenes/k99-long/frames [--phone] [--sound]` (needs Node 22+). |
 | `grammatik/jagd/` | Kapitel 17 (Akkusativ), *Wer jagt wen?*, on the village meadow (`grammatik/dorf/village.js` as its set). 5 scenes, plus 10 practice rounds: **Regie** (3: the learner's sentence is acted out exactly as its articles say, so *Den Hund jagt der Ball* makes the ball chase the dog), *Max packt* (4, from u2) and *Doch, ich habe …* (3, from t1). The strip is in case mode (`createStrip(el, { cases: true })`). |
 | `grammatik/klammer/` | Kapitel 5: six scenes (Klammer, Vokalrad, Ohne Endung, man, Fragen, Merksatz) and 11 practice rounds. The rounds are the chapter's own exercises: u2, u3, u5, u4, u6 and t1. |
-| `.local/scenes/k05/lines.json` | **Private** (git-ignored): every line, strip, wheel, sign, card, reason and practice item. Public files hold no lesson text; `tests/buehne.test.cjs` checks this. |
+| `.local/scenes/k05-long/lines.json` (and `-en-long`, `-sw-long`, `-fr-long`) | **Private** (git-ignored): every line, strip, wheel, sign, card, reason and practice item. Public files hold no lesson text; `tests/buehne.test.cjs` checks this. |
 | `.local/scenes/voices.json` | **Private**: the cast's ElevenLabs voices, shared by all chapters (copied from Im Dorf). |
-| `tools/scene-audio.cjs` | Recording for any scene: `record k05`, `pack k05`, plus `library` / `add` / `samples` for choosing a voice. |
+| `tools/scene-audio.cjs` | Recording for any scene: `record k05-long`, `pack k05-long …`, plus `library` / `add` / `samples` for choosing a voice. |
 
 ## Try it
 
@@ -30,7 +41,7 @@ file, and reuses the rest.
 python3 -m http.server 8798 --bind 127.0.0.1
 ```
 
-Then open `http://localhost:8798/grammatik/klammer/index.html?local` (Kap 5) or `…/grammatik/jagd/index.html?local` (Kap 17).
+Then open `http://localhost:8798/grammatik/klammer/index.html?local` (Kap 5), `…/grammatik/jagd/index.html?local` (Kap 17) `…/grammatik/passiv/index.html?local` (B2 · Passiv, k99) `…/grammatik/konjunktiv/index.html?local` (B2 · Konjunktiv II, k97) `…/grammatik/futur2/index.html?local` (C1 · Futur II, k439) or `…/grammatik/nominalstil/index.html?local` (C1 · Nominalstil, k482).
 - `&speed=2` runs the scene clock twice as fast (checks only).
 - `&test` drives the clock by a timer.
 - Hooks: `__klammer.watch(i)`, `__klammer.practise()`, `__klammer.S`, `__klammer.A`.
@@ -43,6 +54,7 @@ chosen by pitch, liveliness and how different they sound from the rest of the ca
 
 | Role | Voice (ElevenLabs Voice Library) | Why |
 |---|---|---|
+| Narrator (role `elisa`, German) | Otto – Casual and Normal (since 24 Nov 2026, speed 1.0; before: Elisa) | the owner's choice for a lighter, still teacherly narrator at a natural pace, mid-low pitch; the German caption says *Erzähler* (`.local/scenes/audition/narrator-2026-11.md`) |
 | Meister Anton | Christian Plasa – Soft and Mild (played at 0.95 speed) | a natural, warm conversational voice for dialogue |
 | Frau Adler | Dana – Friendly and Fun | warm and trustworthy; the lowest of the women, so different from Huber, Lena and Elisa |
 | Max | Albert – Cheerful, Playful and Fun | the highest, most boyish pitch; made for funny characters |
@@ -80,11 +92,11 @@ Their lines, boards, practice and recordings travel through the Worker's private
 `k17/`). To publish a change to a scene's private file or voices:
 
 ```bash
-node tools/scene-audio.cjs pack k05
+node tools/scene-audio.cjs pack k05-long k05-en-long k05-sw-long k05-fr-long
 ```
 
 ```bash
-FILM_AUDIO_DIR=$PWD/.local/scenes/k05/upload node tools/upload-film-audio.cjs --remote
+FILM_AUDIO_DIR=$PWD/.local/scenes/k05-long/upload node tools/upload-film-audio.cjs --remote --only 5
 ```
 
 (The path must be absolute; the tool runs wrangler from `worker/`, which needs wrangler installed or linked there.)
@@ -101,10 +113,10 @@ manifest. Anton's figure (`a02.riv`) is published with the rest of the 2D cast i
 ## Two languages (22 Nov 2026)
 
 Each pilot has a German version and a **bilingual** one (`?lang=en`, switch **DE | EN** under the picture): the
-narrator (Enniah, ElevenLabs Voice Library, a native German voice verified in English) explains in English with the
+narrator (Katja since 25 Nov 2026, an Azure German voice; until then Enniah) explains in English with the
 German woven in; the characters speak German with an English gloss under their line; buttons and feedback are
-English. Private files: `.local/scenes/k05-en/`, `.local/scenes/k17-en/` (same scenes; the characters' recordings
-are reused). Both languages of a chapter travel in one narration list: `node tools/scene-audio.cjs pack k05 k05-en`.
+English. Private files: `.local/scenes/k05-en-long/`, `.local/scenes/k17-en-long/` (the characters' recordings are
+reused). All languages of a chapter travel in one narration list (see Long versions).
 
 **Pronunciation rules for the bilingual narrator** (the owner's review: no German word in an English accent, no
 English word in a German one):
@@ -146,8 +158,9 @@ Calls to test and new-feature emails are designs in `worker/src/announce.js`, pi
 
 ## Long versions
 
-Each pilot can come in four versions: short or long (`?form=long`), each explained in German or in English with
-German examples (`?lang=en`). The long version opens like a class: today's topic, why it matters in daily life, a
+**Since 24 Nov 2026 each pilot has only its long version**, explained in German, English, Swahili or French
+(`?lang=`). The short versions are archived: code in git tag `archive/short-pilots-k5-k17`, private lines and
+recordings in `.local/release-backups/20261124-short-pilots-k5-k17/` (README there). The long version opens like a class: today's topic, why it matters in daily life, a
 question that gets the learner thinking, then the rule in more detail and a recap that comes back to the opening.
 The German and the English long scripts are written apart, not translated, and are staged differently (the German
 one starts from a story, Liv planning her day; the English one from what English speakers already know: "I can
@@ -155,33 +168,45 @@ dance" against "Ich kann gut tanzen").
 
 - Scripts: `.local/scenes/<scene>-long/script.mjs` and `.local/scenes/<scene>-en-long/script.mjs` (private) write
   that version's `lines.json`; run them after a change, then `node tools/scene-audio.cjs record <scene>-long`.
-  Lines shared with the short film reuse its recordings.
-- Staging as data: a long script carries `acts` (scenes) made of `beats`, played by `grammatik/buehne/regie.js`; a
-  scene file passes its own verbs (Kap 18: merk, wheel, sign, window, sweep, saw; Kap 13: home, pet, move, dash,
-  ring, ringsOff, lamps, lamp, chase, hop, mood, look, birds, bleat, band, carry, backHome).
+  Lines it once shared with the short film are frozen in `base.json` and `base/audio/` in the same folder.
+- Staging as data: a long script carries `acts` (scenes) made of `beats` and may use shortcuts (`saw`, `home`, `carry`,
+  `sign`, `band` …); at its end it runs `tools/scene-compile.mjs`, which writes scene format v1 (`docs/scene-format.md`):
+  beats as ordered lists of single-key steps from one closed vocabulary, played by `grammatik/buehne/regie.js` and the apps.
 - Openers so far: Kap 18 German – Liv plans her day (will schwimmen, muss putzen, kann tanzen); Kap 18 English – "I
   can dance" against "Ich kann richtig gut tanzen"; Kap 13 German – a coffee, a lost key, a dog (someone does
   something, something receives it); Kap 13 English – "I see him", never "I see he", and word order against articles.
 - Boards (`tafel.js`) also take `{ cards: [{ pic, icon, t, at }] }`: picture cards with a caption, or the modal
   verbs' icons with their meaning, appearing word by word.
-- The switch under the film: DE | EN and Kurz | Lang (`start({ long: true })`); the feedback form rates every
-  version this browser has watched (`de`, `en`, `de-long`, `en-long`).
-- One chapter's narration list holds all its versions: `node tools/scene-audio.cjs pack k05 k05-en k05-long k05-en-long`
-  (Kap 13: `pack k17 k17-en k17-long k17-en-long`), then `FILM_AUDIO_DIR=<abs>/.local/scenes/k05/upload node
-  tools/upload-film-audio.cjs --remote --only 5` (needs wrangler in `worker/node_modules`).
+- The switch under the film: DE | EN | SW | FR; the feedback form rates every version this browser has watched
+  (`de-long`, `en-long`, `sw-long`, `fr-long`; the old short ratings stay in their own columns).
+- One chapter's narration list holds all its versions: `node tools/scene-audio.cjs pack k05-long k05-en-long k05-sw-long
+  k05-fr-long` (Kap 13: the same with `k17`), then `FILM_AUDIO_DIR=<abs>/.local/scenes/k05-long/upload node
+  tools/upload-film-audio.cjs --remote --only 5` (needs wrangler in `worker/node_modules`). The upload replaces the
+  chapter's list, so the archived short cues leave the live list with it.
 - Local testing: the dev server in `.claude/launch.json` needs a long connection queue (`request_queue_size`), or
   Chrome's many parallel module requests get reset and the scene never starts.
 
 ## Swahili and French (22 Nov 2026)
 
-Both pilots also explain in **Kenyan Swahili** (`?lang=sw`) and **standard French** (`?lang=fr`), short and long,
+Both pilots also explain in **Kenyan Swahili** (`?lang=sw`) and **standard French** (`?lang=fr`),
 with the German examples and the characters' German lines unchanged (their recordings are reused) and a gloss under
 each character line in the new language. The switch under the film reads **DE | EN | SW | FR**; in a narrow practice
 panel (a phone, or the column beside the picture) only the language in use shows, and tapping it opens the others,
 so the picture keeps its size. Buttons, feedback and practice hints are in the version's language (`UI`, `SW` in
 `stage.js`; `TXT`, `PARTS` in `meinung.js`).
 
-- **Voices.** French: Victoria (ElevenLabs Voice Library, standard Parisian French, verified in French and German),
+- **Voices since 25 Nov 2026** (the owner's choice: *a German teaching German*, German voices from Azure;
+  `.local/scenes/audition/narrators-azure-2026-11.md`): English **Katja** (`azure:de-DE-KatjaNeural`, German only, so
+  she reads English with a German accent), French **Florian** (`azure:de-DE-FlorianMultilingualNeural:tagged`, the
+  French parts tagged `fr-FR`), Swahili still Mohammed (ElevenLabs), whose German examples are now spoken by Katja.
+  An Azure narrator speaks a whole line in one SSML request, the `{de:…}` runs in `<lang xml:lang='de-DE'>`
+  (`tools/azure-tts.cjs`; key in `.env.azure`). German narrator: Otto (ElevenLabs). Labels: *Narrator*, *Narrateur*.
+  Checking a whole Azure line: `node .local/scenes/lang/scribe-lines.cjs <scene>…` (Scribe detects the languages;
+  share of German and of own-language words heard; `--lang de --only e11,e16` to hear given lines as German). Local
+  Whisper is no use on these mixed lines: forced to one language it translates the other. The Swahili parts are
+  still checked one by one (`scribe.cjs`, faster-whisper for the German parts) and redone with `split-voice.cjs redo`.
+  The paragraph below is the history.
+- **Voices until 24 Nov.** French: Victoria (ElevenLabs Voice Library, standard Parisian French, verified in French and German),
   on `eleven_turbo_v2_5` like English, one voice for both languages, each run recorded alone with its language
   enforced (on `eleven_v4` her short German phrases, *den Ball*, *du kannst*, were heard as English: 2 of 10 takes
   passed the check, against 8 of 10 on Turbo). Swahili is a
@@ -204,7 +229,7 @@ python3 .local/scenes/lang/texts.py
 node .local/scenes/lang/make.cjs --missing
 ```
 
-  `make.cjs` builds `<scene>-sw[-long]` and `<scene>-fr[-long]` from the English version of the same length (same
+  `make.cjs` builds `<scene>-sw-long` and `<scene>-fr-long` from the English long version (same
   scenes, staging and practice), copies the characters' recordings, keeps a recording whose line did not change,
   and lists any text without a translation and any board timing it had to guess.
 - **Recording and checks.** `node tools/scene-audio.cjs record k05-sw` (and the other seven). German parts are
@@ -212,9 +237,9 @@ node .local/scenes/lang/make.cjs --missing
   (`node .local/scenes/lang/scribe.cjs <scene>…`), as the local model cannot judge short Swahili. A German example
   always comes as a phrase of two words or more, and a run of the explaining language between two German phrases has
   at least two words (*na pia*, *et aussi*), so the duet does not switch speakers every half second.
-- **Packing.** One chapter's narration list holds all eight versions:
-  `node tools/scene-audio.cjs pack k05 k05-en k05-sw k05-fr k05-long k05-en-long k05-sw-long k05-fr-long`.
-- **Feedback.** Stars for every version (`sw`, `fr`, `sw-long`, `fr-long`), stored in the columns of migration 0008.
+- **Packing.** One chapter's narration list holds all four versions:
+  `node tools/scene-audio.cjs pack k05-long k05-en-long k05-sw-long k05-fr-long`.
+- **Feedback.** Stars for every version (`sw-long`, `fr-long`), stored in the columns of migration 0008.
 
 ## Redesign of the play-along (22 Nov 2026)
 

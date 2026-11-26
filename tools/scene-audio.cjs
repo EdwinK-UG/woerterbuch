@@ -8,7 +8,8 @@
      node tools/scene-audio.cjs scout [role…]                    Voice Library candidates for roles without a voice (free)
      node tools/scene-audio.cjs audition                         render .local/scenes/audition.json + a listening page
      node tools/scene-audio.cjs cast <role> <voice id>           give a role its voice
-     node tools/scene-audio.cjs record <scene> [--dry]          record every line that changed (hash of text, voice, settings)
+     node tools/scene-audio.cjs record <scene> [--dry]          record every line that changed (hash of text, voice, settings);
+                                                               .local/scenes/<scene>/voices.json overrides the shared cast
      node tools/scene-audio.cjs pack <scene>                    the upload folder for tools/upload-film-audio.cjs
    The key comes only from ELEVENLABS_API_KEY. This file holds no lesson text.
    Children (Max, Mia, Finn): ElevenLabs does not allow child voices; their lines are skipped until a voice is chosen
@@ -16,7 +17,8 @@
 "use strict";
 const fs = require("fs"), path = require("path"), crypto = require("crypto"), { execFileSync } = require("child_process");
 const { call, speak, credits } = require("./elevenlabs.cjs");
-const { splitSpeak, SPLIT_MODEL, NARRATOR } = require("./split-voice.cjs");
+const { splitSpeak, runs, SPLIT_MODEL, NARRATOR } = require("./split-voice.cjs");
+const { isAzure, speakAzure } = require("./azure-tts.cjs");
 // the bilingual narrator speaks English with German woven in: each language is recorded natively, then joined
 const SPLIT = new Set(["narrator"]);
 
@@ -24,9 +26,11 @@ const ROOT = path.join(__dirname, "..", ".local", "scenes"), VOICES = path.join(
 const MODEL = "eleven_multilingual_v2";
 const SETTINGS = {
   default: { stability: 0.5, similarity_boost: 0.75, style: 0, use_speaker_boost: true, speed: 1 },
-  elisa: { stability: 0.55, similarity_boost: 0.75, style: 0, use_speaker_boost: true, speed: 0.95 },
+  elisa: { stability: 0.5, similarity_boost: 0.75, style: 0.15, use_speaker_boost: true, speed: 1.0 },   // the German narrator: Otto since 24 Nov 2026 (lighter, natural pace; .local/scenes/audition/narrator-2026-11.md)
   liv: { stability: 0.4, similarity_boost: 0.75, style: 0.3, use_speaker_boost: true, speed: 1.05 },
-  narrator: { stability: 0.55, similarity_boost: 0.75, style: 0, use_speaker_boost: true, speed: 0.95 },   // Enniah: English explanations, German examples
+  // the ElevenLabs settings of the non-German narrators. Since 25 Nov 2026 English (Katja) and French (Florian) are Azure
+  // voices (voices.json "azure:…", tools/azure-tts.cjs: no settings, default rate); these apply to Swahili (Mohammed)
+  narrator: { stability: 0.55, similarity_boost: 0.75, style: 0, use_speaker_boost: true, speed: 1.0 },
   anton: { stability: 0.5, similarity_boost: 0.75, style: 0.15, use_speaker_boost: true, speed: 0.95 },  // Christian Plasa, a little slower
   finn: { stability: 0.5, similarity_boost: 0.75, style: 0.2, use_speaker_boost: true, speed: 1.0 },     // the quieter boy
   kid: { stability: 0.38, similarity_boost: 0.75, style: 0.35, use_speaker_boost: true, speed: 1.06 },   // Max, Mia, Finn: lively
@@ -139,11 +143,12 @@ ${page.map((p) => `<h2>${esc(p.role)}</h2><p class="t">${esc(p.note || "")} „$
     console.log("listening page: .local/scenes/audition/index.html; used", credits(chars)); return;
   }
   if (cmd === "cast") {            // cast <role> <voice id>: the role's voice for every scene
-    const [role, id] = args; if (!role || !/^[A-Za-z0-9]{10,40}$/.test(id || "")) { console.error("usage: cast <role> <voice id>"); process.exit(1); }
+    const [role, id] = args; if (!role || !/^([A-Za-z0-9]{10,40}|azure:[A-Za-z]{2}-[A-Za-z]{2}-[A-Za-z]+Neural(:tagged)?)$/.test(id || "")) { console.error("usage: cast <role> <ElevenLabs voice id | azure:<voice>[:tagged]>"); process.exit(1); }
     const cast = read(VOICES, {}); cast[role] = id; fs.writeFileSync(VOICES, JSON.stringify(cast, null, 1)); console.log(role, "→", id); return;
   }
   if (cmd === "record") {
-    const dir = sceneDir(args[0]), LINES = path.join(dir, "lines.json"), dry = args.includes("--dry"), data = read(LINES), cast = read(VOICES, {});
+    // a scene's own voices.json (e.g. the B2–C1 films: Azure voices for every role) overrides the shared cast
+    const dir = sceneDir(args[0]), LINES = path.join(dir, "lines.json"), dry = args.includes("--dry"), data = read(LINES), cast = { ...read(VOICES, {}), ...read(path.join(dir, "voices.json"), {}) };
     if (!data) { console.error("no", LINES); process.exit(1); }
     // the Swahili and French versions: their own narrator (voices.json narrator-sw / narrator-fr) and model
     const lang = data.lang || "en", nar = NARRATOR[lang] || NARRATOR.en, deVoice = nar.de ? cast[nar.de.role] : null;
@@ -164,7 +169,9 @@ ${page.map((p) => `<h2>${esc(p.role)}</h2><p class="t">${esc(p.note || "")} „$
         for (const [i, r] of roles.entries()) { const f = path.join(dir, "audio", `${id}.part${i}.mp3`); fs.writeFileSync(f, (await speak(text, cast[r], MODEL, { voice_settings: SETTINGS[r] || SETTINGS.default })).bytes); parts.push(f); }
         execFileSync("ffmpeg", ["-v", "error", "-y", ...parts.flatMap((f) => ["-i", f]), "-filter_complex", `amix=inputs=${parts.length}:normalize=0`, "-ar", "44100", "-b:a", "96k", path.join(dir, rel)]);
         parts.forEach((f) => fs.unlinkSync(f));
-      } else if (split) await splitSpeak(ln.text, cast[roles[0]], SETTINGS[roles[0]], path.join(dir, rel), { base: lang, model: nar.model, de });
+      } else if (split && isAzure(cast[roles[0]])) await speakAzure(runs(ln.text, lang), cast[roles[0]], path.join(dir, rel), lang);   // one request per line
+      else if (!split && isAzure(cast[roles[0]])) await speakAzure([{ lang: "de", t: text }], cast[roles[0]], path.join(dir, rel), "de");   // one German voice, one request
+      else if (split) await splitSpeak(ln.text, cast[roles[0]], SETTINGS[roles[0]], path.join(dir, rel), { base: lang, model: nar.model, de });
       else fs.writeFileSync(path.join(dir, rel), (await speak(text, cast[roles[0]], isShort(ln) ? SHORT_MODEL : MODEL, { voice_settings: SETTINGS[roles[0]] || (KIDS.has(roles[0]) ? SETTINGS.kid : SETTINGS.default), ...(isShort(ln) ? { language_code: "de" } : {}) })).bytes);
       ln.audio = rel; ln.hash = hash; made++; console.log("recorded", id, ln.who);
       fs.writeFileSync(LINES, JSON.stringify(data, null, 1));          // after every line, so a stop loses nothing

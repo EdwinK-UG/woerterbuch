@@ -3,7 +3,7 @@
 // private lines file is complete, and the recorder never packs Max/Mia/Finn without a chosen voice.
 const { test } = require('node:test'), assert = require('node:assert/strict'), fs = require('node:fs'), path = require('node:path');
 const ROOT = path.join(__dirname, '..'), PRIV = path.join(ROOT, '.local', 'scenes');
-const PUBLIC = [path.join(ROOT, 'grammatik', 'buehne'), path.join(ROOT, 'grammatik', 'klammer'), path.join(ROOT, 'grammatik', 'jagd')];
+const PUBLIC = [path.join(ROOT, 'grammatik', 'buehne'), path.join(ROOT, 'grammatik', 'klammer'), path.join(ROOT, 'grammatik', 'jagd'), path.join(ROOT, 'grammatik', 'passiv'), path.join(ROOT, 'grammatik', 'konjunktiv'), path.join(ROOT, 'grammatik', 'futur2'), path.join(ROOT, 'grammatik', 'nominalstil')];
 const files = (d) => fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? files(path.join(d, e.name)) : [path.join(d, e.name)]));
 const scenes = () => (fs.existsSync(PRIV) ? fs.readdirSync(PRIV).filter((d) => fs.existsSync(path.join(PRIV, d, 'lines.json'))) : []);
 const plain = (s) => s.replace(/\{[a-z]+:([^}]*)\}/g, '$1');
@@ -30,7 +30,10 @@ test('every scene line names a known speaker and every practice item can be grad
       if (p.kind === 'order') {
         assert.equal(p.roles.length, p.tiles.length, at + ': a role per tile');
         // the tiles, in some order, make the first accepted sentence
-        assert.deepEqual([...p.tiles].map(plain).join(' ').split(' ').sort(), plain(p.ok[0]).split(' ').sort(), at + ': tiles = sentence');
+        // (since k439: with `slots` some tiles are spare; the sentence then uses tiles from the set, each once)
+        const tw = [...p.tiles].map(plain).join(' ').split(' ').sort(), sw = plain(p.ok[0]).split(' ').sort();
+        if (p.slots) { assert.ok(p.slots < p.tiles.length, at + ': spare tiles'); const left = [...tw]; for (const x of sw) { const i = left.indexOf(x); assert.ok(i >= 0, at + ': word ' + x + ' has a tile'); left.splice(i, 1); } }
+        else assert.deepEqual(tw, sw, at + ': tiles = sentence');
         if (p.q !== 'yn') assert.equal(plain(p.ok[0]).split(' ').length > 2, true);
       } else if (p.kind === 'choice') { assert.ok(p.q.includes('___'), at + ': a gap'); assert.ok(p.right >= 0 && p.right < p.options.length, at + ': the right option exists'); }
       else if (p.kind === 'regie') { assert.equal(p.want.length, 2, at + ': who chases whom'); assert.ok(p.slots < p.tiles.length, at + ': spare tiles'); assert.ok(p.tiles.every((x) => x.v || (x.who && /^[nad?]$/.test(x.c))), at + ': every tile is the verb or a noun with its case'); assert.ok(p.tiles.some((x) => x.v), at + ': a verb'); }
@@ -56,6 +59,8 @@ test('the play dock reserves feedback space and keeps readable, wrapping sentenc
   const css = fs.readFileSync(path.join(ROOT, 'grammatik/buehne/stage.css'), 'utf8');
   assert.match(css, /#panel > \* \{ flex-shrink: 0; \}/);
   assert.match(css, /grid-template-rows: minmax\(0, 1fr\) var\(--dock\)/);
+  // the dock grows with long options or a two-line reason instead of overlapping (27 Nov 2026)
+  assert.match(css, /grid-template-rows: minmax\(0, 1fr\) fit-content\(58%\)/); assert.match(css, /#panel\.pr #practice2 \{[^}]*align-self: safe center/);
   assert.match(css, /#panel\.pr #strip \.sb-row \{[^}]*flex-wrap: wrap/);
   // 16 px, shrinking to 80 % at most so the clamp's sentence stays on one line; tap targets keep 44 px
   assert.match(css, /#panel\.pr #strip \.sb-w \{[^}]*font-size: calc\(16px \* var\(--sbk, 1\)\);[^}]*min-height: 44px/);
@@ -207,4 +212,65 @@ test('subtitles come a sentence or clause at a time, never cutting a mark; long 
   assert.ok(!/formsw|SW\[LANG\]\.length/.test(src), 'no Kurz | Lang switch');
   assert.match(src, /cc\.id = 'cc'/); assert.match(src, /localStorage\.setItem\('buehne-cc'/);
   assert.match(src, /!qs\.get\('hero'\)/, 'no language buttons inside a chapter');
+});
+
+// Player labels in the scene's language (27 Nov 2026): every language has every label, and no fixed German UI text
+// is left in the player's code outside the strings table
+test('player labels exist in de, en, fr and sw and the code reads them from the strings table', () => {
+  const src = fs.readFileSync(path.join(ROOT, 'grammatik/buehne/stage.js'), 'utf8');
+  const UI = new Function(src.slice(src.indexOf('export const UI = {'), src.indexOf('\n};\n', src.indexOf('export const UI = {')) + 3).replace('export const UI', 'const UI') + '\nreturn UI;')();
+  for (const l of ['de', 'en', 'fr', 'sw']) {
+    assert.deepEqual(Object.keys(UI[l]).sort(), Object.keys(UI.de).sort(), l + ': the same labels as German');
+    for (const [k, v] of Object.entries(UI[l])) assert.ok(String(v).trim(), `${l}.${k} is empty`);
+  }
+  for (const k of ['soundOn', 'soundOff', 'sound', 'full', 'prev', 'next', 'pause', 'resume', 'close', 'scene', 'answer', 'and', 'seat', 'empty', 'putBack', 'end']) assert.ok(UI.de[k], k);
+  assert.equal(UI.en.full, 'Full screen'); assert.equal(UI.fr.end, 'Fin'); assert.equal(UI.sw.play, 'Cheza pamoja');
+  const code = src.slice(src.indexOf('\n};\n', src.indexOf('export const UI = {')));
+  for (const de of ["'Ton an'", "'Ton aus'", "'Vollbild'", "'Schließen'", "'Weiter'", "' und '", 'Szene ${']) assert.ok(!code.includes(de), `stage.js still has ${de}`);
+  const sb = fs.readFileSync(path.join(ROOT, 'grammatik/buehne/satzband.js'), 'utf8');
+  for (const de of ['Platz ', 'Zurücklegen', "'Ende'", 'leer`']) assert.ok(!sb.includes(de), `satzband.js still has ${de}`);
+  assert.match(src, /document\.title = title \+/, 'the tab title follows the version');
+});
+test('wagon labels: 1, 2 … end by default, none with spare tiles, the item\'s own seats when given', async () => {
+  const dom = new JSDOM('<div id="strip"></div>', { url: 'https://local.test' });
+  try {
+    const { createStrip } = uiModule('grammatik/buehne/satzband.js', ['createStrip'], dom.window,
+      { REDUCED: true, ResizeObserver: class { observe() {} }, Event: dom.window.Event });
+    const root = dom.window.document.querySelector('#strip'), strip = createStrip(root);
+    const seats = () => [...root.querySelectorAll('.sb-seat')].map((s) => s.textContent);
+    strip.tiles(['A', 'B', 'C', 'D']); assert.deepEqual(seats(), ['1', '2', '', 'end']);
+    assert.equal(root.querySelector('.sb-w').getAttribute('aria-label'), 'seat 1, empty');
+    strip.tiles(['A', 'B', 'C', 'D'], { slots: 3, seats: [] }); assert.deepEqual(seats(), ['', '', '']);
+    strip.tiles(['A', 'B', 'C'], { seats: ['x', '', 'z'] }); assert.deepEqual(seats(), ['x', '', 'z']);
+  } finally { dom.window.close(); }
+  const pr = fs.readFileSync(path.join(ROOT, 'grammatik/buehne/practice.js'), 'utf8');
+  assert.match(pr, /item\.seats \|\| \(item\.slots && item\.slots < item\.tiles\.length \? \[\] : undefined\)/);
+});
+test('practice: a typed answer waits for the reaction; the last wrong choice is staged before the solution', async () => {
+  const dom = new JSDOM('<div id="panel"><div id="round"></div><div id="prompt"></div><div id="verdict"></div><div id="answers"></div><div id="say"><input id="inp"><button id="ok">OK</button></div><div id="score"></div></div>', { url: 'https://local.test' });
+  try {
+    const { createPractice } = uiModule('grammatik/buehne/practice.js', ['createPractice'], dom.window);
+    let release, misses = [];
+    const hooks = { miss: (item, tries, info) => { misses.push([tries, info && info.pick, dom.window.document.querySelector('#verdict').textContent]); return new Promise((r) => { release = r; }); } };
+    const ui = createPractice({ data: () => ({}), wait: async () => {}, Abort: class extends Error {} }, { clear() {} }, hooks);
+    const q = (s) => dom.window.document.querySelector(s), tick = () => new Promise((r) => setTimeout(r, 0));
+    // type: a wrong answer locks the field until the reaction is over; a fast retry does nothing
+    const typed = ui.ask({ kind: 'type', q: 'x', ok: ['Das ist gut'], end: '.' });
+    q('#inp').value = 'falsch'; q('#ok').click(); await tick();
+    assert.equal(misses.length, 1); assert.ok(q('#panel').classList.contains('busy')); assert.equal(q('#inp').readOnly, true);
+    q('#ok').click(); q('#inp').dispatchEvent(new dom.window.KeyboardEvent('keydown', { key: 'Enter' })); await tick();
+    assert.equal(misses.length, 1, 'no second check while the reaction plays');
+    release(); await tick();
+    assert.equal(q('#panel').classList.contains('busy'), false); assert.equal(q('#inp').readOnly, false);
+    q('#inp').value = 'Das ist gut'; q('#ok').click(); const r1 = await typed; assert.equal(r1.right, true); assert.equal(r1.tries, 2);
+    // choice of three: the second wrong pick plays its reaction (with its reason) before "rightis"
+    misses = [];
+    const chosen = ui.ask({ kind: 'choice', q: '___', options: ['a', 'b', 'c'], right: 2, why: { 0: 'why a', 1: 'why b' } });
+    q('#answers button').click(); await tick(); release(); await tick();
+    q('#answers button:nth-child(2)').click(); await tick();
+    assert.deepEqual(misses.map((m) => m.slice(0, 2)), [[1, 0], [2, 1]]);
+    assert.match(misses[1][2], /why b/); assert.doesNotMatch(q('#verdict').textContent, /rightis/);
+    release(); const r2 = await chosen;
+    assert.equal(r2.right, false); assert.match(q('#verdict').textContent, /rightis/);
+  } finally { dom.window.close(); }
 });

@@ -12,7 +12,9 @@
 "use strict";
 const fs = require("fs"), path = require("path"), { spawnSync } = require("child_process");
 const root = path.resolve(__dirname, ".."), OUT = path.join(root, ".local", "feedback");
-const SCENES = { k05: "A1 · Kapitel 18 · Modalverben – Die Klammer-Werkstatt", k17: "A1 · Kapitel 13 · Der Akkusativ – Wer jagt wen?" };
+const SCENES = { k05: "A1 · Kapitel 18 · Modalverben – Die Klammer-Werkstatt", k17: "A1 · Kapitel 13 · Der Akkusativ – Wer jagt wen?",
+  k99: "B2 · Kapitel 14 · Passiv – Die Werkstatt der unsichtbaren Hände", k97: "B2 · Kapitel 12 · Konjunktiv II – Wunschblasen am See",
+  k439: "C1 · Kapitel 39 · Futur II – Lenas Umzug auf dem Zeitband", k482: "C1 · Kapitel 82 · Nominalstil – Die Spalte ist zu schmal" };
 const argv = process.argv.slice(2), since = (argv[argv.indexOf("--since") + 1] || "").match(/^\d{4}-\d\d-\d\d$/)?.[0] || "";
 
 function rows() {

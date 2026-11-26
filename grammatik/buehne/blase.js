@@ -8,6 +8,7 @@
 import { $, rich, REDUCED, isNarrator } from './stage.js';
 import { createStrip } from './satzband.js';
 import { BILDER, ICONS } from './bilder.js';
+import { picture as bakedPic, icon as bakedIcon } from './baked.js';   // the baked images (as the apps draw them); live drawing until loaded
 import { play } from './sfx.js';
 import { bestSpot } from './platz.js';
 
@@ -38,10 +39,9 @@ export function createBlase(B, { cases = false } = {}) {
     const fresh = !S.on || o.who !== S.who || !!o.at !== !!S.at;
     Object.assign(S, { on: true, who: o.who || null, at: o.at || null, kind: o.kind || 'say', pic: o.pic || null, icon: o.icon || null });
     if (fresh) { S.x = null; S.spot = null; S.t0 = B.S.t; }
-    el.classList.toggle('think', S.kind === 'think'); el.classList.add('on');
+    el.classList.toggle('think', S.kind === 'think' || S.kind === 'wish'); el.classList.toggle('wish', S.kind === 'wish'); tail.classList.toggle('wish', S.kind === 'wish'); el.classList.add('on');
     picBox.style.display = S.pic ? '' : 'none'; iconBox.style.display = S.icon ? '' : 'none';
     el.querySelector('.bub-text').innerHTML = o.text ? rich(o.text) : ''; el.querySelector('.bub-text').style.display = o.text ? '' : 'none';
-    if (S.icon) { const c = icon.getContext('2d'); c.setTransform(2, 0, 0, 2, 0, 0); c.clearRect(0, 0, 28, 28); ICONS[S.icon](c); }
     if (fresh && !REDUCED) el.animate([{ transform: 'scale(.6)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 260, easing: 'cubic-bezier(.3,1.4,.5,1)' });
     if (fresh) play.pop(1.3);
     if (o.strip) await strip.show(o.strip, { clamp: o.clamp ?? 'auto' }); else if (o.strip === null) strip.clear();
@@ -49,11 +49,27 @@ export function createBlase(B, { cases = false } = {}) {
   // another speaker's line (not the narrator, who talks about the bubble): the bubble goes
   B.sayHooks.push((who) => { if (S.on && !isNarrator(who) && S.who && who !== S.who) hide(); });
   function hide() { if (!S.on) return; S.on = false; el.classList.remove('on'); tail.innerHTML = ''; strip.clear(); }
+  // the bubble bursts (a wish meets reality): it swells and fades, sparkles fly out (0.35 s), plopp
+  async function pop() {
+    if (!S.on) return; play.plopp && play.plopp();
+    const r = el.getBoundingClientRect(), sr = st.getBoundingClientRect(), cx = r.left - sr.left + r.width / 2, cy = r.top - sr.top + r.height / 2;
+    if (!REDUCED) {
+      for (let i = 0; i < 12; i++) {
+        const sp = document.createElement('i'); sp.className = 'bub-spark'; sp.style.left = cx + 'px'; sp.style.top = cy + 'px'; st.append(sp);
+        const a = (i / 12) * Math.PI * 2, d = 0.45 * Math.max(r.width, r.height) * (0.8 + 0.4 * Math.random());
+        sp.animate([{ transform: 'translate(-50%,-50%) scale(1)', opacity: 1 }, { transform: `translate(calc(-50% + ${Math.cos(a) * d}px), calc(-50% + ${Math.sin(a) * d}px)) scale(.3)`, opacity: 0 }], { duration: 550, easing: 'ease-out' }).onfinish = () => sp.remove();
+      }
+      tail.innerHTML = '';
+      await el.animate([{ transform: el.style.transform + ' scale(1)', opacity: 1 }, { transform: el.style.transform + ' scale(1.15)', opacity: 0 }], { duration: 320, easing: 'ease-in' }).finished.catch(() => {});
+    }
+    hide();
+  }
 
   B.onFrame.push((t) => {
     if (!S.on) return;
     const { pw, ph, dpr } = size();
-    if (S.pic && BILDER[S.pic]) { const c = pic.getContext('2d'); c.setTransform(dpr * pw / 160, 0, 0, dpr * ph / 100, 0, 0); c.clearRect(0, 0, 160, 100); BILDER[S.pic](c, REDUCED ? 1.5 : t - S.t0); }
+    if (S.pic && BILDER[S.pic]) { const c = pic.getContext('2d'); c.setTransform(dpr * pw / 160, 0, 0, dpr * ph / 100, 0, 0); c.clearRect(0, 0, 160, 100); if (!bakedPic(c, S.pic, REDUCED ? 1.5 : t - S.t0, 0, 0, 160, 100)) BILDER[S.pic](c, REDUCED ? 1.5 : t - S.t0); }
+    if (S.icon && ICONS[S.icon]) { const c = icon.getContext('2d'); c.setTransform(2, 0, 0, 2, 0, 0); c.clearRect(0, 0, 28, 28); if (!bakedIcon(c, S.icon, 0, 0, 28, 28)) ICONS[S.icon](c); }
     // place it where it covers the least of anyone: above the head, shifted, beside it, or in a top corner
     const W = B.set.V.W, H = B.set.V.H, w = el.offsetWidth, h = el.offsetHeight, a = anchor(), gap = S.kind === 'think' ? 26 : 18;
     const cands = !a ? [{ x: (W - w) / 2, y: 8, side: 'none' }, { x: 8, y: 8, side: 'none' }, { x: W - w - 8, y: 8, side: 'none' }] : [
@@ -71,12 +87,12 @@ export function createBlase(B, { cases = false } = {}) {
     const by = side === 'up' ? S.y + h - 2 : Math.max(S.y + 16, Math.min(S.y + h - 16, a.y));
     const tx = a.x + (side === 'right' ? a.w * 0.35 : side === 'left' ? -a.w * 0.35 : 0), ty = a.y - (side === 'up' ? 6 : 0);
     tail.setAttribute('width', W); tail.setAttribute('height', H); tail.setAttribute('viewBox', `0 0 ${W} ${H}`);
-    if (S.kind === 'think') {
+    if (S.kind === 'think' || S.kind === 'wish') {
       const pts = [0.3, 0.58, 0.82].map((k, i) => `<circle cx="${(bx + (tx - bx) * k).toFixed(1)}" cy="${(by + (ty - by) * k).toFixed(1)}" r="${[7, 5, 3.4][i]}"/>`); tail.innerHTML = pts.join('');
     } else {
       const dx = tx - bx, dy = ty - by, len = Math.hypot(dx, dy) || 1, nx = -dy / len, ny = dx / len, ex = bx + dx * 0.82, ey = by + dy * 0.82, s = len > 120 ? 6 : 9;   // a far bubble gets a slimmer tail
       tail.innerHTML = `<path d="M${(bx + nx * s).toFixed(1)} ${(by + ny * s).toFixed(1)} L${ex.toFixed(1)} ${ey.toFixed(1)} L${(bx - nx * s).toFixed(1)} ${(by - ny * s).toFixed(1)} Z"/>`;
     }
   });
-  return { show, hide, strip, el, get on() { return S.on; } };
+  return { show, hide, pop, strip, el, get on() { return S.on; } };
 }

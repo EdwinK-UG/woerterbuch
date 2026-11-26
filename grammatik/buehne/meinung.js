@@ -3,26 +3,27 @@
    this browser has watched), which one helps most once there is more than one, and a box to write freely. One quiet
    link opens four short sections that follow the parts of a scene: understanding the film, pictures and animation,
    practice, problems. Sent to the Worker (POST /scene-feedback); nothing about the person is sent.
-   Versions: de, en, sw, fr (short) and de-long, en-long, sw-long, fr-long (the detailed ones with an introduction). */
+   Versions: de-long, en-long, sw-long, fr-long (one per explaining language; the short versions de, en, sw, fr were
+   archived on 24 Nov 2026, and their old ratings stay in their own columns). */
 import { $, LANG, VERSION, esc } from './stage.js';
 
 const TXT = {
   de: { btn: 'Feedback', title: 'Wie war’s?', sub: 'Ehrlich und gern kritisch – das hilft uns am meisten. Anonym.', which: 'Was hilft dir am meisten?', same: 'Gleich',
     free: 'Was sollen wir besser machen? Schreib einfach los …', more: 'Genauer: Verstehen, Bilder, Üben, Probleme', less: 'Weniger', send: 'Senden', close: 'Schließen',
     need: 'Gib Sterne oder schreib etwas.', sending: 'Wird gesendet …', thanks: 'Danke! Du kannst jederzeit mehr schicken.', fail: 'Das hat nicht geklappt. Bitte noch einmal.',
-    v: { de: 'Deutsch', en: 'Englisch', sw: 'Swahili', fr: 'Französisch' }, short: 'kurz', long: 'ausführlich' },
+    v: { de: 'Deutsch', en: 'Englisch', sw: 'Swahili', fr: 'Französisch' } },
   en: { btn: 'Feedback', title: 'How was it?', sub: 'Honest, critical feedback helps us most. Anonymous.', which: 'Which helps you most?', same: 'Same',
     free: 'What should we do better? Just write …', more: 'In detail: understanding, pictures, practice, problems', less: 'Less', send: 'Send', close: 'Close',
     need: 'Give stars or write something.', sending: 'Sending …', thanks: 'Thank you! You can send more any time.', fail: "That didn't work. Please try again.",
-    v: { de: 'German', en: 'English', sw: 'Swahili', fr: 'French' }, short: 'short', long: 'detailed' },
+    v: { de: 'German', en: 'English', sw: 'Swahili', fr: 'French' } },
   sw: { btn: 'Maoni', title: 'Ilikuwaje?', sub: 'Maoni ya kweli, hata makali, yanatusaidia zaidi. Bila jina.', which: 'Lipi linakusaidia zaidi?', same: 'Sawa tu',
     free: 'Tuboreshe nini? Andika tu …', more: 'Kwa undani: kuelewa, picha, mazoezi, matatizo', less: 'Punguza', send: 'Tuma', close: 'Funga',
     need: 'Toa nyota au andika kitu.', sending: 'Inatumwa …', thanks: 'Asante! Unaweza kutuma zaidi wakati wowote.', fail: 'Haikufaulu. Tafadhali jaribu tena.',
-    v: { de: 'Kijerumani', en: 'Kiingereza', sw: 'Kiswahili', fr: 'Kifaransa' }, short: 'fupi', long: 'ndefu' },
+    v: { de: 'Kijerumani', en: 'Kiingereza', sw: 'Kiswahili', fr: 'Kifaransa' } },
   fr: { btn: 'Avis', title: 'C’était comment\u202f?', sub: 'Un avis honnête, même critique, nous aide le plus. Anonyme.', which: 'Laquelle t’aide le plus\u202f?', same: 'Pareil',
     free: 'Que devrions-nous améliorer\u202f? Écris simplement …', more: 'En détail\u202f: comprendre, images, exercices, problèmes', less: 'Moins', send: 'Envoyer', close: 'Fermer',
     need: 'Donne des étoiles ou écris quelque chose.', sending: 'Envoi …', thanks: 'Merci\u202f! Tu peux en envoyer plus à tout moment.', fail: 'Ça n’a pas marché. Réessaie, s’il te plaît.',
-    v: { de: 'Allemand', en: 'Anglais', sw: 'Swahili', fr: 'Français' }, short: 'court', long: 'détaillé' },
+    v: { de: 'Allemand', en: 'Anglais', sw: 'Swahili', fr: 'Français' } },
 }[LANG];
 // the sections follow the parts of a scene; each question is the placeholder of its box
 const PARTS = {
@@ -58,8 +59,7 @@ export function createMeinung(B, { scene, versions }) {
   ($('meta') || $('ctl')).appendChild(btn);
   const box = document.createElement('div'); box.className = 'fb'; box.setAttribute('role', 'dialog'); box.setAttribute('aria-modal', 'true'); box.setAttribute('aria-label', TXT.title);
   document.body.appendChild(box);
-  const hasLong = versions.some((v) => v.endsWith('-long'));
-  const label = (v) => TXT.v[v.slice(0, 2)] + (hasLong ? ' · ' + (v.endsWith('-long') ? TXT.long : TXT.short) : '');
+  const label = (v) => TXT.v[v.slice(0, 2)];
   const state = { ratings: {}, prefer: null, more: false };
   const seen = () => { try { return JSON.parse(localStorage.getItem('buehne-seen-' + scene) || '[]'); } catch (e) { return []; } };
   // the version being watched first, then the others this browser has watched
@@ -98,7 +98,7 @@ export function createMeinung(B, { scene, versions }) {
       msg(TXT.sending); t.disabled = true;
       try {
         const r = await fetch((cfg.workerUrl || '') + '/scene-feedback', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ scene, version: VERSION, ratings: state.ratings, prefer: state.prefer, ...text, device: device(), watched: seen().filter((v) => !v.endsWith('-long')), lang: LANG }) });
+          body: JSON.stringify({ scene, version: VERSION, ratings: state.ratings, prefer: state.prefer, ...text, device: device(), watched: seen(), lang: LANG }) });
         if (!r.ok && r.status !== 429) throw Error(r.status);
         state.ratings = {}; state.prefer = null; box.querySelectorAll('textarea').forEach((x) => (x.value = '')); paint(); msg(TXT.thanks, 'ok'); t.disabled = false;
       } catch (err) { msg(TXT.fail, 'no'); t.disabled = false; }
