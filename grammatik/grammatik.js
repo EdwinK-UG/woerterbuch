@@ -385,6 +385,7 @@ iframe.werk-max{position:fixed!important;inset:0!important;width:100vw!important
 .gr-ueb.fail{background:color-mix(in srgb,var(--warn) 15%,var(--card));color:var(--warn)}
 .gr-ueb.free{background:var(--line2);color:var(--mut)}
 .gr-uei{color:var(--mut);font-size:.9rem;margin:.45rem 0 .8rem}
+.gr-see{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;font-size:.88rem;margin:-.35rem 0 .8rem;color:var(--mut)}.gr-see a{display:inline-flex;align-items:center;gap:.3rem;color:var(--ink);font-weight:600;text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:.2rem .65rem;background:var(--card,transparent)}.gr-see a:hover{border-color:var(--mut)}.gr-see svg{width:15px;height:15px}
 .gr-it{display:flex;gap:.6rem;align-items:flex-start;padding:.6rem 0;border-top:1px dashed var(--line)}
 .gr-it:first-child{border-top:0}
 .gr-in{flex:0 0 1.6rem;height:1.6rem;border-radius:50%;display:grid;place-items:center;font-size:.75rem;font-weight:700;color:var(--mut);background:var(--line2);margin-top:.2rem;transition:.2s}
@@ -1926,6 +1927,11 @@ const LET = 'abcdefghijklmnop';
 function matchOpts(x) { x._opts = shuffle(x.items.map(it => it.r)); return `<div class="gr-mopts">${x._opts.map((r, k) => `<span><b>${LET[k]})</b> ${H(r)}</span>`).join('')}</div>`; }
 const itemBody = (x,it,i) => `${it.scene ? `<figure class="gr-scene">${window.GRAM_ART.draw(K,it.scene)}</figure>` : ''}${itemHTML(x,it,i)}<div class="gr-sol" hidden></div>`;
 const itemsHTML = x => (x.type === 'match' ? matchOpts(x) : '') + x.items.map((it, i) => `<div class="gr-it" data-i="${i}"><span class="gr-in">${i + 1}</span><div class="gr-ib">${itemBody(x,it,i)}</div></div>`).join('');
+// `see: [n, …]` on an exercise group: lessons to look at first (e.g. a form this exercise uses before its own chapter)
+function seeHTML(x) {
+  const ls = (Array.isArray(x.see) ? x.see : []).map(n => ({ n, i: chInfo(n) })).filter(o => o.i);
+  return ls.length ? `<p class="gr-see">${U('Zuerst ansehen:')} ${ls.map(o => `<a href="${hashOf(o.n)}">${icn('book-open')}${U('Kapitel')} ${gNo(o.n)} · ${H(o.i.c[1])}</a>`).join(' ')}</p>` : '';
+}
 function exHTML(x, n, t = x) {
   const legend = x.type === 'cases' ? `<div class="gr-legend"><span class="n">1× Nominativ</span><span class="d">2× Dativ</span><span class="a">3× Akkusativ</span></div>` : '';
   const lay = [x.grid ? 'grid' : '', x.cols ? 'cols' : '', x.flow ? 'flow' : ''].filter(Boolean).join(' ');
@@ -1934,7 +1940,7 @@ function exHTML(x, n, t = x) {
   let body = `<div class="gr-items ${lay}">${itemsHTML(x)}</div>`;
   if (x.frame) body = `<div class="gr-frame ${x.frame}">${x.frame === 'form' ? `<div class="gr-fh">${icn('clipboard-list')}<span>${H(x.subject || 'Formular')}</span></div>` : ''}${x.frame === 'mail' ? `<div class="gr-fh">${icn('mail')}<span>${H(x.subject || 'Neue Nachricht')}</span></div>` : ''}${body}</div>`;
   return `<div class="gr-ue${cur && cur.vocab ? ' vk-ue' : ''}" id="ue-${x.id}" data-ex="${x.id}" data-type="${x.type}"><div class="gr-ueh"><span class="gr-uen">${label}</span><h3>${H(t.title)}</h3><span id="ueb-${x.id}">${badgeHTML(x)}</span></div>
-    <p class="gr-uei">${rich(H(t.instr))}</p>${legend}${bank}${t.before ? block(t.before) : ''}${body}
+    <p class="gr-uei">${rich(H(t.instr))}</p>${seeHTML(x)}${legend}${bank}${t.before ? block(t.before) : ''}${body}
     <div class="gr-uef"><button class="btn primary gr-btn" data-act="check">${icn('check')} ${U('Prüfen')}</button>
     ${x.type === 'free' ? '' : `<button class="btn gr-btn" data-act="show" disabled title="${H(U('Erst nach dem ersten Prüfen'))}">${icn('eye')} ${U('Lösung zeigen')}</button>`}
     <button class="btn gr-btn" data-act="reset">${icn('rotate-ccw')} ${U('Neu')}</button><span class="gr-res"></span></div></div>

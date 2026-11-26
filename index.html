@@ -424,7 +424,7 @@ kbd{font:600 .66rem Inter,system-ui,sans-serif;padding:.1rem .35rem;border-radiu
 <script src="js/render-safety.js?v=cbceea56a80a"></script>
 <script src="js/dictionary-english.js?v=28771e7e1e26" data-curated="content/dictionary-english.json?v=422a7563148c" data-shards="content/english/{xx}.json?v=1497a4840e8b"></script>
 <script src="js/site-design.js?v=3b981b6c88ad"></script>
-<script src="js/lesson-help.js?v=9d4a2536900a"></script>
+<script src="js/lesson-help.js?v=12378bdd61db"></script>
 <script id="data" type="application/octet-stream" data-src="core.bin?v=2a6842e1378a" data-defs="defs.bin?v=e5dfed095d11"></script>
 <script>
 "use strict";
@@ -603,7 +603,7 @@ function loadGram(){
     if(!window.GRAM_ART)await scriptFile('grammatik/illustrations.js?v=990e867b0dec');
     // Illustrations stay static. Authored films opt in per private lesson;
     // the old picture-type motion wrapper is retained only in its review prototype.
-    if(!window.GRAM)await scriptFile('grammatik/grammatik.js?v=4ba74a24d072');
+    if(!window.GRAM)await scriptFile('grammatik/grammatik.js?v=dacba3ae9aad');
   })().catch(e=>{gramP=null;throw e});
   return gramP;
 }
