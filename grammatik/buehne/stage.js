@@ -376,7 +376,8 @@ export function createStage({ set, priv, tag, keys, onCast = () => {}, z0 = 2.75
     ccShow(); $('corner').prepend(cc);
     // a slim row under the controls: the language (only when the scene is opened on its own: in a chapter the page's
     // own language choice sets it) and the feedback button (right)
-    const ownLang = langs && langs.length > 1 && !qs.get('hero');
+    // (&pick=1: a chapter page whose own language choice does not cover the film, the B2–C1 films, shows it too)
+    const ownLang = langs && langs.length > 1 && (!qs.get('hero') || qs.has('pick'));
     if (ownLang || feedback) { const m = document.createElement('div'); m.id = 'meta'; $('ctl').after(m); }
     if (ownLang) {
       const sel = document.createElement('select'); sel.id = 'langsel'; sel.setAttribute('aria-label', SUBS[LANG].lang);
@@ -384,7 +385,7 @@ export function createStage({ set, priv, tag, keys, onCast = () => {}, z0 = 2.75
       sel.onchange = () => { stopAudio(); const u = new URL(location.href); if (sel.value === 'de') u.searchParams.delete('lang'); else u.searchParams.set('lang', sel.value); location.replace(u); };
       $('meta').append(sel);
     }
-    if (feedback) import('./meinung.js?v=7').then((m) => m.createMeinung(B, { scene: feedback, versions: (langs || [LANG]).map((l) => l + '-long') }));
+    if (feedback) import('./meinung.js?v=8').then((m) => m.createMeinung(B, { scene: feedback, versions: (langs || [LANG]).map((l) => l + '-long') }));
     // scenes: a list, or a function that makes it from the loaded lines (scenes written as data, regie.js)
     S.scenes = typeof scenes === 'function' ? [] : scenes; S.onEnd = end;
     fitStage(); new ResizeObserver(fitStage).observe($('stage'));

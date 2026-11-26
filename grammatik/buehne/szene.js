@@ -8,22 +8,22 @@
    `set` and `cast` repeat the file's own `set` and `cast` so the web page can start loading the set and the figures
    before the private file arrives (tests/scene-format.test.cjs checks that they match). `langs`: the versions the scene
    has (default all four; the B2–C1 films have 'de' and 'en'), for the language switch and the feedback form. */
-import { createStage, $, rich, LANG, LANGS, T } from './stage.js?v=7';
-import { createDirector } from './regie.js?v=7';
-import { createStrip, wheel as makeWheel } from './satzband.js?v=7';
-import { createPractice } from './practice.js?v=7';
-import { createBlase } from './blase.js?v=7';
-import { createTafel } from './tafel.js?v=7';
-import { createLicht } from './licht.js?v=7';
-import { createFx } from './tiere.js?v=7';
-import { sfx, play, unlockSfx } from './sfx.js?v=7';
-import { createWerkstatt } from './sets/werkstatt.js?v=7';
-import { createVillage } from '../dorf/village.js?v=7';
-import { createSee } from './sets/see.js?v=7';
-import { createWohnung } from './sets/wohnung.js?v=7';
-import { createRedaktion } from './sets/redaktion.js?v=7';
-import { bakeable, M as manifest } from './baked.js?v=7';
-import { createRequisiten } from './requisiten.js?v=7';
+import { createStage, $, rich, LANG, LANGS, T } from './stage.js?v=8';
+import { createDirector } from './regie.js?v=8';
+import { createStrip, wheel as makeWheel } from './satzband.js?v=8';
+import { createPractice } from './practice.js?v=8';
+import { createBlase } from './blase.js?v=8';
+import { createTafel } from './tafel.js?v=8';
+import { createLicht } from './licht.js?v=8';
+import { createFx } from './tiere.js?v=8';
+import { sfx, play, unlockSfx } from './sfx.js?v=8';
+import { createWerkstatt } from './sets/werkstatt.js?v=8';
+import { createVillage } from '../dorf/village.js?v=8';
+import { createSee } from './sets/see.js?v=8';
+import { createWohnung } from './sets/wohnung.js?v=8';
+import { createRedaktion } from './sets/redaktion.js?v=8';
+import { bakeable, M as manifest } from './baked.js?v=8';
+import { createRequisiten } from './requisiten.js?v=8';
 
 const SETS = { werkstatt: createWerkstatt, dorf: createVillage, see: createSee, wohnung: createWohnung, redaktion: createRedaktion };
 

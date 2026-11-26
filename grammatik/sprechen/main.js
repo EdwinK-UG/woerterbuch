@@ -4,9 +4,9 @@
    both through the Worker (/speak/turn); this page never sees a key. Only the founder and people with one of the
    founder's access codes can use it (the Worker checks every turn).
    ?ch=5 the chapter (internal id). ?local: a pretend Liv for checking the page offline; ?local&live: the real Worker. */
-// (stage.js?v=7: the version that takes lines directly; browsers may still hold the pilots' v=6)
-import { createStage, $, LOCAL, EMBED } from '../buehne/stage.js?v=7';
-import { createWerkstatt } from '../buehne/sets/werkstatt.js?v=7';
+// (stage.js?v=8: the version since the scene-format v1 release; v=7 once meant an older stage.js here)
+import { createStage, $, LOCAL, EMBED } from '../buehne/stage.js?v=8';
+import { createWerkstatt } from '../buehne/sets/werkstatt.js?v=8';
 
 const qs = new URLSearchParams(location.search);
 const CHAPTER = /^\d{1,4}$/.test(qs.get('ch') || '') ? qs.get('ch') : '5';
