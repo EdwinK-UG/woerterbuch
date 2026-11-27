@@ -608,3 +608,94 @@ test('signup opens the app immediately, shows a quiet confirmation prompt and co
   s.document.querySelector('#email-confirm-action').click();await until(()=>confirmations===1);await until(()=>s.document.querySelector('#email-status-banner').hidden);assert.ok(!s.window.localStorage.getItem('gd_session').includes('a'.repeat(64)));assert.deepEqual(s.errors,[]);
  }finally{await s.close()}
 });
+
+test('a stored assignment cannot put markup or script into the learner pages',async()=>{
+ const attack='"><img src=x onerror="window.pwned=1">',org={id:'00000000-0000-4000-ab00-000000000081',name:'Own School',kind:'school',theme:'#28634c',pass_mark:70};
+ const tasks=[{id:'t1',class_id:'c1',title:'Week 1 <b>bold</b>',due_at:null,pass_mark:null,items:[{ch:attack,ex:attack},{ch:201,ex:attack},{ch:201,ex:'u1'},attack]}];
+ const s=await site('#/aufgaben',{account:true,profile:()=>Response.json([{user_id:'fixture',role:'learner',unlocked:['A1'],level:'A1',org_id:org.id}]),request:async u=>{
+  if(u.pathname==='/rest/v1/rpc/my_org')return Response.json(org);if(u.pathname==='/rest/v1/assignments')return Response.json(tasks);
+ }});
+ try{
+  await until(()=>s.document.querySelector('#view .ks-t'));
+  const check=()=>{const view=s.document.querySelector('#view');assert.equal(view.querySelectorAll('img[src="x"]').length,0);assert.equal(view.querySelector('.ks-t b b,.kd-tasks b b'),null);assert.equal(s.window.pwned,undefined);
+   for(const a of view.querySelectorAll('.ks-it a,.kd-tasks a,li small a'))assert.match(a.getAttribute('href'),/^#\/(start|[gv]\/\d{1,5}(\/ue-[A-Za-z0-9_-]{1,40})?)$/);return view;};
+  const links=[...check().querySelectorAll('.ks-it a')].map(a=>a.getAttribute('href'));
+  assert.equal(links.length,2);assert.match(links[0],/^#\/[gv]\/201$/);assert.match(links[1],/^#\/[gv]\/201\/ue-u1$/);
+  s.window.location.hash='#/start';await until(()=>[...s.document.querySelectorAll('#view b')].some(b=>b.textContent==='Week 1 <b>bold</b>')&&!s.document.querySelector('#view .ks-t'));
+  check();assert.deepEqual(s.errors,[]);
+ }finally{await s.close()}
+});
+test('the class page reads named columns, takes private details only for managed classes and offers set-up only there',async()=>{
+ const org={id:'00000000-0000-4000-ab00-000000000081',owner:'the-owner',name:'Gold School',theme:'#ac8935',kind:'school',pass_mark:70};
+ const own={id:'00000000-0000-4000-ab00-000000000082',org_id:org.id,teacher_id:'fixture',name:'Mine A1',level:'A1'},other={id:'00000000-0000-4000-ab00-000000000083',org_id:org.id,teacher_id:'colleague',name:'Colleague B1',level:'B1'};
+ let installed=true;const selects=[],patches=[];
+ const s=await site('#/klasse',{account:true,profile:()=>Response.json([{user_id:'fixture',role:'teacher',unlocked:[],org_id:org.id}]),request:async(u,r)=>{
+  if(u.pathname==='/rest/v1/orgs')return Response.json(u.searchParams.get('owner')?[]:[org]);
+  if(u.pathname==='/rest/v1/org_members')return Response.json(u.searchParams.get('select')==='org_id'?[{org_id:org.id}]:[]);
+  if(u.pathname==='/rest/v1/rpc/my_org')return Response.json(org);
+  if(u.pathname==='/rest/v1/rpc/class_private')return installed?Response.json([{id:own.id,meeting_details:'Room 1',notification_email:'fixture@example.invalid'},{id:other.id,meeting_details:'Not for me',notification_email:'colleague@example.invalid'}]):Response.json({code:'PGRST202',message:'not found'},{status:404});
+  if(u.pathname==='/rest/v1/classes'){if(r.method==='PATCH'){patches.push([u.search,JSON.parse(r.body)]);return new Response(null,{status:204});}selects.push(u.searchParams.get('select'));
+   return Response.json(u.searchParams.get('select').includes('meeting_details')?[{id:own.id,meeting_details:'Room 9',notification_email:null}]:[own,other]);}
+ }});
+ try{
+  await until(()=>s.document.querySelectorAll('.ks-cls').length===2);
+  assert.ok(selects.length>=1);for(const columns of selects){assert.ok(columns&&!columns.includes('*'));assert.ok(!columns.includes('meeting_details')&&!columns.includes('notification_email'));}
+  const cards=[...s.document.querySelectorAll('.ks-cls')],mine=cards.find(c=>c.textContent.includes('Mine A1')),theirs=cards.find(c=>c.textContent.includes('Colleague B1'));
+  assert.ok(mine.innerHTML.includes("KONTO.liveClassSheet('"+own.id+"')"));assert.ok(mine.innerHTML.includes("KONTO.classPass('"+own.id+"')"));
+  assert.ok(!theirs.innerHTML.includes('KONTO.liveClassSheet'));assert.ok(!theirs.innerHTML.includes('KONTO.classPass'));assert.ok(!theirs.innerHTML.includes('KONTO.sendClassInvite'));assert.ok(!s.document.querySelector('#view').innerHTML.includes('Not for me'));
+  s.window.KONTO.liveClassSheet(other.id);assert.equal(s.document.querySelector('#lc_meeting'),null);
+  s.window.KONTO.liveClassSheet(own.id);await until(()=>s.document.querySelector('#lc_meeting'));
+  assert.equal(s.document.querySelector('#lc_meeting').value,'Room 1');assert.equal(s.document.querySelector('#lc_notify').value,'fixture@example.invalid');
+  s.document.querySelector('#lc_meeting').value='Room 2';await s.window.KONTO.saveLiveClass(own.id);await until(()=>patches.length===1);
+  assert.equal(patches[0][0],'?id=eq.'+own.id);assert.equal(patches[0][1].meeting_details,'Room 2');
+  // Before the manager lookup exists on the server the page reads the same two fields directly.
+  installed=false;selects.length=0;s.window.KONTO.refresh();await until(()=>selects.some(c=>c==='id,meeting_details,notification_email'));
+  await until(()=>s.document.querySelectorAll('.ks-cls').length===2);s.window.KONTO.liveClassSheet(own.id);await until(()=>s.document.querySelector('#lc_meeting')?.value==='Room 9');
+  assert.deepEqual(s.errors,[]);
+ }finally{await s.close()}
+});
+test('an email is confirmed only by its own signed-in account; stopping reminders needs only the link',async()=>{
+ const uid='00000000-0000-4000-ab00-000000000092',token='a'.repeat(64);let calls=[],verified=false;
+ const s=await site('#/confirm-email/'+uid+'/'+token,{profile:()=>Response.json([{user_id:uid,role:'learner',display_name:'Alex',level:'A1',unlocked:['A1']}]),request:async(u,r)=>{
+  if(u.pathname==='/auth/v1/token')return Response.json({access_token:'fixture-token',refresh_token:'fixture-refresh',expires_in:3600,user:{id:JSON.parse(r.body).email==='alex@example.com'?uid:'someone-else',email:JSON.parse(r.body).email,app_metadata:{dk_email_verification_required:true}}});
+  if(u.pathname.endsWith('/email_verification_status'))return Response.json({verified,required:!verified,email:'alex@example.com'});
+  if(u.pathname==='/email-verification/send')return Response.json({sent:true});
+  if(u.pathname.endsWith('/confirm_email_token')){const body=JSON.parse(r.body);calls.push({stop:body.p_stop,auth:r.headers.Authorization||null});if(!body.p_stop)verified=true;return Response.json(body.p_stop?{stopped:true}:{verified:true});}
+ }});
+ const signIn=async email=>{s.window.ACCT.sheet('in');await until(()=>s.document.querySelector('#ac_em'));s.document.querySelector('#ac_em').value=email;s.document.querySelector('#ac_pw').value='fixture-password';await s.window.ACCT.submit('in');};
+ try{
+  await until(()=>s.document.querySelector('#email-confirm-action'));assert.equal(s.window.location.hash,'#/confirm-email');
+  // Signed out: the link alone confirms nothing and asks for the account's own sign-in.
+  s.document.querySelector('#email-confirm-action').click();await new Promise(r=>setTimeout(r,80));
+  assert.equal(calls.length,0);assert.match(s.document.querySelector('#email-confirm-result').textContent,/Sign in to the account you created/);assert.ok(s.document.querySelector('#ac_em'),'sign-in opens');
+  // Somebody else's session does not confirm it either.
+  await signIn('other@example.com');await until(()=>s.window.ACCT.user()?.id==='someone-else');await new Promise(r=>setTimeout(r,80));assert.equal(calls.length,0);
+  await until(()=>s.document.querySelector('#email-confirm-action'));s.document.querySelector('#email-confirm-action').click();await new Promise(r=>setTimeout(r,80));
+  assert.equal(calls.length,0);assert.match(s.document.querySelector('#email-confirm-result').textContent,/different account/);
+  await s.window.ACCT.signOut();await until(()=>!s.window.ACCT.user());
+  // The right account signs in after being asked: the waiting confirmation completes with its session.
+  await until(()=>s.document.querySelector('#email-confirm-action'));s.document.querySelector('#email-confirm-action').click();await new Promise(r=>setTimeout(r,50));assert.equal(calls.length,0);
+  await signIn('alex@example.com');await until(()=>calls.length===1);
+  assert.deepEqual(calls[0],{stop:false,auth:'Bearer fixture-token'});await until(()=>s.window.location.hash==='#/start');
+  // "Stop reminders" works from the link alone, signed out.
+  await s.window.ACCT.signOut();await until(()=>!s.window.ACCT.user());calls=[];
+  s.window.location.hash='#/stop-email/'+uid+'/'+token;await until(()=>s.document.querySelector('#email-confirm-action')&&s.window.location.hash==='#/stop-email');
+  s.document.querySelector('#email-confirm-action').click();await until(()=>calls.length===1);assert.deepEqual(calls[0],{stop:true,auth:null});
+  assert.deepEqual(s.errors,[]);
+ }finally{await s.close()}
+});
+test('starting to teach before the email is confirmed saves the request and says what to do',async()=>{
+ let requested=null,made=null;
+ const s=await site('#/settings',{account:true,profile:()=>Response.json([{user_id:'fixture',role:'learner',unlocked:['A1'],level:'A1',requested_role:requested}]),request:async(u,r)=>{
+  if(u.pathname==='/rest/v1/rpc/register_teaching_account'){requested=JSON.parse(r.body).p_kind;return Response.json(made);}
+  if(u.pathname==='/rest/v1/rpc/complete_teacher_onboarding')return Response.json({message:'confirm your email first'},{status:400});
+ }});
+ try{
+  await until(()=>s.document.querySelector('#view')?.textContent.includes('Start teaching'));
+  s.window.KONTO.request();await until(()=>s.document.querySelector('#kr_role'));await s.window.KONTO.sendRequest();
+  assert.equal(requested,'teacher');await until(()=>/Confirm your email to open your teaching space/.test(s.document.querySelector('#toast').textContent));
+  // The open request never breaks loading the account, whatever the server answers.
+  await until(()=>s.window.location.hash==='#/start'&&/Confirm your email to open your teaching space/.test(s.document.querySelector('#view').textContent));
+  assert.deepEqual(s.errors,[]);
+ }finally{await s.close()}
+});

@@ -34,19 +34,37 @@ test('immediate access is distinct from mailbox proof; confirmations, reminders 
  await db.query('update app_private.email_verifications set next_send_at=now()-interval \'1 second\' where user_id=$1',[user]);await db.exec('set role anon');
  const third=(await claim())[0];assert.equal(third.stage,2);await finish(third);assert.deepEqual(await claim(),[]);
  await db.exec('reset role');await db.query("update app_private.email_verification_tokens set expires_at=now()-interval '1 second' where token_hash=encode(sha256(convert_to($1,'UTF8')),'hex')",[third.token]);await db.exec('set role anon');await assert.rejects(db.query('select public.confirm_email_token($1,$2)',[user,third.token]),/invalid or expired/);
+ // The link alone does not confirm: the mailbox owner must also be signed in to that account.
+ await db.query("select set_config('request.jwt.claim.sub','',false)");
+ await assert.rejects(db.query('select public.confirm_email_token($1,$2)',[user,first.token]),/sign in to this account/);
+ await db.exec('reset role;set role authenticated');await db.query("select set_config('request.jwt.claim.sub',$1,false)",[owner]);
+ await assert.rejects(db.query('select public.confirm_email_token($1,$2)',[user,first.token]),/sign in to this account/);
+ await db.exec('reset role');assert.equal((await db.query('select app_private.email_is_verified($1) as v',[user])).rows[0].v,false);
+ assert.equal((await db.query('select count(*)::int n from public.org_members where user_id=$1',[user])).rows[0].n,0);
  // Earlier email links remain valid when a later reminder is sent.
+ await db.exec('set role authenticated');await db.query("select set_config('request.jwt.claim.sub',$1,false)",[user]);
  await db.query('select public.confirm_email_token($1,$2)',[user,first.token]);
  await db.exec('reset role');assert.equal((await db.query('select app_private.email_is_verified($1) as v',[user])).rows[0].v,true);
+ // Confirmation uses up every outstanding link of the account.
+ assert.equal((await db.query('select count(*)::int n from app_private.email_verification_tokens where user_id=$1',[user])).rows[0].n,0);
  assert.equal((await db.query('select count(*)::int n from public.org_members where user_id=$1',[user])).rows[0].n,1);
  assert.equal((await db.query("select uses_left from public.invites where code='abcdef123456'")).rows[0].uses_left,0);
  assert.equal((await db.query('select next_send_at from app_private.email_verifications')).rows[0].next_send_at,null);
- await db.exec('set role anon');await db.query('select public.confirm_email_token($1,$2)',[user,first.token]);
+ // Opening the used link again is harmless for the signed-in holder and useless for anyone else.
+ await db.exec('set role authenticated');assert.equal((await db.query('select public.confirm_email_token($1,$2) as r',[user,first.token])).rows[0].r.verified,true);
+ await db.exec('reset role;set role anon');await db.query("select set_config('request.jwt.claim.sub','',false)");
+ await assert.rejects(db.query('select public.confirm_email_token($1,$2)',[user,first.token]),/sign in to this account/);
+ await assert.rejects(db.query('select public.confirm_email_token($1,$2,true)',[user,first.token]),/invalid or expired/);
  await db.exec('reset role');
  // Tokens bind the exact address, not just the account ID.
  await db.query("update auth.users set email='changed@example.invalid' where id=$1",[user]);
- await db.exec('set role anon');await assert.rejects(db.query('select public.confirm_email_token($1,$2)',[user,first.token]),/invalid or expired/);
  await db.exec('reset role');await db.query('update app_private.email_verifications set attempt_day=null,lease_id=null,lease_until=null where user_id=$1',[user]);await db.exec('set role anon');
- const changed=(await claim())[0];await db.query('select public.confirm_email_token($1,$2,true)',[user,changed.token]);assert.deepEqual(await claim(),[]);
+ const changed=(await claim())[0];
+ await db.exec('reset role;set role authenticated');await db.query("select set_config('request.jwt.claim.sub',$1,false)",[user]);
+ await assert.rejects(db.query('select public.confirm_email_token($1,$2)',[user,'b'.repeat(64)]),/invalid or expired/);
+ // "Stop reminders" needs only the link, without a session.
+ await db.exec('reset role;set role anon');await db.query("select set_config('request.jwt.claim.sub','',false)");
+ await db.query('select public.confirm_email_token($1,$2,true)',[user,changed.token]);assert.deepEqual(await claim(),[]);
  await db.exec('reset role;set role authenticated');await db.query("select set_config('request.jwt.claim.sub',$1,false)",[user]);
  assert.equal((await db.query('select public.email_verification_status() as s')).rows[0].s.verified,false);
  await db.query('select public.request_email_verification()');assert.equal((await db.query('select public.request_email_verification() as r')).rows[0].r.wait,true);
@@ -56,7 +74,17 @@ test('immediate access is distinct from mailbox proof; confirmations, reminders 
  await db.exec(fs.readFileSync('supabase/activate-immediate-signup.sql','utf8'));
  assert.ok((await db.query('select email_confirmed_at from auth.users where id=$1',[legacy])).rows[0].email_confirmed_at);
  assert.equal((await db.query('select app_private.email_is_verified($1) as v',[legacy])).rows[0].v,false);
- assert.equal((await db.query('select role from public.profiles where user_id=$1',[legacy])).rows[0].role,'teacher');
+ // A teaching workspace opens only once the mailbox is proven, then by itself.
+ assert.equal((await db.query('select role,requested_role from public.profiles where user_id=$1',[legacy])).rows[0].role,'learner');
+ await db.exec('set role authenticated');await db.query("select set_config('request.jwt.claim.sub',$1,false)",[legacy]);
+ await db.query('select public.complete_teacher_onboarding()');
+ assert.equal((await db.query("select public.register_teaching_account('teacher','{}') as id")).rows[0].id,null);
+ await db.exec('reset role');assert.equal((await db.query('select count(*)::int n from public.orgs where owner=$1',[legacy])).rows[0].n,0);
+ await db.exec('set role anon');const legacyMail=(await db.query("select public.claim_verification_mail('fixture-secret',$1) as j",[legacy])).rows[0].j[0];
+ await db.exec('reset role;set role authenticated');await db.query('select public.confirm_email_token($1,$2)',[legacy,legacyMail.token]);
+ await db.exec('reset role');
+ const promoted=(await db.query('select role,requested_role,org_id from public.profiles where user_id=$1',[legacy])).rows[0];
+ assert.equal(promoted.role,'teacher');assert.equal(promoted.requested_role,null);assert.ok(promoted.org_id);
  assert.equal((await db.query('select app_private.email_is_verified($1) as v',[owner])).rows[0].v,true);
  }finally{await db.close()}
 });

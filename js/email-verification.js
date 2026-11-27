@@ -2,7 +2,7 @@
 (()=>{
  const esc=x=>String(x||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const tr=(en,de)=>window.KONTO?.lang()==='de'?de:en;
- let status=null,generation=0,capability=null,working=false;
+ let status=null,generation=0,capability=null,working=false,awaitingSignIn=false;
  async function rpc(name,body={},anonymous=false){
   const headers={apikey:APP_CONFIG.supabaseKey,'Content-Type':'application/json'};
   if(!anonymous){const token=await window.ACCT?.token();if(!token)throw Error('Sign in first');headers.Authorization='Bearer '+token;}
@@ -34,14 +34,27 @@
   const button=document.getElementById('email-confirm-action');if(button)button.onclick=complete;
   return true;
  }
+ // Confirming needs the link from the inbox and a session of the same account: whoever opens the
+ // link must be the person who created the account. "Stop reminders" needs only the link.
+ function needsSignIn(action){
+  const user=window.ACCT?.user(),result=document.getElementById('email-confirm-result');
+  if(action.stop||user?.id===action.user)return false;
+  if(result)result.innerHTML=user
+   ?esc(tr('This link belongs to a different account. Sign out, then sign in with the account you created with this email address.','Dieser Link gehört zu einem anderen Konto. Melde dich ab und dann mit dem Konto an, das du mit dieser E-Mail-Adresse erstellt hast.'))
+   :`${esc(tr('Sign in to the account you created with this email address. Your email is confirmed right after that.','Melde dich mit dem Konto an, das du mit dieser E-Mail-Adresse erstellt hast. Deine E-Mail wird gleich danach bestätigt.'))} <span>${esc(tr('Did not create an account? Then ignore this email; nothing happens without your password.','Kein Konto erstellt? Dann ignoriere diese E-Mail; ohne dein Passwort passiert nichts.'))}</span>`;
+  if(!user){awaitingSignIn=true;window.ACCT?.sheet?.('in');}
+  return true;
+ }
  async function complete(){
-  if(!capability||working)return;working=true;const action=capability,button=document.getElementById('email-confirm-action'),result=document.getElementById('email-confirm-result');button.disabled=true;
-  try{await rpc('confirm_email_token',{p_user:action.user,p_token:action.token,p_stop:action.stop},true);capability=null;button.remove();result.textContent=action.stop?tr('Reminders stopped.','Erinnerungen beendet.'):tr('Email confirmed. Your account is ready.','E-Mail bestätigt. Dein Konto ist bereit.');if(ACCT.user()?.id===action.user){await refresh();await KONTO.reload();if(!action.stop){location.hash='#/start';toast(tr('Email confirmed. Welcome!','E-Mail bestätigt. Willkommen!'));}}}
-  catch(e){result.textContent=tr('This link is invalid or expired. Sign in and request a new confirmation email.','Dieser Link ist ungültig oder abgelaufen. Melde dich an und fordere eine neue Bestätigung an.');button.disabled=false;}
+  if(!capability||working||needsSignIn(capability))return;working=true;const action=capability,button=document.getElementById('email-confirm-action'),result=document.getElementById('email-confirm-result');button.disabled=true;
+  try{await rpc('confirm_email_token',{p_user:action.user,p_token:action.token,p_stop:action.stop},action.stop);capability=null;button.remove();result.textContent=action.stop?tr('Reminders stopped.','Erinnerungen beendet.'):tr('Email confirmed. Your account is ready.','E-Mail bestätigt. Dein Konto ist bereit.');if(ACCT.user()?.id===action.user){await refresh();await KONTO.reload();if(!action.stop){location.hash='#/start';toast(tr('Email confirmed. Welcome!','E-Mail bestätigt. Willkommen!'));}}}
+  catch(e){button.disabled=false;if(/sign in/i.test(e&&e.message||'')&&!action.stop&&window.ACCT?.user()?.id!==action.user){needsSignIn(action);}else result.textContent=tr('This link is invalid or expired. Sign in and request a new confirmation email.','Dieser Link ist ungültig oder abgelaufen. Melde dich an und fordere eine neue Bestätigung an.');}
   finally{working=false;}
  }
  window.EMAIL_VERIFY={refresh,resend,handleRoute,required:()=>!!status?.required&&!status?.verified};
- window.addEventListener('acct:in',refresh);window.addEventListener('acct:out',()=>{generation++;status=null;capability=null;banner()});
+ window.addEventListener('acct:in',refresh);
+ // Signed in after opening a confirmation link: finish the confirmation that was waiting.
+ window.addEventListener('acct:in',()=>{if(!awaitingSignIn||!capability||capability.stop)return;awaitingSignIn=false;const result=document.getElementById('email-confirm-result');if(result)result.textContent='';if(document.getElementById('email-confirm-action'))complete();});window.addEventListener('acct:out',()=>{generation++;status=null;if(!document.getElementById('email-confirm-action'))capability=null;banner()});
  window.addEventListener('focus',()=>{if(status?.required)refresh()});
  const style=document.createElement('style');style.textContent='.email-nudge[hidden]{display:none}.email-nudge{display:flex;align-items:center;gap:1rem;justify-content:space-between;padding:1rem 1.2rem;width:calc(100% - 2rem);max-width:58rem;margin:0 auto 1.3rem;border:1px solid var(--line);border-radius:1rem;background:var(--card);font-size:.8rem}.email-nudge b{font-weight:500}.email-nudge small{display:block;color:var(--mut);line-height:1.6;margin-top:.3rem;overflow-wrap:anywhere}.email-nudge button{flex-shrink:0}.email-confirm-page{max-width:520px;margin:2rem auto;line-height:1.7}.email-confirm-page h1{font:500 2.6rem/1.1 Fraunces,serif}.email-confirm-page p{color:var(--mut)}@media(max-width:560px){.email-nudge{align-items:flex-start;flex-direction:column;padding:.85rem;gap:.6rem}.email-nudge button{align-self:flex-end}}';document.head.append(style);
 })();

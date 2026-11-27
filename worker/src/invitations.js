@@ -14,6 +14,8 @@ const text = (value, max) => String(value || "").trim().slice(0, max);
 const date = (value) => (value ? new Date(value + "T12:00:00Z").toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }) : "to be confirmed");
 const supabase = async (env, path, token, options = {}) => {
   const response = await fetch(new URL(path, env.SUPABASE_URL), {
+    signal: AbortSignal.timeout(7000),
+    redirect: "manual",
     ...options,
     headers: {
       apikey: env.SUPABASE_PUBLISHABLE_KEY,
@@ -23,10 +25,12 @@ const supabase = async (env, path, token, options = {}) => {
     },
   });
   const body = await response.json().catch(() => null);
-  if (!response.ok) throw Object.assign(new Error("Class service could not load "+path.split("?")[0].split("/").pop()+" (HTTP "+response.status+")."),{status:response.status});
+  if (!response.ok) throw Object.assign(new Error("Class service could not load "+path.split("?")[0].split("/").pop()+" (HTTP "+response.status+")."),{status:response.status,detail:typeof body?.message==="string"?body.message.slice(0,200):""});
   return body;
 };
 const smtp = (env) => ({ host: String(env.SMTP_HOST || "smtppro.zoho.com"), port: Number(env.SMTP_PORT || 465) });
+// Daily ceilings across all senders. They keep one day of misuse from exhausting the shared mailbox.
+const ceiling = (value, fallback) => (/^\d{1,5}$/.test(String(value || "")) ? Number(value) : fallback);
 
 const diagnostic = error => Number.isInteger(error?.smtpCode) ? 'smtp_'+error.smtpCode+'_'+error.smtpStage : 'transport_'+(error?.smtpStage||'unknown');
 const mailProblem = error => error?.smtpCode===535 ? 'The mail provider rejected the saved sign-in. Please contact support; your invitation is saved for retry.' : error?.smtpCode>=500 && error?.smtpStage==='RCPT' ? 'The mail provider rejected this recipient. Check the email address and try again.' : 'The email provider could not accept the invitation. Your invitation is saved; please retry in a moment.';
@@ -89,8 +93,12 @@ async function deliverInvitation(env,headers,user,id,to,content,brand,send=smtpS
   const existing=await env.DB.prepare('SELECT state,updated_at,attempts FROM invitation_mail WHERE id=?1').bind(id).first();
   if(existing?.state==='sent')return json(200,{sent:true,already_sent:true},headers);
   if(existing?.state==='sending'&&existing.updated_at>now-120000)return json(409,{error:'This invitation is still being sent. Check the inbox before retrying.'},headers);
+  // Per sender 30 a day; class invitations from all senders together share a site-wide daily ceiling
+  // (the owner's own teacher/school invitations, ids "site-…", are not held back by it).
+  const siteWide=String(id).startsWith('site-')?1000000:ceiling(env.INVITATION_DAILY_MAIL,300);
   const claim=await env.DB.prepare(`INSERT INTO invitation_mail(id,sender,day,state,updated_at,attempts) SELECT ?1,?2,?3,'sending',?4,1 WHERE (SELECT count(*) FROM invitation_mail WHERE sender=?2 AND day=?3)<30
-    ON CONFLICT(id) DO UPDATE SET state='sending',updated_at=?4,attempts=invitation_mail.attempts+1 WHERE invitation_mail.state<>'sent' AND (invitation_mail.state<>'sending' OR invitation_mail.updated_at<=?5) AND invitation_mail.attempts<5 RETURNING id`).bind(id,user.id,day,now,now-120000).first();
+    AND (SELECT count(*) FROM invitation_mail WHERE day=?3 AND sender<>'diagnostic' AND id NOT LIKE 'live-%' AND id NOT LIKE 'site-%')<?6
+    ON CONFLICT(id) DO UPDATE SET state='sending',updated_at=?4,attempts=invitation_mail.attempts+1 WHERE invitation_mail.state<>'sent' AND (invitation_mail.state<>'sending' OR invitation_mail.updated_at<=?5) AND invitation_mail.attempts<5 RETURNING id`).bind(id,user.id,day,now,now-120000,siteWide).first();
   if(!claim)return json(429,{error:'The invitation sending limit has been reached. Please try again tomorrow or contact support.'},headers);
   const transport=smtp(env);
   try{
@@ -107,27 +115,45 @@ export async function requestLiveClass(req, env, headers, send = smtpSend) {
   if (req.method !== "POST") return json(405, { error: "POST only" }, headers);
   const user = await authenticated(req, env, headers);
   if (user instanceof Response) return user;
-  if (!env.SMTP_USER || !env.SMTP_PASSWORD || !env.WELCOME_HOOK_SECRET)
+  if (!env.SMTP_USER || !env.SMTP_PASSWORD || !env.WELCOME_HOOK_SECRET || !env.DB)
     return json(503, { error: "Class notification mail is not configured." }, headers);
   const body = await req.json().catch(() => null), classId = text(body?.class_id, 36);
   if (!/^[0-9a-f-]{36}$/i.test(classId)) return json(400, { error: "Choose a class." }, headers);
+  const token = req.headers.get("Authorization");
   let request;
-  try { request = await supabase(env, "/rest/v1/rpc/request_live_class", req.headers.get("Authorization"), { method: "POST", body: JSON.stringify({ p_class: classId }) }); }
-  catch { return json(400, { error: "This class is not accepting applications." }, headers); }
-  const profile = await supabase(env, `/rest/v1/profiles?select=display_name&user_id=eq.${encodeURIComponent(user.id)}`, req.headers.get("Authorization")).catch(() => []);
-  // The existing mail credential authorises exactly this learner's application.
-  // Neither a service-role key nor the private teacher address reaches the browser.
-  const context = await supabase(env, "/rest/v1/rpc/teacher_mail_context", req.headers.get("Authorization"), {
-    method: "POST", body: JSON.stringify({ p_request: request.request_id, p_worker_secret: env.WELCOME_HOOK_SECRET }),
-  });
-  const notificationEmail = context.notification_email;
-  const recipients = [env.SUPPORT_EMAIL || "support@deutschklinik.com", notificationEmail].filter(email).filter((v, i, a) => a.indexOf(v) === i);
-  if (env.SMTP_USER && env.SMTP_PASSWORD) {
+  try { request = await supabase(env, "/rest/v1/rpc/request_live_class", token, { method: "POST", body: JSON.stringify({ p_class: classId }) }); }
+  catch (error) {
+    const detail = String(error?.detail || "");
+    return json(400, { error: /confirm your email/i.test(detail) ? "Confirm your email first." : /leave your current school/i.test(detail) ? "You already belong to a school. Leave it in your settings before applying to this class." : "This class is not accepting applications." }, headers);
+  }
+  const done = () => json(200, { status: request.status, class_name: request.class_name, level: request.level }, headers);
+  if (request?.status !== "pending" || !/^[0-9a-f-]{36}$/i.test(String(request.request_id || ""))) return done();
+  // One notification per application and day, a few applications per learner and day, and a
+  // daily ceiling for all learners together. A repeated request is still a success for the
+  // learner: the application itself is stored and shown in the teacher's dashboard.
+  const now = Date.now(), day = new Date(now).toISOString().slice(0, 10), id = "live-" + request.request_id + "-" + day, sender = "live:" + user.id;
+  const claim = await env.DB.prepare(`INSERT INTO invitation_mail(id,sender,day,state,updated_at,attempts) SELECT ?1,?2,?3,'sending',?4,1
+    WHERE (SELECT count(*) FROM invitation_mail WHERE sender=?2 AND day=?3)<?5 AND (SELECT count(*) FROM invitation_mail WHERE day=?3 AND id LIKE 'live-%')<?6
+    ON CONFLICT(id) DO UPDATE SET state='sending',updated_at=?4,attempts=invitation_mail.attempts+1 WHERE invitation_mail.state='failed' AND invitation_mail.attempts<3 RETURNING id`)
+    .bind(id, sender, day, now, ceiling(env.LIVE_CLASS_USER_DAILY_MAIL, 5), ceiling(env.LIVE_CLASS_DAILY_MAIL, 100)).first();
+  if (!claim) return done();
+  try {
+    const profile = await supabase(env, `/rest/v1/profiles?select=display_name&user_id=eq.${encodeURIComponent(user.id)}`, token).catch(() => []);
+    // The existing mail credential authorises exactly this learner's application.
+    // Neither a service-role key nor the private teacher address reaches the browser.
+    const context = await supabase(env, "/rest/v1/rpc/teacher_mail_context", token, {
+      method: "POST", body: JSON.stringify({ p_request: request.request_id, p_worker_secret: env.WELCOME_HOOK_SECRET }),
+    });
+    const recipients = [env.SUPPORT_EMAIL || "support@deutschklinik.com", context?.notification_email].filter(email).filter((v, i, a) => a.indexOf(v) === i);
     const message = `New live-class application\n\nLearner: ${profile?.[0]?.display_name || "(no name)"}\nEmail: ${user.email}\nClass: ${request.class_name} (${request.level})\nStarts: ${date(request.starts_on)}\nSchedule: ${request.schedule || "to be confirmed"}\n\nOpen the teacher dashboard to accept or decline the application.`;
     const transport = smtp(env);
     await Promise.all(recipients.map((to) => send(env.SMTP_USER.trim(), env.SMTP_PASSWORD.replace(/\s+/g, ""), to, `New ${request.level} class application · Deutschklinik`, message, `<pre style="font-family:Arial,sans-serif;white-space:pre-wrap">${message.replace(/&/g,"&amp;").replace(/</g,"&lt;")}</pre>`, crypto.randomUUID(), transport.host, transport.port)));
+    await env.DB.prepare("UPDATE invitation_mail SET state='sent',last_error=NULL,updated_at=?2 WHERE id=?1").bind(id, Date.now()).run();
+  } catch (error) {
+    // The application is saved; only the notification failed. It may be retried a few times.
+    await env.DB.prepare("UPDATE invitation_mail SET state='failed',last_error=?2,updated_at=?3 WHERE id=?1").bind(id, error?.smtpStage || Number.isInteger(error?.smtpCode) ? diagnostic(error) : "context_unavailable", Date.now()).run().catch(() => {});
   }
-  return json(200, { status: request.status, class_name: request.class_name, level: request.level }, headers);
+  return done();
 }
 
 export function siteInvitationContent(url,invitation){

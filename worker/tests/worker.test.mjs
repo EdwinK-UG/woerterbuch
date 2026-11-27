@@ -28,8 +28,8 @@ test('invitation button and wordmark use school colours with readable contrast',
  }
 });
 test('school welcome mail uses verified school and class context, escapes copy and routes help publicly',()=>{
- const result=welcomeContent('https://deutschklinik.com/',{role:'learner',name:'Learner',org:{kind:'school',name:'Gold School',theme:'#ac8935',logo_url:'https://logo.invalid/gold.png',welcome:'Learn <together>',contact_email:'help@gold.invalid'},class:{name:'Evening A1',level:'A1'}});
- assert.equal(result.subject,'Welcome to Gold School');assert.ok(result.html.includes('Welcome to Gold School.'));assert.ok(result.html.includes('Learn &lt;together&gt;'));assert.ok(result.html.includes('Evening A1'));assert.ok(result.html.includes('https://logo.invalid/gold.png'));assert.ok(result.html.includes('mailto:help@gold.invalid'));assert.ok(result.html.includes('background:#ac8935;color:#14202e'));assert.ok(!result.text.includes('Have a class invitation?'));
+ const result=welcomeContent('https://deutschklinik.com/',{role:'learner',name:'Learner',org:{kind:'school',name:'Gold School',theme:'#ac8935',logo_url:'https://vnnhyhicppkexdibuqyu.supabase.co/storage/v1/object/public/logos/u1/logo-1.png',welcome:'Learn <together>',contact_email:'help@gold.invalid'},class:{name:'Evening A1',level:'A1'}});
+ assert.equal(result.subject,'Welcome to Gold School');assert.ok(result.html.includes('Welcome to Gold School.'));assert.ok(result.html.includes('Learn &lt;together&gt;'));assert.ok(result.html.includes('Evening A1'));assert.ok(result.html.includes('https://vnnhyhicppkexdibuqyu.supabase.co/storage/v1/object/public/logos/u1/logo-1.png'));assert.ok(result.html.includes('mailto:help@gold.invalid'));assert.ok(result.html.includes('background:#ac8935;color:#14202e'));assert.ok(!result.text.includes('Have a class invitation?'));
 });
 test('email status is restricted to class managers and cannot expose another class',async()=>{
  const previous=globalThis.fetch;let manager=false,queries=0;
@@ -66,27 +66,115 @@ test('term invitation contains configured dates, course length, timetable and co
   } finally {globalThis.fetch=oldFetch;rmSync(dir,{recursive:true,force:true});}
 });
 test('class application notifies support and the private teacher without a service key', async () => {
-  const oldFetch = globalThis.fetch, sent = [];
+  const oldFetch = globalThis.fetch, sent = [], dir = mkdtempSync(join(tmpdir(), 'live-class-mail-')), DB = db(join(dir, 'fixture.sqlite'));
+  DB.exec(readFileSync(new URL('../migrations/0003_invitation_delivery.sql', import.meta.url), 'utf8'));
   try {
     globalThis.fetch = async (url, options) => {
       const path = new URL(url).pathname;
       if (path === '/auth/v1/user') return Response.json({id:'student',email:'student@example.invalid',email_confirmed_at:'2026-11-01T00:00:00Z'});
-      if (path === '/rest/v1/rpc/request_live_class') return Response.json({request_id:'application',status:'pending',class_name:'German A1',level:'A1'});
+      if (path === '/rest/v1/rpc/request_live_class') return Response.json({request_id:'00000000-0000-4000-ab00-0000000000a1',status:'pending',class_name:'German A1',level:'A1'});
       if (path === '/rest/v1/profiles') return Response.json([{display_name:'Student'}]);
       if (path === '/rest/v1/rpc/teacher_mail_context') {
-        assert.deepEqual(JSON.parse(options.body), {p_request:'application',p_worker_secret:'fixture-mail-secret'});
+        assert.deepEqual(JSON.parse(options.body), {p_request:'00000000-0000-4000-ab00-0000000000a1',p_worker_secret:'fixture-mail-secret'});
         return Response.json({notification_email:'teacher@example.invalid'});
       }
       throw Error('Unexpected mail request');
     };
     const response = await requestLiveClass(new Request('https://worker.example.invalid/live-class-request', {method:'POST',headers:{Authorization:'Bearer verified'},body:JSON.stringify({class_id:'00000000-0000-4000-ab00-000000000001'})}), {
-      SUPABASE_URL:'https://auth.example.invalid',SUPABASE_PUBLISHABLE_KEY:'fixture',SMTP_USER:'hello@example.invalid',SMTP_PASSWORD:'fixture',WELCOME_HOOK_SECRET:'fixture-mail-secret',
+      DB,SUPABASE_URL:'https://auth.example.invalid',SUPABASE_PUBLISHABLE_KEY:'fixture',SMTP_USER:'hello@example.invalid',SMTP_PASSWORD:'fixture',WELCOME_HOOK_SECRET:'fixture-mail-secret',
     }, {}, async (...args) => sent.push(args));
     assert.equal(response.status,200);
     assert.deepEqual(sent.map(x=>x[2]).sort(),['support@deutschklinik.com','teacher@example.invalid']);
     assert.ok(sent.every(x=>x[4].includes('student@example.invalid')));
     assert.equal((await response.text()).includes('teacher@example.invalid'),false);
-  } finally { globalThis.fetch=oldFetch; }
+  } finally { globalThis.fetch=oldFetch; rmSync(dir,{recursive:true,force:true}); }
+});
+test('class application mail is sent once per application and bounded per learner and per day', async () => {
+  const oldFetch = globalThis.fetch, dir = mkdtempSync(join(tmpdir(), 'live-class-limits-')), DB = db(join(dir, 'fixture.sqlite'));
+  DB.exec(readFileSync(new URL('../migrations/0003_invitation_delivery.sql', import.meta.url), 'utf8'));
+  let sent = [], learner = 'student', status = 'pending', contexts = 0, refusal = null, teacher = 'teacher@example.invalid';
+  const application = n => '00000000-0000-4000-ab00-' + String(n).padStart(12, '0');
+  const env = {DB,SUPABASE_URL:'https://auth.example.invalid',SUPABASE_PUBLISHABLE_KEY:'fixture',SMTP_USER:'hello@example.invalid',SMTP_PASSWORD:'fixture',WELCOME_HOOK_SECRET:'fixture-mail-secret'};
+  const apply = (n, send = async (...args) => { sent.push(args); }, extra = {}) => requestLiveClass(new Request('https://worker.example.invalid/live-class-request', {method:'POST',headers:{Authorization:'Bearer verified'},body:JSON.stringify({class_id:application(n)})}), {...env,...extra}, {}, send);
+  try {
+    globalThis.fetch = async (url, options) => {
+      const path = new URL(url).pathname;
+      if (path === '/auth/v1/user') return Response.json({id:learner,email:learner+'@example.invalid',email_confirmed_at:'2026-11-01T00:00:00Z'});
+      if (path === '/rest/v1/rpc/request_live_class') return refusal ? Response.json({message:refusal},{status:400}) : Response.json({request_id:JSON.parse(options.body).p_class,status,class_name:'German A1',level:'A1'});
+      if (path === '/rest/v1/profiles') return Response.json([{display_name:'Student'}]);
+      if (path === '/rest/v1/rpc/teacher_mail_context') { contexts++; return Response.json({notification_email:teacher}); }
+      throw Error('Unexpected mail request');
+    };
+    // The same application, requested again and again: one notification, every reply a success.
+    for (let i = 0; i < 4; i++) { const r = await apply(1); assert.equal(r.status, 200); assert.equal((await r.json()).status, 'pending'); }
+    assert.equal(sent.length, 2); assert.equal(contexts, 1);
+    // A learner's sixth application on one day is stored but sends nothing.
+    for (let n = 2; n <= 7; n++) assert.equal((await apply(n)).status, 200);
+    assert.equal(sent.length, 10); assert.equal(contexts, 5);
+    assert.equal((await DB.prepare("SELECT count(*) AS n FROM invitation_mail WHERE sender='live:student' AND state='sent'").first()).n, 5);
+    // An application that is already accepted is never announced again.
+    learner = 'second'; status = 'accepted'; await apply(20); assert.equal(sent.length, 10); status = 'pending';
+    // Without a confirmed staff mailbox only support is told.
+    teacher = null; sent = []; await apply(21); assert.deepEqual(sent.map(x => x[2]), ['support@deutschklinik.com']); teacher = 'teacher@example.invalid';
+    // A failed notification does not fail the application and may be retried a few times.
+    learner = 'third'; sent = [];
+    for (let i = 0; i < 5; i++) assert.equal((await apply(30, async () => { throw Object.assign(Error('private provider response'), {smtpCode:451,smtpStage:'RCPT'}); })).status, 200);
+    assert.deepEqual(await DB.prepare("SELECT state,attempts,last_error FROM invitation_mail WHERE sender='live:third'").first(), {state:'failed',attempts:3,last_error:'smtp_451_RCPT'});
+    assert.equal((await apply(30)).status, 200); assert.equal(sent.length, 0);
+    // All learners together share a daily ceiling.
+    learner = 'fourth'; sent = []; const before = (await DB.prepare("SELECT count(*) AS n FROM invitation_mail WHERE id LIKE 'live-%'").first()).n;
+    await apply(40, undefined, {LIVE_CLASS_DAILY_MAIL:String(before + 1)}); await apply(41, undefined, {LIVE_CLASS_DAILY_MAIL:String(before + 1)});
+    assert.equal(sent.length, 2);
+    // Refusals from the class service are explained without leaking details; no mail, no receipt.
+    learner = 'fifth'; sent = [];
+    for (const [detail, expected] of [['confirm your email first', /Confirm your email/], ['leave your current school before applying to this class', /already belong to a school/], ['relation "secret" does not exist', /not accepting applications/]]) {
+      refusal = detail; const r = await apply(50); assert.equal(r.status, 400); const text = (await r.json()).error; assert.match(text, expected); assert.equal(text.includes('secret'), false);
+    }
+    assert.equal(sent.length, 0); assert.equal((await DB.prepare("SELECT count(*) AS n FROM invitation_mail WHERE sender='live:fifth'").first()).n, 0);
+    // Without the receipt store nothing is sent at all.
+    refusal = null; assert.equal((await apply(60, undefined, {DB:undefined})).status, 503); assert.equal(sent.length, 0);
+  } finally { globalThis.fetch=oldFetch; rmSync(dir,{recursive:true,force:true}); }
+});
+test('class invitations from all senders share a daily ceiling; the owner’s own invitations are not held back', async () => {
+  const oldFetch = globalThis.fetch, dir = mkdtempSync(join(tmpdir(), 'invitation-ceiling-')), DB = db(join(dir, 'fixture.sqlite'));
+  DB.exec(readFileSync(new URL('../migrations/0003_invitation_delivery.sql', import.meta.url), 'utf8'));
+  let teacher = 'teacher-1', code = 'abcdef000001', sends = 0;
+  try {
+    globalThis.fetch = async url => {
+      const path = new URL(url).pathname;
+      if (path === '/auth/v1/user') return Response.json({id:teacher,email:teacher+'@example.invalid',email_confirmed_at:'2026-11-01T00:00:00Z'});
+      if (path.endsWith('/can_manage_class')) return Response.json(true);
+      if (path.endsWith('/is_founder')) return Response.json(true);
+      if (path === '/rest/v1/classes') return Response.json([{org_id:'org',name:'A1 class',level:'A1',term_name:'Autumn',starts_on:'2026-11-23',ends_on:'2027-02-01',schedule:'Mon 20:00 EAT'}]);
+      if (path === '/rest/v1/orgs') return Response.json([{owner:teacher,name:'Studio'}]);
+      if (path === '/rest/v1/profiles') return Response.json([{display_name:'Teacher'}]);
+      if (path === '/rest/v1/invites') return Response.json([{code,recipient_email:'learner@example.invalid',expires_at:'2099-01-01'}]);
+      if (path === '/rest/v1/site_invites') return Response.json([{code,name:'New teacher',email:'new@example.invalid',role:'teacher',expires_at:'2099-01-01',uses_left:1}]);
+      throw Error('unexpected fetch');
+    };
+    const env = {DB,SITE_URL:'https://site.example.invalid/',SUPABASE_URL:'https://auth.example.invalid',SUPABASE_PUBLISHABLE_KEY:'key',SMTP_USER:'support@example.invalid',SMTP_PASSWORD:'not-a-real-secret',INVITATION_DAILY_MAIL:'3'};
+    const invite = () => sendCourseInvitation(new Request('https://worker.example.invalid/course-invitation',{method:'POST',headers:{Authorization:'Bearer verified'},body:JSON.stringify({class_id:'00000000-0000-4000-ab00-000000000001',to:'learner@example.invalid',invite_url:env.SITE_URL+'?join='+code})}),env,{},async()=>{sends++;});
+    // Three different senders use up the day; live-class receipts and diagnostics do not count.
+    DB.exec("INSERT INTO invitation_mail(id,sender,day,state,updated_at,attempts) VALUES('live-x','live:u',date('now'),'sent',1,1),('diagnostic-auth','diagnostic',date('now'),'failed',1,0)");
+    for (let n = 1; n <= 3; n++) { teacher = 'teacher-' + n; code = 'abcdef00000' + n; assert.equal((await invite()).status, 200); }
+    teacher = 'teacher-4'; code = 'abcdef000004';
+    const held = await invite(); assert.equal(held.status, 429); assert.match((await held.json()).error, /limit/); assert.equal(sends, 3);
+    // A repeat of an invitation that was already sent still answers "sent" without mailing again.
+    teacher = 'teacher-1'; code = 'abcdef000001'; const again = await invite(); assert.equal(again.status, 200); assert.equal((await again.json()).already_sent, true); assert.equal(sends, 3);
+    // The owner's teacher invitation still goes out.
+    const { sendSiteInvitation } = await import('../src/invitations.js');
+    teacher = 'owner'; code = 'abcdef00000a';
+    const site = await sendSiteInvitation(new Request('https://worker.example.invalid/site-invitation',{method:'POST',headers:{Authorization:'Bearer verified'},body:JSON.stringify({code})}),env,{},async()=>{sends++;});
+    assert.equal(site.status, 200); assert.equal(sends, 4);
+  } finally { globalThis.fetch=oldFetch; rmSync(dir,{recursive:true,force:true}); }
+});
+test('mail shows a school logo only from the project logo folder', () => {
+  const folder = 'https://vnnhyhicppkexdibuqyu.supabase.co/storage/v1/object/public/logos/';
+  assert.equal(mailBrand({logo_url:folder+'u1/logo-1.webp'}).logo, folder+'u1/logo-1.webp');
+  for (const foreign of ['https://tracker.invalid/pixel.png', folder.replace('vnnhyhicppkexdibuqyu','otherprojectrefxxxxxx')+'a.png', folder+'a.png?u=1', folder+'../../a.png', 'https://vnnhyhicppkexdibuqyu.supabase.co.evil.invalid/storage/v1/object/public/logos/a.png', 'javascript:alert(1)', null])
+    assert.equal(mailBrand({logo_url:foreign}).logo, '', String(foreign));
+  const html = invitationContent({org:{name:'School',logo_url:'https://tracker.invalid/pixel.png'},course:{name:'A1',level:'A1'},inviteUrl:'https://deutschklinik.com/'}).html;
+  assert.equal(html.includes('tracker.invalid'), false);
 });
 const migration = readFileSync(
   new URL("../migrations/0001_review_and_operations.sql", import.meta.url),

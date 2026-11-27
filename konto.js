@@ -97,7 +97,8 @@ async function load() {
     if (!current()) return;
     if (!profile) throw new Error('Profile unavailable');
     if (fresh) LSs('gd_signup', null);
-    if (profile.requested_role) { await rpc('complete_teacher_onboarding'); rows = await q('/rest/v1/profiles?select=*&user_id=eq.' + u.id); profile = rows[0]; }
+    // Opens the teaching workspace once the email is confirmed; until then the request simply stays open.
+    if (profile.requested_role) { try { await rpc('complete_teacher_onboarding'); rows = await q('/rest/v1/profiles?select=*&user_id=eq.' + u.id); profile = rows[0] || profile; } catch (e) {} }
     if (!Array.isArray(profile.unlocked)) throw new Error('Enrollment schema unavailable');
     const org = profile.org_id ? await rpc('my_org') : null;
     const memberships = { orgs: [], staff: [] };
@@ -494,7 +495,12 @@ function need() {
   page(T('Please sign in', 'Bitte anmelden'), `<p class="sub">${T('Sign in or create a free account to see this page.', 'Melde dich an oder erstelle ein kostenloses Konto, um diese Seite zu sehen.')}</p>
     <p class="row"><button class="btn primary" onclick="ACCT.sheet('up')">${T('Create account', 'Konto erstellen')}</button><button class="btn" onclick="ACCT.sheet('in')">${T('Sign in', 'Anmelden')}</button></p>`);
 }
-const chHash = n => (CHS().find(c => c.n === Number(n))?.vocab ? '#/v/' : '#/g/') + n;
+// Assignment items come from the database: a link is only ever built from a whole chapter number
+// and a plain exercise id, whatever a stored item contains.
+const chNo = n => (typeof n === 'number' && Number.isInteger(n) && n >= 0 && n <= 99999 ? n : null);
+const chHash = n => { n = chNo(n); return n === null ? '#/start' : (CHS().find(c => c.n === n)?.vocab ? '#/v/' : '#/g/') + n; };
+const exHash = x => (typeof x === 'string' && /^[A-Za-z0-9_-]{1,40}$/.test(x) ? '/ue-' + x : '');
+const taskItems = t => (Array.isArray(t && t.items) ? t.items.filter(it => it && typeof it === 'object' && chNo(it.ch) !== null) : []);
 // "Weitermachen": where the learner stopped (grammatik.js, shared with the apps), right under the home page's hero.
 // A guest gets it only once they have worked in a lesson in this browser (no grammar code is loaded otherwise).
 function showPlace(after, guest) {
@@ -506,7 +512,7 @@ function showPlace(after, guest) {
 }
 async function ensureGram() { if (!window.GRAM && window.loadGram) { try { await loadGram(); } catch (e) {} } }
 const CHS = () => (window.GRAM && GRAM.chapters ? GRAM.chapters() : []);
-const chTitle = n => { const c = CHS().find(x => x.n === Number(n)); return c ? c.title : T('Chapter ', 'Kapitel ') + n; };
+const chTitle = n => { const c = CHS().find(x => x.n === Number(n)); return c ? c.title : T('Chapter ', 'Kapitel ') + (chNo(n) === null ? '?' : n); };
 const chLabel = c => (c.vocab ? T('Topic ', 'Thema ') : T('Chapter ', 'Kapitel ')) + c.no;
 /* best result per (user, chapter, exercise) → share correct */
 function bestMap(rows) {
@@ -514,7 +520,7 @@ function bestMap(rows) {
   return b;
 }
 function doneTask(best, uid, task, need) {
-  return (task.items || []).filter(item => {
+  return taskItems(task).filter(item => {
     const ids = item.ex ? [item.ex] : item.required || window.GRAM?.requiredExercises(item.ch) || [];
     return Array.isArray(ids) && ids.length > 0 &&
       ids.every(id => best[uid + '|' + item.ch + '|' + id] * 100 >= need);
@@ -577,7 +583,7 @@ async function viewLearner() {
       : st === 'locked' ? `<div class="row"><button class="btn sm" onclick="KONTO.lockSheet('${l}')">${icn(P.org_id ? 'hand' : 'lock-open')} ${P.org_id ? T('Ask my teacher', 'Lehrkraft fragen') : T('Enroll', 'Einschreiben')}</button></div>` : ''}</div>`;
   };
   const b = bestMap(res.map(r => ({ uid: 'me', ch: r.ch, ex: r.ex, score: r.score, total: r.total }))), pm = passMark();
-  const taskRows = tasks.map(t => { const need = t.pass_mark || pm, its = t.items || [], done = doneTask(b, 'me', t, need), ok = its.length && done === its.length, late = !ok && t.due_at && new Date(t.due_at) < new Date();
+  const taskRows = tasks.map(t => { const need = t.pass_mark || pm, its = taskItems(t), done = doneTask(b, 'me', t, need), ok = its.length && done === its.length, late = !ok && t.due_at && new Date(t.due_at) < new Date();
     return `<li class="${ok ? 'ok' : late ? 'late' : ''}"><span class="ic">${icn(ok ? 'circle-check' : late ? 'alarm-clock' : 'clipboard-list')}</span><span><b>${esc(t.title)}</b><small>${its.map(it => `<a href="${chHash(it.ch)}">${esc(chTitle(it.ch))}</a>`).join(' · ')}</small></span><span class="d">${ok ? T('done', 'erledigt') : (t.due_at ? T('due ', 'bis ') + dt(t.due_at) : '') + ` · ${done}/${its.length}`}</span></li>`; }).join('');
   const open = mineL.length ? mineL : lvs.filter(x => x.st === 'open' && x.s.cs.length);
   const rest = lvs.filter(x => !open.includes(x));
@@ -586,7 +592,7 @@ async function viewLearner() {
       ${ORG && ORG.welcome ? `<p class="kd-wel">${esc(ORG.welcome)}</p>` : ''}
       <div class="row">${cur ? `<a class="btn kd-cta" href="#/kurs/${cur}">${icn('play')} ${T('Go to my course', 'Zu meinem Kurs')}</a>` : !P.org_id ? `<button class="btn kd-cta" onclick="KONTO.askLevel()">${T('Choose my level', 'Niveau wählen')}</button>` : ''}${ORG ? `<a class="btn kd-ghost" href="#/schule/${ORG.id}">${icn('school')} ${ORG.kind === 'school' ? T('School page', 'Schulseite') : T('Teacher page', 'Seite der Lehrkraft')}</a>` : ''}</div>`)}
     ${ORG?.class?.term_name?`<section class="kd-card learner-term"><span class="play-eyebrow">${esc(ORG.class.term_name)}</span><h2>${esc(ORG.class.name)}</h2><p>${dt(ORG.class.starts_on)} – ${dt(ORG.class.ends_on)}</p><p>${esc(ORG.class.schedule||'')}</p>${ORG.class.meeting_details?`<details><summary>${T('Joining details','Teilnahmeinformationen')}</summary><p style="white-space:pre-line">${esc(ORG.class.meeting_details)}</p></details>`:''}</section>`:''}
-    ${P.requested_role ? `<p class="kd-note">${icn('hourglass')} ${T('Confirm your email to finish activating your teaching workspace.','Bestätigen Sie Ihre E-Mail, um Ihren Unterrichtsbereich zu aktivieren.')}</p>` : ''}
+    ${P.requested_role ? `<p class="kd-note">${icn('hourglass')} ${T('Confirm your email to open your teaching space. It opens by itself as soon as you have confirmed.','Bestätigen Sie Ihre E-Mail, um Ihren Unterrichtsbereich zu öffnen. Er öffnet sich von selbst, sobald Sie bestätigt haben.')}</p>` : ''}
     ${kpis([['flame', streak, T('day streak', 'Tage am Stück')], ['dumbbell', week, T('exercises this week', 'Übungen diese Woche')], ['history', lastR ? ago(lastR.at) : '–', T('last practice', 'zuletzt geübt'), lastR ? chTitle(lastR.ch) : ''], ['trophy', Object.values(b).filter(v => v * 100 >= pm).length, T('exercises passed', 'Übungen bestanden'), T(`from ${pm} %`, `ab ${pm} %`)]])}
     ${tasks.length ? `<h2 class="kd-h">${icn('clipboard-list')} ${T('Assignments', 'Aufgaben')}</h2><ul class="kd-tasks">${taskRows}</ul>` : ''}
     <h2 class="kd-h">${icn('graduation-cap')} ${T('My courses', 'Meine Kurse')}</h2><div class="kd-lvs">${open.map(card).join('') || `<p class="sub">${T('No level unlocked yet.', 'Noch kein Niveau freigeschaltet.')}</p>`}</div>
@@ -622,11 +628,19 @@ async function staffOrgs() {
   return orgs;
 }
 let D = { org: null, classes: [], members: [], profiles: {}, invites: [], tasks: [], res: [], liveRequests: [] };
+const CLASS_COLUMNS = 'id,org_id,name,level,pass_mark,teacher_id,created_at,starts_on,ends_on,schedule,live_open,term_name,course_details';
 let orgLoadGeneration=0;
 async function loadOrg(org) {
   const request=++orgLoadGeneration,user=me()?.id;
   const next = { org, classes: [], members: [], profiles: {}, invites: [], tasks: [], res: [], liveRequests: [] };
-  next.classes = await q('/rest/v1/classes?select=*&org_id=eq.' + org.id + '&order=created_at') || [];
+  next.classes = await q('/rest/v1/classes?select=' + CLASS_COLUMNS + '&org_id=eq.' + org.id + '&order=created_at') || [];
+  // The meeting details and the notification address are private: they come separately and only for the
+  // classes this person manages (their own; all of them for the owner). `priv` marks a class whose private
+  // details are loaded, so that saving the set-up form can never blank details it did not show.
+  let priv = null;
+  try { priv = await rpc('class_private', { p_org: org.id }) || []; }
+  catch (e) { if (notInstalled(e)) { try { priv = await q('/rest/v1/classes?select=id,meeting_details,notification_email&org_id=eq.' + org.id) || []; } catch (e2) {} } }
+  if (priv) { const manages = c => org.owner === user || c.teacher_id === user; priv.forEach(x => { const c = next.classes.find(k => k.id === x.id); if (c && manages(c)) Object.assign(c, { meeting_details: x.meeting_details, notification_email: x.notification_email, priv: true }); }); }
   next.members = await q('/rest/v1/org_members?select=*&org_id=eq.' + org.id) || [];
   next.invites = await q('/rest/v1/invites?select=*&org_id=eq.' + org.id + '&order=expires_at.desc') || [];
   const ids = next.members.map(m => m.user_id);
@@ -712,12 +726,12 @@ async function viewClasses(arg) {
     Object.keys(best).filter(k => k.startsWith(uid + '|')).forEach(k => { const ch = +k.split('|')[1]; if (window.GRAM && GRAM.chLevel(ch) !== L) return; tried++; sum += best[k]; if (best[k] * 100 >= pm) passed++; });
     return { tried, passed, avg: tried ? Math.round(sum / tried * 100) : 0, pm }; };
   const classCard = c => {
-    const ms = D.members.filter(m => m.class_id === c.id && m.member_role === 'student'), ts = D.tasks.filter(t => t.class_id === c.id), apps = D.liveRequests.filter(r => r.class_id === c.id && r.status === 'pending');
+    const ms = D.members.filter(m => m.class_id === c.id && m.member_role === 'student'), ts = D.tasks.filter(t => t.class_id === c.id), apps = D.liveRequests.filter(r => r.class_id === c.id && r.status === 'pending'), manages = owner || c.teacher_id === me().id;
     return `<details class="ks-card ks-cls" open><summary><b>${esc(c.name)}</b> <span class="gr-lv ${c.level}">${c.level}</span> <small>${c.term_name ? esc(c.term_name) + ' · ' : ''}${ms.length} ${T('learners', 'Lernende')} · ${T('pass from', 'bestanden ab')} ${c.pass_mark || org.pass_mark} %</small></summary>
-      <div class="ks-row"><span>${T('Pass mark', 'Bestehensgrenze')}</span><input class="input" type="number" min="1" max="100" id="kc_pm_${c.id}" value="${c.pass_mark || ''}" placeholder="${org.pass_mark}" style="width:7rem"> %<button class="btn sm" onclick="KONTO.classPass('${c.id}')">${T('Save', 'Speichern')}</button></div>
-      <div class="ks-row"><span>${T('Invite', 'Einladen')}</span><button class="btn sm primary" onclick="KONTO.sendClassInvite('${c.id}')">${icn('send')} ${T('Send individual invitation', 'Einzelne Einladung senden')}</button><button class="btn sm" onclick="KONTO.invite('student','${c.id}','${c.level}')">${icn('link')} ${T('Create shareable link', 'Link zum Teilen erstellen')}</button></div>
+      <div class="ks-row"><span>${T('Pass mark', 'Bestehensgrenze')}</span><input class="input" type="number" min="1" max="100" id="kc_pm_${c.id}" value="${c.pass_mark || ''}" placeholder="${org.pass_mark}" style="width:7rem"${manages ? '' : ' disabled'}> %${manages ? `<button class="btn sm" onclick="KONTO.classPass('${c.id}')">${T('Save', 'Speichern')}</button>` : `<small class="muted">${T('Set by the class teacher or the school', 'Legt die Lehrkraft der Klasse oder die Schule fest')}</small>`}</div>
+      <div class="ks-row"><span>${T('Invite', 'Einladen')}</span>${manages ? `<button class="btn sm primary" onclick="KONTO.sendClassInvite('${c.id}')">${icn('send')} ${T('Send individual invitation', 'Einzelne Einladung senden')}</button>` : ''}<button class="btn sm" onclick="KONTO.invite('student','${c.id}','${c.level}')">${icn('link')} ${T('Create shareable link', 'Link zum Teilen erstellen')}</button></div>
       <p class="ks-tip">${icn('info')} ${T(`Learners who join with this link get ${c.level} unlocked at once.`, `Wer mit diesem Link beitritt, bekommt ${c.level} sofort freigeschaltet.`)}</p>
-      <div class="ks-row"><span>${T('Live class', 'Live-Unterricht')}</span><span>${c.live_open ? T('Open for applications', 'Für Anmeldungen geöffnet') : T('Private / invite-only', 'Privat / nur mit Einladung')}</span><button class="btn sm" onclick="KONTO.liveClassSheet('${c.id}')">${icn('settings-2')} ${T('Set up', 'Einrichten')}</button></div>
+      <div class="ks-row"><span>${T('Live class', 'Live-Unterricht')}</span><span>${c.live_open ? T('Open for applications', 'Für Anmeldungen geöffnet') : T('Private / invite-only', 'Privat / nur mit Einladung')}</span>${manages ? `<button class="btn sm" onclick="KONTO.liveClassSheet('${c.id}')">${icn('settings-2')} ${T('Set up', 'Einrichten')}</button>` : ''}</div>
       ${c.live_open ? `<p class="ks-tip">${T('Starts', 'Start')}: ${dt(c.starts_on)} · ${T('Ends', 'Ende')}: ${dt(c.ends_on)}${c.schedule ? ' · ' + esc(c.schedule) : ''}</p>` : ''}
       <ul class="ks-inv">${D.invites.filter(i => i.class_id === c.id).map(invRow).join('')}</ul>
       <details><summary>${T('Invitation email status','Status der Einladungs-E-Mails')}</summary><p class="ks-tip">${T('Check whether the mail provider accepted each invitation. Inbox delivery can take a few minutes; ask learners to check spam too.','Prüfen Sie, ob der Mailanbieter die Einladungen angenommen hat. Die Zustellung kann einige Minuten dauern; bitte auch den Spamordner prüfen.')}</p><button class="btn sm" onclick="KONTO.checkInvitationMail('${c.id}')">${T('Check email status','E-Mail-Status prüfen')}</button><div id="mail_status_${c.id}" role="status"></div></details>
@@ -727,7 +741,7 @@ async function viewClasses(arg) {
         return `<tr><td>${sName(m.user_id)}</td><td>${p.unlocked.map(x => `<span class="gr-lv ${x}">${x}</span>`).join(' ') || '–'}${wants(p) ? ` <span class="kd-want">${icn('hand')} ${wants(p)}</span>` : ''}</td>
           <td>${g.passed}/${g.tried}</td><td>${g.tried ? `<span class="gr-ueb ${g.avg >= g.pm ? 'pass' : 'fail'}">${g.avg} %</span>` : '–'}</td><td><button class="btn sm" onclick="KONTO.student('${m.user_id}')">${icn('sliders-horizontal')} ${T('Levels', 'Niveaus')}</button></td></tr>`; }).join('')}</table></div>` : `<p class="sub">${T('Nobody in this class yet. Share the invitation link.', 'Noch niemand in dieser Klasse. Teilen Sie den Einladungslink.')}</p>`}
       <h4 class="ks-h">${T('Assignments', 'Aufgaben')}</h4>
-      ${ts.length ? `<div class="ks-tw"><table class="ks-t"><tr><th>${T('Assignment', 'Aufgabe')}</th><th>${T('Due', 'Bis')}</th><th>${T('Pass from', 'Bestanden ab')}</th><th>${T('Done', 'Erledigt')}</th><th></th></tr>${ts.map(t => { const need = t.pass_mark || c.pass_mark || org.pass_mark || 70, its = t.items || [];
+      ${ts.length ? `<div class="ks-tw"><table class="ks-t"><tr><th>${T('Assignment', 'Aufgabe')}</th><th>${T('Due', 'Bis')}</th><th>${T('Pass from', 'Bestanden ab')}</th><th>${T('Done', 'Erledigt')}</th><th></th></tr>${ts.map(t => { const need = t.pass_mark || c.pass_mark || org.pass_mark || 70, its = taskItems(t);
         const n = ms.filter(m => its.length && doneTask(best, m.user_id, t, need) === its.length).length;
         return `<tr><td><b>${esc(t.title)}</b><div class="ks-it">${its.map(it => esc(chTitle(it.ch))).join(' · ')}</div></td><td>${dt(t.due_at)}</td><td>${need} %</td><td>${n}/${ms.length}</td><td><button class="btn sm" onclick="KONTO.delTask('${t.id}')">${icn('trash-2')}</button></td></tr>`; }).join('')}</table></div>` : ''}
       <div class="ks-form ks-new"><b>${T('New assignment', 'Neue Aufgabe')}</b><label>${T('Title', 'Titel')}<input class="input" id="kt_t_${c.id}" maxlength="100" placeholder="${T('e.g. Vocabulary topic 3 by Friday', 'z. B. Wortschatz Thema 3 bis Freitag')}"></label>
@@ -758,7 +772,7 @@ const addClass = () => act(async () => {
   refresh();
 }, T('Class created', 'Klasse angelegt'));
 function termFields(c, pre) {
-  return `<label>${T('Term name', 'Name des Durchgangs')}<input class="input" id="${pre}_term" maxlength="80" value="${esc(c.term_name || '')}" placeholder="${T('e.g. January 2027 intake', 'z. B. Januar 2027')}"></label><div class="ks-2"><label>${T('Starts', 'Start')}<input class="input" id="${pre}_start" type="date" value="${esc(c.starts_on || '')}"></label><label>${T('Ends', 'Ende')}<input class="input" id="${pre}_end" type="date" value="${esc(c.ends_on || '')}"></label></div><label>${T('Days, times and time zone', 'Tage, Zeiten und Zeitzone')}<input class="input" id="${pre}_schedule" maxlength="240" value="${esc(c.schedule || '')}" placeholder="${T('e.g. Mon & Wed, 18:00–20:00 EAT (UTC+3)', 'z. B. Mo & Mi, 18:00–20:00 EAT (UTC+3)')}"></label><label>${T('What the course includes', 'Kursleistungen')}<textarea class="input" id="${pre}_details" maxlength="1200" rows="4" placeholder="${T('Live lessons, weekly study time, teacher feedback, learning resources, fees and access duration …', 'Live-Unterricht, wöchentlicher Lernaufwand, Feedback, Lernmaterial, Gebühren und Zugangsdauer …')}">${esc(c.course_details || '')}</textarea></label><label>${T('Teacher notification email', 'Benachrichtigungs-E-Mail der Lehrkraft')}<input class="input" id="${pre}_notify" type="email" maxlength="120" value="${esc(c.notification_email || me().email || '')}"></label><label><input id="${pre}_open" type="checkbox" ${c.live_open ? 'checked' : ''}> ${T('Open public applications for this term', 'Öffentliche Anmeldungen für diesen Durchgang öffnen')}</label>`;
+  return `<label>${T('Term name', 'Name des Durchgangs')}<input class="input" id="${pre}_term" maxlength="80" value="${esc(c.term_name || '')}" placeholder="${T('e.g. January 2027 intake', 'z. B. Januar 2027')}"></label><div class="ks-2"><label>${T('Starts', 'Start')}<input class="input" id="${pre}_start" type="date" value="${esc(c.starts_on || '')}"></label><label>${T('Ends', 'Ende')}<input class="input" id="${pre}_end" type="date" value="${esc(c.ends_on || '')}"></label></div><label>${T('Days, times and time zone', 'Tage, Zeiten und Zeitzone')}<input class="input" id="${pre}_schedule" maxlength="240" value="${esc(c.schedule || '')}" placeholder="${T('e.g. Mon & Wed, 18:00–20:00 EAT (UTC+3)', 'z. B. Mo & Mi, 18:00–20:00 EAT (UTC+3)')}"></label><label>${T('What the course includes', 'Kursleistungen')}<textarea class="input" id="${pre}_details" maxlength="1200" rows="4" placeholder="${T('Live lessons, weekly study time, teacher feedback, learning resources, fees and access duration …', 'Live-Unterricht, wöchentlicher Lernaufwand, Feedback, Lernmaterial, Gebühren und Zugangsdauer …')}">${esc(c.course_details || '')}</textarea></label><label>${T('Teacher notification email', 'Benachrichtigungs-E-Mail der Lehrkraft')}<input class="input" id="${pre}_notify" type="email" maxlength="120" value="${esc(c.notification_email || me().email || '')}"><small class="muted">${T('Applications are announced to the confirmed account email of the class teacher or of the school owner. Another address is not used.', 'Anmeldungen werden an die bestätigte Konto-E-Mail der Lehrkraft oder der Schulleitung gemeldet. Eine andere Adresse wird nicht verwendet.')}</small></label><label><input id="${pre}_open" type="checkbox" ${c.live_open ? 'checked' : ''}> ${T('Open public applications for this term', 'Öffentliche Anmeldungen für diesen Durchgang öffnen')}</label>`;
 }
 function readTerm(pre) {
   const val = n => (($(`${pre}_${n}`) || {}).value || '').trim();
@@ -770,6 +784,7 @@ function readTerm(pre) {
 }
 function liveClassSheet(id) {
   const c = D.classes.find(x => x.id === id); if (!c) return;
+  if (!c.priv) return toastM(T('The details of this class could not be loaded. Only the class teacher or the school can set it up; otherwise reload the page.', 'Die Angaben dieser Klasse konnten nicht geladen werden. Nur die Lehrkraft der Klasse oder die Schule kann sie einrichten; sonst die Seite neu laden.'));
   openSheet(`<h3>${T('Set up live class', 'Live-Unterricht einrichten')}</h3><p>${T('Public applications are requests, not automatic enrolment. You accept each learner in your dashboard.', 'Öffentliche Anmeldungen sind Anfragen, keine automatische Einschreibung. Sie nehmen jede Person in Ihrer Übersicht an.')}</p>
     <div class="ks-form">${termFields(c, 'lc')}<label>${T('Meeting details for enrolled learners', 'Details für eingeschriebene Lernende')}<textarea class="input" id="lc_meeting" maxlength="400" rows="3">${esc(c.meeting_details || '')}</textarea></label></div>
     <div class="row" style="margin-top:1rem"><span class="spacer"></span><button class="btn" onclick="closeSheet()">${T('Cancel', 'Abbrechen')}</button><button class="btn primary" onclick="KONTO.saveLiveClass('${id}')">${T('Save', 'Speichern')}</button></div>`);
@@ -778,6 +793,7 @@ const saveLiveClass = id => act(async () => {
   const val = n => (($('lc_' + n) || {}).value || '').trim();
   const notification_email = val('notify');
   if (notification_email && !/^[^\s@<>]+@[^\s@<>]+$/.test(notification_email)) throw new Error(T('Enter a valid teacher e-mail.', 'Bitte eine gültige E-Mail der Lehrkraft eingeben.'));
+  const c = D.classes.find(x => x.id === id); if (!c || !c.priv) throw new Error(T('Reload the page and try again.', 'Bitte die Seite neu laden und erneut versuchen.'));
   await PATCH('/rest/v1/classes?id=eq.' + id, { ...readTerm('lc'), meeting_details: val('meeting') || null });
   closeSheet(); refresh();
 }, T('Live class saved', 'Live-Unterricht gespeichert'));
@@ -870,8 +886,8 @@ async function viewTasks() {
   try { as = await q('/rest/v1/assignments?select=*&order=due_at.asc.nullslast') || []; res = await A().practiceSummary([me().id]); }
   catch (e) { return page(T('My assignments', 'Meine Aufgaben'), `<p class="sub">${esc(err(e))}</p>`); }
   const b = bestMap(res), pm = passMark();
-  const rows = as.map(a => { const items = a.items || [], need = a.pass_mark || pm, done = doneTask(b, me().id, a, need), ok = items.length && done === items.length, late = !ok && a.due_at && new Date(a.due_at) < new Date();
-    return `<tr><td><b>${esc(a.title)}</b><div class="ks-it">${items.map(it => `<a href="${chHash(it.ch)}${it.ex ? '/ue-' + esc(it.ex) : ''}">${esc(chTitle(it.ch))}</a>`).join(' · ')}</div></td>
+  const rows = as.map(a => { const items = taskItems(a), need = a.pass_mark || pm, done = doneTask(b, me().id, a, need), ok = items.length && done === items.length, late = !ok && a.due_at && new Date(a.due_at) < new Date();
+    return `<tr><td><b>${esc(a.title)}</b><div class="ks-it">${items.map(it => `<a href="${chHash(it.ch)}${exHash(it.ex)}">${esc(chTitle(it.ch))}</a>`).join(' · ')}</div></td>
       <td>${dt(a.due_at)}</td><td>${need} %</td><td>${ok ? `<span class="gr-ueb pass">${icn('check')} ${T('done', 'erledigt')}</span>` : late ? `<span class="gr-ueb fail">${T('overdue', 'überfällig')}</span>` : `${done}/${items.length}`}</td></tr>`; }).join('');
   page(T('My assignments', 'Meine Aufgaben'), `<p class="sub">${T('Assignments from', 'Aufgaben von')} ${esc(ORG && ORG.name || T('your teacher', 'deiner Lehrkraft'))}. ${T(`Passed from ${pm} % (unless the assignment says otherwise).`, `Bestanden ab ${pm} % (wenn bei der Aufgabe nichts anderes steht).`)}</p>
     ${rows ? `<div class="ks-tw"><table class="ks-t"><tr><th>${T('Assignment', 'Aufgabe')}</th><th>${T('Due', 'Bis')}</th><th>${T('Pass from', 'Bestanden ab')}</th><th>${T('Status', 'Stand')}</th></tr>${rows}</table></div>` : `<p class="sub">${T('You have no assignments right now.', 'Im Moment hast du keine Aufgaben.')}</p>`}`);
@@ -1104,7 +1120,12 @@ async function sendRequest() {
   const r = $('kr_role').value, info = readDetails(r, 'kr');
   if (r === 'school' && (!info.name || info.name.length < 2)) return toastM(T('Please enter the name of the school.', 'Bitte den Namen der Schule eingeben.'));
   try { const lf = $('kr_logo'); if (lf && lf.files && lf.files[0]) { const s = await shrinkLogo(lf.files[0]); info.logo_url = await uploadLogo(s.blob); } } catch (e) { return toastM(err(e)); }
-  try { await rpc('register_teaching_account', {p_kind:r,p_info:info}); closeSheet(); await reload(); location.hash='#/start'; refreshView(); toastM(T('Your teaching workspace is ready', 'Ihr Unterrichtsbereich ist bereit')); } catch(e) { toastM(err(e)); }
+  try {
+    const made = await rpc('register_teaching_account', {p_kind:r,p_info:info});
+    closeSheet(); await reload(); location.hash='#/start'; refreshView();
+    // No page yet: the request is saved and the workspace opens by itself once the email is confirmed.
+    toastM(made && !(P && P.requested_role) ? T('Your teaching workspace is ready', 'Ihr Unterrichtsbereich ist bereit') : T('Confirm your email to open your teaching space. Check your inbox and spam folder.', 'Bestätigen Sie Ihre E-Mail, um Ihren Unterrichtsbereich zu öffnen. Prüfen Sie Posteingang und Spam.'));
+  } catch(e) { toastM(/confirm your email/i.test(e && e.message || '') ? T('Confirm your email to open your teaching space. Check your inbox and spam folder.', 'Bestätigen Sie Ihre E-Mail, um Ihren Unterrichtsbereich zu öffnen. Prüfen Sie Posteingang und Spam.') : err(e)); }
 }
 
 /* ---------- home for visitors who are not signed in: Deutschklinik ---------- */

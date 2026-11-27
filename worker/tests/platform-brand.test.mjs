@@ -33,8 +33,8 @@ test('every platform email family shows the approved mixed PNG lockup with alt t
  assert.match(welcomeContent(site,{role:'learner'}).html,/background:#1f6feb/);
 });
 test('school identity, colour and safe logo come first, with a smaller platform attribution',()=>{
- const b=mailBrand({name:'School <West>',theme:'#38745a',logo_url:'https://example.com/school.png'}),html=mailIdentity(b);
- assert.equal(b.colour,'#38745a');assert.match(html,/School &lt;West&gt;/);assert.match(html,/https:\/\/example.com\/school.png/);assert.match(html,ATTRIBUTION);assert.doesNotMatch(html,LOGO);
+ const b=mailBrand({name:'School <West>',theme:'#38745a',logo_url:'https://vnnhyhicppkexdibuqyu.supabase.co/storage/v1/object/public/logos/u1/school.png'}),html=mailIdentity(b);
+ assert.equal(b.colour,'#38745a');assert.match(html,/School &lt;West&gt;/);assert.match(html,/logos\/u1\/school\.png/);assert.match(html,ATTRIBUTION);assert.doesNotMatch(html,LOGO);
  assert.ok(html.indexOf('School &lt;West&gt;')<html.indexOf('brand-lockup-mixed.png'),'school name before platform logo');
  assert.equal(mailBrand({logo_url:'javascript:alert(1)'}).logo,'');
  const org={name:'Green School',kind:'school',theme:'#28634c'};
