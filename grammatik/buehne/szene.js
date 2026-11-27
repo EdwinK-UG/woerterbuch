@@ -8,12 +8,12 @@
    `set` and `cast` repeat the file's own `set` and `cast` so the web page can start loading the set and the figures
    before the private file arrives (tests/scene-format.test.cjs checks that they match). `langs`: the versions the scene
    has (default all four; the B2–C1 films have 'de' and 'en'), for the language switch and the feedback form. */
-import { createStage, $, rich, LANG, LANGS, T } from './stage.js?v=8';
+import { createStage, $, rich, LANG, LANGS, T } from './stage.js?v=9';
 import { createDirector } from './regie.js?v=8';
 import { createStrip, wheel as makeWheel } from './satzband.js?v=8';
 import { createPractice } from './practice.js?v=8';
-import { createBlase } from './blase.js?v=8';
-import { createTafel } from './tafel.js?v=8';
+import { createBlase } from './blase.js?v=9';
+import { createTafel } from './tafel.js?v=9';
 import { createLicht } from './licht.js?v=8';
 import { createFx } from './tiere.js?v=8';
 import { sfx, play, unlockSfx } from './sfx.js?v=8';
@@ -23,7 +23,7 @@ import { createSee } from './sets/see.js?v=8';
 import { createWohnung } from './sets/wohnung.js?v=8';
 import { createRedaktion } from './sets/redaktion.js?v=8';
 import { bakeable, M as manifest } from './baked.js?v=8';
-import { createRequisiten } from './requisiten.js?v=8';
+import { createRequisiten } from './requisiten.js?v=9';
 
 const SETS = { werkstatt: createWerkstatt, dorf: createVillage, see: createSee, wohnung: createWohnung, redaktion: createRedaktion };
 
@@ -270,7 +270,7 @@ export function playScene({ base, set: setName, sets: more = [], cast, cases = f
     clearAll(); await D.now(S.lines.filmStart || []); if (S.lines.camStart != null) S.cam.x = S.lines.camStart;
     return true;
   });
-  const api = { B, S, A, set, strip, PR, fx, ani, bubble, tafel, D, practise, watch: B.watch, ready };
+  const api = { B, S, A, set, strip, PR, fx, ani, bubble, tafel, props, D, practise, watch: B.watch, ready };
   if (hook) window[hook] = api;
   window.__szene = api;
   return api;

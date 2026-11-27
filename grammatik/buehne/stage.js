@@ -5,7 +5,7 @@
    - the camera (wide framing per scene, close-ups on whoever speaks, also vertical),
    - lines and captions, two audio players with the iPhone unlock, reading time for lines not yet recorded,
    - a scene clock with waits and tweens that stop while paused and abort cleanly when the learner jumps,
-   - scene dots, pause, the start box, embedding (height, close, private cues by postMessage), test hooks.
+   - the act buttons, pause, the start box, embedding (height, close, private cues by postMessage), test hooks.
    Like every lesson scene, nothing here holds lesson text: the chapter's lines come from its private lines file
    (?local, from the git-ignored .local/scenes/<chapter>/) or, embedded, from the lesson page. */
 
@@ -105,6 +105,23 @@ export function subtitleParts(text, max = 84) {
     }
   }
   return fit(parts);
+}
+
+/* The act buttons (docs/scene-format.md, player behaviour): one round numbered button per act under the transport
+   controls; a tap jumps to the start of that act (jump(i)). mark(i) highlights the act that is playing (the ones before
+   it as done) and scrolls the row so it is in view when the row is wider than the screen; mark(n) after the last act. */
+export function actButtons(root, scenes, { label, jump, reduced = false }) {
+  root.setAttribute('role', 'group'); root.setAttribute('aria-label', label);
+  root.innerHTML = scenes.map((s, i) => `<button type="button" title="${esc(s.name)}" aria-label="${esc(label)} ${i + 1}: ${esc(s.name)}" data-i="${i}">${i + 1}</button>`).join('');
+  root.onclick = (e) => { const b = e.target.closest('button'); if (b && root.contains(b)) jump(+b.dataset.i); };
+  function mark(at) {
+    [...root.children].forEach((b, i) => { b.classList.toggle('on', i === at); b.classList.toggle('done', i < at); if (i === at) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current'); });
+    const on = root.children[at]; if (!on || root.scrollWidth <= root.clientWidth + 1) return;
+    // the row itself scrolls (scrollIntoView could also scroll the lesson page around the frame)
+    const r = on.getBoundingClientRect(), c = root.getBoundingClientRect();
+    if (r.left < c.left + 4 || r.right > c.right - 4) root.scrollTo({ left: root.scrollLeft + (r.left - c.left) - (c.width - r.width) / 2, behavior: reduced ? 'auto' : 'smooth' });
+  }
+  return { mark };
 }
 
 /* create the stage
@@ -316,11 +333,10 @@ export function createStage({ set, priv, tag, keys, onCast = () => {}, z0 = 2.75
     return Math.min(1, (S.t - L.t0) / L.dur);
   }
   /* ---------- scenes ---------- */
-  function dots() {
-    $('dots').innerHTML = S.scenes.map((s, i) => `<button title="${esc(s.name)}" aria-label="${esc(T('scene'))} ${i + 1}: ${esc(s.name)}" data-i="${i}">${i + 1}</button>`).join('');
-    $('dots').onclick = (e) => { const b = e.target.closest('button'); if (b) watch(+b.dataset.i); };
-  }
-  function markDot() { [...$('dots').children].forEach((b, i) => { b.classList.toggle('on', i === S.scene); b.classList.toggle('done', i < S.scene); }); }
+  // the act buttons: 1, 2, 3 … one per act, the one playing highlighted; a tap plays from the start of that act
+  let acts = null;
+  function dots() { acts = actButtons($('dots'), S.scenes, { label: T('scene'), jump: (i) => watch(i), reduced: REDUCED }); markDot(); }
+  function markDot() { if (acts) acts.mark(S.scene); }
   const resetHooks = [];
   // the versions this visitor has watched (or practised) a part of, per scene, in this browser only
   function seen() { try { const k = 'buehne-seen-' + tag.replace(/(-en|-sw|-fr)?(-long)?$/, ''), v = new Set(JSON.parse(localStorage.getItem(k) || '[]')); v.add(VERSION); localStorage.setItem(k, JSON.stringify([...v])); } catch (e) { /* private mode */ } }

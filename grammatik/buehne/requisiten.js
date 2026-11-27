@@ -30,6 +30,7 @@ import { BILDER } from './bilder.js';
 import * as baked from './baked.js';
 import { REDUCED } from './stage.js';
 import { play } from './sfx.js';
+import { margin } from './platz.js?v=9';
 
 const TAU = Math.PI * 2;
 const ease = (k) => k * k * (3 - 2 * k), lin = (k) => k;
@@ -163,12 +164,43 @@ export function createRequisiten(B) {
     if (p.pic != null) return [BUB[0] * p.s, BUB[1] * p.s];
     return p.word != null ? [(p._w || 0.6) / 2 * p.s, 0.13 * p.s] : [0.2 * p.s, 0.2 * p.s];
   }
+  // a word's or a picture bubble's box on screen (the props that hold text or meaning), before any nudge
+  function screenBox(p) {
+    const w = where(p), f = set.foot(w.x, w.d), s = set.V.cam.z * f.k, k = p.s, cx = f.x, cy = f.y - w.y * s;
+    if (p.pic != null) { const rx = BUB[0] * s * k, ry = BUB[1] * s * k; return { x: cx - rx, y: cy - ry, w: rx * 2, h: ry * 2 }; }
+    if (p.word == null) return null;
+    const px = Math.max(12, 0.15 * s) * k;
+    if (p.look === 'flag') { const cw = Math.max(0, (p._w || 0.6) * s * k - px), pole = 1.05 * s * k; return { x: cx, y: cy - pole, w: cw, h: pole }; }
+    if (p.look === 'slot') { const sw = (p.w || 1) * s * k, sh = 0.36 * s * k, lab = Math.max(11, 0.12 * s) * k * 1.55; return { x: cx - sw / 2, y: cy - sh / 2 - lab, w: sw, h: sh + lab }; }
+    const pw = (p._w || 0.6) * s * k, ph = px * 1.9; return { x: cx - pw / 2, y: cy - ph / 2, w: pw, h: ph };
+  }
+  // the words and picture bubbles in the picture now (tools/scene-frames.cjs checks they keep off the edges)
+  let labels = [];                           // the tape's mark labels as last drawn
+  function boxes() {
+    const out = labels.slice();
+    for (const p of P.values()) { if (!p.show || p.vis < 0.5 || p.alpha < 0.3) continue; const b = screenBox(p); if (b) out.push({ ...b, x: b.x + (p.nx || 0), y: b.y + (p.ny || 0), id: p.id }); }
+    return out;
+  }
+  /* The fit rule for props (docs/scene-format.md, player behaviour): a word or a picture bubble that is in the picture,
+     even in part, or that stands in the scene's wide shot as a wide screen shows it (a phone shows less of the room),
+     is drawn just inside the picture's margins instead of being cut at its edge. Things (THINGS) stay where they are.
+     The shift (p.nx, p.ny, in px) eases, so nothing jumps; a prop that leaves the scene leaves the picture. */
+  function nudgeTo(p) {
+    const b = screenBox(p); if (!b) return [0, 0];
+    const W = set.V.W, H = set.V.H, m = margin(W), base = B.S.base || { x: 0, k: 1 };
+    const inPic = b.x < W && b.x + b.w > 0 && b.y < H && b.y + b.h > 0;
+    if (!inPic && Math.abs(where(p).x - base.x) > 3.1 / (base.k || 1)) return [0, 0];
+    const fit = (x, size, lim) => (size > lim - 2 * m ? (lim - size) / 2 - x : Math.max(m - x, Math.min(0, lim - m - x - size)));
+    return [fit(b.x, b.w, W), fit(b.y, b.h, H)];
+  }
+  // a label on the tape: moved sideways (only) into the picture when it is in it in part
+  function labelShift(x, w) { const W = set.V.W, m = margin(W); return x < W && x + w > 0 ? Math.max(m - x, Math.min(0, W - m - x - w)) : 0; }
   B.occupiers.push(() => {
     const out = [], Z = set.V.cam.z;
     for (const p of P.values()) {
       if (!p.show || p.vis < 0.5 || p.alpha < 0.3) continue;
       const w = where(p), f = set.foot(w.x, w.d), s = Z * f.k, [hw, hh] = size(p);
-      out.push({ x: f.x - hw * s, y: f.y - w.y * s - hh * s, w: hw * 2 * s, h: hh * 2 * s, who: 'prop:' + p.id });
+      out.push({ x: f.x + (p.nx || 0) - hw * s, y: f.y + (p.ny || 0) - w.y * s - hh * s, w: hw * 2 * s, h: hh * 2 * s, who: 'prop:' + p.id });
     }
     return out;
   });
@@ -337,7 +369,7 @@ export function createRequisiten(B) {
     const w = where(p), f = set.foot(w.x, w.d), s = Z * f.k;
     const pop = p.pop != null ? Math.min(1, (B.S.t - p.pop) / 0.28) : 1, sc = p.s * (p.show && pop < 1 && !REDUCED ? 0.6 + 0.4 * ease(pop) + Math.sin(Math.PI * pop) * 0.08 : 1);
     const draw = (cc) => {
-      cc.save(); cc.translate(f.x, f.y - w.y * s); cc.rotate(p.rot); cc.scale(w.flip ? -sc : sc, sc);
+      cc.save(); cc.translate(f.x + (p.nx || 0), f.y - w.y * s + (p.ny || 0)); cc.rotate(p.rot); cc.scale(w.flip ? -sc : sc, sc);
       if (p.glow > 0 && p.tone !== 'ghost') { cc.shadowColor = `rgba(255,250,215,${Math.min(1, p.glow)})`; cc.shadowBlur = 18 * p.glow; }
       if (p.word != null) { if (w.flip) cc.scale(-1, 1); drawWord(cc, p, s); } else if (p.pic != null) { if (w.flip) cc.scale(-1, 1); drawPic(cc, p, s); } else drawThing(cc, p.thing, s);
       cc.restore();
@@ -351,7 +383,7 @@ export function createRequisiten(B) {
       const [hw, hh] = size(p);
       for (let i = 0; i < 4; i++) {
         const k = (B.S.t * 0.7 + i / 4 + p.ph) % 1, a = p.ph + i * 1.9, r = 1.1 + 0.25 * Math.sin(i * 3.1);
-        const sx = f.x + Math.cos(a) * hw * r * s, sy = f.y - w.y * s + Math.sin(a) * hh * r * s, rr = (2 + 3 * Math.sin(Math.PI * k)) * (s / 160);
+        const sx = f.x + (p.nx || 0) + Math.cos(a) * hw * r * s, sy = f.y - w.y * s + (p.ny || 0) + Math.sin(a) * hh * r * s, rr = (2 + 3 * Math.sin(Math.PI * k)) * (s / 160);
         star(c, sx, sy, Math.max(1.5, rr * 1.4), Math.sin(Math.PI * k));
       }
     }
@@ -388,22 +420,35 @@ export function createRequisiten(B) {
   }
   // a mark's label on its post (the tape's, the band's), or a little finish flag (flag: true); pops in when new
   function drawMark(c, T, m, i, s, f) {
-    const lit = T.lit === i, dimmed = T.lit != null && !lit, px = Math.max(13, 0.17 * s) * (lit ? 1.2 : 1), post = (m.flag ? 0.75 : 0.42) * s;
+    const lit = T.lit === i, dimmed = T.lit != null && !lit, px = Math.max(13, 0.17 * s) * (lit ? 1.2 : 1), post0 = (m.flag ? 0.75 : 0.42) * s;
     const pop = m.t0 > 0 ? Math.min(1, (B.S.t - m.t0) / 0.35) : 1, sc = pop < 1 && !REDUCED ? 0.4 + 0.6 * ease(pop) + Math.sin(Math.PI * pop) * 0.12 : 1;
     c.save(); c.translate(f.x, f.y); c.scale(sc, sc); c.globalAlpha = dimmed ? 0.55 : 1;
-    c.strokeStyle = '#2a2f3a'; c.lineWidth = Math.max(2, 0.02 * s); c.beginPath(); c.moveTo(0, 0); c.lineTo(0, -post); c.stroke();
     c.font = `700 ${px.toFixed(1)}px Inter, system-ui, sans-serif`; const tw = c.measureText(m.t).width + px * 0.9, bh = px * 1.5;
+    // the label keeps inside the picture (the fit rule): a flag near the right edge waves to the left of its pole, a
+    // label that would still cross an edge slides sideways along it (its post stays on its point of the tape); and
+    // labels never cover each other: one that would cover a label drawn before it is lifted above it, on a longer post
+    const W = set.V.W, mg = margin(W), fw = tw + px * 1.1;
+    const dir = m.flag && f.x + fw > W - mg && f.x - fw >= mg ? -1 : 1, sx = m.flag ? labelShift(f.x + Math.min(0, dir * fw), fw) : 0, lx = m.flag ? 0 : labelShift(f.x - tw / 2, tw);
+    const box = m.flag ? { x: f.x + sx + Math.min(0, dir * fw), y: f.y - post0, w: fw, h: bh } : { x: f.x - tw / 2 + lx, y: f.y - post0 - bh, w: tw, h: bh };
+    let lift = 0;
+    for (let n = 0; n < 6; n++) {
+      const hit = labels.find((q) => q.x < box.x + box.w + 3 && box.x < q.x + q.w + 3 && q.y < box.y + box.h + 2 && box.y < q.y + q.h + 2); if (!hit) break;
+      const d = box.y + box.h + 3 - hit.y; lift += d; box.y -= d;
+    }
+    labels.push({ ...box, id: 'mark:' + m.t });
+    const post = post0 + lift;
+    c.strokeStyle = '#2a2f3a'; c.lineWidth = Math.max(2, 0.02 * s); c.beginPath(); c.moveTo(0, 0); c.lineTo(0, -post); c.stroke();
     if (lit) { c.shadowColor = 'rgba(242,201,76,.95)'; c.shadowBlur = 16; }
     if (m.flag) {                                   // a pennant with a chequered edge, the word on it
-      const fw = tw + px * 1.1, wave = (u) => Math.sin(B.S.t * 3 + u * 4) * bh * 0.07 * u;
-      c.beginPath(); c.moveTo(0, -post); for (let k = 0; k <= 8; k++) c.lineTo((k / 8) * fw, -post + wave(k / 8)); for (let k = 8; k >= 0; k--) c.lineTo((k / 8) * fw, -post + bh + wave(k / 8)); c.closePath();
+      const wave = (u) => Math.sin(B.S.t * 3 + u * 4) * bh * 0.07 * u, X = (u) => sx + dir * u * fw;
+      c.beginPath(); c.moveTo(X(0), -post); for (let k = 0; k <= 8; k++) c.lineTo(X(k / 8), -post + wave(k / 8)); for (let k = 8; k >= 0; k--) c.lineTo(X(k / 8), -post + bh + wave(k / 8)); c.closePath();
       c.fillStyle = lit ? '#f2c94c' : '#fffcf6'; c.fill(); c.shadowBlur = 0; c.strokeStyle = '#2a2f3a'; c.lineWidth = 1.5; c.stroke();
-      c.save(); c.clip(); const sq = bh / 3; for (let a = 0; a < 3; a++) for (let b = 0; b < 2; b++) { c.fillStyle = (a + b) % 2 ? '#2a2f3a' : '#fffcf6'; c.fillRect(fw - sq * 2 + b * sq, -post + a * sq - bh * 0.05, sq, sq + 1); } c.restore();
-      c.fillStyle = '#2a2f3a'; c.textAlign = 'left'; c.textBaseline = 'middle'; c.fillText(m.t, px * 0.35, -post + bh / 2 + 1);
+      c.save(); c.clip(); const sq = bh / 3, q0 = sx + (dir > 0 ? fw - sq * 2 : -fw); for (let a = 0; a < 3; a++) for (let b = 0; b < 2; b++) { c.fillStyle = (a + b) % 2 ? '#2a2f3a' : '#fffcf6'; c.fillRect(q0 + b * sq, -post + a * sq - bh * 0.05, sq, sq + 1); } c.restore();
+      c.fillStyle = '#2a2f3a'; c.textAlign = dir > 0 ? 'left' : 'right'; c.textBaseline = 'middle'; c.fillText(m.t, sx + dir * px * 0.35, -post + bh / 2 + 1);
     } else {
-      c.fillStyle = lit ? '#f2c94c' : '#fffcf6'; rounded(c, -tw / 2, -post - bh, tw, bh, bh * 0.3); c.fill(); c.shadowBlur = 0;
+      c.fillStyle = lit ? '#f2c94c' : '#fffcf6'; rounded(c, lx - tw / 2, -post - bh, tw, bh, bh * 0.3); c.fill(); c.shadowBlur = 0;
       c.strokeStyle = '#2a2f3a'; c.lineWidth = 1.5; c.stroke();
-      c.fillStyle = '#2a2f3a'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(m.t, 0, -post - bh / 2 + 1);
+      c.fillStyle = '#2a2f3a'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(m.t, lx, -post - bh / 2 + 1);
     }
     c.restore();
   }
@@ -437,8 +482,10 @@ export function createRequisiten(B) {
       c.fillStyle = '#e0a92a'; c.beginPath(); c.moveTo(e.x + Math.cos(ang) * ah * 0.6, e.y + Math.sin(ang) * ah * 0.6); c.lineTo(e.x + Math.cos(ang + 2.5) * ah, e.y + Math.sin(ang + 2.5) * ah); c.lineTo(e.x + Math.cos(ang - 2.5) * ah, e.y + Math.sin(ang - 2.5) * ah); c.closePath(); c.fill();
       if (T.arc.t && k > 0.5) {
         const px = Math.max(13, 0.16 * s), mid = pt(0.5); c.globalAlpha = Math.min(1, (k - 0.5) * 3); c.shadowBlur = 0;
-        c.font = `700 ${px.toFixed(1)}px Inter, system-ui, sans-serif`; const tw = c.measureText(T.arc.t).width + px; c.fillStyle = '#fffcf6'; rounded(c, mid.x - tw / 2, mid.y - px * 1.9, tw, px * 1.5, px * 0.4); c.fill(); c.strokeStyle = '#e0a92a'; c.lineWidth = 2; c.stroke();
-        c.fillStyle = '#2a2f3a'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(T.arc.t, mid.x, mid.y - px * 1.15);
+        c.font = `700 ${px.toFixed(1)}px Inter, system-ui, sans-serif`; const tw = c.measureText(T.arc.t).width + px, lx = mid.x + labelShift(mid.x - tw / 2, tw);
+        labels.push({ x: lx - tw / 2, y: mid.y - px * 1.9, w: tw, h: px * 1.5, id: 'arc:' + T.arc.t });
+        c.fillStyle = '#fffcf6'; rounded(c, lx - tw / 2, mid.y - px * 1.9, tw, px * 1.5, px * 0.4); c.fill(); c.strokeStyle = '#e0a92a'; c.lineWidth = 2; c.stroke();
+        c.fillStyle = '#2a2f3a'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(T.arc.t, lx, mid.y - px * 1.15);
       }
       c.restore();
     }
@@ -463,13 +510,17 @@ export function createRequisiten(B) {
       const g = a.ghost || 0; if (a._ghost === g) continue; a._ghost = g;
       a.cv.style.filter = g > 0.005 ? `saturate(${(1 - g).toFixed(2)}) brightness(${(1 + 0.9 * g).toFixed(2)}) opacity(${(1 - 0.72 * g).toFixed(2)}) drop-shadow(0 0 ${(4 * g).toFixed(1)}px rgba(255,255,240,${(0.95 * g).toFixed(2)}))` : '';
     }
-    const c = fit(), Z = set.V.cam.z;
+    const c = fit(), Z = set.V.cam.z; labels = [];
     for (const [w, r] of riders) { const a = B.A[w], p = P.get(r.id); if (a && p) { a.x = where(p).x + r.dx; a.tx = null; } }
     // the tint: sepia as a filter on the set, the people and the props; a "what if" as a lilac glow (drawn below)
     const sep = D.tone === 'sepia' && D.tint > 0.005 ? `sepia(${(0.85 * D.tint).toFixed(2)}) saturate(${(1 - 0.15 * D.tint).toFixed(2)})` : '';
     if (sep !== D._f) { D._f = sep; for (const el of [document.getElementById('bg'), document.getElementById('people'), document.getElementById('fg'), cv]) if (el) el.style.filter = sep; }
     for (const p of P.values()) {
       p.vis += ((p.show ? 1 : 0) - p.vis) * Math.min(1, dt * 9);
+      if (p.word != null || p.pic != null) {
+        const [tx, ty] = nudgeTo(p), e = p.nx == null || p.vis < 0.05 ? 1 : Math.min(1, Math.max(dt, 0.016) * 8);
+        p.nx = (p.nx || 0) + (tx - (p.nx || 0)) * e; p.ny = (p.ny || 0) + (ty - (p.ny || 0)) * e;
+      } else p.nx = p.ny = 0;
       if (p.mv && !p.mv.done) {
         const mv = p.mv, k = Math.min(1, (B.S.t - mv.t0) / mv.dur), e = mv.ease(k);
         for (const f of Object.keys(mv.to)) p[f] = mv.from[f] + (mv.to[f] - mv.from[f]) * e;
@@ -490,5 +541,5 @@ export function createRequisiten(B) {
     }
     if (D.dim > 0.001) { c.fillStyle = `rgba(8, 12, 28, ${(0.8 * D.dim).toFixed(3)})`; c.fillRect(0, 0, set.V.W, set.V.H); }
   });
-  return { prop, move, morph, tape: setTape, dim, ghost, pop, ride, rain, tint, sure, clear, P, get tapeState() { return tape; }, D };
+  return { prop, move, morph, tape: setTape, dim, ghost, pop, ride, rain, tint, sure, clear, P, boxes, get tapeState() { return tape; }, D };
 }

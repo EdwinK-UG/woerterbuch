@@ -10,7 +10,7 @@ import { createStrip } from './satzband.js';
 import { BILDER, ICONS } from './bilder.js';
 import { picture as bakedPic, icon as bakedIcon } from './baked.js';   // the baked images (as the apps draw them); live drawing until loaded
 import { play } from './sfx.js';
-import { bestSpot } from './platz.js';
+import { bestSpot, margin, reach, fitScale } from './platz.js?v=9';
 
 export function createBlase(B, { cases = false } = {}) {
   const st = $('stage');
@@ -20,7 +20,7 @@ export function createBlase(B, { cases = false } = {}) {
   st.append(tail, el);
   const picBox = el.querySelector('.bub-pic'), pic = picBox.querySelector('canvas'), iconBox = el.querySelector('.bub-icon'), icon = iconBox.querySelector('canvas');
   const strip = createStrip(el.querySelector('.bub-sb'), { cases });
-  const S = { on: false, who: null, at: null, kind: 'say', pic: null, icon: null, x: null, y: null, t0: 0 };
+  const S = { on: false, who: null, at: null, kind: 'say', pic: null, icon: null, x: null, y: null, t0: 0, k: 1, out: null, outT: 0, outWH: '' };
 
   function anchor() {             // the point the tail points at: the speaker's head, an animal, or a world point
     const set = B.set;
@@ -38,11 +38,13 @@ export function createBlase(B, { cases = false } = {}) {
   async function show(o = {}) {
     const fresh = !S.on || o.who !== S.who || !!o.at !== !!S.at;
     Object.assign(S, { on: true, who: o.who || null, at: o.at || null, kind: o.kind || 'say', pic: o.pic || null, icon: o.icon || null });
-    if (fresh) { S.x = null; S.spot = null; S.t0 = B.S.t; }
+    // a new bubble shows from its first placed frame (until then its transform is still the last bubble's place)
+    if (fresh) { S.x = null; S.spot = null; S.t0 = B.S.t; S.out = null; el.style.visibility = 'hidden'; }
     el.classList.toggle('think', S.kind === 'think' || S.kind === 'wish'); el.classList.toggle('wish', S.kind === 'wish'); tail.classList.toggle('wish', S.kind === 'wish'); el.classList.add('on');
     picBox.style.display = S.pic ? '' : 'none'; iconBox.style.display = S.icon ? '' : 'none';
     el.querySelector('.bub-text').innerHTML = o.text ? rich(o.text) : ''; el.querySelector('.bub-text').style.display = o.text ? '' : 'none';
-    if (fresh && !REDUCED) el.animate([{ transform: 'scale(.6)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 260, easing: 'cubic-bezier(.3,1.4,.5,1)' });
+    // (the scale property, not transform: an animated transform would replace the bubble's place for its 0.26 s)
+    if (fresh && !REDUCED) el.animate([{ scale: '.6', opacity: 0 }, { scale: '1', opacity: 1 }], { duration: 260, easing: 'cubic-bezier(.3,1.4,.5,1)' });
     if (fresh) play.pop(1.3);
     if (o.strip) await strip.show(o.strip, { clamp: o.clamp ?? 'auto' }); else if (o.strip === null) strip.clear();
   }
@@ -71,16 +73,21 @@ export function createBlase(B, { cases = false } = {}) {
     if (S.pic && BILDER[S.pic]) { const c = pic.getContext('2d'); c.setTransform(dpr * pw / 160, 0, 0, dpr * ph / 100, 0, 0); c.clearRect(0, 0, 160, 100); if (!bakedPic(c, S.pic, REDUCED ? 1.5 : t - S.t0, 0, 0, 160, 100)) BILDER[S.pic](c, REDUCED ? 1.5 : t - S.t0); }
     if (S.icon && ICONS[S.icon]) { const c = icon.getContext('2d'); c.setTransform(2, 0, 0, 2, 0, 0); c.clearRect(0, 0, 28, 28); if (!bakedIcon(c, S.icon, 0, 0, 28, 28)) ICONS[S.icon](c); }
     // place it where it covers the least of anyone: above the head, shifted, beside it, or in a top corner
-    const W = B.set.V.W, H = B.set.V.H, w = el.offsetWidth, h = el.offsetHeight, a = anchor(), gap = S.kind === 'think' ? 26 : 18;
-    const cands = !a ? [{ x: (W - w) / 2, y: 8, side: 'none' }, { x: 8, y: 8, side: 'none' }, { x: W - w - 8, y: 8, side: 'none' }] : [
+    // the whole bubble, with whatever sticks out of it, inside the picture's margins: smaller when it is too big
+    const W = B.set.V.W, H = B.set.V.H, w0 = el.offsetWidth, h0 = el.offsetHeight, m = margin(W), a = anchor(), gap = S.kind === 'think' ? 26 : 18;
+    const now = performance.now();       // (real time: a paused film still settles what changed in it)
+    if (!S.out || now - S.outT > 250 || S.outWH !== `${w0}x${h0}x${W}x${H}`) { S.out = reach(el, S.k); S.outT = now; S.outWH = `${w0}x${h0}x${W}x${H}`; }
+    const o = S.out; S.k = fitScale(w0, h0, W, H, o, m);
+    const w = (w0 + o.l + o.r) * S.k, h = (h0 + o.t + o.b) * S.k;
+    const cands = !a ? [{ x: (W - w) / 2, y: m, side: 'none' }, { x: m, y: m, side: 'none' }, { x: W - w - m, y: m, side: 'none' }] : [
       { x: a.x - w / 2, y: a.y - h - gap, side: 'up' }, { x: a.x - w * 0.15, y: a.y - h - gap, side: 'up' }, { x: a.x - w * 0.85, y: a.y - h - gap, side: 'up' },
       { x: a.x + a.w * 0.6 + gap, y: a.y - h * 0.3, side: 'right' }, { x: a.x - a.w * 0.6 - gap - w, y: a.y - h * 0.3, side: 'left' },
-      { x: 8, y: 8, side: 'up', cost: 400 }, { x: W - w - 8, y: 8, side: 'up', cost: 400 }];
-    if (!S.spotT || B.S.t - S.spotT > 0.4 || !S.spot) { S.spot = bestSpot(cands, { w, h, W, H, busy: B.occupied(), speaker: S.who, prev: S.spot }); S.spotT = B.S.t; }
-    const pick = cands[S.spot.i] ? { ...S.spot, ...bestSpot([cands[S.spot.i]], { w, h, W, H, busy: [], speaker: null }) } : S.spot;
+      { x: m, y: m, side: 'up', cost: 400 }, { x: W - w - m, y: m, side: 'up', cost: 400 }];
+    if (!S.spotT || B.S.t - S.spotT > 0.4 || !S.spot) { S.spot = bestSpot(cands, { w, h, W, H, m, busy: B.occupied(), speaker: S.who, prev: S.spot }); S.spotT = B.S.t; }
+    const pick = cands[S.spot.i] ? { ...S.spot, ...bestSpot([cands[S.spot.i]], { w, h, W, H, m, busy: [], speaker: null }) } : S.spot;
     let { x, y, side } = pick;
     if (S.x == null) { S.x = x; S.y = y; } else { S.x += (x - S.x) * 0.25; S.y += (y - S.y) * 0.25; }
-    el.style.transform = `translate(${S.x.toFixed(1)}px, ${S.y.toFixed(1)}px)`;
+    el.style.transform = `translate(${(S.x + o.l * S.k).toFixed(1)}px, ${(S.y + o.t * S.k).toFixed(1)}px)` + (S.k < 0.999 ? ` scale(${S.k.toFixed(3)})` : ''); el.style.visibility = '';
     // the tail: from the bubble's nearest edge toward the anchor
     if (!a || side === 'none') { tail.innerHTML = ''; return; }
     const bx = side === 'up' ? Math.max(S.x + 18, Math.min(S.x + w - 18, a.x)) : side === 'right' ? S.x + 2 : S.x + w - 2;

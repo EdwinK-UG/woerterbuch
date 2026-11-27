@@ -28,16 +28,18 @@ import { createStrip, wheel } from './satzband.js';
 import { BILDER, ICONS } from './bilder.js';
 import { picture as bakedPic, icon as bakedIcon } from './baked.js';   // the baked images (as the apps draw them); live drawing until loaded
 import { play } from './sfx.js';
-import { bestSpot } from './platz.js';
+import { bestSpot, margin, reach, fitScale } from './platz.js?v=9';
 
 export function createTafel(B, { cases = false, bubble = null } = {}) {
   const el = document.createElement('div'); el.className = 'tafel'; el.setAttribute('aria-live', 'polite'); $('stage').append(el);
   let steps = [], pics = [], open = null, spot = null, spotT = 0, pos = null, early = false;
+  let fk = 1, out = null, outT = 0, outWH = '';                // the fit: its scale, and how far its contents reach out of it
   // something to see: a title, a strip, wheels, a picture, or an item that is already showing
   const seen = () => !!el.querySelector('.tf-title, .tf-item > div:not(.tf-drawer), .tf-wheel, .tf-pic, tr:not(.wait), .tf-chip:not(.wait), .tf-card:not(.wait), .tf-mo:not(.wait), .tf-drawer:not(.wait)');
-  const reveal = () => { early = false; spot = null; pos = null; el.classList.add('on'); if (!REDUCED) el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 300, easing: 'ease-out' }); };
+  // (shown from its first placed frame: until then its transform is still the last board's place)
+  const reveal = () => { early = false; spot = null; pos = null; el.style.visibility = 'hidden'; el.classList.add('on'); if (!REDUCED) el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 300, easing: 'ease-out' }); };
 
-  function hide() { open = null; steps = []; pics = []; spot = null; pos = null; early = false; el.classList.remove('on'); el.replaceChildren(); }
+  function hide() { open = null; steps = []; pics = []; spot = null; pos = null; early = false; fk = 1; out = null; el.style.transform = ''; el.classList.remove('on'); el.replaceChildren(); }
   function show(id, board) {
     hide(); open = id; if (bubble) bubble.hide();
     const text = plain((B.S.lines.lines[id] || {}).text || ''), len = Math.max(1, text.length);
@@ -95,7 +97,8 @@ export function createTafel(B, { cases = false, bubble = null } = {}) {
           if (dr.open != null) steps.push({ k: when(dr.open), go: () => { box.classList.add('open'); play.roll(); } }); else if (dr.items && dr.items.length) box.classList.add('open');
         }
       } else if (it.timeline) {
-        const tl = it.timeline, small = B.set.V.W < 520, W = small ? 300 : 540, H = (tl.notes || []).some((n) => n.row) ? (small ? 118 : 132) : (small ? 92 : 104), ly = H - 30;
+        // as wide as the board can be in this picture (its padding and frame take about 40 px), at most 300 / 540 px
+        const tl = it.timeline, small = B.set.V.W < 520, W = Math.min(small ? 300 : 540, Math.max(200, Math.floor(B.set.V.W * 0.92 - 40))), H = (tl.notes || []).some((n) => n.row) ? (small ? 118 : 132) : (small ? 92 : 104), ly = H - 30;
         const box = document.createElement('div'); box.className = 'tf-tl'; box.style.width = W + 'px'; box.style.height = H + 'px'; row.append(box);
         const pc = (x) => (100 * Math.max(0, Math.min(1, x))).toFixed(1) + '%', now = tl.now;
         const line = document.createElement('i'); line.className = 'tf-tl-line'; line.style.top = ly + 'px';
@@ -184,13 +187,18 @@ export function createTafel(B, { cases = false, bubble = null } = {}) {
   });
   B.onFrame.push((t) => {
     if (!open) return;
-    // a top corner or the middle, whichever covers the least of the characters (re-checked as they move)
-    const W = B.set.V.W, H = B.set.V.H, w = el.offsetWidth, h = el.offsetHeight;
-    const cands = [{ x: 8, y: 8 }, { x: (W - w) / 2, y: 8 }, { x: W - w - 8, y: 8 }];
-    if (!spot || t - spotT > 0.5) { spot = bestSpot(cands, { w, h, W, H, busy: B.occupied(), prev: spot }); spotT = t; }
-    const tgt = bestSpot([cands[spot.i]], { w, h, W, H, busy: [] });
+    // a top corner or the middle, whichever covers the least of the characters (re-checked as they move); the whole
+    // board, with whatever sticks out of it (a wagon's label), inside the picture's margins: smaller when it is too big
+    const W = B.set.V.W, H = B.set.V.H, w = el.offsetWidth, h = el.offsetHeight, m = margin(W);
+    const now = performance.now();       // (real time: a paused film still settles what changed in it)
+    if (el.classList.contains('on') && (!out || now - outT > 250 || outWH !== `${w}x${h}x${W}x${H}`)) { out = reach(el, fk); outT = now; outWH = `${w}x${h}x${W}x${H}`; }
+    const o = out || { l: 0, t: 0, r: 0, b: 0 }; fk = fitScale(w, h, W, H, o, m);
+    const ow = (w + o.l + o.r) * fk, oh = (h + o.t + o.b) * fk;
+    const cands = [{ x: m, y: m }, { x: (W - ow) / 2, y: m }, { x: W - ow - m, y: m }];
+    if (!spot || t - spotT > 0.5) { spot = bestSpot(cands, { w: ow, h: oh, W, H, m, busy: B.occupied(), prev: spot }); spotT = t; }
+    const tgt = bestSpot([cands[spot.i]], { w: ow, h: oh, W, H, m, busy: [] });
     if (!pos) pos = { x: tgt.x, y: tgt.y }; else { pos.x += (tgt.x - pos.x) * 0.15; pos.y += (tgt.y - pos.y) * 0.15; }
-    el.style.transform = `translate(${pos.x.toFixed(1)}px, ${pos.y.toFixed(1)}px)`;
+    el.style.transform = `translate(${(pos.x + o.l * fk).toFixed(1)}px, ${(pos.y + o.t * fk).toFixed(1)}px)` + (fk < 0.999 ? ` scale(${fk.toFixed(3)})` : ''); el.style.visibility = '';
     // the steps follow the board's own line: the board opens before that line has started, and until then
     // progress() still describes the previous line (whose reused audio player had looked "done")
     const L = B.S.line, k = L && L.id === open ? B.progress() : 0;

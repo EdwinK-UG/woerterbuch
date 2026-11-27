@@ -231,6 +231,61 @@ test('player labels exist in de, en, fr and sw and the code reads them from the 
   for (const de of ['Platz ', 'Zurücklegen', "'Ende'", 'leer`']) assert.ok(!sb.includes(de), `satzband.js still has ${de}`);
   assert.match(src, /document\.title = title \+/, 'the tab title follows the version');
 });
+// The act buttons (27 Nov 2026, the owner's iPhone): one numbered button per act under the transport controls, as in
+// the iOS app; on a phone a row of their own that scrolls sideways, never hidden; hidden while playing along
+test('act buttons: one per act, labelled in the scene\'s language, the current one marked, a tap jumps to its act', () => {
+  const src = fs.readFileSync(path.join(ROOT, 'grammatik/buehne/stage.js'), 'utf8');
+  const fn = src.slice(src.indexOf('export function actButtons'), src.indexOf('\n}\n', src.indexOf('export function actButtons')) + 2);
+  const esc = src.slice(src.indexOf('export const esc'), src.indexOf('\n', src.indexOf('export const esc')));
+  const dom = new JSDOM('<div id="ctl"><div id="dots"></div></div>');
+  const { actButtons } = new Function('document', (esc + '\n' + fn).replace(/export /g, '') + '\nreturn { actButtons };')(dom.window.document);
+  const root = dom.window.document.getElementById('dots'), jumps = [];
+  const acts = actButtons(root, [{ name: 'Die Werkstatt' }, { name: 'Wer <macht> was?' }, { name: 'Ende' }], { label: 'Scene', jump: (i) => jumps.push(i) });
+  const bs = [...root.querySelectorAll('button')];
+  assert.deepEqual(bs.map((b) => b.textContent), ['1', '2', '3']);
+  assert.equal(bs[1].getAttribute('aria-label'), 'Scene 2: Wer <macht> was?', 'label: the scene word, its number and the act\'s name');
+  assert.equal(root.querySelector('macht'), null, 'act names are escaped');
+  assert.ok(bs.every((b) => b.type === 'button'));
+  assert.equal(root.getAttribute('role'), 'group');
+  acts.mark(1);
+  assert.deepEqual(bs.map((b) => b.className.trim()), ['done', 'on', ''], 'the act playing is highlighted, the ones before it done');
+  assert.equal(bs[1].getAttribute('aria-current'), 'step'); assert.equal(bs[0].getAttribute('aria-current'), null);
+  acts.mark(3); assert.ok(bs.every((b) => b.classList.contains('done') && !b.classList.contains('on')), 'after the last act');
+  bs[2].click(); bs[0].click(); assert.deepEqual(jumps, [2, 0], 'a tap jumps to the start of that act');
+  assert.match(src, /actButtons\(\$\('dots'\), S\.scenes, \{ label: T\('scene'\), jump: \(i\) => watch\(i\)/, 'the player wires them to watch(act)');
+  const UI = new Function(src.slice(src.indexOf('export const UI = {'), src.indexOf('\n};\n', src.indexOf('export const UI = {')) + 3).replace('export const UI', 'const UI') + '\nreturn UI;')();
+  assert.deepEqual(['de', 'en', 'fr', 'sw'].map((l) => UI[l].scene), ['Szene', 'Scene', 'Scène', 'Onyesho']);
+  const css = fs.readFileSync(path.join(ROOT, 'grammatik/buehne/stage.css'), 'utf8');
+  assert.doesNotMatch(css, /(^|[{}]\s*)#dots \{ display: none; \}/m, 'never hidden on a phone');
+  assert.match(css, /@media \(max-width: 460px\) \{[^}]*#ctl \{[^}]*flex-wrap: wrap[^}]*\}\s*#dots \{ order: 3; flex: 1 0 100%; \}/, 'a phone: a row of their own');
+  assert.match(css, /#dots \{[^}]*overflow-x: auto/, 'many acts: the row scrolls sideways');
+  assert.match(css, /#ctl\.pr #prev, #ctl\.pr #play, #ctl\.pr #next, #ctl\.pr #dots \{ display: none; \}/, 'hidden while playing along');
+  for (const f of ['passiv', 'konjunktiv', 'futur2', 'nominalstil', 'klammer', 'jagd']) assert.match(fs.readFileSync(path.join(ROOT, 'grammatik', f, 'index.html'), 'utf8'), /<div id="ctl">[\s\S]*<div id="dots"><\/div>/, f + ': the row is on the page');
+});
+
+// The fit rule (27 Nov 2026): boards, bubbles, word props and the tape's labels keep inside the picture with a margin
+test('fit rule: a margin at every edge, boxes too big are scaled down, never cut', async () => {
+  const src = fs.readFileSync(path.join(ROOT, 'grammatik/buehne/platz.js'), 'utf8');
+  const { bestSpot, margin, fitScale } = await import('data:text/javascript,' + encodeURIComponent(src));
+  assert.equal(margin(320), 8); assert.equal(margin(390), 8); assert.ok(margin(1280) > 8);
+  const W = 390, H = 600, m = margin(W);
+  for (const c of [{ x: -40, y: -10 }, { x: 300, y: 500 }, { x: 0, y: 0 }]) {
+    const s = bestSpot([c], { w: 200, h: 120, W, H, busy: [] });
+    assert.ok(s.x >= m && s.y >= m && s.x + 200 <= W - m && s.y + 120 <= H - m, JSON.stringify(s));
+  }
+  assert.equal(fitScale(300, 100, W, H), 1, 'fits: full size');
+  const k = fitScale(500, 100, W, H, { l: 0, t: 0, r: 20, b: 0 });
+  assert.ok(Math.abs(520 * k - (W - 2 * m)) < 0.01, 'too wide (with what sticks out): exactly as wide as the picture allows');
+  assert.ok(fitScale(200, 900, W, H) * 900 <= H - 2 * m + 0.01, 'too tall: as tall as it allows');
+  for (const f of ['tafel.js', 'blase.js']) {
+    const code = fs.readFileSync(path.join(ROOT, 'grammatik/buehne', f), 'utf8');
+    assert.match(code, /fitScale\(/, f + ' scales down what does not fit'); assert.match(code, /reach\(el/, f + ' counts what sticks out of it');
+  }
+  const req = fs.readFileSync(path.join(ROOT, 'grammatik/buehne/requisiten.js'), 'utf8');
+  assert.match(req, /function nudgeTo\(p\)/); assert.match(req, /labelShift\(/);
+  assert.match(fs.readFileSync(path.join(ROOT, 'grammatik/buehne/blase.js'), 'utf8'), /scale: '\.6'/, 'the pop-in keeps the bubble in its place');
+  assert.match(fs.readFileSync(path.join(ROOT, 'grammatik/buehne/stage.css'), 'utf8'), /\.tf-item > \.sb, \.bub-sb \{ min-width: 0; max-width: 100%; \}/, 'a strip on a board shrinks instead of overflowing it');
+});
 test('wagon labels: 1, 2 … end by default, none with spare tiles, the item\'s own seats when given', async () => {
   const dom = new JSDOM('<div id="strip"></div>', { url: 'https://local.test' });
   try {

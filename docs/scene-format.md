@@ -274,7 +274,7 @@ line's text (index ÷ length, minus 0.02) × the recording's length. Items:
 | `{ "pic": name, "icon": name }` | A picture of meaning (`docs/scene-assets.md`). |
 | `{ "cards": [{ "pic", "icon", "t", "at" }] }` | Small picture cards with a caption. An icon alone is drawn large. |
 | `{ "morph": [{ "t", "at", "to", "toAt", "fx", "stamp", "twin", "twinAt" }] }` | Words that change when said (in a row). Each word `t` appears at `at` (or at once); at `toAt` it turns into `to` with `fx` as the `morph` step (`shave`: a little plane slides across and the first `{e:…}` part curls away; `stamp`: a red stamp `stamp` comes down, then the word flips and stays lightly highlighted; `flip`; `grow`: the new `{e:…}` parts come in from ghost letters). `twin`: a mirror copy of `t` appears beside it at `twinAt`, flipping in from a mirror image, with the small label `twin` (e.g. "= Indikativ"); it fades when the word is stamped. |
-| `{ "timeline": { "now", "marks": [{ "x", "t", "at", "flag" }], "notes": [{ "x", "t", "at", "row" }], "arcs": [{ "from", "to", "t", "at" }] } }` | (since k439) A time line, 540 × 104 px (300 × 92 on a phone; 28 px taller when a note has `row` 1): x runs from 0 (left, the past) to 1 (the future). The line 30 px above the bottom, 7 px thick: from sepia to gold at `now`, white at `now`, pale blue after it; a glowing dot at `now`. Marks hang under the line (a tick and the label; `flag`: ⚑ before it). Notes are chips above the line (row 0, or row 1 higher), anchored at `x` (the chip's own x% point on it). An arc is a dashed gold curve from `from` to `to`, 62 px high (52 on a phone), with an arrowhead at `to` and its label in a white pill; it draws itself in 0.9 s when said. Each part with `at` appears when said. |
+| `{ "timeline": { "now", "marks": [{ "x", "t", "at", "flag" }], "notes": [{ "x", "t", "at", "row" }], "arcs": [{ "from", "to", "t", "at" }] } }` | (since k439) A time line, 540 × 104 px (300 × 92 on a phone; 28 px taller when a note has `row` 1; never wider than the board can be in the picture: 92 % of its width less 40 px): x runs from 0 (left, the past) to 1 (the future). The line 30 px above the bottom, 7 px thick: from sepia to gold at `now`, white at `now`, pale blue after it; a glowing dot at `now`. Marks hang under the line (a tick and the label; `flag`: ⚑ before it). Notes are chips above the line (row 0, or row 1 higher), anchored at `x` (the chip's own x% point on it). An arc is a dashed gold curve from `from` to `to`, 62 px high (52 on a phone), with an arrowhead at `to` and its label in a white pill; it draws itself in 0.9 s when said. Each part with `at` appears when said. |
 | `{ "drawers": [{ "t", "at", "open", "c", "items": [text \| { "t", "at" }] }] }` | A cabinet of labelled wooden drawers side by side. A drawer appears at `at` (or at once), slides open at `open` (or is open from the start if it has items and no `open`), and shows its items, each at its own `at`. `c` (`n a d g`) colours the label by case. |
 
 A step's word is searched after the previous step's word; a word said only earlier in the line counts at its first
@@ -374,6 +374,43 @@ left); four or more after the third.
 says `say[n]` (the answers locked until done). When the item ends without a right answer, a pause of `afterMiss`.
 
 **After the last item:** the `end` steps, then "Fertig! …" with the score.
+
+## Player behaviour
+
+What every player does the same way, whatever the scene (web: `grammatik/buehne/stage.js`, `platz.js`; since
+27 Nov 2026).
+
+**The act buttons.** Under the transport controls (⏮ ▶/❚❚ ⏭) there is one round button per act, numbered 1, 2, 3 … in
+the order of `acts`. The act playing is filled (ink on the page's background colour), the acts before it are lightly
+tinted (done), the ones after it plain. A tap plays the film from the start of that act, exactly as ⏮/⏭ do (the act
+starts clean, see Acts and beats). On a phone (the panel 460 px wide or less) the buttons have a row of their own
+under ⏮ ▶ ⏭ and the play-along button, centred while they fit; with more acts than fit, the row scrolls sideways
+and keeps the act playing in view (it scrolls itself, never the page around the frame). On a wider screen they sit
+between ⏭ and the play-along button in the same row. Each button is 36 px round, 5 px apart; its accessible label is
+`<scene> <n>: <act name>` with the scene word in the version's language (`Szene`, `Scene`, `Scène`, `Onyesho`;
+stage.js `UI.scene`), the act's `name` also as its tooltip. The act playing is marked `aria-current="step"`. While
+the learner plays along (practice), the act buttons are hidden with ⏮ ▶ ⏭.
+
+**The fit rule.** Nothing with text or meaning may reach past the edges of the picture, at any size from a 320 px
+phone to a full-screen desktop: boards (with everything on them, e.g. a wagon's label), bubbles, cards, word and
+picture props and the tape's labels keep a margin at every edge of **8 px, or 1.2 % of the picture's width when that
+is more** (`margin(W)` in platz.js). Players keep it so:
+
+- A sentence strip on a board or in a bubble is never wider than the board or bubble: its wagons shrink (down to
+  60 %) until it fits. Chips and cards wrap onto another row.
+- A board or bubble that still does not fit (with whatever sticks out of it) is scaled down as a whole, from its top
+  left corner, until it does (`fitScale`; never below 30 %), then placed inside the margins. Never cut.
+- A word or picture prop is drawn just inside the margins when it is in the picture even in part, or when it stands
+  within the scene's wide shot as a wide screen shows it (3.1 m either side of the camera's `x`; a phone shows less
+  of the room). The shift eases in (about 0.1 s), so nothing jumps; things (`thing`) are not moved, and a prop that
+  leaves the scene leaves the picture.
+- A label on the tape that is in the picture in part slides sideways along the edge until it is whole (its post
+  stays on its point of the tape); a flag near the right edge waves to the left of its pole. A label that would then
+  cover one drawn before it is lifted above it on a longer post. Labels of parts of the tape the camera has not
+  reached are not shown.
+
+`tools/scene-frames.cjs` checks a film against this rule at any size (`--phone`, `--phone 320x640`, `--size WxH`):
+its "edge findings" line must say 0.
 
 ## Versions and feedback
 

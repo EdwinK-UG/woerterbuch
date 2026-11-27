@@ -114,7 +114,7 @@ button.sb-w { cursor: pointer; }
 .lamp b { font-family: Fraunces, Georgia, serif; font-size: clamp(18px, 4vw, 26px); font-weight: 600; display: block; }
 .lamp.lit { border-top-color: #0b8579; box-shadow: 0 0 0 3px rgba(11,133,121,.35), 0 6px 22px rgba(11,133,121,.35); transform: translateY(-3px); }
 .lamp.lit b { color: #0b8579; }
-@media (max-width: 480px) { #lamps { gap: 4px; top: 6px; left: 6px; right: 92px; transform: none; } .lamp { flex: 1; min-width: 0; padding: 3px 2px 4px; border-top-width: 4px; } .lamp small { font-size: 8px; letter-spacing: 0; } .lamp b { font-size: 17px; } }
+@media (max-width: 480px) { #lamps { gap: 4px; top: 11px; left: 8px; right: 92px; transform: none; } .lamp { flex: 1; min-width: 0; padding: 3px 2px 4px; border-top-width: 4px; } .lamp small { font-size: 8px; letter-spacing: 0; } .lamp b { font-size: 17px; } }
 #say .pre { align-self: center; font-size: 17px; white-space: nowrap; color: var(--mut); }
 .sb-bank { display: flex; flex-wrap: wrap; gap: 8px; }
 .sb-bank:empty { display: none; }
@@ -139,10 +139,16 @@ button.sb-w { cursor: pointer; }
 #say { display: none; gap: 8px; }
 #say input { flex: 1; min-width: 0; font: inherit; font-size: 17px; padding: 9px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); color: var(--ink); }
 #ctl { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-#dots { display: flex; gap: 5px; align-items: center; flex: 1; min-width: 120px; flex-wrap: wrap; }
-#dots button { min-height: 0; width: 26px; height: 26px; padding: 0; border-radius: 50%; font-size: 11px; color: var(--mut); }
+/* the act buttons (stage.js actButtons): 1, 2, 3 … one per act, the one playing filled; one row that scrolls sideways
+   when there are more than fit (on a phone a row of its own under the transport controls, see "fit" below) */
+#dots { display: flex; gap: 5px; align-items: center; flex: 1 1 auto; min-width: 0; flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden;
+        padding: 2px; scrollbar-width: none; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; }
+#dots::-webkit-scrollbar { display: none; }
+#dots button { flex: 0 0 auto; width: 36px; height: 36px; min-width: 36px; min-height: 0; padding: 0; border-radius: 50%; border: 1px solid var(--line);
+               background: var(--paper); color: var(--mut); font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1; }
+#dots button.done { color: var(--ink); background: color-mix(in srgb, var(--acc) 12%, var(--paper)); border-color: color-mix(in srgb, var(--acc) 30%, var(--paper)); }
 #dots button.on { background: var(--ink); color: var(--bg); border-color: var(--ink); }
-#dots button.done { background: color-mix(in srgb, var(--acc) 15%, var(--paper)); border-color: color-mix(in srgb, var(--acc) 40%, var(--paper)); }
+#dots button:focus-visible { outline-offset: -3px; }
 #ctl.pr #prev, #ctl.pr #play, #ctl.pr #next, #ctl.pr #dots { display: none; }
 #score { font-size: 13px; color: var(--acc); font-weight: 600; }
 
@@ -150,8 +156,7 @@ button.sb-w { cursor: pointer; }
   #start .box { padding: 10px 12px; } #start h2 { font-size: 17px; margin-bottom: 8px; } #start p { display: none; }
   #start button { font-size: 14px; padding: 7px 11px; }
   #cap { font-size: 16px; min-height: 56px; }
-  #dots button { width: 24px; height: 24px; }
-  #cards { left: 6px; top: 6px; right: 96px; gap: 4px; } .card { padding: 2px 8px 3px; font-size: 13px; }
+  #cards { left: 8px; top: 8px; right: 96px; gap: 4px; } .card { padding: 2px 8px 3px; font-size: 13px; }
   .sb-w { min-width: 36px; } .sb-row { gap: 4px; }
   #merk { left: 4%; right: 4%; padding: 6px 10px 8px; }
 }
@@ -190,6 +195,11 @@ button.sb-w { cursor: pointer; }
 .tafel.on { display: flex; }
 .tf-title { font-family: Fraunces, Georgia, serif; font-size: clamp(16px, 2.8vw, 22px); font-weight: 600; letter-spacing: .01em; text-align: center; }
 .tf-item { display: flex; justify-content: center; max-width: 100%; }
+/* the fit rule (platz.js): a sentence strip on a board or in a bubble may be no wider than it, so its wagons shrink
+   (satzband.js) instead of running past its edges; a board or bubble still too big for the picture is scaled down
+   from its top left corner (tafel.js, blase.js) */
+.tf-item > .sb, .bub-sb { min-width: 0; max-width: 100%; }
+.tafel, .bub { transform-origin: 0 0; }
 .tafel .sb-rail { min-height: 0; padding-top: 24px; overflow: visible; }
 .tafel .sb-w { font-size: calc(clamp(16px, 3.4vw, 22px) * var(--sbk, 1)); padding: .3em .55em .38em; }
 .tafel .sb-rail::after { background: repeating-linear-gradient(90deg, #cfd8cf 0 14px, transparent 14px 20px); }
@@ -237,9 +247,14 @@ html, body { height: 100%; }
 #ctl { flex-wrap: nowrap; gap: 6px; }
 #ctl button { min-height: 40px; }
 #ctl #prev, #ctl #play, #ctl #next { width: 40px; padding: 0; border-radius: 50%; flex: 0 0 auto; }
-#dots { min-width: 0; overflow: hidden; flex-wrap: nowrap; }
+#ctl #dots button { min-height: 0; }
 #try { flex: 0 0 auto; padding: 8px 14px; }
-@media (max-width: 460px) { #dots { display: none; } #ctl { justify-content: space-between; } }
+/* a phone: the act buttons get a row of their own under ⏮ ▶ ⏭ and the play button, centred while they fit */
+@media (max-width: 460px) {
+  #ctl { flex-wrap: wrap; justify-content: space-between; row-gap: 6px; }
+  #dots { order: 3; flex: 1 0 100%; }
+  #dots button:first-child { margin-left: auto; } #dots button:last-child { margin-right: auto; }
+}
 /* the language switch and the feedback button */
 #langsw { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; flex: 0 0 auto; }
 #langsw button { border: 0; border-radius: 0; min-height: 38px; padding: 0 11px; font-size: 13px; font-weight: 700; color: var(--mut); background: var(--paper); }
@@ -421,7 +436,6 @@ button:active:not(:disabled) { transform: translateY(1px); }
 #app:has(#start:not([style*="display: none"])) #panel { visibility: hidden; }
 #load:empty { display: none; }
 #cap { border: 0; background: var(--paper); border-radius: 16px; }
-#dots button { width: 40px; height: 40px; min-width: 40px; }
 #meta #langsw button { min-height: 40px; min-width: 40px; }
 #meta #fbBtn { min-height: 40px; border: 0; background: var(--soft); color: var(--ink); }
 .bub { background: var(--paper); color: var(--ink); border: 1px solid var(--line); border-radius: 22px; box-shadow: 0 6px 24px #20242b14; }
