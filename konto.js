@@ -398,7 +398,7 @@ function suMore() {
       ${pv.type === 'org' ? `<p class="ks-n">${icn('info')} ${T('Your teacher unlocks your level for you.', 'Deine Lehrkraft schaltet dein Niveau für dich frei.')}</p>` : ''}`;
   } else {
     h += `<div class="ks-dt">${detailFields(r, pv.type === 'site' && r === 'school' ? { name: pv.name } : {}, 'su')}</div>`;
-    if (!invited) h += `<p class="ks-n">${icn('shield-check')} ${T('Your teaching workspace opens straight away. Confirm your email to send invitations.', 'Ihr Unterrichtsbereich öffnet sich sofort. Bestätigen Sie Ihre E-Mail, um Einladungen zu senden.')}</p>`;
+    if (!invited) h += `<p class="ks-n">${icn('shield-check')} ${T('You can sign in straight away. Confirm your email to open your teaching space: it opens by itself as soon as you have confirmed.', 'Sie können sich sofort anmelden. Bestätigen Sie Ihre E-Mail, um Ihren Unterrichtsbereich zu öffnen: Er öffnet sich von selbst, sobald Sie bestätigt haben.')}</p>`;
   }
   if(pv.type==='org'&&pv.term_name)h+=`<div class="invite-summary"><span class="play-eyebrow">${esc(pv.term_name)}</span><p>${dt(pv.starts_on)} – ${dt(pv.ends_on)}</p><p>${esc(pv.schedule||'')}</p>${pv.course_details?`<details><summary>${T('Your course','Dein Kurs')}</summary><p>${esc(pv.course_details)}</p></details>`:''}</div>`;
   box.innerHTML = h; icons();
