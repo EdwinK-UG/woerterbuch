@@ -268,3 +268,117 @@ test('an account made with somebody else’s address gains nothing from that per
     assert.ok((await one(`select public.register_teaching_account('teacher','{"name":"Learner turned teacher"}') as id`)).id);
   } finally { await db.close(); }
 });
+
+// Class boundaries for members and invitations (supabase/migrations/20261127211500_class_member_boundaries.sql).
+test('a teacher’s own membership never opens a colleague’s class', async () => {
+  const t = await database(), { db, as, one, admin } = t;
+  try {
+    await school(t);
+    const myClass = async user => { await as(user); return (await one('select public.my_org() as o')).o.class; };
+    const privateIds = async user => { await as(user); return (await db.query('select id from public.class_private($1) order by 1', [org])).rows.map(r => r.id); };
+    // Nobody can put a teacher's membership row into a class: not the teacher, not a colleague, not the owner.
+    for (const user of [teacherB, teacherA, owner]) {
+      await as(user);
+      assert.equal((await db.query('update public.org_members set class_id=$2 where org_id=$1 and user_id=$3', [org, classA, teacherB])).affectedRows, 0);
+    }
+    assert.equal(await myClass(teacherB), null);
+    // Even a teacher row that already points at a class (older data, a teacher link made for a class) gets nothing from it.
+    await admin(); await db.query('update public.org_members set class_id=$2 where org_id=$1 and user_id=$3', [org, classA, teacherB]);
+    assert.equal(await myClass(teacherB), null);
+    assert.deepEqual(await privateIds(teacherB), [classB]);
+    await as(teacherB); assert.equal((await one('select public.my_org() as o')).o.name, 'Hardening School');
+    // A learner cannot move themselves either, and still receives their own class.
+    await as(learner); assert.equal((await db.query('update public.org_members set class_id=$2 where user_id=$1', [learner, classB])).affectedRows, 0);
+    assert.equal((await myClass(learner)).meeting_details, 'https://meet.invalid/a');
+    await admin(); assert.equal((await one('select class_id from public.org_members where user_id=$1', [learner])).class_id, classA);
+  } finally { await db.close(); }
+});
+
+test('a learner is moved only by the owner or by the teacher of the classes involved', async () => {
+  const t = await database(), { db, as, one, admin } = t;
+  try {
+    await school(t);
+    const move = async (user, to) => { await as(user); return db.query('update public.org_members set class_id=$3 where org_id=$1 and user_id=$2', [org, learner, to]); };
+    const where = async () => { await admin(); return (await one('select class_id from public.org_members where user_id=$1', [learner])).class_id; };
+    const recipients = async (user, cls) => { await as(user); return (await one('select public.message_recipients($1) as r', [cls])).r.users.map(u => u.id); };
+    // A colleague cannot pull the learner into their class, out of the class, or anywhere else.
+    for (const to of [classB, null, classOwner]) assert.equal((await move(teacherB, to)).affectedRows, 0);
+    assert.equal(await where(), classA);
+    assert.deepEqual(await recipients(teacherB, classB), []);
+    await as(teacherB); await assert.rejects(db.query('select public.message_recipients($1)', [classA]), /not authorised/);
+    for (const user of [outsider, learner]) assert.equal((await move(user, classB)).affectedRows, 0);
+    // The class teacher cannot push the learner into a class they do not manage.
+    await assert.rejects(move(teacherA, classB), /row-level security/);
+    await assert.rejects(move(teacherA, classOwner), /row-level security/);
+    assert.deepEqual(await recipients(teacherA, classA), [learner]);
+    // The class teacher takes the learner out of the class and back in.
+    assert.equal((await move(teacherA, null)).affectedRows, 1); assert.equal(await where(), null);
+    assert.equal((await move(teacherA, classA)).affectedRows, 1); assert.equal(await where(), classA);
+    // A learner without a class can be taken into a teacher's own class, and only there.
+    await move(teacherA, null);
+    await assert.rejects(move(teacherB, classA), /row-level security/);
+    assert.equal((await move(teacherB, classB)).affectedRows, 1); assert.equal(await where(), classB);
+    assert.deepEqual(await recipients(teacherB, classB), [learner]);
+    assert.equal((await move(teacherA, classA)).affectedRows, 0);
+    // The owner moves anyone within the school, into any class or none.
+    for (const to of [classA, classOwner, null, classB, classA]) { assert.equal((await move(owner, to)).affectedRows, 1); assert.equal(await where(), to); }
+    // A class of another school is never a target.
+    const otherOrg = id(160), otherClass = id(161);
+    await admin(); await db.query(`insert into public.orgs(id,owner,kind,name) values($1,$2,'teacher','Elsewhere')`, [otherOrg, outsider]);
+    await db.query(`insert into public.classes(id,org_id,name,level,teacher_id) values($1,$2,'Elsewhere A1','A1',$3)`, [otherClass, otherOrg, outsider]);
+    await assert.rejects(move(owner, otherClass)); assert.equal((await move(outsider, otherClass)).affectedRows, 0);
+    assert.equal(await where(), classA);
+    // Levels and removal by staff keep working as before.
+    await as(teacherA); await db.query(`select public.unlock_level($1,'A2',true)`, [learner]);
+    assert.equal((await db.query('delete from public.org_members where org_id=$1 and user_id=$2', [org, learner])).affectedRows, 1);
+  } finally { await db.close(); }
+});
+
+test('class invitation links are seen, made and deleted only by the class manager; joining still works', async () => {
+  const t = await database(), { db, as, one, admin } = t;
+  try {
+    await school(t);
+    const make = (cls, role = 'student') => db.query(`insert into public.invites(org_id,class_id,member_role,level) values($1,$2,$3,'A1') returning code`, [org, cls, role]);
+    const codes = async user => { await as(user); return (await db.query('select code from public.invites where org_id=$1 order by code', [org])).rows.map(r => r.code); };
+    await as(owner);
+    const forA = (await make(classA)).rows[0].code, forB = (await make(classB)).rows[0].code, school_ = (await make(null)).rows[0].code, staff = (await make(null, 'teacher')).rows[0].code;
+    // A teacher makes links for their own class and for the school, not for a colleague's class and not for teachers.
+    await as(teacherB);
+    await assert.rejects(make(classA), /row-level security/); await assert.rejects(make(classOwner), /row-level security/);
+    await assert.rejects(make(null, 'teacher'), /row-level security/);
+    const ownB = (await make(classB)).rows[0].code, open = (await make(null)).rows[0].code;
+    // Each teacher sees the school links and the links of their own classes; the owner sees all.
+    assert.deepEqual(await codes(teacherB), [forB, school_, ownB, open].sort());
+    assert.deepEqual(await codes(teacherA), [forA, school_, open].sort());
+    assert.deepEqual(await codes(owner), [forA, forB, school_, staff, ownB, open].sort());
+    assert.deepEqual(await codes(learner), []); assert.deepEqual(await codes(outsider), []);
+    // Deleting follows the same line.
+    await as(teacherB);
+    for (const code of [forA, staff]) assert.equal((await db.query('delete from public.invites where code=$1', [code])).affectedRows, 0);
+    assert.equal((await db.query('delete from public.invites where code=$1', [ownB])).affectedRows, 1);
+    await as(owner); assert.equal((await db.query('delete from public.invites where code=$1', [forB])).affectedRows, 1);
+    // Joining: a class link enrols the learner in that class, a school link in no class, a teacher link as a teacher.
+    const one_ = id(170), two = id(171), three = id(172);
+    await admin(); await db.query(`insert into auth.users(id,email,email_confirmed_at) values($1,'one@example.invalid',now()),($2,'two@example.invalid',now()),($3,'three@example.invalid',now())`, [one_, two, three]);
+    await as(one_); await db.query('select public.join_with_code($1)', [forA]);
+    assert.equal((await one('select public.my_org() as o')).o.class.meeting_details, 'https://meet.invalid/a');
+    await as(two); await db.query('select public.join_with_code($1)', [open]);
+    assert.equal((await one('select public.my_org() as o')).o.class, null);
+    await as(three); await db.query('select public.join_with_code($1)', [staff]);
+    assert.equal((await one('select public.my_org() as o')).o.class, null);
+    await admin();
+    assert.deepEqual((await db.query('select user_id,member_role,class_id from public.org_members where user_id in ($1,$2,$3) order by user_id', [one_, two, three])).rows,
+      [{ user_id: one_, member_role: 'student', class_id: classA }, { user_id: two, member_role: 'student', class_id: null }, { user_id: three, member_role: 'teacher', class_id: null }]);
+    // The learner without a class is then placed by a teacher in that teacher's own class.
+    await as(teacherB); assert.equal((await db.query('update public.org_members set class_id=$2 where user_id=$1', [two, classB])).affectedRows, 1);
+    await as(two); assert.equal((await one('select public.my_org() as o')).o.class.meeting_details, 'https://meet.invalid/b');
+    // An accepted live-class application still places the learner in the class.
+    const applicant = id(173);
+    await admin(); await db.query(`insert into auth.users(id,email,email_confirmed_at) values($1,'applicant@example.invalid',now())`, [applicant]);
+    await db.query(`update public.classes set live_open=true,term_name='Term',starts_on='2027-01-01',ends_on='2027-03-01',schedule='Mon' where id=$1`, [classB]);
+    await as(applicant); const request = (await one('select public.request_live_class($1) as r', [classB])).r.request_id;
+    await as(teacherA); await assert.rejects(db.query('select public.decide_live_class_request($1,true)', [request]), /not your class/);
+    await as(teacherB); await db.query('select public.decide_live_class_request($1,true)', [request]);
+    await as(applicant); assert.equal((await one('select public.my_org() as o')).o.class.id, classB);
+  } finally { await db.close(); }
+});

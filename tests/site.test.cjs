@@ -699,3 +699,21 @@ test('starting to teach before the email is confirmed saves the request and says
   assert.deepEqual(s.errors,[]);
  }finally{await s.close()}
 });
+test('a teacher sees invitation and move controls only for the classes they manage',async()=>{
+ const org={id:'00000000-0000-4000-ab00-000000000081',owner:'00000000-0000-4000-ab00-000000000080',name:'Two teachers',kind:'school',pass_mark:70},mine={id:'00000000-0000-4000-ab00-000000000082',org_id:org.id,name:'Own A1',level:'A1',teacher_id:'fixture'},theirs={id:'00000000-0000-4000-ab00-000000000083',org_id:org.id,name:'Colleague B1',level:'B1',teacher_id:'00000000-0000-4000-ab00-000000000084'};
+ const own='00000000-0000-4000-ab00-000000000085',other='00000000-0000-4000-ab00-000000000086',free='00000000-0000-4000-ab00-000000000087';
+ const s=await site('#/klasse',{account:true,profile:()=>Response.json([{user_id:'fixture',role:'teacher',unlocked:[],org_id:org.id}]),request:async u=>{
+ if(u.pathname==='/rest/v1/orgs')return Response.json([org]);if(u.pathname==='/rest/v1/classes')return Response.json([mine,theirs]);
+ if(u.pathname==='/rest/v1/org_members')return Response.json(u.searchParams.get('member_role')?[{org_id:org.id}]:[{org_id:org.id,user_id:own,member_role:'student',class_id:mine.id},{org_id:org.id,user_id:other,member_role:'student',class_id:theirs.id},{org_id:org.id,user_id:free,member_role:'student',class_id:null}]);
+ if(u.pathname==='/rest/v1/profiles'&&(u.searchParams.get('user_id')||'').startsWith('in.'))return Response.json([own,other,free].map((user_id,i)=>({user_id,display_name:'Learner '+i,level:'A1',unlocked:['A1']})));
+ }});try{await until(()=>s.document.querySelectorAll('.ks-cls').length===2);
+ const [a,b]=s.document.querySelectorAll('.ks-cls'),has=(card,call)=>[...card.querySelectorAll('[onclick]')].some(x=>x.getAttribute('onclick').includes(call));
+ for(const call of ["KONTO.checkInvitationMail('"+mine.id+"')","KONTO.invite('student','"+mine.id+"'","KONTO.sendClassInvite('"+mine.id+"')"])assert.ok(has(a,call),call);
+ for(const call of ['KONTO.checkInvitationMail(','KONTO.invite(','KONTO.sendClassInvite(','KONTO.liveClassSheet('])assert.equal(has(b,call),false,call);assert.equal(b.querySelector('#mail_status_'+theirs.id),null);
+ const choices=uid=>{s.window.KONTO.student(uid);const select=s.document.querySelector('#modal select, .sheet select')||[...s.document.querySelectorAll('select')].find(x=>/moveMember|disabled/.test(x.outerHTML));return {disabled:select.disabled,values:[...select.options].map(o=>o.value||o.textContent)}};
+ assert.deepEqual(choices(own),{disabled:false,values:['no class',mine.id]});
+ assert.deepEqual(choices(free),{disabled:false,values:['no class',mine.id]});
+ assert.deepEqual(choices(other),{disabled:true,values:['Colleague B1 (B1)']});
+ assert.deepEqual(s.errors,[]);
+ }finally{await s.close()}
+});
